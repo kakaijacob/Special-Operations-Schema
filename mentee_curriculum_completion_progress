@@ -1,0 +1,259 @@
+WITH mentees AS (
+    SELECT DISTINCT
+        mentee_id,
+        mentee_name,
+        county,
+        facility,
+        facility_code
+    FROM mentors.mentee_curriculum_tracking
+),
+
+cme AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 11
+            ELSE 13
+        END AS required_topics,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'cmes'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+drills AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        5 AS required_topics,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'drills'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+skill_demo AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_topics,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'skill_demos_mentor'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+return_demo AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_topics,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'skills_demos_mentee'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+labor_monitoring AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        1 AS required_topics,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity IN (
+        'video_case_scenarios',
+        'videoa_case_scenarios', 'case_scenarios'
+    )
+      AND topic IN (
+            'Partograph_use_and_interpretation',
+            'Labor Monitoring'
+      )
+    GROUP BY mentee_id
+),
+
+skill_evaluation AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT skill_evaluation) AS completed_assessments,
+
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_assessments,
+
+        AVG(average_score) AS avg_score,
+
+        MAX(date_submitted) AS completion_date
+
+    FROM mentors.process_moh_skills_assessment_2026
+    WHERE skill_evaluation IS NOT NULL
+      AND average_score IS NOT NULL
+    GROUP BY mentee_id
+)
+
+SELECT
+    m.mentee_id,
+    m.mentee_name,
+    m.county,
+    m.facility,
+    m.facility_code,
+
+    ROUND(
+        LEAST(
+            COALESCE(c.completed_topics, 0)::NUMERIC
+            / NULLIF(c.required_topics, 0),
+            1
+        ),
+        3
+    ) AS cme_completion,
+
+    ROUND(
+        LEAST(
+            COALESCE(d.completed_topics, 0)::NUMERIC
+            / NULLIF(d.required_topics, 0),
+            1
+        ),
+        3
+    ) AS drill_completion,
+
+    ROUND(
+        LEAST(
+            COALESCE(sd.completed_topics, 0)::NUMERIC
+            / NULLIF(sd.required_topics, 0),
+            1
+        ),
+        3
+    ) AS skill_demo_completion,
+
+    ROUND(
+        LEAST(
+            COALESCE(rd.completed_topics, 0)::NUMERIC
+            / NULLIF(rd.required_topics, 0),
+            1
+        ),
+        3
+    ) AS return_demo_completion,
+
+    ROUND(
+        LEAST(
+            COALESCE(lm.completed_topics, 0)::NUMERIC
+            / NULLIF(lm.required_topics, 0),
+            1
+        ),
+        3
+    ) AS labor_monitoring_completion,
+
+    ROUND(
+        CASE
+            WHEN se.avg_score >= 0.85
+            THEN LEAST(
+                COALESCE(se.completed_assessments, 0)::NUMERIC
+                / NULLIF(se.required_assessments, 0),
+                1
+            )
+            ELSE 0
+        END,
+        3
+    ) AS skill_evaluation_completion,
+    
+        CASE
+        WHEN
+            ROUND(
+                LEAST(
+                    COALESCE(c.completed_topics, 0)::NUMERIC
+                    / NULLIF(c.required_topics, 0),
+                    1
+                ),
+                3
+            ) >= 1
+
+        AND ROUND(
+                LEAST(
+                    COALESCE(d.completed_topics, 0)::NUMERIC
+                    / NULLIF(d.required_topics, 0),
+                    1
+                ),
+                3
+            ) >= 1
+
+        AND ROUND(
+                LEAST(
+                    COALESCE(sd.completed_topics, 0)::NUMERIC
+                    / NULLIF(sd.required_topics, 0),
+                    1
+                ),
+                3
+            ) >= 1
+
+        AND ROUND(
+                LEAST(
+                    COALESCE(rd.completed_topics, 0)::NUMERIC
+                    / NULLIF(rd.required_topics, 0),
+                    1
+                ),
+                3
+            ) >= 1
+
+        AND ROUND(
+                LEAST(
+                    COALESCE(lm.completed_topics, 0)::NUMERIC
+                    / NULLIF(lm.required_topics, 0),
+                    1
+                ),
+                3
+            ) >= 1
+
+        AND ROUND(
+                CASE
+                    WHEN se.avg_score >= 0.85
+                    THEN LEAST(
+                        COALESCE(se.completed_assessments, 0)::NUMERIC
+                        / NULLIF(se.required_assessments, 0),
+                        1
+                    )
+                    ELSE 0
+                END,
+                3
+            ) >= 1
+
+        THEN 1
+        ELSE 0
+    END AS curriculum_completion,
+
+    NULLIF(
+    GREATEST(
+        COALESCE(c.completion_date, DATE '1900-01-01'),
+        COALESCE(d.completion_date, DATE '1900-01-01'),
+        COALESCE(sd.completion_date, DATE '1900-01-01'),
+        COALESCE(rd.completion_date, DATE '1900-01-01'),
+        COALESCE(lm.completion_date, DATE '1900-01-01'),
+        COALESCE(se.completion_date, DATE '1900-01-01')
+    ),
+    DATE '1900-01-01'
+) AS date_completed
+
+FROM mentees m
+LEFT JOIN cme c
+    ON m.mentee_id = c.mentee_id
+LEFT JOIN drills d
+    ON m.mentee_id = d.mentee_id
+LEFT JOIN skill_demo sd
+    ON m.mentee_id = sd.mentee_id
+LEFT JOIN return_demo rd
+    ON m.mentee_id = rd.mentee_id
+LEFT JOIN labor_monitoring lm
+    ON m.mentee_id = lm.mentee_id
+LEFT JOIN skill_evaluation se
+    ON m.mentee_id = se.mentee_id;
