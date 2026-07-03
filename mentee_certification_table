@@ -1,0 +1,160 @@
+WITH mentees AS (
+    SELECT DISTINCT
+        mentee_id,
+        mentee_name,
+        county,
+        facility,
+        facility_code
+    FROM mentors.mentee_curriculum_tracking
+),
+
+cme AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 11
+            ELSE 13
+        END AS required_topics
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'cmes'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+drills AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        5 AS required_topics
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'drills'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+skill_demo AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_topics
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'skill_demos_mentor'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+return_demo AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_topics
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'skills_demos_mentee'
+      AND topic IS NOT NULL
+    GROUP BY mentee_id
+),
+
+labor_monitoring AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT topic) AS completed_topics,
+        1 AS required_topics
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity IN (
+        'video_case_scenarios',
+        'videoa_case_scenarios'
+    )
+      AND topic IN (
+            'Partograph_use_and_interpretation',
+            'Labor Monitoring'
+      )
+    GROUP BY mentee_id
+),
+
+skill_evaluation AS (
+    SELECT
+        mentee_id,
+        COUNT(DISTINCT CASE
+            WHEN average_score >= 0.85
+            THEN skill_evaluation
+        END) AS completed_assessments,
+
+        CASE
+            WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
+            ELSE 21
+        END AS required_assessments,
+
+        AVG(average_score) AS avg_score
+
+    FROM mentors.process_moh_skills_assessment_2026
+    WHERE skill_evaluation IS NOT NULL
+    GROUP BY mentee_id
+)
+
+SELECT
+    m.mentee_id,
+    m.mentee_name,
+    m.county,
+    m.facility,
+    m.facility_code,
+
+    ROUND(
+        COALESCE(c.completed_topics,0)::NUMERIC
+        / NULLIF(c.required_topics,0),
+        3
+    ) AS cme_completion,
+
+    ROUND(
+        COALESCE(d.completed_topics,0)::NUMERIC
+        / NULLIF(d.required_topics,0),
+        3
+    ) AS drill_completion,
+
+    ROUND(
+        COALESCE(sd.completed_topics,0)::NUMERIC
+        / NULLIF(sd.required_topics,0),
+        3
+    ) AS skill_demo_completion,
+
+    ROUND(
+        COALESCE(rd.completed_topics,0)::NUMERIC
+        / NULLIF(rd.required_topics,0),
+        3
+    ) AS return_demo_completion,
+
+    ROUND(
+        COALESCE(lm.completed_topics,0)::NUMERIC
+        / NULLIF(lm.required_topics,0),
+        3
+    ) AS labor_monitoring_completion,
+
+    ROUND(
+        CASE
+            WHEN se.avg_score >= 0.85
+            THEN COALESCE(se.completed_assessments,0)::NUMERIC
+                 / NULLIF(se.required_assessments,0)
+            ELSE 0
+        END,
+        3
+    ) AS skill_evaluation_completion
+
+FROM mentees m
+LEFT JOIN cme c
+    ON m.mentee_id = c.mentee_id
+LEFT JOIN drills d
+    ON m.mentee_id = d.mentee_id
+LEFT JOIN skill_demo sd
+    ON m.mentee_id = sd.mentee_id
+LEFT JOIN return_demo rd
+    ON m.mentee_id = rd.mentee_id
+LEFT JOIN labor_monitoring lm
+    ON m.mentee_id = lm.mentee_id
+LEFT JOIN skill_evaluation se
+    ON m.mentee_id = se.mentee_id;
