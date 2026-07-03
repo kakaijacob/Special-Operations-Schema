@@ -1,0 +1,241 @@
+WITH completions AS (
+
+    -- CME completions (11 modules)
+    SELECT
+        'cmes' AS mentorship_activity,
+        mentee_id,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'cmes'
+    GROUP BY mentee_id
+    HAVING COUNT(DISTINCT topic) = 11
+
+    UNION ALL
+
+    -- Drill completions (5 modules)
+    SELECT
+        'drills' AS mentorship_activity,
+        mentee_id,
+        MAX(date_submitted) AS completion_date
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity = 'drills'
+    GROUP BY mentee_id
+    HAVING COUNT(DISTINCT topic) = 5
+
+    UNION ALL
+
+    -- Skills completions
+    SELECT
+        'skills' AS mentorship_activity,
+        d.mentee_id,
+        GREATEST(
+            d.last_demo_date,
+            e.last_evaluation_date
+        ) AS completion_date
+    FROM (
+
+        SELECT
+            mentee_id,
+            MAX(date_submitted) AS last_demo_date
+        FROM mentors.mentee_curriculum_tracking
+        GROUP BY mentee_id
+        HAVING
+            COUNT(DISTINCT CASE
+                WHEN mentorship_activity = 'skill_demos_mentor' THEN topic
+            END) >= 18
+            AND COUNT(DISTINCT CASE
+                WHEN mentorship_activity = 'skills_demos_mentee' THEN topic
+            END) >= 18
+
+    ) d
+
+    INNER JOIN (
+
+        SELECT
+            pmsa.mentee_id,
+            MAX(pmsa.date_submitted) AS last_evaluation_date
+        FROM mentors.process_moh_skills_assessment_2026 pmsa
+        GROUP BY pmsa.mentee_id
+        HAVING
+            COUNT(DISTINCT pmsa.skill_evaluation ) >= 18
+            AND AVG(pmsa.average_score) >= 0.85
+
+    ) e
+        ON d.mentee_id = e.mentee_id
+)
+
+/*Quarterly EmONC Activity Completion Rate */
+SELECT
+    mentorship_activity,
+    AVG(quarterly_completions) AS avg_completions_per_quarter
+FROM (
+
+    SELECT
+        mentorship_activity,
+        DATE_TRUNC('quarter', completion_date) AS quarter,
+        COUNT(DISTINCT mentee_id) AS quarterly_completions
+    FROM completions
+    GROUP BY
+        mentorship_activity,
+        DATE_TRUNC('quarter', completion_date)
+
+) q
+GROUP BY mentorship_activity
+ORDER BY mentorship_activity;
+
+
+/* % Passing Skills Assessment (>= 85%) - Many Attempts Included*/
+SELECT
+    ROUND(
+        100.0 * COUNT(DISTINCT CASE WHEN pmsa.average_score >= 0.85 THEN pmsa.mentee_id END)
+        / COUNT(DISTINCT pmsa.mentee_id),
+        1
+    ) AS skill_score_pct
+FROM mentors.process_moh_skills_assessment_2026 pmsa ;
+
+
+//////* # On first time attempt*/
+WITH first_attempts AS (
+    SELECT
+        pmsa.mentee_id,
+        pmsa.skill_evaluation,
+        pmsa.average_score,
+        ROW_NUMBER() OVER (
+            PARTITION BY pmsa.mentee_id, pmsa.skill_evaluation
+            ORDER BY pmsa.date_submitted, pmsa.submission_id
+        ) AS attempt_no
+    FROM mentors.process_moh_skills_assessment_2026 pmsa
+    WHERE pmsa.date_submitted <= DATE '2026-04-01'
+),
+
+qualified AS (
+    SELECT
+        mentee_id
+    FROM first_attempts
+    WHERE attempt_no = 1
+    GROUP BY mentee_id
+    HAVING
+        COUNT(DISTINCT skill_evaluation) >= 18
+        AND AVG(average_score) >= 0.85
+),
+
+eligible AS (
+    SELECT COUNT(DISTINCT mentee_id) AS total
+    FROM first_attempts
+)
+
+SELECT
+    COUNT(*) AS qualified_mentees,
+    MAX(total) AS eligible_mentees,
+    ROUND(100.0 * COUNT(*) / MAX(total), 1) AS pct_qualified
+FROM qualified
+CROSS JOIN eligible;
+
+
+/*Average skills assessment score on first attempt*/
+WITH first_attempts AS (
+    SELECT
+        pmsa.mentee_id,
+        pmsa.skill_evaluation,
+        pmsa.average_score,
+        ROW_NUMBER() OVER (
+            PARTITION BY pmsa.mentee_id, pmsa.skill_evaluation
+            ORDER BY pmsa.date_submitted, pmsa.submission_id
+        ) AS attempt_no
+    FROM mentors.process_moh_skills_assessment_2026 pmsa
+    WHERE pmsa.date_submitted <= DATE '2026-04-01'
+),
+
+mentee_scores AS (
+    SELECT
+        mentee_id,
+        AVG(average_score) AS first_attempt_avg_score
+    FROM first_attempts
+    WHERE attempt_no = 1
+    GROUP BY mentee_id
+)
+
+SELECT
+    ROUND(AVG(first_attempt_avg_score) * 100, 1) AS avg_first_attempt_score_pct
+FROM mentee_scores;
+
+
+/*Average number of attempts to skills competency*/
+WITH attempts AS (
+    SELECT
+        pmsa.mentee_id,
+        pmsa.skill_evaluation,
+        pmsa.average_score,
+        ROW_NUMBER() OVER (
+            PARTITION BY pmsa.mentee_id, pmsa.skill_evaluation
+            ORDER BY pmsa.date_submitted, pmsa.submission_id
+        ) AS attempt_no
+    FROM mentors.process_moh_skills_assessment_2026 pmsa
+    WHERE pmsa.date_submitted <= DATE '2026-04-01'
+),
+
+first_pass AS (
+    SELECT
+        mentee_id,
+        skill_evaluation,
+        MIN(attempt_no) AS attempts_to_pass
+    FROM attempts
+    WHERE average_score >= 0.85
+    GROUP BY
+        mentee_id,
+        skill_evaluation
+)
+
+SELECT
+    ROUND(AVG(attempts_to_pass), 2) AS avg_attempts_to_85pct
+FROM first_pass;
+
+
+/*Facility Activation Rate*/
+WITH total_facilities AS (
+    SELECT COUNT(DISTINCT facility_code) AS total_facilities
+    FROM mentors.mentee_curriculum_tracking
+),
+
+quarterly_activation AS (
+    SELECT
+        DATE_TRUNC('quarter', date_submitted) AS quarter,
+        COUNT(DISTINCT facility_code) AS active_facilities
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity IS NOT NULL
+    GROUP BY DATE_TRUNC('quarter', date_submitted)
+)
+
+SELECT
+    ROUND(AVG(active_facilities::NUMERIC / total_facilities), 4) AS average_facility_activation_rate,
+    ROUND(AVG(active_facilities::NUMERIC / total_facilities) * 100, 2) AS average_facility_activation_rate_percent
+FROM quarterly_activation
+CROSS JOIN total_facilities;
+
+
+/*Mentee Activation Rate*/
+WITH total_mapped_mentees AS (
+    SELECT COUNT(DISTINCT mentee_id) AS total_mentees
+    FROM mentors.mentee_curriculum_tracking
+),
+
+quarterly_participation AS (
+    SELECT
+        DATE_TRUNC('quarter', date_submitted) AS quarter,
+        COUNT(DISTINCT mentee_id) AS participating_mentees
+    FROM mentors.mentee_curriculum_tracking
+    WHERE mentorship_activity IS NOT NULL
+    GROUP BY DATE_TRUNC('quarter', date_submitted)
+)
+
+SELECT
+    ROUND(
+        AVG(participating_mentees::NUMERIC / total_mentees),
+        4
+    ) AS average_learning_session_attendance_rate,
+    ROUND(
+        AVG(participating_mentees::NUMERIC / total_mentees) * 100,
+        2
+    ) AS average_learning_session_attendance_rate_percent
+FROM quarterly_participation
+CROSS JOIN total_mapped_mentees;
