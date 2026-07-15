@@ -71,6 +71,45 @@ function fetchKoboData_All() {
 
   const getSubmissionId = r => r._uuid || r._id;
 
+  // Topic label maps aligned with mentee_curriculum_tracking Power Query
+  const topicExactMap = {
+    "Partograph_use_and_interpretation": "Labor Monitoring",
+    "Maternal_Shock_Resuscitaion": "Maternal Shock",
+    "Preeclampsia_Eclampsia_Management": "Preeclampsia/Eclampsia Management",
+    "Preeclampsia_/_eclampsia": "Preeclampsia/Eclampsia Management",
+    "Hypertension_in_pregnancy": "Preeclampsia/Eclampsia Management",
+    "PPH": "Postpartum Haemorrhage (PPH)",
+    "Vaginal_AVD": "Vacuum-Assisted Delivery",
+    "Vacuum_Assisted_Delivery": "Vacuum-Assisted Delivery",
+    "B-lynch_suture": "B-Lynch Suture",
+    "Compression_of_Abdominal_Aorta": "Abdominal Aortic Compression",
+    "Perineal_tear_repair": "Perineal Tear Repair",
+    "Ubt_placement": "UBT Placement",
+    "UBT": "UBT Placement",
+    "ubt_placement_(free_flow)": "UBT Placement (Free Flow)",
+    "Ubt_placement_(free_flow))": "UBT Placement (Free Flow)"
+  };
+
+  const topicAfterSpaceMap = {
+    "Postpartum haemorrhage (PPH)": "Postpartum Haemorrhage (PPH)",
+    "Newborn resuscitation": "Neonatal Resuscitation",
+    "Postpartum Hemorrhage (PPH)": "Postpartum Haemorrhage (PPH)",
+    "PPH Drill": "Postpartum Haemorrhage (PPH)",
+    "Preeclampsia / Eclampsia": "Preeclampsia/Eclampsia Management"
+  };
+
+  const formatTopic = raw => {
+    if (!raw) return "";
+    if (Object.prototype.hasOwnProperty.call(topicExactMap, raw)) {
+      return topicExactMap[raw];
+    }
+    const spaced = raw.replace(/_/g, " ");
+    if (Object.prototype.hasOwnProperty.call(topicAfterSpaceMap, spaced)) {
+      return topicAfterSpaceMap[spaced];
+    }
+    return spaced;
+  };
+
   // ================= FACILITY FIELDS =================
   const facilityRoots = [
     "demographic_information/facility_details/",
@@ -237,9 +276,7 @@ const dataByMonth = {};
 
         r[t].split(" ").forEach(topic => {
 
-          topics.push(
-            toTitleCase(topic.replace(/_/g, " "))
-          );
+          topics.push(formatTopic(topic));
 
         });
 
