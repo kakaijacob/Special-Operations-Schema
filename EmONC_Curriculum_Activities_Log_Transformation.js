@@ -2,7 +2,6 @@ function fetchKoboData_All() {
 
   const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
   const formUid  = 'aJaBJKDs7pCRMi8zm3BXze';
-  const runId = Utilities.getUuid();
 
   const startDate = "2026-04-01T00:00:00";
 
@@ -303,8 +302,7 @@ const dataByMonth = {};
   m.id,
   m.name,
   toTitleCase(a.replace(/_/g, " ")),
-  t,
-  runId
+  t
 ];
 
    dataByMonth[monthKey].push(row);
@@ -328,8 +326,7 @@ const dataByMonth = {};
   "Mentee ID",
   "Mentee Name",
   "Activity",
-  "Topic",
-  "Run ID"
+  "Topic"
 ];
 
   // ================= MONTHLY SHEETS =================
