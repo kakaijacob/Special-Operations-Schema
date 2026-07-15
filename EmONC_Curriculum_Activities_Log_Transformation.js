@@ -93,7 +93,7 @@ function fetchKoboData_All() {
     "demographic_information/mentee_details_001/"
   ];
 
-  const menteeSuffixes = [
+    const menteeSuffixes = [
     "alupe_sub_mentees","amukura_mentees","bumala_mentees","busia_county_mentees","khunyangu_mentees","matayos_mentees",
     "nambale_mentees","port_victoria_mentees","sio_port_mentees","teso_north_mentees","bushiri_mentees","butere_mentees",
     "chombeli_mentees","iguhu_sub_mentees","kakamega_mentees","khwisero_mentees","likuyani_mentees","lumakanda_mentees",
@@ -137,9 +137,7 @@ function fetchKoboData_All() {
     "ngorano_mentees","nyeri_provincial_mentees","nyeri_town_mentees","othaya_mentees","ruguru_mentees","thangathi_mentees",
     "tumutumu_mentees","unjiru_mentees","wamagana_mentees","warazo_mentees","witima_mentees","akala_health_mentees",
     "ambira_mentees","bar_ndege_mentees","bondo_county_mentees","got_agulu_mentees","madiany_mentees","rwambwa_mentees",
-    "siaya_county_mentees","sigomere_mentees","tingwangi_mentees","ukwala_mentees","yala_sub_mentees","gesusu_mentees_001",
-    "matongo_mentees","mosocho_mentees","mbooni_mentees_001","coast_general_mentees_001","mbuta_health_mentees_001","kayole_mentees_001",
-    "kibera_community","kibera_mentees_001","st_marys_mentees_001","bahati_mentees_001","naivasha_mentees_001","naivasha_subcounty_mentees"
+    "siaya_county_mentees","sigomere_mentees","tingwangi_mentees","ukwala_mentees","yala_sub_mentees"
   ];
     
   const menteeFields = roots.flatMap(root =>
