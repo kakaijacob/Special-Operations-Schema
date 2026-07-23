@@ -39,7 +39,7 @@ skill_eval AS (
 labor_monitoring AS (
     SELECT mct.mentee_id, COUNT(DISTINCT mct.topic) AS labor_monitoring_count
     FROM mentors.mentee_curriculum_tracking mct
-    WHERE mct.mentorship_activity ILIKE 'video_case_scenarios'
+    WHERE mct.mentorship_activity IN ('video_case_scenarios', 'videoa_case_scenarios') 
       AND mct.topic IN ('Partograph%', 'Labor_Monitoring')
     GROUP BY mct.mentee_id
 )
@@ -54,14 +54,14 @@ SELECT
     COALESCE(return_demos.return_demos_count, 0) AS return_demos_count,
     COALESCE(skill_eval.skill_eval_count, 0) AS skill_eval_count,
     COALESCE(skill_eval.average_score, 0) AS average_score,
-    COALESCE(labor_monitoring.labor_monitoring_count, 0) AS labor_monitoring_count
+    COALESCE(labor_monitoring.labor_monitoring_count, 0) AS partograph_count
 FROM mentors.mentee_curriculum_tracking mct
 LEFT JOIN cme ON mct.mentee_id = cme.mentee_id
 LEFT JOIN drills ON mct.mentee_id = drills.mentee_id
 LEFT JOIN skill_demos ON mct.mentee_id = skill_demos.mentee_id
 LEFT JOIN return_demos ON mct.mentee_id = return_demos.mentee_id
 LEFT JOIN skill_eval ON mct.mentee_id = skill_eval.mentee_id
-LEFT JOIN labor_monitoring ON mct.mentee_id = labor_monitoring.mentee_id
+LEFT JOIN labor_monitoring  ON mct.mentee_id = labor_monitoring.mentee_id
 GROUP BY
     mct.mentee_id,
     mct.mentee_name,
