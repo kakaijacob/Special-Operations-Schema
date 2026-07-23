@@ -1,4 +1,14 @@
 WITH 
+mentees AS (
+    SELECT
+        md.mentee_id,
+        md.mentee_name,
+        md.county,
+        md.facility
+    FROM mentors.mentee_database md
+    WHERE md.program IN ('Emonc curriculum', 'Both')
+      AND EXTRACT(YEAR FROM md.date_activated) = 2026
+),
 cme AS (
     SELECT mct.mentee_id, COUNT(DISTINCT mct.topic) AS cme_count
     FROM mentors.mentee_curriculum_tracking mct
@@ -44,10 +54,10 @@ labor_monitoring AS (
     GROUP BY mct.mentee_id
 )
 SELECT 
-    mct.mentee_id,
-    mct.mentee_name,
-    mct.county,
-    mct.facility,
+    m.mentee_id,
+    m.mentee_name,
+    m.county,
+    m.facility,
     COALESCE(cme.cme_count, 0) AS cme_count,
     COALESCE(drills.drill_count, 0) AS drill_count,
     COALESCE(skill_demos.skill_demos_count, 0) AS skill_demos_count,
@@ -55,22 +65,10 @@ SELECT
     COALESCE(skill_eval.skill_eval_count, 0) AS skill_eval_count,
     COALESCE(skill_eval.average_score, 0) AS average_score,
     COALESCE(labor_monitoring.labor_monitoring_count, 0) AS partograph_count
-FROM mentors.mentee_curriculum_tracking mct
-LEFT JOIN cme ON mct.mentee_id = cme.mentee_id
-LEFT JOIN drills ON mct.mentee_id = drills.mentee_id
-LEFT JOIN skill_demos ON mct.mentee_id = skill_demos.mentee_id
-LEFT JOIN return_demos ON mct.mentee_id = return_demos.mentee_id
-LEFT JOIN skill_eval ON mct.mentee_id = skill_eval.mentee_id
-LEFT JOIN labor_monitoring  ON mct.mentee_id = labor_monitoring.mentee_id
-GROUP BY
-    mct.mentee_id,
-    mct.mentee_name,
-    mct.county,
-    mct.facility,
-    cme.cme_count,
-    drills.drill_count,
-    skill_demos.skill_demos_count,
-    return_demos.return_demos_count,
-    skill_eval.skill_eval_count,
-    skill_eval.average_score,
-    labor_monitoring.labor_monitoring_count;
+FROM mentees m
+LEFT JOIN cme ON m.mentee_id = cme.mentee_id
+LEFT JOIN drills ON m.mentee_id = drills.mentee_id
+LEFT JOIN skill_demos ON m.mentee_id = skill_demos.mentee_id
+LEFT JOIN return_demos ON m.mentee_id = return_demos.mentee_id
+LEFT JOIN skill_eval ON m.mentee_id = skill_eval.mentee_id
+LEFT JOIN labor_monitoring ON m.mentee_id = labor_monitoring.mentee_id;
