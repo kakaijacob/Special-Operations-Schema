@@ -1,6 +1,8 @@
 -- Newborn curriculum Inspection (cohort-aware, Redshift-compatible)
 -- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
--- Mentee spine: mentors.mentee_database (program IN newborn curriculum / both)
+-- Cohort windows and mentee spine match newborn_curriculum_completion_progress
+-- Mentee spine: mentors.mentee_database (program IN newborn curriculum / both),
+-- plus any mentee_id only present in fact tables
 -- NNR: first attempt in cycle = baseline; last attempt = endline only if 2+ attempts
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
@@ -53,14 +55,58 @@ WITH cohorts AS (
         CAST(7 AS INTEGER)
 ),
 
+db_mentees AS (
+    SELECT
+        CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+        CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+        CAST(county AS VARCHAR(256)) AS county,
+        CAST(facility AS VARCHAR(256)) AS facility,
+        CAST(facility_code AS VARCHAR(100)) AS facility_code
+    FROM mentors.mentee_database
+    WHERE LOWER(TRIM(program)) IN ('newborn curriculum', 'both')
+),
+
+fact_mentees AS (
+    SELECT
+        mentee_id,
+        MAX(mentee_name) AS mentee_name,
+        MAX(county) AS county,
+        MAX(facility) AS facility,
+        MAX(facility_code) AS facility_code
+    FROM (
+        SELECT
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
+        FROM mentors.newborn_curriculum_tracking
+
+        UNION ALL
+
+        SELECT
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
+        FROM mentors.process_moh_skills_assessment_2026
+        WHERE LOWER(TRIM(skill_evaluation)) = 'newborn resuscitation'
+          AND LOWER(TRIM(program)) = 'newborn curriculum'
+    ) u
+    GROUP BY mentee_id
+),
+
 mentees AS (
     SELECT
-        CAST(md.mentee_id AS VARCHAR(100)) AS mentee_id,
-        CAST(md.mentee_name AS VARCHAR(256)) AS mentee_name,
-        CAST(md.county AS VARCHAR(256)) AS county,
-        CAST(md.facility AS VARCHAR(256)) AS facility
-    FROM mentors.mentee_database md
-    WHERE LOWER(TRIM(md.program)) IN ('newborn curriculum', 'both')
+        COALESCE(d.mentee_id, f.mentee_id) AS mentee_id,
+        COALESCE(d.mentee_name, f.mentee_name) AS mentee_name,
+        COALESCE(d.county, f.county) AS county,
+        COALESCE(d.facility, f.facility) AS facility,
+        COALESCE(d.facility_code, f.facility_code) AS facility_code
+    FROM db_mentees d
+    FULL OUTER JOIN fact_mentees f
+        ON d.mentee_id = f.mentee_id
 ),
 
 mentee_cycles AS (
@@ -69,6 +115,7 @@ mentee_cycles AS (
         m.mentee_name,
         m.county,
         m.facility,
+        m.facility_code,
         c.cycle_id,
         c.cycle_label,
         c.cycle_start,
@@ -180,74 +227,53 @@ curriculum_summary AS (
     GROUP BY c.cycle_id, CAST(t.mentee_id AS VARCHAR(100))
 ),
 
--- NNR assessment: first attempt in cycle = baseline;
--- endline only when a second (or later) attempt exists in the same cycle
-assessment_scores AS (
+-- NNR assessment: first attempt = baseline, last attempt = endline (within cycle)
+-- Same logic as newborn_curriculum_completion_progress
+nnr_ranked AS (
+    SELECT
+        c.cycle_id,
+        CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
+        s.submission_id,
+        CAST(s.date_submitted AS DATE) AS date_submitted,
+        s.average_score,
+        ROW_NUMBER() OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+            ORDER BY CAST(s.date_submitted AS DATE) ASC, s.submission_id ASC
+        ) AS rn_first,
+        ROW_NUMBER() OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+            ORDER BY CAST(s.date_submitted AS DATE) DESC, s.submission_id DESC
+        ) AS rn_last,
+        COUNT(*) OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+        ) AS assessment_count
+    FROM mentors.process_moh_skills_assessment_2026 s
+    INNER JOIN cohorts c
+        ON CAST(s.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(s.date_submitted AS DATE) <= c.cycle_end
+    WHERE LOWER(TRIM(s.skill_evaluation)) = 'newborn resuscitation'
+      AND LOWER(TRIM(s.program)) = 'newborn curriculum'
+      AND s.average_score IS NOT NULL
+),
 
-    WITH ranked AS (
-
-        SELECT
-            c.cycle_id,
-            CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
-            s.submission_id,
-            CAST(s.date_submitted AS DATE) AS date_submitted,
-            s.average_score,
-
-            ROW_NUMBER() OVER (
-                PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
-                ORDER BY CAST(s.date_submitted AS DATE) ASC, s.submission_id ASC
-            ) AS rn_first,
-
-            ROW_NUMBER() OVER (
-                PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
-                ORDER BY CAST(s.date_submitted AS DATE) DESC, s.submission_id DESC
-            ) AS rn_last,
-
-            COUNT(*) OVER (
-                PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
-            ) AS assessment_count
-
-        FROM mentors.process_moh_skills_assessment_2026 s
-        INNER JOIN cohorts c
-            ON CAST(s.date_submitted AS DATE) >= c.cycle_start
-           AND CAST(s.date_submitted AS DATE) <= c.cycle_end
-
-        WHERE LOWER(TRIM(s.skill_evaluation)) = 'newborn resuscitation'
-          AND LOWER(TRIM(s.program)) = 'newborn curriculum'
-          AND s.average_score IS NOT NULL
-    )
-
+nnr_assessment AS (
     SELECT
         cycle_id,
         mentee_id,
-
-        -- First attempt in the cycle is always baseline
+        MAX(CASE WHEN rn_first = 1 THEN average_score END) AS baseline_score,
         MAX(
             CASE
-                WHEN rn_first = 1
-                THEN average_score
-            END
-        ) AS baseline_score,
-
-        -- Endline only exists if there is a second attempt in the same cycle
-        MAX(
-            CASE
-                WHEN assessment_count > 1
-                 AND rn_last = 1
+                WHEN assessment_count > 1 AND rn_last = 1
                 THEN average_score
             END
         ) AS endline_score,
-
         MAX(
             CASE
-                WHEN assessment_count > 1
-                 AND rn_last = 1
+                WHEN assessment_count > 1 AND rn_last = 1
                 THEN date_submitted
             END
         ) AS assessment_completion_date
-
-    FROM ranked
-
+    FROM nnr_ranked
     GROUP BY cycle_id, mentee_id
 )
 
@@ -257,68 +283,68 @@ SELECT
     mc.mentee_name,
     mc.county,
     mc.facility,
-    c.facility_code,
-    c.program,
+    COALESCE(mc.facility_code, cs.facility_code) AS facility_code,
+    cs.program,
     mc.cycle_id,
     mc.cycle_label,
     mc.cycle_start,
     mc.cycle_end,
 
     -- Progress per category (counts only)
-    COALESCE(c.cme_count, 0) AS cme_count,
-    COALESCE(c.drill_count, 0) AS drill_count,
-    COALESCE(c.practicum_count, 0) AS practicum_count,
-    COALESCE(c.skill_demo_count, 0) AS skill_demo_count,
-    COALESCE(c.video_count, 0) AS video_count,
-    COALESCE(c.roleplay_count, 0) AS roleplay_count,
-    COALESCE(c.case_scenario_count, 0) AS case_scenario_count,
-    COALESCE(c.group_discussions_count, 0) AS group_discussions_count,
+    COALESCE(cs.cme_count, 0) AS cme_count,
+    COALESCE(cs.drill_count, 0) AS drill_count,
+    COALESCE(cs.practicum_count, 0) AS practicum_count,
+    COALESCE(cs.skill_demo_count, 0) AS skill_demo_count,
+    COALESCE(cs.video_count, 0) AS video_count,
+    COALESCE(cs.roleplay_count, 0) AS roleplay_count,
+    COALESCE(cs.case_scenario_count, 0) AS case_scenario_count,
+    COALESCE(cs.group_discussions_count, 0) AS group_discussions_count,
 
-    a.baseline_score,
-    a.endline_score,
+    nnr.baseline_score,
+    nnr.endline_score,
 
     -- NNR Assessment Completion (requires distinct baseline + endline, endline >= 0.85)
     CASE
-        WHEN a.baseline_score IS NOT NULL
-         AND a.endline_score IS NOT NULL
-         AND a.endline_score >= 0.85
+        WHEN nnr.baseline_score IS NOT NULL
+         AND nnr.endline_score IS NOT NULL
+         AND nnr.endline_score >= 0.85
         THEN 1
         ELSE 0
     END AS nnr_assessment_completion,
 
     -- Full Curriculum Completion
     CASE
-        WHEN COALESCE(c.cme_count, 0) = mc.req_cme
-         AND COALESCE(c.drill_count, 0) = mc.req_drills
-         AND COALESCE(c.practicum_count, 0) = CASE
-                WHEN c.program = 'essential_newborn_care' THEN mc.req_practicum_essential
-                WHEN c.program = 'comprehensive_newborn_care' THEN mc.req_practicum_comprehensive
+        WHEN COALESCE(cs.cme_count, 0) = mc.req_cme
+         AND COALESCE(cs.drill_count, 0) = mc.req_drills
+         AND COALESCE(cs.practicum_count, 0) = CASE
+                WHEN cs.program = 'essential_newborn_care' THEN mc.req_practicum_essential
+                WHEN cs.program = 'comprehensive_newborn_care' THEN mc.req_practicum_comprehensive
                 ELSE -1
             END
-         AND COALESCE(c.skill_demo_count, 0) = mc.req_skill_demo
-         AND COALESCE(c.video_count, 0) = mc.req_videos
-         AND COALESCE(c.roleplay_count, 0) = mc.req_roleplay
-         AND COALESCE(c.case_scenario_count, 0) = mc.req_case_scenarios
-         AND COALESCE(c.group_discussions_count, 0) = mc.req_group_discussions
+         AND COALESCE(cs.skill_demo_count, 0) = mc.req_skill_demo
+         AND COALESCE(cs.video_count, 0) = mc.req_videos
+         AND COALESCE(cs.roleplay_count, 0) = mc.req_roleplay
+         AND COALESCE(cs.case_scenario_count, 0) = mc.req_case_scenarios
+         AND COALESCE(cs.group_discussions_count, 0) = mc.req_group_discussions
 
-         AND a.baseline_score IS NOT NULL
-         AND a.endline_score IS NOT NULL
-         AND a.endline_score >= 0.85
+         AND nnr.baseline_score IS NOT NULL
+         AND nnr.endline_score IS NOT NULL
+         AND nnr.endline_score >= 0.85
 
         THEN 1
         ELSE 0
     END AS curriculum_completion,
 
-    a.assessment_completion_date
+    nnr.assessment_completion_date
 
 FROM mentee_cycles mc
 
-LEFT JOIN curriculum_summary c
-    ON mc.mentee_id = c.mentee_id
-   AND mc.cycle_id = c.cycle_id
+LEFT JOIN curriculum_summary cs
+    ON mc.mentee_id = cs.mentee_id
+   AND mc.cycle_id = cs.cycle_id
 
-LEFT JOIN assessment_scores a
-    ON mc.mentee_id = a.mentee_id
-   AND mc.cycle_id = a.cycle_id
+LEFT JOIN nnr_assessment nnr
+    ON mc.mentee_id = nnr.mentee_id
+   AND mc.cycle_id = nnr.cycle_id
 
 ORDER BY mc.mentee_id, mc.cycle_id
