@@ -28,7 +28,18 @@ WITH cohorts AS (
     )
 ),
 
-mentees AS (
+-- Prefer mentors.mentee_database; still include fact-table mentees missing from it
+db_mentees AS (
+    SELECT
+        mentee_id,
+        mentee_name,
+        county,
+        facility,
+        facility_code
+    FROM mentors.mentee_database
+),
+
+fact_mentees AS (
     SELECT
         mentee_id,
         MAX(mentee_name) AS mentee_name,
@@ -55,6 +66,18 @@ mentees AS (
         FROM mentors.process_moh_skills_assessment_2026
     ) u
     GROUP BY mentee_id
+),
+
+mentees AS (
+    SELECT
+        COALESCE(d.mentee_id, f.mentee_id) AS mentee_id,
+        COALESCE(d.mentee_name, f.mentee_name) AS mentee_name,
+        COALESCE(d.county, f.county) AS county,
+        COALESCE(d.facility, f.facility) AS facility,
+        COALESCE(d.facility_code, f.facility_code) AS facility_code
+    FROM db_mentees d
+    FULL OUTER JOIN fact_mentees f
+        ON d.mentee_id = f.mentee_id
 ),
 
 -- All mentee × cohort combinations (empty progress rows included)
@@ -222,8 +245,9 @@ labor_monitoring AS (
 ),
 
 -- Skill evaluations:
--- each skill must be assessed in the cycle; use MAX(average_score) for that skill;
--- counts only when that max score is >= 0.85
+-- 1) highest score per skill, per mentee, per cycle
+-- 2) avg_skill_score = average of those per-skill maxima
+-- 3) a skill counts as complete only when its max score is >= 0.85
 skill_eval_by_skill AS (
     SELECT
         c.cycle_id,
@@ -260,15 +284,38 @@ skill_eval_passed AS (
       AND first_pass_date IS NOT NULL
 ),
 
-skill_evaluation AS (
+skill_eval_stats AS (
     SELECT
         cycle_id,
         mentee_id,
-        COUNT(*) AS completed_assessments,
+        COUNT(*) FILTER (WHERE max_score >= 0.85) AS completed_assessments,
         MAX(req_skill_eval) AS required_assessments,
+        AVG(max_score) AS avg_skill_score
+    FROM skill_eval_by_skill
+    GROUP BY cycle_id, mentee_id
+),
+
+skill_eval_threshold AS (
+    SELECT
+        cycle_id,
+        mentee_id,
         MIN(first_pass_date) FILTER (WHERE rn = req_skill_eval) AS threshold_date
     FROM skill_eval_passed
     GROUP BY cycle_id, mentee_id
+),
+
+skill_evaluation AS (
+    SELECT
+        s.cycle_id,
+        s.mentee_id,
+        s.completed_assessments,
+        s.required_assessments,
+        s.avg_skill_score,
+        t.threshold_date
+    FROM skill_eval_stats s
+    LEFT JOIN skill_eval_threshold t
+        ON s.cycle_id = t.cycle_id
+       AND s.mentee_id = t.mentee_id
 ),
 
 progress AS (
@@ -337,6 +384,8 @@ progress AS (
             3
         ) AS skill_evaluation_completion,
 
+        ROUND(se.avg_skill_score::NUMERIC, 3) AS avg_skill_score,
+
         cme.threshold_date AS cme_threshold_date,
         d.threshold_date AS drill_threshold_date,
         sd.threshold_date AS skill_demo_threshold_date,
@@ -380,6 +429,7 @@ SELECT
     return_demo_completion,
     labor_monitoring_completion,
     skill_evaluation_completion,
+    avg_skill_score,
 
     CASE
         WHEN cme_completion >= 1
