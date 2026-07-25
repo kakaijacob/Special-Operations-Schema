@@ -1,10 +1,9 @@
 -- Cohort-aware mentee curriculum completion
--- Grain: one row per (mentee_id, cycle)
+-- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
 -- To add a future cohort: insert another row in the cohorts CTE below.
--- Windows are half-open: [cycle_start, cycle_end).
--- Set cycle_end NULL for an open/current cycle if needed.
+-- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
 
 WITH cohorts AS (
     SELECT *
@@ -12,9 +11,9 @@ WITH cohorts AS (
         VALUES
             -- cycle_id, label, start, end,
             -- req_cme, req_drills, req_skill_demo, req_return_demo, req_labor_monitoring, req_skill_eval
-            (2024, '2024-25', DATE '2024-04-01', DATE '2025-04-01', 11, 5, 18, 18, 1, 18),
-            (2025, '2025-26', DATE '2025-04-01', DATE '2026-04-01', 11, 5, 18, 18, 1, 18),
-            (2026, '2026-27', DATE '2026-04-01', DATE '2027-04-01', 13, 5, 21, 21, 1, 21)
+            (1, 'Cohort 1', DATE '2024-01-01', DATE '2026-03-31', 11, 5, 18, 18, 1, 18),
+            (2, 'Cohort 2', DATE '2026-04-01', DATE '2027-03-31', 13, 5, 21, 21, 1, 21),
+            (3, 'Cohort 3', DATE '2027-04-01', DATE '2028-03-31', 13, 5, 21, 21, 1, 21)
     ) AS t (
         cycle_id,
         cycle_label,
@@ -36,8 +35,48 @@ mentees AS (
         MAX(county) AS county,
         MAX(facility) AS facility,
         MAX(facility_code) AS facility_code
-    FROM mentors.mentee_curriculum_tracking
+    FROM (
+        SELECT
+            mentee_id,
+            mentee_name,
+            county,
+            facility,
+            facility_code
+        FROM mentors.mentee_curriculum_tracking
+
+        UNION ALL
+
+        SELECT
+            mentee_id,
+            mentee_name,
+            county,
+            facility,
+            facility_code
+        FROM mentors.process_moh_skills_assessment_2026
+    ) u
     GROUP BY mentee_id
+),
+
+-- All mentee × cohort combinations (empty progress rows included)
+mentee_cycles AS (
+    SELECT
+        m.mentee_id,
+        m.mentee_name,
+        m.county,
+        m.facility,
+        m.facility_code,
+        c.cycle_id,
+        c.cycle_label,
+        c.cycle_start,
+        c.cycle_end,
+        c.req_cme,
+        c.req_drills,
+        c.req_skill_demo,
+        c.req_return_demo,
+        c.req_labor_monitoring,
+        c.req_skill_eval
+    FROM mentees m
+    CROSS JOIN cohorts c
 ),
 
 -- Curriculum tracking rows assigned to a cohort by submission date
@@ -52,11 +91,11 @@ tracking_by_cycle AS (
         t.mentee_id,
         t.mentorship_activity,
         t.topic,
-        t.date_submitted
+        t.date_submitted::date AS date_submitted
     FROM mentors.mentee_curriculum_tracking t
     INNER JOIN cohorts c
-        ON t.date_submitted >= c.cycle_start
-       AND t.date_submitted < COALESCE(c.cycle_end, DATE '9999-12-31')
+        ON t.date_submitted::date >= c.cycle_start
+       AND t.date_submitted::date <= c.cycle_end
     WHERE t.topic IS NOT NULL
 ),
 
@@ -182,32 +221,43 @@ labor_monitoring AS (
     GROUP BY cycle_id, mentee_id
 ),
 
--- Skill evaluations assigned to a cohort by submission date
-skill_eval_first AS (
+-- Skill evaluations:
+-- each skill must be assessed in the cycle; use MAX(average_score) for that skill;
+-- counts only when that max score is >= 0.85
+skill_eval_by_skill AS (
     SELECT
         c.cycle_id,
         c.req_skill_eval,
         s.mentee_id,
         s.skill_evaluation,
-        MIN(s.date_submitted) AS first_date,
-        AVG(s.average_score) AS topic_avg_score
+        MAX(s.average_score) AS max_score,
+        MIN(s.date_submitted::date) FILTER (
+            WHERE s.average_score >= 0.85
+        ) AS first_pass_date
     FROM mentors.process_moh_skills_assessment_2026 s
     INNER JOIN cohorts c
-        ON s.date_submitted >= c.cycle_start
-       AND s.date_submitted < COALESCE(c.cycle_end, DATE '9999-12-31')
+        ON s.date_submitted::date >= c.cycle_start
+       AND s.date_submitted::date <= c.cycle_end
     WHERE s.skill_evaluation IS NOT NULL
       AND s.average_score IS NOT NULL
     GROUP BY c.cycle_id, c.req_skill_eval, s.mentee_id, s.skill_evaluation
 ),
 
-skill_eval_ranked AS (
+skill_eval_passed AS (
     SELECT
-        sef.*,
+        cycle_id,
+        req_skill_eval,
+        mentee_id,
+        skill_evaluation,
+        max_score,
+        first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY sef.cycle_id, sef.mentee_id
-            ORDER BY sef.first_date, sef.skill_evaluation
+            PARTITION BY cycle_id, mentee_id
+            ORDER BY first_pass_date, skill_evaluation
         ) AS rn
-    FROM skill_eval_first sef
+    FROM skill_eval_by_skill
+    WHERE max_score >= 0.85
+      AND first_pass_date IS NOT NULL
 ),
 
 skill_evaluation AS (
@@ -216,48 +266,9 @@ skill_evaluation AS (
         mentee_id,
         COUNT(*) AS completed_assessments,
         MAX(req_skill_eval) AS required_assessments,
-        AVG(topic_avg_score) AS avg_score,
-        MIN(first_date) FILTER (WHERE rn = req_skill_eval) AS threshold_date
-    FROM skill_eval_ranked
+        MIN(first_pass_date) FILTER (WHERE rn = req_skill_eval) AS threshold_date
+    FROM skill_eval_passed
     GROUP BY cycle_id, mentee_id
-),
-
--- One spine row per mentee × cycle with any activity in that window
-mentee_cycles AS (
-    SELECT DISTINCT
-        m.mentee_id,
-        m.mentee_name,
-        m.county,
-        m.facility,
-        m.facility_code,
-        c.cycle_id,
-        c.cycle_label,
-        c.cycle_start,
-        c.cycle_end,
-        c.req_cme,
-        c.req_drills,
-        c.req_skill_demo,
-        c.req_return_demo,
-        c.req_labor_monitoring,
-        c.req_skill_eval
-    FROM mentees m
-    INNER JOIN (
-        SELECT DISTINCT cycle_id, mentee_id
-        FROM tracking_by_cycle
-
-        UNION
-
-        SELECT DISTINCT
-            c.cycle_id,
-            s.mentee_id
-        FROM mentors.process_moh_skills_assessment_2026 s
-        INNER JOIN cohorts c
-            ON s.date_submitted >= c.cycle_start
-           AND s.date_submitted < COALESCE(c.cycle_end, DATE '9999-12-31')
-    ) active
-        ON active.mentee_id = m.mentee_id
-    INNER JOIN cohorts c
-        ON c.cycle_id = active.cycle_id
 ),
 
 progress AS (
@@ -318,15 +329,11 @@ progress AS (
         ) AS labor_monitoring_completion,
 
         ROUND(
-            CASE
-                WHEN se.avg_score >= 0.85
-                THEN LEAST(
-                    COALESCE(se.completed_assessments, 0)::NUMERIC
-                    / NULLIF(mc.req_skill_eval, 0),
-                    1
-                )
-                ELSE 0
-            END,
+            LEAST(
+                COALESCE(se.completed_assessments, 0)::NUMERIC
+                / NULLIF(mc.req_skill_eval, 0),
+                1
+            ),
             3
         ) AS skill_evaluation_completion,
 
@@ -335,10 +342,7 @@ progress AS (
         sd.threshold_date AS skill_demo_threshold_date,
         rd.threshold_date AS return_demo_threshold_date,
         lm.threshold_date AS labor_monitoring_threshold_date,
-        CASE
-            WHEN se.avg_score >= 0.85 THEN se.threshold_date
-            ELSE NULL
-        END AS skill_evaluation_threshold_date
+        se.threshold_date AS skill_evaluation_threshold_date
     FROM mentee_cycles mc
     LEFT JOIN cme
         ON mc.mentee_id = cme.mentee_id
@@ -413,4 +417,4 @@ SELECT
     END AS date_completed
 
 FROM progress
-ORDER BY mentee_id, cycle_start;
+ORDER BY mentee_id, cycle_id;
