@@ -1,31 +1,48 @@
--- Cohort-aware mentee curriculum completion
+-- Cohort-aware mentee curriculum completion (Redshift-compatible)
 -- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
+-- Mentee spine: mentors.mentee_database, plus any mentee_id only present in fact tables
+-- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
--- To add a future cohort: insert another row in the cohorts CTE below.
+-- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
 -- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
 
 WITH cohorts AS (
-    SELECT *
-    FROM (
-        VALUES
-            -- cycle_id, label, start, end,
-            -- req_cme, req_drills, req_skill_demo, req_return_demo, req_labor_monitoring, req_skill_eval
-            (1, 'Cohort 1', DATE '2024-01-01', DATE '2026-03-31', 11, 5, 18, 18, 1, 18),
-            (2, 'Cohort 2', DATE '2026-04-01', DATE '2027-03-31', 13, 5, 21, 21, 1, 21),
-            (3, 'Cohort 3', DATE '2027-04-01', DATE '2028-03-31', 13, 5, 21, 21, 1, 21)
-    ) AS t (
-        cycle_id,
-        cycle_label,
-        cycle_start,
-        cycle_end,
-        req_cme,
-        req_drills,
-        req_skill_demo,
-        req_return_demo,
-        req_labor_monitoring,
-        req_skill_eval
-    )
+    SELECT
+        1 AS cycle_id,
+        'Cohort 1' AS cycle_label,
+        DATE '2024-01-01' AS cycle_start,
+        DATE '2026-03-31' AS cycle_end,
+        11 AS req_cme,
+        5 AS req_drills,
+        18 AS req_skill_demo,
+        18 AS req_return_demo,
+        1 AS req_labor_monitoring,
+        18 AS req_skill_eval
+    UNION ALL
+    SELECT
+        2,
+        'Cohort 2',
+        DATE '2026-04-01',
+        DATE '2027-03-31',
+        13,
+        5,
+        21,
+        21,
+        1,
+        21
+    UNION ALL
+    SELECT
+        3,
+        'Cohort 3',
+        DATE '2027-04-01',
+        DATE '2028-03-31',
+        13,
+        5,
+        21,
+        21,
+        1,
+        21
 ),
 
 -- Prefer mentors.mentee_database; still include fact-table mentees missing from it
@@ -114,11 +131,11 @@ tracking_by_cycle AS (
         t.mentee_id,
         t.mentorship_activity,
         t.topic,
-        t.date_submitted::date AS date_submitted
+        CAST(t.date_submitted AS DATE) AS date_submitted
     FROM mentors.mentee_curriculum_tracking t
     INNER JOIN cohorts c
-        ON t.date_submitted::date >= c.cycle_start
-       AND t.date_submitted::date <= c.cycle_end
+        ON CAST(t.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(t.date_submitted AS DATE) <= c.cycle_end
     WHERE t.topic IS NOT NULL
 ),
 
@@ -160,7 +177,7 @@ cme AS (
         mentee_id,
         COUNT(*) AS completed_topics,
         MAX(req_cme) AS required_topics,
-        MIN(first_date) FILTER (WHERE rn = req_cme) AS threshold_date
+        MIN(CASE WHEN rn = req_cme THEN first_date END) AS threshold_date
     FROM topic_ranked
     WHERE mentorship_activity = 'cmes'
     GROUP BY cycle_id, mentee_id
@@ -172,7 +189,7 @@ drills AS (
         mentee_id,
         COUNT(*) AS completed_topics,
         MAX(req_drills) AS required_topics,
-        MIN(first_date) FILTER (WHERE rn = req_drills) AS threshold_date
+        MIN(CASE WHEN rn = req_drills THEN first_date END) AS threshold_date
     FROM topic_ranked
     WHERE mentorship_activity = 'drills'
     GROUP BY cycle_id, mentee_id
@@ -184,7 +201,7 @@ skill_demo AS (
         mentee_id,
         COUNT(*) AS completed_topics,
         MAX(req_skill_demo) AS required_topics,
-        MIN(first_date) FILTER (WHERE rn = req_skill_demo) AS threshold_date
+        MIN(CASE WHEN rn = req_skill_demo THEN first_date END) AS threshold_date
     FROM topic_ranked
     WHERE mentorship_activity = 'skill_demos_mentor'
     GROUP BY cycle_id, mentee_id
@@ -196,7 +213,7 @@ return_demo AS (
         mentee_id,
         COUNT(*) AS completed_topics,
         MAX(req_return_demo) AS required_topics,
-        MIN(first_date) FILTER (WHERE rn = req_return_demo) AS threshold_date
+        MIN(CASE WHEN rn = req_return_demo THEN first_date END) AS threshold_date
     FROM topic_ranked
     WHERE mentorship_activity = 'skills_demos_mentee'
     GROUP BY cycle_id, mentee_id
@@ -239,7 +256,7 @@ labor_monitoring AS (
         mentee_id,
         COUNT(*) AS completed_topics,
         MAX(req_labor_monitoring) AS required_topics,
-        MIN(first_date) FILTER (WHERE rn = req_labor_monitoring) AS threshold_date
+        MIN(CASE WHEN rn = req_labor_monitoring THEN first_date END) AS threshold_date
     FROM labor_ranked
     GROUP BY cycle_id, mentee_id
 ),
@@ -255,13 +272,16 @@ skill_eval_by_skill AS (
         s.mentee_id,
         s.skill_evaluation,
         MAX(s.average_score) AS max_score,
-        MIN(s.date_submitted::date) FILTER (
-            WHERE s.average_score >= 0.85
+        MIN(
+            CASE
+                WHEN s.average_score >= 0.85
+                THEN CAST(s.date_submitted AS DATE)
+            END
         ) AS first_pass_date
     FROM mentors.process_moh_skills_assessment_2026 s
     INNER JOIN cohorts c
-        ON s.date_submitted::date >= c.cycle_start
-       AND s.date_submitted::date <= c.cycle_end
+        ON CAST(s.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(s.date_submitted AS DATE) <= c.cycle_end
     WHERE s.skill_evaluation IS NOT NULL
       AND s.average_score IS NOT NULL
     GROUP BY c.cycle_id, c.req_skill_eval, s.mentee_id, s.skill_evaluation
@@ -288,7 +308,7 @@ skill_eval_stats AS (
     SELECT
         cycle_id,
         mentee_id,
-        COUNT(*) FILTER (WHERE max_score >= 0.85) AS completed_assessments,
+        SUM(CASE WHEN max_score >= 0.85 THEN 1 ELSE 0 END) AS completed_assessments,
         MAX(req_skill_eval) AS required_assessments,
         AVG(max_score) AS avg_skill_score
     FROM skill_eval_by_skill
@@ -299,7 +319,7 @@ skill_eval_threshold AS (
     SELECT
         cycle_id,
         mentee_id,
-        MIN(first_pass_date) FILTER (WHERE rn = req_skill_eval) AS threshold_date
+        MIN(CASE WHEN rn = req_skill_eval THEN first_pass_date END) AS threshold_date
     FROM skill_eval_passed
     GROUP BY cycle_id, mentee_id
 ),
@@ -332,7 +352,7 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(cme.completed_topics, 0)::NUMERIC
+                CAST(COALESCE(cme.completed_topics, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_cme, 0),
                 1
             ),
@@ -341,7 +361,7 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(d.completed_topics, 0)::NUMERIC
+                CAST(COALESCE(d.completed_topics, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_drills, 0),
                 1
             ),
@@ -350,7 +370,7 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(sd.completed_topics, 0)::NUMERIC
+                CAST(COALESCE(sd.completed_topics, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_skill_demo, 0),
                 1
             ),
@@ -359,7 +379,7 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(rd.completed_topics, 0)::NUMERIC
+                CAST(COALESCE(rd.completed_topics, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_return_demo, 0),
                 1
             ),
@@ -368,7 +388,7 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(lm.completed_topics, 0)::NUMERIC
+                CAST(COALESCE(lm.completed_topics, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_labor_monitoring, 0),
                 1
             ),
@@ -377,14 +397,14 @@ progress AS (
 
         ROUND(
             LEAST(
-                COALESCE(se.completed_assessments, 0)::NUMERIC
+                CAST(COALESCE(se.completed_assessments, 0) AS DECIMAL(18, 6))
                 / NULLIF(mc.req_skill_eval, 0),
                 1
             ),
             3
         ) AS skill_evaluation_completion,
 
-        ROUND(se.avg_skill_score::NUMERIC, 3) AS avg_skill_score,
+        ROUND(CAST(se.avg_skill_score AS DECIMAL(18, 6)), 3) AS avg_skill_score,
 
         cme.threshold_date AS cme_threshold_date,
         d.threshold_date AS drill_threshold_date,
