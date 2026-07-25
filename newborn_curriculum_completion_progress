@@ -1,240 +1,649 @@
-WITH curriculum_summary AS (
+-- Cohort-aware newborn curriculum completion (Redshift-compatible)
+-- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
+-- Mentee spine: mentors.mentee_database, plus any mentee_id only present in fact tables
+-- date_completed = first date within the cycle when ALL conditions were met; else NULL
+--
+-- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
+-- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
 
+WITH cohorts AS (
+    SELECT
+        CAST(1 AS INTEGER) AS cycle_id,
+        CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+        DATE '2024-01-01' AS cycle_start,
+        DATE '2026-03-31' AS cycle_end,
+        CAST(19 AS INTEGER) AS req_cme,
+        CAST(7 AS INTEGER) AS req_drills,
+        CAST(20 AS INTEGER) AS req_practicum_essential,
+        CAST(22 AS INTEGER) AS req_practicum_comprehensive,
+        CAST(5 AS INTEGER) AS req_skill_demo,
+        CAST(12 AS INTEGER) AS req_videos,
+        CAST(2 AS INTEGER) AS req_roleplay,
+        CAST(9 AS INTEGER) AS req_case_scenarios,
+        CAST(7 AS INTEGER) AS req_group_discussions
+    UNION ALL
+    SELECT
+        CAST(2 AS INTEGER),
+        CAST('Cohort 2' AS VARCHAR(50)),
+        DATE '2026-04-01',
+        DATE '2027-03-31',
+        CAST(19 AS INTEGER),
+        CAST(7 AS INTEGER),
+        CAST(20 AS INTEGER),
+        CAST(22 AS INTEGER),
+        CAST(5 AS INTEGER),
+        CAST(12 AS INTEGER),
+        CAST(2 AS INTEGER),
+        CAST(9 AS INTEGER),
+        CAST(7 AS INTEGER)
+    UNION ALL
+    SELECT
+        CAST(3 AS INTEGER),
+        CAST('Cohort 3' AS VARCHAR(50)),
+        DATE '2027-04-01',
+        DATE '2028-03-31',
+        CAST(19 AS INTEGER),
+        CAST(7 AS INTEGER),
+        CAST(20 AS INTEGER),
+        CAST(22 AS INTEGER),
+        CAST(5 AS INTEGER),
+        CAST(12 AS INTEGER),
+        CAST(2 AS INTEGER),
+        CAST(9 AS INTEGER),
+        CAST(7 AS INTEGER)
+),
+
+db_mentees AS (
+    SELECT
+        CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+        CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+        CAST(county AS VARCHAR(256)) AS county,
+        CAST(facility AS VARCHAR(256)) AS facility,
+        CAST(facility_code AS VARCHAR(100)) AS facility_code
+    FROM mentors.mentee_database
+),
+
+fact_mentees AS (
     SELECT
         mentee_id,
         MAX(mentee_name) AS mentee_name,
         MAX(county) AS county,
         MAX(facility) AS facility,
-        MAX(facility_code) AS facility_code,
-        MAX(program) AS program,
+        MAX(facility_code) AS facility_code
+    FROM (
+        SELECT
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
+        FROM mentors.newborn_curriculum_tracking
 
-        -- CME Completion (19 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'CMEs'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 19
-            THEN 1 ELSE 0
-        END AS cme_completion,
+        UNION ALL
 
-        -- Drill Completion (7 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'Drills'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 7
-            THEN 1 ELSE 0
-        END AS drill_completion,
-
-        -- Practicum Completion
-        CASE
-            WHEN MAX(CASE WHEN program = 'essential_newborn_care' THEN 1 ELSE 0 END) = 1
-                 AND COUNT(DISTINCT CASE
-                        WHEN mentorship_activity = 'practicums'
-                         AND program = 'essential_newborn_care'
-                         AND topic IS NOT NULL
-                         AND TRIM(topic) <> ''
-                        THEN topic
-                    END) = 20
-            THEN 1
-
-            WHEN MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN 1 ELSE 0 END) = 1
-                 AND COUNT(DISTINCT CASE
-                        WHEN mentorship_activity = 'Practicums'
-                         AND program = 'comprehensive_newborn_care'
-                         AND topic IS NOT NULL
-                         AND TRIM(topic) <> ''
-                        THEN topic
-                    END) = 22
-            THEN 1
-
-            ELSE 0
-        END AS practicum_completion,
-
-        -- Skill Demonstration Completion (5 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'skill_demonstrations'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 5
-            THEN 1 ELSE 0
-        END AS skill_demo_completion,
-
-        -- Video Completion (12 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'Videos'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 12
-            THEN 1 ELSE 0
-        END AS video_completion,
-
-        -- Role Play Completion (2 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'Role plays'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 2
-            THEN 1 ELSE 0
-        END AS roleplay_completion,
-
-        -- Case Scenario Completion (9 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'Case scenarios'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 9
-            THEN 1 ELSE 0
-        END AS case_scenario_completion,
-
-        -- Group Discussion Completion (7 topics)
-        CASE
-            WHEN COUNT(DISTINCT CASE
-                    WHEN mentorship_activity = 'Group discussions'
-                     AND topic IS NOT NULL
-                     AND TRIM(topic) <> ''
-                    THEN topic
-                END) = 7
-            THEN 1 ELSE 0
-        END AS group_discussions_completion
-
-    FROM mentors.newborn_curriculum_tracking
-
+        SELECT
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
+        FROM mentors.process_moh_skills_assessment_2026
+        WHERE LOWER(TRIM(skill_evaluation)) = 'newborn resuscitation'
+          AND LOWER(TRIM(program)) = 'newborn curriculum'
+    ) u
     GROUP BY mentee_id
 ),
 
-
-assessment_scores AS (
-
-    WITH ranked AS (
-
-        SELECT
-            mentee_id,
-            submission_id,
-            date_submitted,
-            average_score,
-
-            ROW_NUMBER() OVER (
-                PARTITION BY mentee_id
-                ORDER BY date_submitted ASC, submission_id ASC
-            ) AS rn_first,
-
-            ROW_NUMBER() OVER (
-                PARTITION BY mentee_id
-                ORDER BY date_submitted DESC, submission_id DESC
-            ) AS rn_last,
-
-            COUNT(*) OVER (
-                PARTITION BY mentee_id
-            ) AS assessment_count
-
-        FROM mentors.process_moh_skills_assessment_2026
-
-        WHERE lower(trim(skill_evaluation)) = 'newborn resuscitation'
-          AND lower(trim(program)) = 'newborn curriculum'
-          AND average_score IS NOT NULL
-    )
-
+mentees AS (
     SELECT
+        COALESCE(d.mentee_id, f.mentee_id) AS mentee_id,
+        COALESCE(d.mentee_name, f.mentee_name) AS mentee_name,
+        COALESCE(d.county, f.county) AS county,
+        COALESCE(d.facility, f.facility) AS facility,
+        COALESCE(d.facility_code, f.facility_code) AS facility_code
+    FROM db_mentees d
+    FULL OUTER JOIN fact_mentees f
+        ON d.mentee_id = f.mentee_id
+),
+
+mentee_cycles AS (
+    SELECT
+        m.mentee_id,
+        m.mentee_name,
+        m.county,
+        m.facility,
+        m.facility_code,
+        c.cycle_id,
+        c.cycle_label,
+        c.cycle_start,
+        c.cycle_end,
+        c.req_cme,
+        c.req_drills,
+        c.req_practicum_essential,
+        c.req_practicum_comprehensive,
+        c.req_skill_demo,
+        c.req_videos,
+        c.req_roleplay,
+        c.req_case_scenarios,
+        c.req_group_discussions
+    FROM mentees m
+    CROSS JOIN cohorts c
+),
+
+tracking_by_cycle AS (
+    SELECT
+        c.cycle_id,
+        c.req_cme,
+        c.req_drills,
+        c.req_practicum_essential,
+        c.req_practicum_comprehensive,
+        c.req_skill_demo,
+        c.req_videos,
+        c.req_roleplay,
+        c.req_case_scenarios,
+        c.req_group_discussions,
+        CAST(t.mentee_id AS VARCHAR(100)) AS mentee_id,
+        t.mentorship_activity,
+        t.program,
+        t.topic,
+        CAST(t.date_submitted AS DATE) AS date_submitted
+    FROM mentors.newborn_curriculum_tracking t
+    INNER JOIN cohorts c
+        ON CAST(t.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(t.date_submitted AS DATE) <= c.cycle_end
+    WHERE t.topic IS NOT NULL
+      AND TRIM(t.topic) <> ''
+),
+
+-- Program observed for the mentee within each cycle
+cycle_program AS (
+    SELECT
+        cycle_id,
         mentee_id,
+        MAX(program) AS program
+    FROM tracking_by_cycle
+    GROUP BY cycle_id, mentee_id
+),
 
-        -- First attempt is always baseline
+topic_first AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        mentorship_activity,
+        topic,
+        MIN(date_submitted) AS first_date,
+        MAX(req_cme) AS req_cme,
+        MAX(req_drills) AS req_drills,
+        MAX(req_skill_demo) AS req_skill_demo,
+        MAX(req_videos) AS req_videos,
+        MAX(req_roleplay) AS req_roleplay,
+        MAX(req_case_scenarios) AS req_case_scenarios,
+        MAX(req_group_discussions) AS req_group_discussions
+    FROM tracking_by_cycle
+    WHERE mentorship_activity IN (
+        'CMEs',
+        'Drills',
+        'skill_demonstrations',
+        'Videos',
+        'Role plays',
+        'Case scenarios',
+        'Group discussions'
+    )
+    GROUP BY cycle_id, mentee_id, mentorship_activity, topic
+),
+
+topic_ranked AS (
+    SELECT
+        tf.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY tf.cycle_id, tf.mentee_id, tf.mentorship_activity
+            ORDER BY tf.first_date, tf.topic
+        ) AS rn
+    FROM topic_first tf
+),
+
+cme AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_cme) AS required_topics,
+        MIN(CASE WHEN rn = req_cme THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'CMEs'
+    GROUP BY cycle_id, mentee_id
+),
+
+drills AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_drills) AS required_topics,
+        MIN(CASE WHEN rn = req_drills THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'Drills'
+    GROUP BY cycle_id, mentee_id
+),
+
+skill_demo AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_skill_demo) AS required_topics,
+        MIN(CASE WHEN rn = req_skill_demo THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'skill_demonstrations'
+    GROUP BY cycle_id, mentee_id
+),
+
+videos AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_videos) AS required_topics,
+        MIN(CASE WHEN rn = req_videos THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'Videos'
+    GROUP BY cycle_id, mentee_id
+),
+
+roleplay AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_roleplay) AS required_topics,
+        MIN(CASE WHEN rn = req_roleplay THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'Role plays'
+    GROUP BY cycle_id, mentee_id
+),
+
+case_scenarios AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_case_scenarios) AS required_topics,
+        MIN(CASE WHEN rn = req_case_scenarios THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'Case scenarios'
+    GROUP BY cycle_id, mentee_id
+),
+
+group_discussions AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COUNT(*) AS completed_topics,
+        MAX(req_group_discussions) AS required_topics,
+        MIN(CASE WHEN rn = req_group_discussions THEN first_date END) AS threshold_date
+    FROM topic_ranked
+    WHERE mentorship_activity = 'Group discussions'
+    GROUP BY cycle_id, mentee_id
+),
+
+-- Practicum: essential (20) uses 'practicums'; comprehensive (22) uses 'Practicums'
+practicum_topic_first AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        program,
+        topic,
+        MIN(date_submitted) AS first_date,
+        MAX(req_practicum_essential) AS req_practicum_essential,
+        MAX(req_practicum_comprehensive) AS req_practicum_comprehensive
+    FROM tracking_by_cycle
+    WHERE (
+            mentorship_activity = 'practicums'
+            AND program = 'essential_newborn_care'
+        )
+       OR (
+            mentorship_activity = 'Practicums'
+            AND program = 'comprehensive_newborn_care'
+        )
+    GROUP BY cycle_id, mentee_id, program, topic
+),
+
+practicum_ranked AS (
+    SELECT
+        ptf.*,
+        ROW_NUMBER() OVER (
+            PARTITION BY ptf.cycle_id, ptf.mentee_id, ptf.program
+            ORDER BY ptf.first_date, ptf.topic
+        ) AS rn
+    FROM practicum_topic_first ptf
+),
+
+practicum_by_program AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        program,
+        COUNT(*) AS completed_topics,
         MAX(
             CASE
-                WHEN rn_first = 1
-                THEN average_score
+                WHEN program = 'essential_newborn_care' THEN req_practicum_essential
+                WHEN program = 'comprehensive_newborn_care' THEN req_practicum_comprehensive
             END
-        ) AS baseline_score,
+        ) AS required_topics,
+        MIN(
+            CASE
+                WHEN program = 'essential_newborn_care'
+                 AND rn = req_practicum_essential
+                THEN first_date
+                WHEN program = 'comprehensive_newborn_care'
+                 AND rn = req_practicum_comprehensive
+                THEN first_date
+            END
+        ) AS threshold_date
+    FROM practicum_ranked
+    GROUP BY cycle_id, mentee_id, program
+),
 
-        -- Endline only exists if there is a second attempt
+-- Prefer essential_newborn_care when present; otherwise comprehensive
+practicum AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        COALESCE(
+            MAX(CASE WHEN program = 'essential_newborn_care' THEN program END),
+            MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN program END)
+        ) AS program,
+        COALESCE(
+            MAX(CASE WHEN program = 'essential_newborn_care' THEN completed_topics END),
+            MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN completed_topics END)
+        ) AS completed_topics,
+        COALESCE(
+            MAX(CASE WHEN program = 'essential_newborn_care' THEN required_topics END),
+            MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN required_topics END)
+        ) AS required_topics,
+        COALESCE(
+            MAX(CASE WHEN program = 'essential_newborn_care' THEN threshold_date END),
+            MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN threshold_date END)
+        ) AS threshold_date
+    FROM practicum_by_program
+    GROUP BY cycle_id, mentee_id
+),
+
+-- NNR assessment: first attempt = baseline, last attempt = endline (within cycle)
+nnr_ranked AS (
+    SELECT
+        c.cycle_id,
+        CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
+        s.submission_id,
+        CAST(s.date_submitted AS DATE) AS date_submitted,
+        s.average_score,
+        ROW_NUMBER() OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+            ORDER BY CAST(s.date_submitted AS DATE) ASC, s.submission_id ASC
+        ) AS rn_first,
+        ROW_NUMBER() OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+            ORDER BY CAST(s.date_submitted AS DATE) DESC, s.submission_id DESC
+        ) AS rn_last,
+        COUNT(*) OVER (
+            PARTITION BY c.cycle_id, CAST(s.mentee_id AS VARCHAR(100))
+        ) AS assessment_count
+    FROM mentors.process_moh_skills_assessment_2026 s
+    INNER JOIN cohorts c
+        ON CAST(s.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(s.date_submitted AS DATE) <= c.cycle_end
+    WHERE LOWER(TRIM(s.skill_evaluation)) = 'newborn resuscitation'
+      AND LOWER(TRIM(s.program)) = 'newborn curriculum'
+      AND s.average_score IS NOT NULL
+),
+
+nnr_assessment AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        MAX(CASE WHEN rn_first = 1 THEN average_score END) AS baseline_score,
         MAX(
             CASE
-                WHEN assessment_count > 1
-                 AND rn_last = 1
+                WHEN assessment_count > 1 AND rn_last = 1
                 THEN average_score
             END
         ) AS endline_score,
-
         MAX(
             CASE
-                WHEN assessment_count > 1
-                 AND rn_last = 1
+                WHEN assessment_count > 1 AND rn_last = 1
                 THEN date_submitted
             END
         ) AS assessment_completion_date
+    FROM nnr_ranked
+    GROUP BY cycle_id, mentee_id
+),
 
-    FROM ranked
+progress AS (
+    SELECT
+        mc.mentee_id,
+        mc.mentee_name,
+        mc.county,
+        mc.facility,
+        mc.facility_code,
+        COALESCE(cp.program, p.program) AS program,
+        mc.cycle_id,
+        mc.cycle_label,
+        mc.cycle_start,
+        mc.cycle_end,
 
-    GROUP BY mentee_id
+        ROUND(
+            LEAST(
+                CAST(COALESCE(cme.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_cme, 0),
+                1
+            ),
+            3
+        ) AS cme_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(d.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_drills, 0),
+                1
+            ),
+            3
+        ) AS drill_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(p.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(
+                    COALESCE(
+                        p.required_topics,
+                        CASE
+                            WHEN COALESCE(cp.program, p.program) = 'comprehensive_newborn_care'
+                            THEN mc.req_practicum_comprehensive
+                            ELSE mc.req_practicum_essential
+                        END
+                    ),
+                    0
+                ),
+                1
+            ),
+            3
+        ) AS practicum_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(sd.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_skill_demo, 0),
+                1
+            ),
+            3
+        ) AS skill_demo_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(v.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_videos, 0),
+                1
+            ),
+            3
+        ) AS video_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(rp.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_roleplay, 0),
+                1
+            ),
+            3
+        ) AS roleplay_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(cs.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_case_scenarios, 0),
+                1
+            ),
+            3
+        ) AS case_scenario_completion,
+
+        ROUND(
+            LEAST(
+                CAST(COALESCE(gd.completed_topics, 0) AS DECIMAL(18, 6))
+                / NULLIF(mc.req_group_discussions, 0),
+                1
+            ),
+            3
+        ) AS group_discussions_completion,
+
+        ROUND(CAST(nnr.baseline_score AS DECIMAL(18, 6)), 3) AS baseline_score,
+        ROUND(CAST(nnr.endline_score AS DECIMAL(18, 6)), 3) AS endline_score,
+
+        CASE
+            WHEN nnr.baseline_score IS NOT NULL
+             AND nnr.endline_score IS NOT NULL
+             AND nnr.endline_score >= 0.85
+            THEN 1
+            ELSE 0
+        END AS nnr_assessment_completion,
+
+        cme.threshold_date AS cme_threshold_date,
+        d.threshold_date AS drill_threshold_date,
+        p.threshold_date AS practicum_threshold_date,
+        sd.threshold_date AS skill_demo_threshold_date,
+        v.threshold_date AS video_threshold_date,
+        rp.threshold_date AS roleplay_threshold_date,
+        cs.threshold_date AS case_scenario_threshold_date,
+        gd.threshold_date AS group_discussions_threshold_date,
+        CASE
+            WHEN nnr.baseline_score IS NOT NULL
+             AND nnr.endline_score IS NOT NULL
+             AND nnr.endline_score >= 0.85
+            THEN nnr.assessment_completion_date
+            ELSE NULL
+        END AS nnr_threshold_date,
+        nnr.assessment_completion_date
+    FROM mentee_cycles mc
+    LEFT JOIN cycle_program cp
+        ON mc.mentee_id = cp.mentee_id
+       AND mc.cycle_id = cp.cycle_id
+    LEFT JOIN cme
+        ON mc.mentee_id = cme.mentee_id
+       AND mc.cycle_id = cme.cycle_id
+    LEFT JOIN drills d
+        ON mc.mentee_id = d.mentee_id
+       AND mc.cycle_id = d.cycle_id
+    LEFT JOIN practicum p
+        ON mc.mentee_id = p.mentee_id
+       AND mc.cycle_id = p.cycle_id
+    LEFT JOIN skill_demo sd
+        ON mc.mentee_id = sd.mentee_id
+       AND mc.cycle_id = sd.cycle_id
+    LEFT JOIN videos v
+        ON mc.mentee_id = v.mentee_id
+       AND mc.cycle_id = v.cycle_id
+    LEFT JOIN roleplay rp
+        ON mc.mentee_id = rp.mentee_id
+       AND mc.cycle_id = rp.cycle_id
+    LEFT JOIN case_scenarios cs
+        ON mc.mentee_id = cs.mentee_id
+       AND mc.cycle_id = cs.cycle_id
+    LEFT JOIN group_discussions gd
+        ON mc.mentee_id = gd.mentee_id
+       AND mc.cycle_id = gd.cycle_id
+    LEFT JOIN nnr_assessment nnr
+        ON mc.mentee_id = nnr.mentee_id
+       AND mc.cycle_id = nnr.cycle_id
 )
 
-
 SELECT
-    c.mentee_id,
-    c.mentee_name,
-    c.county,
-    c.facility,
-    c.facility_code,
-    c.program,
+    mentee_id,
+    mentee_name,
+    county,
+    facility,
+    facility_code,
+    program,
+    cycle_id,
+    cycle_label,
+    cycle_start,
+    cycle_end,
+    cme_completion,
+    drill_completion,
+    practicum_completion,
+    skill_demo_completion,
+    video_completion,
+    roleplay_completion,
+    case_scenario_completion,
+    group_discussions_completion,
+    baseline_score,
+    endline_score,
+    nnr_assessment_completion,
 
-    c.cme_completion,
-    c.drill_completion,
-    c.practicum_completion,
-    c.skill_demo_completion,
-    c.video_completion,
-    c.roleplay_completion,
-    c.case_scenario_completion,
-    c.group_discussions_completion,
-
-    a.baseline_score,
-    a.endline_score,
-
-    -- NNR Assessment Completion
     CASE
-        WHEN a.baseline_score IS NOT NULL
-         AND a.endline_score IS NOT NULL
-         AND a.endline_score >= 0.85
-        THEN 1
-        ELSE 0
-    END AS nnr_assessment_completion,
-
-
-    -- Full Curriculum Completion
-    CASE
-        WHEN c.cme_completion = 1
-         AND c.drill_completion = 1
-         AND c.practicum_completion = 1
-         AND c.skill_demo_completion = 1
-         AND c.video_completion = 1
-         AND c.roleplay_completion = 1
-         AND c.case_scenario_completion = 1
-         AND c.group_discussions_completion = 1
-
-         AND a.baseline_score IS NOT NULL
-         AND a.endline_score IS NOT NULL
-         AND a.endline_score >= 0.85
-
+        WHEN cme_completion >= 1
+         AND drill_completion >= 1
+         AND practicum_completion >= 1
+         AND skill_demo_completion >= 1
+         AND video_completion >= 1
+         AND roleplay_completion >= 1
+         AND case_scenario_completion >= 1
+         AND group_discussions_completion >= 1
+         AND nnr_assessment_completion = 1
         THEN 1
         ELSE 0
     END AS curriculum_completion,
 
-    a.assessment_completion_date
+    CASE
+        WHEN cme_completion >= 1
+         AND drill_completion >= 1
+         AND practicum_completion >= 1
+         AND skill_demo_completion >= 1
+         AND video_completion >= 1
+         AND roleplay_completion >= 1
+         AND case_scenario_completion >= 1
+         AND group_discussions_completion >= 1
+         AND nnr_assessment_completion = 1
+         AND cme_threshold_date IS NOT NULL
+         AND drill_threshold_date IS NOT NULL
+         AND practicum_threshold_date IS NOT NULL
+         AND skill_demo_threshold_date IS NOT NULL
+         AND video_threshold_date IS NOT NULL
+         AND roleplay_threshold_date IS NOT NULL
+         AND case_scenario_threshold_date IS NOT NULL
+         AND group_discussions_threshold_date IS NOT NULL
+         AND nnr_threshold_date IS NOT NULL
+        THEN GREATEST(
+            cme_threshold_date,
+            drill_threshold_date,
+            practicum_threshold_date,
+            skill_demo_threshold_date,
+            video_threshold_date,
+            roleplay_threshold_date,
+            case_scenario_threshold_date,
+            group_discussions_threshold_date,
+            nnr_threshold_date
+        )
+        ELSE NULL
+    END AS date_completed,
 
-FROM curriculum_summary c
+    assessment_completion_date
 
-LEFT JOIN assessment_scores a
-    ON TRIM(LOWER(c.mentee_id)) = TRIM(LOWER(a.mentee_id))
-
-ORDER BY c.mentee_id;
+FROM progress
+ORDER BY mentee_id, cycle_id;
