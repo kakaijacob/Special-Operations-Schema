@@ -1,6 +1,7 @@
 -- Cohort-aware mentee curriculum completion (Redshift-compatible)
 -- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
--- Mentee spine: mentors.mentee_database, plus any mentee_id only present in fact tables
+-- Mentee spine: mentors.mentee_database (program IN EmONC curriculum / both),
+-- plus any mentee_id only present in fact tables
 -- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
@@ -54,6 +55,7 @@ db_mentees AS (
         CAST(facility AS VARCHAR(256)) AS facility,
         CAST(facility_code AS VARCHAR(100)) AS facility_code
     FROM mentors.mentee_database
+    WHERE LOWER(TRIM(program)) IN ('emonc curriculum', 'both')
 ),
 
 fact_mentees AS (
