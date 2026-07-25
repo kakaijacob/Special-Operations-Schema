@@ -104,7 +104,7 @@ curriculum_summary AS (
     SELECT
         c.cycle_id,
         CAST(t.mentee_id AS VARCHAR(100)) AS mentee_id,
-        MAX(t.facility_code) AS facility_code,
+        MAX(CAST(t.facility_code AS VARCHAR(100))) AS facility_code,
         MAX(t.program) AS program,
 
         COUNT(DISTINCT CASE
@@ -227,7 +227,10 @@ SELECT
     mc.mentee_name,
     mc.county,
     mc.facility,
-    COALESCE(mc.facility_code, cs.facility_code) AS facility_code,
+    COALESCE(
+        mc.facility_code,
+        CAST(cs.facility_code AS VARCHAR(100))
+    ) AS facility_code,
     cs.program,
     mc.cycle_id,
     mc.cycle_label,
