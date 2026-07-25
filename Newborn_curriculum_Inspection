@@ -290,6 +290,15 @@ SELECT
     nnr.endline_score,
 
     CASE
+        WHEN nnr.assessment_count > 1
+         AND nnr.baseline_score IS NOT NULL
+         AND nnr.endline_score IS NOT NULL
+         AND nnr.endline_score >= 0.85
+        THEN 1
+        ELSE 0
+    END AS nnr_assessment_completion,
+
+    CASE
         WHEN COALESCE(cs.cme_count, 0) = mc.req_cme
          AND COALESCE(cs.drill_count, 0) = mc.req_drills
          AND COALESCE(cs.practicum_count, 0) = CASE
