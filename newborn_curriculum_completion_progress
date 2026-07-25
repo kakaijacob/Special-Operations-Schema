@@ -1,6 +1,7 @@
 -- Cohort-aware newborn curriculum completion (Redshift-compatible)
 -- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
--- Mentee spine: mentors.mentee_database, plus any mentee_id only present in fact tables
+-- Mentee spine: mentors.mentee_database (program IN newborn curriculum / both),
+-- plus any mentee_id only present in fact tables
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
