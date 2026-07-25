@@ -329,3 +329,124 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 - Purpose: Capture AMTSL evaluation scores in a reusable view
 - Database: mentors
 - Results / observations: View calculates average score using different item sets before and after 2026-04-01
+
+## Review: why `process_moh_skills_assessment_2026` drops rows from `moh_skills_checklist`
+
+`process_moh_skills_assessment_2026` is only a `UNION ALL` of per-skill views. It does not read `moh_skills_checklist` directly. A checklist row appears in the process view only if it passes the filter of one of those child views.
+
+### 1. Hard date cutoff on Shoulder dystocia (confirmed bug / gap)
+
+`shoulder_dystocia_evaluation_2026` is the only documented child view that filters by date in its `WHERE`:
+
+```sql
+WHERE msc.skill_evaluation::text = 'Shoulder dystocia'
+  AND msc.date_submitted <= '2026-04-01'::date
+```
+
+Every Shoulder dystocia submission after `2026-04-01` (and any with `NULL` `date_submitted`) is excluded from the process view, even though it remains in `moh_skills_checklist`. Other skills use the April cutoff only inside score `CASE` expressions; they still keep post-cutoff rows.
+
+### 2. Exact `skill_evaluation` whitelist
+
+Each child view keeps only one exact label. Covered labels in this file:
+
+| View | Required `skill_evaluation` |
+| --- | --- |
+| amstl_evaluation_2026 | `AMTSL` |
+| avd_evaluation_2026 | `Assisted vaginal vacuum delivery` |
+| b_lynch_evaluation_2026 | `B-LYNCH` |
+| bimanual_uterine_compression_evaluation_2026 | `Bimanual uterine compression` |
+| breech_delivery_evaluation_2026 | `Assisted breech delivery` |
+| cervical_tear_repair_evaluation_2026 | `Cervical tear repair` |
+| compression_abdominal_aorta_evaluation_2026 | `Compression of abdominal aorta` |
+| cord_prolapse_evaluation_2026 | `Cord prolapse` |
+| emotive_evaluation_2026 | `EMOTIVE` |
+| manual_placenta_removal_evaluation_2026 | `Manual removal of placenta` |
+| maternal_resuscitation_evaluation_2026 | `Maternal resuscitation` |
+| nasg_evaluation_2026 | `NASG` |
+| partograph_evaluation_2026 | `Partograph` |
+| perineal_tear_repair_evaluation_2026 | `Perineal repair` |
+| pih_evaluation_2026 | `Preeclampsia / Eclampsia` |
+| shoulder_dystocia_evaluation_2026 | `Shoulder dystocia` (+ date filter) |
+| ubt_evaluation_2026 | `UBT` |
+| ubt_free_flow_evaluation_2026 | `UBT (free flow)` |
+| uterine_inversion_evaluation_2026 | `Uterine Inversion` |
+
+Any other value (new skill, renamed label, casing/spacing variant, or `NULL`) never enters the union. Likely mismatches to check in source data:
+
+- `Perineal repair` vs `Perineal Tear Repair` / `Perineal tear repair`
+- `UBT` / `UBT (free flow)` vs placement-style labels
+- `B-LYNCH` casing/punctuation variants
+- `Preeclampsia / Eclampsia` spacing/slash variants
+
+### 3. Two union sources are not defined in this file
+
+The process view also unions:
+
+- `mentors.maternal_shock_evaluation_2026`
+- `mentors.newborn_resuscitation_evaluation_2026`
+
+Their `CREATE VIEW` SQL is missing from this document, so their `WHERE` / score logic cannot be reviewed here. If those views use a wrong label or an extra date filter, Maternal shock / Newborn resuscitation rows would also be dropped.
+
+### 4. Downstream filter (not a process-view drop, but looks like one)
+
+`mentee_curriculum_completion_progress` further filters:
+
+```sql
+FROM mentors.process_moh_skills_assessment_2026
+WHERE skill_evaluation IS NOT NULL
+  AND average_score IS NOT NULL
+```
+
+In the child views, average score is usually a sum of cast checklist items. In PostgreSQL, if any item in that sum is `NULL`, the whole average becomes `NULL`. Those rows can still exist in the process view but disappear from completion metrics.
+
+### Diagnostic queries
+
+```sql
+-- A) Labels present in checklist but absent from process view
+SELECT skill_evaluation, COUNT(*) AS checklist_rows
+FROM mentors.moh_skills_checklist
+GROUP BY skill_evaluation
+ORDER BY checklist_rows DESC;
+
+SELECT skill_evaluation, COUNT(*) AS process_rows
+FROM mentors.process_moh_skills_assessment_2026
+GROUP BY skill_evaluation
+ORDER BY process_rows DESC;
+
+-- B) Rows in checklist missing from process view
+SELECT msc.skill_evaluation, COUNT(*) AS missing_rows
+FROM mentors.moh_skills_checklist msc
+LEFT JOIN mentors.process_moh_skills_assessment_2026 p
+  ON p.submission_id = msc.submission_id
+ AND p.skill_evaluation = msc.skill_evaluation
+WHERE p.submission_id IS NULL
+GROUP BY msc.skill_evaluation
+ORDER BY missing_rows DESC;
+
+-- C) Shoulder dystocia specifically (expect post-2026-04-01 to be missing)
+SELECT
+  CASE
+    WHEN date_submitted <= DATE '2026-04-01' THEN 'on/before 2026-04-01'
+    WHEN date_submitted > DATE '2026-04-01' THEN 'after 2026-04-01'
+    ELSE 'null date_submitted'
+  END AS date_bucket,
+  COUNT(*) AS checklist_rows
+FROM mentors.moh_skills_checklist
+WHERE skill_evaluation = 'Shoulder dystocia'
+GROUP BY 1;
+
+SELECT COUNT(*) AS process_shoulder_rows
+FROM mentors.process_moh_skills_assessment_2026
+WHERE skill_evaluation = 'Shoulder dystocia';
+
+-- D) Inspect undocumented child views
+SELECT pg_get_viewdef('mentors.maternal_shock_evaluation_2026'::regclass, true);
+SELECT pg_get_viewdef('mentors.newborn_resuscitation_evaluation_2026'::regclass, true);
+```
+
+### Likely primary cause
+
+Most unexplained missing rows are expected to be either:
+
+1. **Shoulder dystocia after 2026-04-01**, or
+2. **`skill_evaluation` values that do not exactly match a child-view label** (including Maternal shock / Newborn resuscitation if those views filter incorrectly).
