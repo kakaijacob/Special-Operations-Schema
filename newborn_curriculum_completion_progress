@@ -61,6 +61,7 @@ db_mentees AS (
         CAST(facility AS VARCHAR(256)) AS facility,
         CAST(facility_code AS VARCHAR(100)) AS facility_code
     FROM mentors.mentee_database
+    WHERE LOWER(TRIM(program)) IN ('newborn curriculum', 'both')
 ),
 
 fact_mentees AS (
