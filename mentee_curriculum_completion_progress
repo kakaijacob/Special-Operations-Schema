@@ -9,50 +9,50 @@
 
 WITH cohorts AS (
     SELECT
-        1 AS cycle_id,
-        'Cohort 1' AS cycle_label,
+        CAST(1 AS INTEGER) AS cycle_id,
+        CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
         DATE '2024-01-01' AS cycle_start,
         DATE '2026-03-31' AS cycle_end,
-        11 AS req_cme,
-        5 AS req_drills,
-        18 AS req_skill_demo,
-        18 AS req_return_demo,
-        1 AS req_labor_monitoring,
-        18 AS req_skill_eval
+        CAST(11 AS INTEGER) AS req_cme,
+        CAST(5 AS INTEGER) AS req_drills,
+        CAST(18 AS INTEGER) AS req_skill_demo,
+        CAST(18 AS INTEGER) AS req_return_demo,
+        CAST(1 AS INTEGER) AS req_labor_monitoring,
+        CAST(18 AS INTEGER) AS req_skill_eval
     UNION ALL
     SELECT
-        2,
-        'Cohort 2',
+        CAST(2 AS INTEGER),
+        CAST('Cohort 2' AS VARCHAR(50)),
         DATE '2026-04-01',
         DATE '2027-03-31',
-        13,
-        5,
-        21,
-        21,
-        1,
-        21
+        CAST(13 AS INTEGER),
+        CAST(5 AS INTEGER),
+        CAST(21 AS INTEGER),
+        CAST(21 AS INTEGER),
+        CAST(1 AS INTEGER),
+        CAST(21 AS INTEGER)
     UNION ALL
     SELECT
-        3,
-        'Cohort 3',
+        CAST(3 AS INTEGER),
+        CAST('Cohort 3' AS VARCHAR(50)),
         DATE '2027-04-01',
         DATE '2028-03-31',
-        13,
-        5,
-        21,
-        21,
-        1,
-        21
+        CAST(13 AS INTEGER),
+        CAST(5 AS INTEGER),
+        CAST(21 AS INTEGER),
+        CAST(21 AS INTEGER),
+        CAST(1 AS INTEGER),
+        CAST(21 AS INTEGER)
 ),
 
 -- Prefer mentors.mentee_database; still include fact-table mentees missing from it
 db_mentees AS (
     SELECT
-        mentee_id,
-        mentee_name,
-        county,
-        facility,
-        facility_code
+        CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+        CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+        CAST(county AS VARCHAR(256)) AS county,
+        CAST(facility AS VARCHAR(256)) AS facility,
+        CAST(facility_code AS VARCHAR(100)) AS facility_code
     FROM mentors.mentee_database
 ),
 
@@ -65,21 +65,21 @@ fact_mentees AS (
         MAX(facility_code) AS facility_code
     FROM (
         SELECT
-            mentee_id,
-            mentee_name,
-            county,
-            facility,
-            facility_code
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
         FROM mentors.mentee_curriculum_tracking
 
         UNION ALL
 
         SELECT
-            mentee_id,
-            mentee_name,
-            county,
-            facility,
-            facility_code
+            CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(mentee_name AS VARCHAR(256)) AS mentee_name,
+            CAST(county AS VARCHAR(256)) AS county,
+            CAST(facility AS VARCHAR(256)) AS facility,
+            CAST(facility_code AS VARCHAR(100)) AS facility_code
         FROM mentors.process_moh_skills_assessment_2026
     ) u
     GROUP BY mentee_id
