@@ -128,7 +128,7 @@ tracking_by_cycle AS (
         c.req_skill_demo,
         c.req_return_demo,
         c.req_labor_monitoring,
-        t.mentee_id,
+        CAST(t.mentee_id AS VARCHAR(100)) AS mentee_id,
         t.mentorship_activity,
         t.topic,
         CAST(t.date_submitted AS DATE) AS date_submitted
@@ -269,7 +269,7 @@ skill_eval_by_skill AS (
     SELECT
         c.cycle_id,
         c.req_skill_eval,
-        s.mentee_id,
+        CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
         s.skill_evaluation,
         MAX(s.average_score) AS max_score,
         MIN(
@@ -284,7 +284,11 @@ skill_eval_by_skill AS (
        AND CAST(s.date_submitted AS DATE) <= c.cycle_end
     WHERE s.skill_evaluation IS NOT NULL
       AND s.average_score IS NOT NULL
-    GROUP BY c.cycle_id, c.req_skill_eval, s.mentee_id, s.skill_evaluation
+    GROUP BY
+        c.cycle_id,
+        c.req_skill_eval,
+        CAST(s.mentee_id AS VARCHAR(100)),
+        s.skill_evaluation
 ),
 
 skill_eval_passed AS (
