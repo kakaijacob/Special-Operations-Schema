@@ -325,6 +325,338 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
   GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help, msc.blood_monitoring_drape, msc.emergency_team_roles, msc.rapid_initial_assessment, msc.ensure_patient_privacy, msc.explain_procedure_mother1, msc.obtain_informed_consent1, msc.assess_blood_loss, msc.assess_abcs_resuscitate1, msc.stop_uterotonic_drugs, msc.insert_iv_cannulae, msc.collect_blood_samples1, msc.start_crystalloid_infusion, msc.insert_urinary_catheter, msc.administer_analgesics_antibiotics, msc.hor_hygiene_ppe, msc.replace_uterine_fundus, msc.remove_retained_placenta, msc.start_oxytocin_infusion, msc.examine_repair_tears, msc.monitor_vitals_bleeding, msc.explain_procedure_results, msc.prepare_operating_theatre, msc.inform_client_outcomes, msc.document_blood_loss;
 ```
 
+### 21. mentors.maternal_shock_evaluation_2026 source
+```sql
+CREATE OR REPLACE VIEW mentors.maternal_shock_evaluation_2026
+AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.check_for_safety::integer AS "safety check", msc.check_for_response::integer AS "response check", msc.call_for_help_002::integer AS "call for help", msc.initiate_cpr::integer AS "initiate cpr", msc.assign_team_tasks::integer AS "assign tasks", msc.offer_leadership::integer AS "offer leader", msc.assess_airway::integer AS "assess airway", msc.oropharyngeal_airway::integer AS "oropharyngeal airway", msc.assess_breathing::integer AS "assess breathing", msc.assess_carotid_pulse::integer AS "carotid pulse", msc.cpr_30_2::integer AS "cpr ratio", msc.breathing_assessment::integer AS "breathing assessment", msc.give_oxygen::integer AS "give oxygen", msc.manage_circulation::integer AS "manage circulation", msc.check_pulse_bp::integer AS "check bp & pulse", msc.iv_fluids::integer AS "iv fluids", msc.transfuse_in_anemia::integer AS transfusion, msc.palpate_the_uterus::integer AS "uterine palpation", msc.inspect_external_genitalia::integer AS "inspect genitalia", msc.vaginal_exam_001::integer AS "vaginal exam", msc.repeat_vital_signs::integer AS "repeat vital signs", msc.input_output_monitoring::integer AS "i/o monitoring", msc.iv_antibiotics::integer AS "iv antibiotics", msc.offer_leadership::integer AS "offer leadership (standard)", msc.offer_leadership::integer AS "offer leadership (alt casing)",
+        CASE
+            WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.check_for_safety::integer + msc.check_for_response::integer + msc.call_for_help_002::integer + msc.initiate_cpr::integer + msc.assign_team_tasks::integer + msc.offer_leadership::integer + msc.assess_airway::integer + msc.oropharyngeal_airway::integer + msc.assess_breathing::integer + msc.assess_carotid_pulse::integer + msc.cpr_30_2::integer + msc.breathing_assessment::integer + msc.give_oxygen::integer + msc.manage_circulation::integer + msc.check_pulse_bp::integer + msc.iv_fluids::integer + msc.transfuse_in_anemia::integer + msc.palpate_the_uterus::integer + msc.inspect_external_genitalia::integer + msc.vaginal_exam_001::integer + msc.repeat_vital_signs::integer + msc.input_output_monitoring::integer + msc.iv_antibiotics::integer)::numeric::numeric(18,0) / 23.0
+            ELSE (msc.check_for_safety::integer + msc.check_for_response::integer + msc.call_for_help_002::integer + msc.initiate_cpr::integer + msc.assign_team_tasks::integer + msc.offer_leadership::integer + msc.assess_airway::integer + msc.oropharyngeal_airway::integer + msc.assess_breathing::integer + msc.assess_carotid_pulse::integer + msc.cpr_30_2::integer + msc.breathing_assessment::integer + msc.give_oxygen::integer + msc.manage_circulation::integer + msc.check_pulse_bp::integer + msc.iv_fluids::integer + msc.transfuse_in_anemia::integer + msc.palpate_the_uterus::integer + msc.inspect_external_genitalia::integer + msc.vaginal_exam_001::integer + msc.repeat_vital_signs::integer + msc.input_output_monitoring::integer + msc.iv_antibiotics::integer)::numeric::numeric(18,0) / 23.0
+        END AS "average score"
+   FROM mentors.moh_skills_checklist msc
+  WHERE msc.skill_evaluation::text = 'Maternal shock'::text;
+```
+
+### 22. mentors.newborn_resuscitation_evaluation_2026 source
+```sql
+CREATE OR REPLACE VIEW mentors.newborn_resuscitation_evaluation_2026
+AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
+        CASE
+            WHEN msc.date_started <= '2026-04-01'::date THEN (msc.delivery_of_the_baby::integer + msc.apgar_score::integer + msc.call_for_help_001::integer + msc.abc_assessement::integer + msc._40_60_ventilation_breathes::integer + msc.reasess_abc::integer + msc.when_to_start_cpr::integer + msc.ventilation_compression_ratio::integer + msc.right_mask_size::integer + msc.position_mask_correctly::integer + msc._2_hand_technique_cpr::integer + msc.depth_of_compression::integer + msc.warm_chain::integer + msc.subsequent_abc_reassessement::integer + msc.bvm_1_min_hr_60::integer + msc.another_abc_reassesment::integer + msc.put_on_oxygen::integer + msc.arrangement_for_transfer::integer)::numeric::numeric(18,0) / 18.0
+            ELSE (
+            CASE
+                WHEN msc.q1a_gestational_age THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1a_maternal_comorbidities THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1a_complications THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1a_prenatal_care_visits THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1a_anc_profile_lab_work THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1a_sultrasound_report_if_any THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1b_warm_room_25_28c THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1b_digital_room_thermometer THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1b_environment_no_sharps_spilage THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1b_gloves_both_sterile_and_clean THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1c_perform_hand_hygiene_and_wear_clean_gloves THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1c_radiant_warmer_prewarm_mode_with_two_towels_and_hat THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1c_two_prewarmed_towels_and_hat THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1c_mentions_about_clock THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1d_penguine_sucker_or_suction_machine THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1d_set_suction_machine_pressure_80_100mmhg THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1d_suction_catheter_6f_8f_and_wide_bore_yankauer_sucker THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1d_equipment_clean_and_functionality_checked THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_bvm_size_200_300ml THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_bvm_size_00_0_1 THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_nasal_prongs THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_neonatal_non_rebreather_mask THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_oxygen_source THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_oxygen_tubings THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_pulse_oximeter_with_neonatal_probe THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_cardiorespiratory_monitor THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1e_equipment_clean_and_functionality_checked THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1f_stethoscope THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1f_iv_adrenaline_0_2ml_per_kg_1_10000 THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q1f_normal_saline THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.essential_newborn_care THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.check_apgar_timing THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.shout_help_nnr THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.reassess_abc THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.reassess_abc_2 THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.documentation_nnr THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q2_cry_respiratory_effort THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q2_tone_activity THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q3_remove_wet_cloth THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q3_wrap_in_dry_warm_towel_cloth THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q3_put_hat_on_baby_head THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q4_immediately_cut_cord THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q4_place_baby_on_prewarmed_radiant_warmer THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q5_look_in_mouth_and_nose THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q5_clear_airway THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q6_open_airway_sniffing_position_head_tilt_chin_lift THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q6_look_listen_feel_breathing_5_seconds THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q8_size_bvm_mask THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q8_good_c_and_e_grip THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q8_give_40_60_continuous_ventilations_60_seconds THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q8_correct_rate_breath_two_three THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q8_ensure_chest_rises THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q9_feel_umbilical_pulse_5_seconds THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q9_connect_bvm_to_100_percent_oxygen THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q9_connect_pulse_oximeter THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q10_give_3_chest_compressions_1_ventilation_3_1_ratio_1_minute THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q10_use_2_thumb_hand_encircling_technique THEN 1
+                ELSE 0
+            END::numeric +
+            CASE
+                WHEN msc.q10_location_lower_1_3_sternum THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q10_compress_1_3_ap_diameter THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q10_allow_chest_to_recoil THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q10_about_120_events_30_ventilations_90_chest_compressions_per_ THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q12_give_ventilations_40_60_breaths_per_min_60_seconds THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q12_chest_rise_checking_for_chest_movement THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q12_ensure_baby_kept_warm THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_connect_pulse_oximeter_and_monitor_spo2 THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_monitor_breathing_adequacy THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_switch_to_baby_mode_on_radiant_warmer THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_give_oxygen_using_nrm_10l_min THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_monitor_spo2_and_work_of_breathing THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_titrate_wean_off_oxygen_based_on_spo2 THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q14_ensure_baby_kept_warm_36_5_37_5c THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_airway THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_breathing THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_circulation THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_disability THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_exposure THEN 0.5
+                ELSE 0::numeric
+            END +
+            CASE
+                WHEN msc.q15_ifcdc THEN 0.5
+                ELSE 0::numeric
+            END)::numeric(18,0) / 49::numeric
+        END AS "average score"
+   FROM mentors.moh_skills_checklist msc
+  WHERE msc.skill_evaluation::text = 'Newborn resuscitation'::text;
+```
+
 ## Notes
 - Purpose: Capture AMTSL evaluation scores in a reusable view
 - Database: mentors
@@ -361,7 +693,9 @@ Each child view keeps only one exact label. Covered labels in this file:
 | emotive_evaluation_2026 | `EMOTIVE` |
 | manual_placenta_removal_evaluation_2026 | `Manual removal of placenta` |
 | maternal_resuscitation_evaluation_2026 | `Maternal resuscitation` |
+| maternal_shock_evaluation_2026 | `Maternal shock` |
 | nasg_evaluation_2026 | `NASG` |
+| newborn_resuscitation_evaluation_2026 | `Newborn resuscitation` |
 | partograph_evaluation_2026 | `Partograph` |
 | perineal_tear_repair_evaluation_2026 | `Perineal repair` |
 | pih_evaluation_2026 | `Preeclampsia / Eclampsia` |
@@ -377,14 +711,14 @@ Any other value (new skill, renamed label, casing/spacing variant, or `NULL`) ne
 - `B-LYNCH` casing/punctuation variants
 - `Preeclampsia / Eclampsia` spacing/slash variants
 
-### 3. Two union sources are not defined in this file
+### 3. Maternal shock and Newborn resuscitation — no date exclusion
 
-The process view also unions:
+Both views are now documented in this file. Neither filters by date in `WHERE`:
 
-- `mentors.maternal_shock_evaluation_2026`
-- `mentors.newborn_resuscitation_evaluation_2026`
+- `maternal_shock_evaluation_2026` keeps `skill_evaluation = 'Maternal shock'`
+- `newborn_resuscitation_evaluation_2026` keeps `skill_evaluation = 'Newborn resuscitation'`
 
-Their `CREATE VIEW` SQL is missing from this document, so their `WHERE` / score logic cannot be reviewed here. If those views use a wrong label or an extra date filter, Maternal shock / Newborn resuscitation rows would also be dropped.
+They use date only inside score `CASE` logic (`date_submitted` for maternal shock; `date_started` for newborn resuscitation).
 
 ### 4. Downstream filter (not a process-view drop, but looks like one)
 
@@ -445,14 +779,13 @@ FROM mentors.process_moh_skills_assessment_2026
 WHERE skill_evaluation = 'Shoulder dystocia'
 GROUP BY 1;
 
--- D) Inspect undocumented child views
-SELECT pg_get_viewdef('mentors.maternal_shock_evaluation_2026'::regclass, true);
-SELECT pg_get_viewdef('mentors.newborn_resuscitation_evaluation_2026'::regclass, true);
+-- D) Confirm maternal shock / newborn resuscitation are present
+SELECT skill_evaluation, COUNT(*) AS process_rows
+FROM mentors.process_moh_skills_assessment_2026
+WHERE skill_evaluation IN ('Maternal shock', 'Newborn resuscitation')
+GROUP BY skill_evaluation;
 ```
 
 ### Remaining likely causes (after Shoulder dystocia fix)
 
-Apply the updated `shoulder_dystocia_evaluation_2026` definition in the database, then re-check missing rows. Remaining gaps are expected to be:
-
-1. **`skill_evaluation` values that do not exactly match a child-view label**, or
-2. **Filters inside `maternal_shock_evaluation_2026` / `newborn_resuscitation_evaluation_2026`** (not defined in this file).
+Apply the updated `shoulder_dystocia_evaluation_2026` definition in the database, then re-check missing rows. Remaining gaps are expected to be **`skill_evaluation` values that do not exactly match a child-view label**.
