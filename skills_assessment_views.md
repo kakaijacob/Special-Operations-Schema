@@ -294,7 +294,7 @@ UNION ALL
 CREATE OR REPLACE VIEW mentors.shoulder_dystocia_evaluation_2026
 AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_002::integer AS "shout for help", msc.obtain_consent_006::integer AS "obtain consent", msc.aim_to_deliver_within_5_min::integer AS "aim to deliver < 5", msc.woman_not_to_push::integer AS "woman not to push", msc.evaluates_for_episiotomy_001::integer AS "evaluate episiotomy", msc.mcrobert_position::integer AS "mcroberts position", msc.rubin_1_maneuver::integer AS "rubin 1", msc.rubin_2_maneuver::integer AS "rubin 2", msc.wood_screw_maneuver::integer AS "wood screw maneuver", msc.deliver_posterior_shoulder::integer AS "deliver posterior shoulder", msc.gaskins_maneuver::integer AS "gaskins maneuver", msc._3rd_stage_labor::integer AS "3rd stage labor", msc.prep_for_nnr::integer AS "prepare for nnr", msc.message_to_mother_004::integer AS "message to mother", msc.monitor_the_baby::integer AS "monitor the baby", (msc.shout_for_help_002::integer + msc.obtain_consent_006::integer + msc.aim_to_deliver_within_5_min::integer + msc.woman_not_to_push::integer + msc.evaluates_for_episiotomy_001::integer + msc.mcrobert_position::integer + msc.rubin_1_maneuver::integer + msc.rubin_2_maneuver::integer + msc.wood_screw_maneuver::integer + msc.deliver_posterior_shoulder::integer + msc.gaskins_maneuver::integer + msc._3rd_stage_labor::integer + msc.prep_for_nnr::integer + msc.message_to_mother_004::integer + msc.monitor_the_baby::integer)::numeric::numeric(18,0) / 15.0 AS "average score"
    FROM mentors.moh_skills_checklist msc
-  WHERE msc.skill_evaluation::text = 'Shoulder dystocia'::character varying::text AND msc.date_submitted <= '2026-04-01'::date
+  WHERE msc.skill_evaluation::text = 'Shoulder dystocia'::character varying::text
   GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_002, msc.obtain_consent_006, msc.aim_to_deliver_within_5_min, msc.woman_not_to_push, msc.evaluates_for_episiotomy_001, msc.mcrobert_position, msc.rubin_1_maneuver, msc.rubin_2_maneuver, msc.wood_screw_maneuver, msc.deliver_posterior_shoulder, msc.gaskins_maneuver, msc._3rd_stage_labor, msc.prep_for_nnr, msc.message_to_mother_004, msc.monitor_the_baby;
 ```
 
@@ -334,16 +334,15 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 `process_moh_skills_assessment_2026` is only a `UNION ALL` of per-skill views. It does not read `moh_skills_checklist` directly. A checklist row appears in the process view only if it passes the filter of one of those child views.
 
-### 1. Hard date cutoff on Shoulder dystocia (confirmed bug / gap)
+### 1. Hard date cutoff on Shoulder dystocia — fixed
 
-`shoulder_dystocia_evaluation_2026` is the only documented child view that filters by date in its `WHERE`:
+`shoulder_dystocia_evaluation_2026` previously filtered with:
 
 ```sql
-WHERE msc.skill_evaluation::text = 'Shoulder dystocia'
-  AND msc.date_submitted <= '2026-04-01'::date
+AND msc.date_submitted <= '2026-04-01'::date
 ```
 
-Every Shoulder dystocia submission after `2026-04-01` (and any with `NULL` `date_submitted`) is excluded from the process view, even though it remains in `moh_skills_checklist`. Other skills use the April cutoff only inside score `CASE` expressions; they still keep post-cutoff rows.
+That excluded every Shoulder dystocia submission after `2026-04-01`. The date filter has been removed from the `WHERE` clause so all Shoulder dystocia rows from `moh_skills_checklist` are included (same pattern as the other skill views).
 
 ### 2. Exact `skill_evaluation` whitelist
 
@@ -366,7 +365,7 @@ Each child view keeps only one exact label. Covered labels in this file:
 | partograph_evaluation_2026 | `Partograph` |
 | perineal_tear_repair_evaluation_2026 | `Perineal repair` |
 | pih_evaluation_2026 | `Preeclampsia / Eclampsia` |
-| shoulder_dystocia_evaluation_2026 | `Shoulder dystocia` (+ date filter) |
+| shoulder_dystocia_evaluation_2026 | `Shoulder dystocia` |
 | ubt_evaluation_2026 | `UBT` |
 | ubt_free_flow_evaluation_2026 | `UBT (free flow)` |
 | uterine_inversion_evaluation_2026 | `Uterine Inversion` |
@@ -423,7 +422,7 @@ WHERE p.submission_id IS NULL
 GROUP BY msc.skill_evaluation
 ORDER BY missing_rows DESC;
 
--- C) Shoulder dystocia specifically (expect post-2026-04-01 to be missing)
+-- C) Shoulder dystocia specifically (after fix, post-2026-04-01 should appear)
 SELECT
   CASE
     WHEN date_submitted <= DATE '2026-04-01' THEN 'on/before 2026-04-01'
@@ -435,18 +434,25 @@ FROM mentors.moh_skills_checklist
 WHERE skill_evaluation = 'Shoulder dystocia'
 GROUP BY 1;
 
-SELECT COUNT(*) AS process_shoulder_rows
+SELECT
+  CASE
+    WHEN date_submitted <= DATE '2026-04-01' THEN 'on/before 2026-04-01'
+    WHEN date_submitted > DATE '2026-04-01' THEN 'after 2026-04-01'
+    ELSE 'null date_submitted'
+  END AS date_bucket,
+  COUNT(*) AS process_rows
 FROM mentors.process_moh_skills_assessment_2026
-WHERE skill_evaluation = 'Shoulder dystocia';
+WHERE skill_evaluation = 'Shoulder dystocia'
+GROUP BY 1;
 
 -- D) Inspect undocumented child views
 SELECT pg_get_viewdef('mentors.maternal_shock_evaluation_2026'::regclass, true);
 SELECT pg_get_viewdef('mentors.newborn_resuscitation_evaluation_2026'::regclass, true);
 ```
 
-### Likely primary cause
+### Remaining likely causes (after Shoulder dystocia fix)
 
-Most unexplained missing rows are expected to be either:
+Apply the updated `shoulder_dystocia_evaluation_2026` definition in the database, then re-check missing rows. Remaining gaps are expected to be:
 
-1. **Shoulder dystocia after 2026-04-01**, or
-2. **`skill_evaluation` values that do not exactly match a child-view label** (including Maternal shock / Newborn resuscitation if those views filter incorrectly).
+1. **`skill_evaluation` values that do not exactly match a child-view label**, or
+2. **Filters inside `maternal_shock_evaluation_2026` / `newborn_resuscitation_evaluation_2026`** (not defined in this file).
