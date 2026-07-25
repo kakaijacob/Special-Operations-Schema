@@ -1,0 +1,240 @@
+WITH curriculum_summary AS (
+
+    SELECT
+        mentee_id,
+        MAX(mentee_name) AS mentee_name,
+        MAX(county) AS county,
+        MAX(facility) AS facility,
+        MAX(facility_code) AS facility_code,
+        MAX(program) AS program,
+
+        -- CME Completion (19 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'CMEs'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 19
+            THEN 1 ELSE 0
+        END AS cme_completion,
+
+        -- Drill Completion (7 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'Drills'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 7
+            THEN 1 ELSE 0
+        END AS drill_completion,
+
+        -- Practicum Completion
+        CASE
+            WHEN MAX(CASE WHEN program = 'essential_newborn_care' THEN 1 ELSE 0 END) = 1
+                 AND COUNT(DISTINCT CASE
+                        WHEN mentorship_activity = 'practicums'
+                         AND program = 'essential_newborn_care'
+                         AND topic IS NOT NULL
+                         AND TRIM(topic) <> ''
+                        THEN topic
+                    END) = 20
+            THEN 1
+
+            WHEN MAX(CASE WHEN program = 'comprehensive_newborn_care' THEN 1 ELSE 0 END) = 1
+                 AND COUNT(DISTINCT CASE
+                        WHEN mentorship_activity = 'Practicums'
+                         AND program = 'comprehensive_newborn_care'
+                         AND topic IS NOT NULL
+                         AND TRIM(topic) <> ''
+                        THEN topic
+                    END) = 22
+            THEN 1
+
+            ELSE 0
+        END AS practicum_completion,
+
+        -- Skill Demonstration Completion (5 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'skill_demonstrations'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 5
+            THEN 1 ELSE 0
+        END AS skill_demo_completion,
+
+        -- Video Completion (12 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'Videos'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 12
+            THEN 1 ELSE 0
+        END AS video_completion,
+
+        -- Role Play Completion (2 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'Role plays'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 2
+            THEN 1 ELSE 0
+        END AS roleplay_completion,
+
+        -- Case Scenario Completion (9 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'Case scenarios'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 9
+            THEN 1 ELSE 0
+        END AS case_scenario_completion,
+
+        -- Group Discussion Completion (7 topics)
+        CASE
+            WHEN COUNT(DISTINCT CASE
+                    WHEN mentorship_activity = 'Group discussions'
+                     AND topic IS NOT NULL
+                     AND TRIM(topic) <> ''
+                    THEN topic
+                END) = 7
+            THEN 1 ELSE 0
+        END AS group_discussions_completion
+
+    FROM mentors.newborn_curriculum_tracking
+
+    GROUP BY mentee_id
+),
+
+
+assessment_scores AS (
+
+    WITH ranked AS (
+
+        SELECT
+            mentee_id,
+            submission_id,
+            date_submitted,
+            average_score,
+
+            ROW_NUMBER() OVER (
+                PARTITION BY mentee_id
+                ORDER BY date_submitted ASC, submission_id ASC
+            ) AS rn_first,
+
+            ROW_NUMBER() OVER (
+                PARTITION BY mentee_id
+                ORDER BY date_submitted DESC, submission_id DESC
+            ) AS rn_last,
+
+            COUNT(*) OVER (
+                PARTITION BY mentee_id
+            ) AS assessment_count
+
+        FROM mentors.process_moh_skills_assessment_2026
+
+        WHERE lower(trim(skill_evaluation)) = 'newborn resuscitation'
+          AND lower(trim(program)) = 'newborn curriculum'
+          AND average_score IS NOT NULL
+    )
+
+    SELECT
+        mentee_id,
+
+        -- First attempt is always baseline
+        MAX(
+            CASE
+                WHEN rn_first = 1
+                THEN average_score
+            END
+        ) AS baseline_score,
+
+        -- Endline only exists if there is a second attempt
+        MAX(
+            CASE
+                WHEN assessment_count > 1
+                 AND rn_last = 1
+                THEN average_score
+            END
+        ) AS endline_score,
+
+        MAX(
+            CASE
+                WHEN assessment_count > 1
+                 AND rn_last = 1
+                THEN date_submitted
+            END
+        ) AS assessment_completion_date
+
+    FROM ranked
+
+    GROUP BY mentee_id
+)
+
+
+SELECT
+    c.mentee_id,
+    c.mentee_name,
+    c.county,
+    c.facility,
+    c.facility_code,
+    c.program,
+
+    c.cme_completion,
+    c.drill_completion,
+    c.practicum_completion,
+    c.skill_demo_completion,
+    c.video_completion,
+    c.roleplay_completion,
+    c.case_scenario_completion,
+    c.group_discussions_completion,
+
+    a.baseline_score,
+    a.endline_score,
+
+    -- NNR Assessment Completion
+    CASE
+        WHEN a.baseline_score IS NOT NULL
+         AND a.endline_score IS NOT NULL
+         AND a.endline_score >= 0.85
+        THEN 1
+        ELSE 0
+    END AS nnr_assessment_completion,
+
+
+    -- Full Curriculum Completion
+    CASE
+        WHEN c.cme_completion = 1
+         AND c.drill_completion = 1
+         AND c.practicum_completion = 1
+         AND c.skill_demo_completion = 1
+         AND c.video_completion = 1
+         AND c.roleplay_completion = 1
+         AND c.case_scenario_completion = 1
+         AND c.group_discussions_completion = 1
+
+         AND a.baseline_score IS NOT NULL
+         AND a.endline_score IS NOT NULL
+         AND a.endline_score >= 0.85
+
+        THEN 1
+        ELSE 0
+    END AS curriculum_completion,
+
+    a.assessment_completion_date
+
+FROM curriculum_summary c
+
+LEFT JOIN assessment_scores a
+    ON TRIM(LOWER(c.mentee_id)) = TRIM(LOWER(a.mentee_id))
+
+ORDER BY c.mentee_id;
