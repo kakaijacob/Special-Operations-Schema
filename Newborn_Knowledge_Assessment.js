@@ -114,7 +114,8 @@ function removeExtraNewbornKASheets_(ss, keepNames) {
 // =====================================================
 function writeNewbornKASurvey_(sheet) {
   var rows = [NEWBORN_KA_SURVEY_HEADERS]
-    .concat(getNewbornKASurveyStartRows_());
+    .concat(getNewbornKASurveyStartRows_())
+    .concat(getNewbornKAAssessmentRows_());
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -268,6 +269,72 @@ function newbornKAFacilitySelectRow_(listName, countyLabel) {
     "",
     "${county} = '" + countyLabel + "'",
     ""
+  ];
+}
+
+/**
+ * Newborn Knowledge Assessment questions + thank-you note.
+ * Columns: type, name, label, hint, required, constraint_message,
+ *          constraint, relevant, calculation
+ */
+function getNewbornKAAssessmentRows_() {
+  var sectionRelevant = "${next_group_hide1}!=''";
+
+  return [
+    [
+      "begin_group",
+      "newborn_assessment",
+      "Newborn Knowledge Assessment",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      ""
+    ],
+    [
+      "note",
+      "note",
+      "*This section tests your understanding of key newborn care practices, including breastfeeding initiation, thermoregulation, hypoglycemia prevention, resuscitation protocols, neonatal feeding regimens, infection prevention, and safe transfer procedures. Choose the most appropriate response before submitting.*",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      ""
+    ],
+    ["select_one initiating_breastfeeding", "initiating_breastfeeding", "1. What is the recommendation regarding breastfeeding in a stable/term neonate?", "", "true", "", "", "", ""],
+    ["select_one neonatal_heatloss", "neonatal_heatloss", "2. Evaporation is the main source of heat loss in a neonate. Which of the following should be routinely done to prevent evaporation?", "", "true", "", "", "", ""],
+    ["select_one hyperthermia_risk_factors", "hyperthermia_risk_factors", "3. What are the risks associated with hypothermia in a neonate?", "", "true", "", "", "", ""],
+    ["select_one skin_to_skin", "skin_to_skin", "4. Which of the following is true regarding skin to skin mother care?", "", "true", "", "", "", ""],
+    ["select_one golden_minute", "golden_minute", "5. In neonatal resuscitation, the \"golden minute\" refers to:", "", "true", "", "", "", ""],
+    ["select_one mask_size", "mask_size", "6. The most appropriate mask for a preterm newborn is:", "", "true", "", "", "", ""],
+    ["select_one sga_infant", "sga_infant", "7. What is a small for gestational age (SGA) infant?", "", "true", "", "", "", ""],
+    ["select_one weight_gain", "weight_gain", "8. What is the goal for weight gain in a small vulnerable infant?", "", "true", "", "", "", ""],
+    ["select_one medication_seizure", "medication_seizure", "9. In a neonatal seizure, the first line pharmacological agent and dose is:", "", "true", "", "", "", ""],
+    ["select_one hypoglycemia_prevention", "hypoglycemia_prevention", "10. Which of the following is a key intervention to prevent hypoglycemia in a neonate?", "", "true", "", "", "", ""],
+    ["select_one cpap_contrandication", "cpap_contrandication", "11. In a neonate with respiratory distress, do NOT start CPAP if:", "", "true", "", "", "", ""],
+    ["select_one meconium_aspiration", "causes_newborn_mortality", "12. The main causes of newborn mortality are:", "", "true", "", "", "", ""],
+    ["select_one neonate_transfer", "neonate_transfer", "13. Which of the following is true regarding transfer of sick TERM neonates?", "", "true", "", "", "", ""],
+    ["select_one nicu_admission", "birth_weight", "14. Baby Musa is born and weighs 2000 grams. Baby Musa is:", "", "true", "", "", "", ""],
+    ["select_one handling_sharps", "handling_sharps", "15. Which of the following is true regarding proper handling of sharps?", "", "true", "", "", "", ""],
+    ["select_one nbu_hygiene", "nbu_hygiene", "16. Which of the following cleaning practices should be performed DAILY in the NBU?", "", "true", "", "", "", ""],
+    ["select_one feeding_regimen", "feeding_regimen", "17. Which of the following is the most appropriate feeding regimen for an 1800g unstable neonate who is one day old?", "", "true", "", "", "", ""],
+    ["select_one weight_monitoring", "weight_monitoring", "18. Which of the following statements is true?", "", "true", "", "", "", ""],
+    ["select_one cpr_ratio", "cpr_ratio", "19. What is the recommended compression-to-ventilation ratio during neonatal cardiopulmonary resuscitation (CPR)?", "", "true", "", "", "", ""],
+    ["select_one starting_cpr", "starting_cpr", "20. When resuscitating a newborn, cardiac compressions should be started if the heart rate is less than how many beats per minute?", "", "true", "", "", "", ""],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "note",
+      "thank_you",
+      "*Thank you for completing this knowledge assessment! Your feedback will help us tailor support and training to improve maternal and newborn health outcomes. Please click Submit to complete.*",
+      "",
+      "false",
+      "",
+      "",
+      "${starting_cpr}!=''",
+      ""
+    ]
   ];
 }
 
