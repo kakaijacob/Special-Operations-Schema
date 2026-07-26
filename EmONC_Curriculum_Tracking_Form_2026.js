@@ -4,7 +4,7 @@
 // from the shared kobocreator.js output workbook.
 // =====================================================
 
-var EMONC_CTF_2026_TITLE = "EmONC Curriculum Tracking Form 2026";
+var EMONC_CTF_2026_TITLE = "EmONC Curriculum Tracking Form";
 
 // Script Properties keys
 var EMONC_CTF_2026_PROP_FORM_ID = "EMONC_CTF_2026_SPREADSHEET_ID";
@@ -65,6 +65,9 @@ function upsertEmONCCurriculumTrackingForm2026_(sourceSs) {
     formSs = SpreadsheetApp.create(EMONC_CTF_2026_TITLE);
     props.setProperty(EMONC_CTF_2026_PROP_FORM_ID, formSs.getId());
     created = true;
+  } else if (formSs.getName() !== EMONC_CTF_2026_TITLE) {
+    // Keep saved form title in sync if it was created under an older name
+    formSs.rename(EMONC_CTF_2026_TITLE);
   }
 
   var surveySheet = getOrCreateEmONCCTF2026Sheet_(formSs, "survey");

@@ -32,7 +32,7 @@ function getKoboToolsRegistry_() {
     },
     {
       id: "emonc_ctf_2026",
-      label: "EmONC Curriculum Tracking Form 2026",
+      label: "EmONC Curriculum Tracking Form",
       buildFnName: "createEmONCCurriculumTrackingForm2026",
       enabled: true
     }
