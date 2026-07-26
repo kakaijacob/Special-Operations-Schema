@@ -24,7 +24,8 @@ var NEWBORN_CTF_SURVEY_HEADERS = [
 var NEWBORN_CTF_CHOICES_HEADERS = [
   "list_name",
   "name",
-  "label"
+  "label",
+  "allowed"
 ];
 
 var NEWBORN_CTF_SETTINGS_HEADERS = [
@@ -121,9 +122,11 @@ function removeExtraNewbornCTFSheets_(ss, keepNames) {
 // =====================================================
 function writeNewbornCTFSurvey_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_SURVEY_HEADERS]
-    .concat(getNewbornCTFSurveyRows_());
+    .concat(getNewbornCTFSurveyRows_())
+    .concat(getNewbornCTFSection1bRows_());
 
-  // Later sections (facility / mentee lists / curriculum) will append here.
+  // Later: mentee select rows + curriculum sections will append here.
+  // mentee_details / demographic_information groups stay open for now.
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -254,14 +257,79 @@ function getNewbornCTFSurveyRows_() {
   ];
 }
 
+/**
+ * Section 1b: county + facility selects (choice_filter by program).
+ * mentee_details group left open for mentee attendance rows next.
+ */
+function getNewbornCTFSection1bRows_() {
+  var sectionRelevant =
+    "${first_name}!='' and ${second_name}!='' and ${session_date}!='' and ${program}!=''";
+
+  return [
+    [
+      "begin_group",
+      "mentee_details",
+      "Section 1b: Mentee Details",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "mentee_details_note",
+      "***Enumerator Note:*** *This section captures the location and participating mentees for the mentorship session. Please select the county and facility where the session was conducted, then identify all mentees who participated from the selected facility. Ensure the correct facility is selected before marking mentee attendance to support accurate participation tracking and reporting.*",
+      "",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      ""
+    ],
+    [
+      "select_one county",
+      "county",
+      "4. Which county are you in?",
+      "true",
+      "Sorry, this answer is required",
+      "",
+      "",
+      "",
+      ""
+    ],
+    newbornFacilitySelectRow_("kakamega_facilities", "Kakamega"),
+    newbornFacilitySelectRow_("makueni_facilities", "Makueni"),
+    newbornFacilitySelectRow_("mombasa_facilities", "Mombasa"),
+    newbornFacilitySelectRow_("muranga_facilities", "Muranga")
+  ];
+}
+
+function newbornFacilitySelectRow_(listName, countyLabel) {
+  return [
+    "select_one " + listName,
+    listName,
+    "5. Which facility are you in?",
+    "true",
+    "Sorry, this answer is required",
+    "",
+    "${county} = '" + countyLabel + "'",
+    "contains(allowed, ${program})",
+    ""
+  ];
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
 function writeNewbornCTFChoices_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_CHOICES_HEADERS]
-    .concat(getNewbornCTFProgramChoices_());
+    .concat(getNewbornCTFProgramChoices_())
+    .concat(getNewbornCTFCountyChoices_())
+    .concat(getNewbornCTFFacilityChoices_(sourceSs));
 
-  // Later: counties, facilities, mentees, modules will append here.
+  // Later: mentees, modules will append here.
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -271,11 +339,70 @@ function writeNewbornCTFChoices_(sheet, sourceSs) {
  * Newborn program options for select_one program.
  */
 function getNewbornCTFProgramChoices_() {
-  // list_name, name, label
+  // list_name, name, label, allowed
   return [
-    ["program", "essential_newborn_care", "Essential Newborn Care"],
-    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care"]
+    ["program", "essential_newborn_care", "Essential Newborn Care", ""],
+    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care", ""]
   ];
+}
+
+function getNewbornCTFCountyChoices_() {
+  // list_name, name, label, allowed
+  return [
+    ["county", "Kakamega", "Kakamega", ""],
+    ["county", "Makueni", "Makueni", ""],
+    ["county", "Mombasa", "Mombasa", ""],
+    ["county", "Muranga", "Murang'a", ""]
+  ];
+}
+
+/**
+ * Facility choices from kobocreator sheet
+ * "Newborn Facilities List (Choices)" → list_name, name, label, allowed
+ */
+function getNewbornCTFFacilityChoices_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Newborn Facilities List (Choices)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Newborn Facilities List (Choices)' not found. " +
+      "Run generateNewbornAssessmentSheet() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var listNameIndex = header.indexOf("list_name");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var allowedIndex = header.indexOf("allowed");
+
+  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
+    throw new Error(
+      "Newborn Facilities List (Choices) is missing required columns: list_name, name, label"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var listName = data[i][listNameIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var allowed = allowedIndex === -1 ? "" : data[i][allowedIndex];
+
+    if (!listName && !name) continue;
+
+    rows.push([
+      listName || "",
+      name || "",
+      label || "",
+      allowed || ""
+    ]);
+  }
+
+  return rows;
 }
 
 // =====================================================
