@@ -930,7 +930,152 @@ function getMoHSACSection2Rows_() {
         ""
       ],
       ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close group_ubt_free_flow
-    ]);
+    ])
+    .concat(getMoHSACManualPlacentaRows_());
+}
+
+/**
+ * Section 2b: Manual Removal of Placenta checklist + score.
+ */
+function getMoHSACManualPlacentaRows_() {
+  var emptyBladderLabel =
+    "7. Administer analgesics and antibiotics:\n" +
+    "  • Give Diazepam 10 mg IM/IV (if woman is not in shock)\n" +
+    "  • Give 2 g Ampicillin IV or 1 g Cefazolin IV or IV Ceftriaxone 2 g plus IV Metronidazole 500 mg";
+
+  var scoreCalc =
+    "round(((" +
+    "(${shout_for_help1}='yes')+" +
+    "(${obtain_consent_001}='yes')+" +
+    "(${v_drape}='yes')+" +
+    "(${insert_iv_lines}='yes')+" +
+    "(${lithotomy_position_001}='yes')+" +
+    "(${repeat_oxytocin}='yes')+" +
+    "(${empty_bladder}='yes')+" +
+    "(${analgesics_antibiotics}='yes')+" +
+    "(${wear_gynecological_gloves}='yes')+" +
+    "(${guide_hor_into_uterus}='yes')+" +
+    "(${locate_placenta_edge}='yes')+" +
+    "(${placenta_removal}='yes')+" +
+    "(${cct}='yes')+" +
+    "(${check_for_atony}='yes')+" +
+    "(${placenta_examination}='yes')+" +
+    "(${explore_for_fragments}='yes')+" +
+    "(${remove_fragments}='yes')+" +
+    "(${laceration_repair}='yes')+" +
+    "(${oxytocin_20_iu}='yes')+" +
+    "(${vital_signs_001}='yes')+" +
+    "(${message_to_mother}='yes')+" +
+    "(${other_managment}='yes')" +
+    ")*100 div 22,0)";
+
+  var items = [
+    ["shout_for_help1", "shout_for_help1", "1. Shout for help."],
+    ["obtain_consent", "obtain_consent_001", "2. Briefly explain the procedure to the mother depending on the client’s condition and obtain consent."],
+    ["v_drape", "v_drape", "3. Place a blood loss measuring drape."],
+    ["insert_iv_lines", "insert_iv_lines", "4. Insert large-bore IV lines."],
+    ["lithotomy_position", "lithotomy_position_001", "5. Place patient in lithotomy position."],
+    ["repeat_oxytocin", "repeat_oxytocin", "6. Insert a Foley’s catheter and empty bladder."],
+    ["empty_bladder", "empty_bladder", emptyBladderLabel],
+    ["analgesics_antibiotics", "analgesics_antibiotics", "8. Perform hand hygiene and wear PPE (personal protective equipment) and put on gynecological gloves."],
+    ["wear_gynecological_gloves", "wear_gynecological_gloves", "9. Hold the umbilical cord with a clamp and gently pull, using the cord to guide your other hand into the uterus."],
+    ["guide_hand_into_uterus", "guide_hor_into_uterus", "10. Place fingers of one hand into the uterus and follow the cord to locate the placenta and identify the edge of the placenta."],
+    ["locate_placenta_edge", "locate_placenta_edge", "11. Identify the rough surface behind the placenta and carefully separate it from the uterine wall by smoothly sweeping fingers back and forth while stabilizing the uterine fundus with the other hand, using smooth lateral motion until the placenta separates from the uterine wall."],
+    ["placenta_removal", "placenta_removal", "12. Withdraw the hand, bringing the placenta with it, and provide counter-traction abdominally."],
+    ["cct", "cct", "13. Once the placenta is out, check uterine tone and massage if soft (after massage, say “uterus well contracted”)."],
+    ["check_for_atony", "check_for_atony", "14. Examine the placenta for completeness."],
+    ["placenta_examination", "placenta_examination", "15. Perform exploration for any fragments."],
+    ["explore_for_fragments", "explore_for_fragments", "16. If fragments are present, remove by hand, ovum forceps, or wide curette."],
+    ["remove_fragments", "remove_fragments", "17. Examine the cervix, vagina, and perineum for any tears and repair accordingly."],
+    ["laceration_repair", "laceration_repair", "18. Give oxytocin 20 IU in 1 litre normal saline at 60 drops per minute."],
+    ["oxytocin_20_iu", "oxytocin_20_iu", "19. Check vital signs every 15 minutes for the first 2 hours after the placenta is out and every 30 minutes for the next 6 hours."],
+    ["vital_signs", "vital_signs_001", "20. Explain to the mother the results of the procedure."],
+    ["message_to_mother", "message_to_mother", "21. If the placenta is still adherent despite manual attempt at removal, consider manual removal in theatre under anaesthesia, laparotomy, or subtotal hysterectomy in extreme cases."],
+    ["other_managment", "other_managment", "22. Document on the blood loss monitoring chart."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_manual_placenta_removal",
+      "Section 2b: Manual Removal of Placenta",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Manual_removal_of_placenta'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_manualplacenta",
+      "***Case Scenario:*** *You are on duty and are informed that it has been one hour since the patient delivered, and the placenta has not been delivered. On further inquiry, the patient is para 2+0, all previous deliveries were SVDs. She is currently having minimal bleeding, with normal vital signs. The baby had a good Apgar score and is stable. Using the mannequin provided, describe step by step how you will perform manual removal of the placenta. Give a running commentary throughout the procedure.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "manual_placenta_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "manual_placenta_pass",
+      "*Congratulations! Your score is **[${manual_placenta_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${manual_placenta_score} >= 84.5 and ${other_managment}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "manual_placenta_fail",
+      "*Sorry! Your score is **[${manual_placenta_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${manual_placenta_score} < 84.5 and ${other_managment}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
 }
 
 function getMoHSACUbtFreeflowChecklistRows_() {
@@ -1003,12 +1148,18 @@ function getMoHSACSkillEvaluationChoices_() {
       "UBT_(free flow)",
       "UBT (Free Flow)",
       "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Manual_removal_of_placenta",
+      "Manual Removal of Placenta",
+      "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
 }
 
 function getMoHSACUbtFreeflowYesNoChoices_() {
-  var listNames = [
+  return getMoHSACYesNoChoicesForLists_([
     "obtain_consent",
     "sterile_gloves",
     "assemble_ubt",
@@ -1043,8 +1194,35 @@ function getMoHSACUbtFreeflowYesNoChoices_() {
     "referral",
     "close_valve_in_transfer",
     "Document"
-  ];
+  ]);
+}
 
+function getMoHSACManualPlacentaYesNoChoices_() {
+  // Only lists not already covered by UBT Free Flow yes/no choices
+  return getMoHSACYesNoChoicesForLists_([
+    "shout_for_help1",
+    "v_drape",
+    "insert_iv_lines",
+    "repeat_oxytocin",
+    "empty_bladder",
+    "analgesics_antibiotics",
+    "wear_gynecological_gloves",
+    "guide_hand_into_uterus",
+    "locate_placenta_edge",
+    "placenta_removal",
+    "cct",
+    "check_for_atony",
+    "placenta_examination",
+    "explore_for_fragments",
+    "remove_fragments",
+    "laceration_repair",
+    "oxytocin_20_iu",
+    "message_to_mother",
+    "other_managment"
+  ]);
+}
+
+function getMoHSACYesNoChoicesForLists_(listNames) {
   var rows = [];
   for (var i = 0; i < listNames.length; i++) {
     rows.push([listNames[i], "yes", "Yes", ""]);
@@ -1069,7 +1247,8 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
     .concat(getMoHSACMentorsMenteeChoices_(sourceSs))
     .concat(getMoHSACSkillEvaluationChoices_())
-    .concat(getMoHSACUbtFreeflowYesNoChoices_());
+    .concat(getMoHSACUbtFreeflowYesNoChoices_())
+    .concat(getMoHSACManualPlacentaYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
