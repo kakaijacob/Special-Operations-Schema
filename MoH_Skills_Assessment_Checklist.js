@@ -932,7 +932,9 @@ function getMoHSACSection2Rows_() {
       ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close group_ubt_free_flow
     ])
     .concat(getMoHSACManualPlacentaRows_())
-    .concat(getMoHSACUbtRows_());
+    .concat(getMoHSACUbtRows_())
+    .concat(getMoHSACCordProlapseRows_())
+    .concat(getMoHSACAssistedBreechRows_());
 }
 
 /**
@@ -1214,6 +1216,275 @@ function getMoHSACUbtRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Management of Cord Prolapse checklist + score.
+ */
+function getMoHSACCordProlapseRows_() {
+  var tocolyticsLabel =
+    "12. Give tocolytics (Nifedipine, MgSO4).\n" +
+    "  • Patient to be transported in knee-elbow or knee-chest position.\n" +
+    "  • Catheter to be deflated before the caesarean section.";
+
+  var expeditingLabel =
+    "14. Expedite delivery with vacuum extraction.\n" +
+    "  • If the baby is breech, perform breech extraction.";
+
+  var scoreCalc =
+    "round(((" +
+    "(${shout_for_help_001}='yes')+" +
+    "(${obtain_consent_003}='yes')+" +
+    "(${vaginal_exam}='yes')+" +
+    "(${confirm_diagnosis}='yes')+" +
+    "(${confirms_cord_pulsation}='yes')+" +
+    "(${patient_position}='yes')+" +
+    "(${manual_cord_decompression}='yes')+" +
+    "(${consent_prep_emergency_cs}='yes')+" +
+    "(${patient_transfer_position}='yes')+" +
+    "(${hor_removal}='yes')+" +
+    "(${bladder_filling}='yes')+" +
+    "(${tocolytics}='yes')+" +
+    "(${when_cord_not_pulsating}='yes')+" +
+    "(${expediting_delivery}='yes')+" +
+    "(${prepare_to_resuscitate}='yes')" +
+    ")*100 div 15,0)";
+
+  var items = [
+    ["shout_for_help", "shout_for_help_001", "1. Shouts for help."],
+    ["obtain_consent", "obtain_consent_003", "2. Briefly explains to the mother the diagnosis and the procedure and obtain informed consent."],
+    ["vaginal_exam", "vaginal_exam", "3. Gently performs a sterile vaginal examination."],
+    ["confirm_diagnosis", "confirm_diagnosis", "4. Confirms diagnosis of cord prolapse, cervical dilation at 6 cm, cephalic presentation in longitudinal lie."],
+    ["confirms_cord_pulsation", "confirms_cord_pulsation", "5. Confirms that the cord is pulsating."],
+    ["patient_position", "patient_position", "6. Positions the patient in knee-elbow, exaggerated Sims, or knee-chest position on a stretcher."],
+    ["manual_cord_decompression", "manual_cord_decompression", "7. Repeats a vaginal examination, manually displaces the presenting part from the pelvis, and does not remove the hand."],
+    ["consent_prep_emergency_cs", "consent_prep_emergency_cs", "8. Obtain consent and prepare for emergency caesarean section."],
+    ["patient_transfer_position", "patient_transfer_position", "9. Patient is taken to theatre in knee-elbow or knee-chest position, with the presenting part manually displaced from the pelvis, or in exaggerated Sims position."],
+    ["hand_removal", "hor_removal", "10. Remove hand from the vagina when the patient is ready for caesarean section."],
+    ["bladder_filling", "bladder_filling", "11. Fill the bladder with 500 mL normal saline and clamp the catheter after displacing the presenting part."],
+    ["tocolytics", "tocolytics", tocolyticsLabel],
+    ["when_cord_not_pulsating", "when_cord_not_pulsating", "13. If the cord is not pulsating, the fetus may be dead. Deliver in the manner safest for the mother (it is no longer an emergency)."],
+    ["expediting_delivery", "expediting_delivery", expeditingLabel],
+    ["prepare_to_resuscitate", "prepare_to_resuscitate", "15. Prepare to resuscitate the newborn."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_cord_prolapse",
+      "Section 2b: Management of Cord Prolapse",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Cord_prolapse'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_cordprolapse",
+      "***Case Scenario:*** *You are a healthcare provider working in a health facility when a pregnant mother comes in. On vaginal examination, you discover cord prolapse at 6 cm cervical dilatation, with a pulsating cord. Conduct the management using the mannequin provided. Give a running commentary.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    var required = items[i][1] === "expediting_delivery" ? "false" : "true";
+    rows.push([
+      "select_one " + items[i][0],
+      items[i][1],
+      items[i][2],
+      "",
+      required,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]);
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "cord_prolapse_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "cord_prolapse_pass",
+      "*Congratulations! Your score is **[${cord_prolapse_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${cord_prolapse_score} >= 84.5 and ${prepare_to_resuscitate}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "cord_prolapse_fail",
+      "*Sorry! Your score is **[${cord_prolapse_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${cord_prolapse_score} < 84.5 and ${prepare_to_resuscitate}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
+/**
+ * Section 2b: Assisted Breech Delivery checklist + score.
+ */
+function getMoHSACAssistedBreechRows_() {
+  var scoreCalc =
+    "round(((" +
+    "(${confirm_diagnosis_001}='yes')+" +
+    "(${obtain_consent_004}='yes')+" +
+    "(${call_for_help}='yes')+" +
+    "(${empty_bladder_001}='yes')+" +
+    "(${consider_episiotomy}='yes')+" +
+    "(${hands_off_breech}='yes')+" +
+    "(${pinard_manuever}='yes')+" +
+    "(${grip_pelvis_bone}='yes')+" +
+    "(${lovset_maneuver}='yes')+" +
+    "(${maurecieu_smellie_veit_maneuve}='yes')+" +
+    "(${amtsl}='yes')+" +
+    "(${message_to_mother_002}='yes')+" +
+    "(${documentation_001}='yes')" +
+    ")*100 div 13,0)";
+
+  var items = [
+    ["confirm_diagnosis", "confirm_diagnosis_001", "1. Confirm diagnosis both abdominally and vaginally and rule out any contraindications."],
+    ["obtain_consent", "obtain_consent_004", "2. Explain the diagnosis, procedure, and risks, and obtain consent."],
+    ["call_for_help", "call_for_help", "3. Calls for help."],
+    ["empty_bladder", "empty_bladder_001", "4. Empty bladder."],
+    ["consider_episiotomy", "consider_episiotomy", "5. Consider episiotomy if necessary."],
+    ["hands_off_breech", "hands_off_breech", "6. Employ “hands-off breech”."],
+    ["pinard_manuever", "pinard_manuever", "7. If legs do not deliver, deliver one at a time using Pinard manoeuvre."],
+    ["grip_pelvis_bone", "grip_pelvis_bone", "8. Wrap up the body with a towel to allow support and grip at the pelvic bone and keep encouraging the mother to push."],
+    ["lovset_maneuver", "lovset_maneuver", "9. If arms do not deliver spontaneously, use Lovset’s manoeuvre to deliver."],
+    ["maurecieu_smellie_veit_maneuve", "maurecieu_smellie_veit_maneuve", "10. Deliver the head using Mauriceau-Smellie-Veit manoeuvre."],
+    ["amtsl", "amtsl", "11. Initiate active management of third stage of labour."],
+    ["message_to_mother", "message_to_mother_002", "12. Explain the results to the mother."],
+    ["documentation", "documentation_001", "13. Documentation."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_assisted_breech",
+      "Section 2b: Assisted Breech Delivery",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Assisted_breech_delivery'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_breech",
+      "***Case scenario:*** *Agnes, a para 2+0, gravida 3, comes to your maternity unit at full dilatation with a breech presentation. Using the mannequins provided, demonstrate, with a running commentary, how to conduct an assisted vaginal breech delivery.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "breech_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "breech_pass",
+      "*Congratulations! Your score is **[${breech_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${breech_score} >= 84.5 and ${documentation_001}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "breech_fail",
+      "*Sorry! Your score is **[${breech_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${breech_score} < 84.5 and ${documentation_001}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
 function getMoHSACUbtFreeflowChecklistRows_() {
   var items = [
     ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
@@ -1295,6 +1566,18 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "UBT",
       "UBT",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Cord_prolapse",
+      "Management of Cord Prolapse",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Assisted_breech_delivery",
+      "Assisted Breech Delivery",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
@@ -1386,6 +1669,38 @@ function getMoHSACUbtYesNoChoices_() {
   ]);
 }
 
+function getMoHSACCordProlapseYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "shout_for_help",
+    "vaginal_exam",
+    "confirm_diagnosis",
+    "confirms_cord_pulsation",
+    "patient_position",
+    "manual_cord_decompression",
+    "consent_prep_emergency_cs",
+    "patient_transfer_position",
+    "hand_removal",
+    "bladder_filling",
+    "tocolytics",
+    "when_cord_not_pulsating",
+    "expediting_delivery",
+    "prepare_to_resuscitate"
+  ]);
+}
+
+function getMoHSACAssistedBreechYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "call_for_help",
+    "consider_episiotomy",
+    "hands_off_breech",
+    "pinard_manuever",
+    "grip_pelvis_bone",
+    "lovset_maneuver",
+    "maurecieu_smellie_veit_maneuve",
+    "amtsl"
+  ]);
+}
+
 function getMoHSACYesNoChoicesForLists_(listNames) {
   var rows = [];
   for (var i = 0; i < listNames.length; i++) {
@@ -1413,7 +1728,9 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACSkillEvaluationChoices_())
     .concat(getMoHSACUbtFreeflowYesNoChoices_())
     .concat(getMoHSACManualPlacentaYesNoChoices_())
-    .concat(getMoHSACUbtYesNoChoices_());
+    .concat(getMoHSACUbtYesNoChoices_())
+    .concat(getMoHSACCordProlapseYesNoChoices_())
+    .concat(getMoHSACAssistedBreechYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
