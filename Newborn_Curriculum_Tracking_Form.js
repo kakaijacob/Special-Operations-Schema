@@ -842,9 +842,7 @@ function writeNewbornCTFChoices_(sheet, sourceSs) {
     .concat(getNewbornCTFCountyChoices_())
     .concat(getNewbornCTFFacilityChoices_(sourceSs))
     .concat(getNewbornCTFMenteeChoices_(sourceSs))
-    .concat(getNewbornCTFProgramChoices_());
-
-  // Later: newborn_modules / activities / cmes / etc. will append here.
+    .concat(getNewbornCTFCurriculumChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -864,12 +862,127 @@ function getNewbornCTFCountyChoices_() {
 }
 
 /**
- * Newborn program options for select_one program.
+ * Program, modules, activities, and topic choice lists for Section 2.
+ * Columns: list_name, name, label, allowed, module_constraint
  */
-function getNewbornCTFProgramChoices_() {
+function getNewbornCTFCurriculumChoices_() {
   return [
-    ["program", "essential_newborn_care", "Essential Newborn Care", "", ""],
-    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care", "", ""]
+    ["program", "essential_newborn_care", "Essential Newborn Care (ENC)", "", ""],
+    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care (CNC)", "", ""],
+
+    ["newborn_modules", "module_one", "Module 1: Infection Prevention and Control (IPC)", "", ""],
+    ["newborn_modules", "module_two", "Module 2: Infant and Family Centred Developmental Care (IFCDC)", "", ""],
+    ["newborn_modules", "module_three", "Module 3: Essential Newborn Care (ENC)", "", ""],
+    ["newborn_modules", "module_four", "Module 4: Oxygen Therapy", "", ""],
+    ["newborn_modules", "module_five", "Module 5: Neonatal Thermoregulation", "", ""],
+    ["newborn_modules", "module_six", "Module 6: Newborn Resuscitation", "", ""],
+    ["newborn_modules", "module_seven", "Module 7: Identification of Newborn Danger Signs and Management of Neonatal Sepsis", "", ""],
+    ["newborn_modules", "module_eight", "Module 8: Care of the Small and Sick Newborns", "", ""],
+    ["newborn_modules", "module_nine", "Module 9: Neonatal Jaundice", "", ""],
+    ["newborn_modules", "module_ten", "Module 10: Neonatal Hypoglycaemia", "", ""],
+    ["newborn_modules", "module_eleven", "Module 11: Neonatal Feeds and Fluids", "", ""],
+    ["newborn_modules", "module_twelve", "Module 12: Documentation and Referral", "", ""],
+    ["newborn_modules", "module_thirteen", "Module 13: Monitoring and Evaluation", "", ""],
+
+    ["newborn_activities", "cmes", "Activity 1: CME Lecturettes", "comprehensive_newborn_care, essential_newborn_care", "module_one, module_two, module_three, module_four, module_five, module_six, module_seven, module_eight, module_nine, module_ten, module_eleven"],
+    ["newborn_activities", "videos", "Activity 2: Videos", "comprehensive_newborn_care, essential_newborn_care", "module_one, module_three, module_four, module_seven, module_eight, module_ten, module_eleven"],
+    ["newborn_activities", "case_scenarios", "Activity 3: Case Scenarios", "comprehensive_newborn_care, essential_newborn_care", "module_three, module_six, module_seven, module_eight, module_nine"],
+    ["newborn_activities", "role_plays", "Activity 4: Role Plays", "comprehensive_newborn_care, essential_newborn_care", "module_two"],
+    ["newborn_activities", "drills", "Activity 5: Simulation Drills", "comprehensive_newborn_care, essential_newborn_care", "module_three, module_six, module_seven, module_eight, module_nine,module_ten,module_eleven"],
+    ["newborn_activities", "mentor_skills_demonstrations", "Activity 6: Skills Demonstrations", "comprehensive_newborn_care, essential_newborn_care", "module_four, module_six, module_seven, module_ten"],
+    ["newborn_activities", "practicum", "Activity 7: Practicum", "comprehensive_newborn_care, essential_newborn_care", "module_one, module_two, module_four, module_five, module_six, module_seven, module_eight, module_nine, module_ten, module_eleven, module_twelve, module_thirteen"],
+    ["newborn_activities", "group_discussions", "Activity 8: Group Discussions", "comprehensive_newborn_care, essential_newborn_care", "module_seven,module_twelve,module_thirteen"],
+
+    ["cmes", "infection_prevention_and_control", "Infection Prevention and Control (IPC)", "comprehensive_newborn_care, essential_newborn_care", "module_one"],
+    ["cmes", "infant_and_family_centred_developmental_care", "Infant and Family Centred Developmental Care (IFCDC)", "comprehensive_newborn_care, essential_newborn_care", "module_two"],
+    ["cmes", "essential_newborn_care", "Essential Newborn Care (ENC)", "comprehensive_newborn_care, essential_newborn_care", "module_three"],
+    ["cmes", "newborn_care_transition", "Newborn Care Transition", "comprehensive_newborn_care, essential_newborn_care", "module_three"],
+    ["cmes", "indications_and_safe_use_of_oxygen", "Indications and Safe Use of Oxygen", "comprehensive_newborn_care, essential_newborn_care", "module_four"],
+    ["cmes", "the_use_of_pulse_oximetry", "The Use of Pulse Oximetry", "comprehensive_newborn_care, essential_newborn_care", "module_four"],
+    ["cmes", "neonatal_thermoregulation", "Neonatal Thermoregulation", "comprehensive_newborn_care, essential_newborn_care", "module_five"],
+    ["cmes", "the_use_of_a_radiant_warmer", "The Use of a Radiant Warmer", "comprehensive_newborn_care, essential_newborn_care", "module_five"],
+    ["cmes", "use_of_incubator_and_different_settings", "Use of Incubator and Different Settings", "comprehensive_newborn_care, essential_newborn_care", "module_five"],
+    ["cmes", "newborn_resuscitation", "Newborn Resuscitation", "comprehensive_newborn_care, essential_newborn_care", "module_six"],
+    ["cmes", "danger_signs_inclusive_of_neonatal_convulsions_and_neonatal_sepsis", "Danger Signs Inclusive of Neonatal Convulsions and Neonatal Sepsis", "comprehensive_newborn_care, essential_newborn_care", "module_seven"],
+    ["cmes", "introduction_to_care_of_small_and_sick_newborns_and_discussion_of_use_of_plastic_wraps", "Introduction to Care of Small and Sick Newborns and Discussion of Use of Plastic Wraps", "comprehensive_newborn_care, essential_newborn_care", "module_eight"],
+    ["cmes", "ballard_score", "Ballard Score", "comprehensive_newborn_care, essential_newborn_care", "module_eight"],
+    ["cmes", "continuous_positive_airway_pressure", "Continuous Positive Airway Pressure (CPAP)", "comprehensive_newborn_care, essential_newborn_care", "module_eight"],
+    ["cmes", "apnea_of_prematurity_and_use_of_caffeine_citrate", "Apnea of Prematurity and Use of Caffeine Citrate", "comprehensive_newborn_care, essential_newborn_care", "module_eight"],
+    ["cmes", "kangaroo_mother_care", "Kangaroo Mother Care (KMC)", "comprehensive_newborn_care, essential_newborn_care", "module_eight"],
+    ["cmes", "neonatal_jaundice", "Neonatal Jaundice", "comprehensive_newborn_care, essential_newborn_care", "module_nine"],
+    ["cmes", "neonatal_feeding_algorithm", "Neonatal Feeding Algorithm", "comprehensive_newborn_care, essential_newborn_care", "module_ten"],
+    ["cmes", "newborn_feeding_and_discussion_of_feeding_algorithm", "Newborn Feeding and Discussion of Feeding Algorithm", "comprehensive_newborn_care, essential_newborn_care", "module_eleven"],
+
+    ["group_discussions", "triple_elimination_of_hiv_syphilis_and_hepatitis_b", "Tripple elimination of HIV, Syphilis and Hepatitis B", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["group_discussions", "newborn_transport", "Newborn Transport", "comprehensive_newborn_care, essential_newborn_care", "module_twelve"],
+    ["group_discussions", "indications_for_referral", "Indications for Referral", "comprehensive_newborn_care, essential_newborn_care", "module_twelve"],
+    ["group_discussions", "referral_process_and_newborn_transport", "Referral Process and Newborn Transport", "comprehensive_newborn_care, essential_newborn_care", "module_twelve"],
+    ["group_discussions", "primary_data_collection_tools", "Primary Data Collection Tools", "comprehensive_newborn_care, essential_newborn_care", "module_thirteen"],
+    ["group_discussions", "multidisciplinary_neonatal_death_audits", "Multidisciplinary Neonatal Death Audits", "comprehensive_newborn_care, essential_newborn_care", "module_thirteen"],
+    ["group_discussions", "neonatal_mentorship_monitoring_and_evaluation_indicators", "Neonatal Mentorship Monitoring and Evaluation (M&E) Indicators", "comprehensive_newborn_care, essential_newborn_care", "module_thirteen"],
+
+    ["videos", "infection_prevention_and_control", "Infection Prevention and Control (IPC)", "essential_newborn_care, comprehensive_newborn_care", "module_one"],
+    ["videos", "essential_newborn_care", "Essential Newborn Care (ENC)", "essential_newborn_care, comprehensive_newborn_care", "module_three"],
+    ["videos", "use_of_oxygen_blenders", "Use of Oxygen Blenders", "essential_newborn_care, comprehensive_newborn_care", "module_four"],
+    ["videos", "neonatal_danger_signs", "Neonatal Danger Signs", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["videos", "kangaroo_mother_care", "Kangaroo Mother Care (KMC)", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["videos", "use_of_plastic_wraps", "Use of Plastic Wraps", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["videos", "ballard_score", "Ballard Score", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["videos", "testing_blood_glucose_using_heel_prick", "Testing Blood Glucose Using Heel Prick", "essential_newborn_care, comprehensive_newborn_care", "module_ten"],
+    ["videos", "newborn_feeding", "Newborn Feeding", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["videos", "breastfeeding_techniques", "Breastfeeding Techniques", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["videos", "milk_expression_and_cup_feeding", "Milk Expression and Cup Feeding", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["videos", "oral_gastric_nasogastric_tube_insertion_and_use", "Oral Gastric/Nasogastric Tube Insertion and Use", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+
+    ["practicums", "hand_hygiene", "Hand Hygiene", "essential_newborn_care, comprehensive_newborn_care", "module_one"],
+    ["practicums", "swaddling_and_nesting", "Swaddling and Nesting", "essential_newborn_care, comprehensive_newborn_care", "module_two"],
+    ["practicums", "use_of_pulse_oximetry", "Use of Pulse Oximetry", "essential_newborn_care, comprehensive_newborn_care", "module_four"],
+    ["practicums", "the_use_of_a_radiant_warmer", "The Use of a Radiant Warmer", "essential_newborn_care, comprehensive_newborn_care", "module_five"],
+    ["practicums", "the_use_of_an_incubator_and_different_settings", "The Use of an Incubator and Different Settings", "essential_newborn_care, comprehensive_newborn_care", "module_five"],
+    ["practicums", "warmth_airway_management_breathing_and_circulation", "Warmth, Airway Management, Breathing and Circulation", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["practicums", "identification_of_danger_signs", "Identification of Danger Signs (Bedside)", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["practicums", "kangaroo_mother_care", "Kangaroo Mother Care (KMC)", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["practicums", "use_of_plastic_wraps", "Use of Plastic Wraps", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["practicums", "bedside_mentorship_for_use_of_ballard_score", "Bedside Mentorship for Use of Ballard Score", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["practicums", "skill_of_assembly_and_use_of_cpap_and_monitoring_babies_on_cpap", "Skill of Assembly and Use of CPAP and Monitoring Babies on CPAP", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["practicums", "calculation_and_administration_of_caffeine_citrate", "Calculation and Administration of Caffeine Citrate", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["practicums", "the_use_of_nomograms_to_determine_therapy", "The Use of Nomograms to Determine Therapy", "essential_newborn_care, comprehensive_newborn_care", "module_nine"],
+    ["practicums", "skills_training_bedside_mentorship_on_phototherapy_use", "Skills Training / Bedside Mentorship on Phototherapy Use", "essential_newborn_care, comprehensive_newborn_care", "module_nine"],
+    ["practicums", "testing_blood_glucose_using_heel_prick", "Testing Blood Glucose Using Heel Prick", "essential_newborn_care, comprehensive_newborn_care", "module_ten"],
+    ["practicums", "buccal_glucose_therapy", "Buccal Glucose Therapy", "essential_newborn_care, comprehensive_newborn_care", "module_ten"],
+    ["practicums", "determining_mode_and_volume_of_feeding_and_hunger_cues", "Determining Mode and Volume of Feeding and Hunger Cues", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["practicums", "feeds_and_fluids_drills", "Feeds and Fluids Drills", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["practicums", "milk_expression_and_cup_feeding", "Milk Expression and Cup Feeding", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["practicums", "oral_gastric_nasogastric_tube_insertion_and_use", "Oral Gastric/Nasogastric Tube Insertion and Use", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+    ["practicums", "referral_form_completion_and_communication", "Referral Form Completion and Communication", "essential_newborn_care, comprehensive_newborn_care", "module_twelve"],
+    ["practicums", "practical_chart_audits_for_inpatients_file_mch_handbook", "Practical Chart Audits for Inpatients File / MCH Handbook", "essential_newborn_care, comprehensive_newborn_care", "module_thirteen"],
+
+    ["case_scenarios", "essential_newborn_care", "Essential Newborn Care (ENC)", "essential_newborn_care, comprehensive_newborn_care", "module_three"],
+    ["case_scenarios", "resuscitation_of_a_term_baby_with_prolonged_second_stage", "Resuscitation of a Term Baby with Prolonged Second Stage", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["case_scenarios", "resuscitation_of_a_baby_who_is_unresponsive_in_the_ward", "Resuscitation of a Baby Who Is Unresponsive in the Ward", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["case_scenarios", "neonatal_danger_signs_and_neonatal_sepsis", "Neonatal Danger Signs and Neonatal Sepsis", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["case_scenarios", "neonatal_convulsions", "Neonatal Convulsions", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["case_scenarios", "management_of_a_neonate_with_persistent_convulsions_despite_receiving_an_initial_loading_dose_of_phenobarbitone", "Management of a Neonate with Persistent Convulsions Despite Receiving an Initial Loading Dose of Phenobarbitone (2-Day-Old)", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["case_scenarios", "management_of_a_neonate_with_persistent_convulsions_despite_receiving_initial_loading_dose_and_mini_loading_dose_of_phenobarbitone", "Management of a Neonate with Persistent Convulsions Despite Receiving Initial Loading Dose and Mini Loading Dose of Phenobarbitone", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["case_scenarios", "delivery_of_a_preterm_baby_initiation_of_cpap_and_starting_of_prophylactic_caffeine_citrate", "Delivery of a preterm baby, Initiation of CPAP and starting of prophylactic caffeine citrate", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["case_scenarios", "how_to_wean_off_phototherapy_in_a_baby_with_neonatal_jaundice", "How to Wean Off Phototherapy in a Baby with Neonatal Jaundice", "essential_newborn_care, comprehensive_newborn_care", "module_nine"],
+
+    ["skill_demonstrations", "oxygen_delivery_devices_prescribing_and_monitoring_oxygen", "Oxygen Delivery Devices, Prescribing, and Monitoring Oxygen", "essential_newborn_care, comprehensive_newborn_care", "module_four"],
+    ["skill_demonstrations", "warmth_airway_management_breathing_and_circulation", "Warmth, Airway Management, Breathing and Circulation", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["skill_demonstrations", "monitoring_skills_using_the_air_device", "Monitoring Skills Using the AIR Device", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["skill_demonstrations", "how_to_draw_samples_for_blood_culture", "How to Draw Samples for Blood Culture", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["skill_demonstrations", "buccal_glucose_therapy", "Buccal Glucose Therapy", "essential_newborn_care, comprehensive_newborn_care", "module_ten"],
+
+    ["drills", "essential_newborn_care", "Essential Newborn Care (ENC)", "essential_newborn_care, comprehensive_newborn_care", "module_three"],
+    ["drills", "neonatal_resuscitation", "Neonatal Resuscitation", "essential_newborn_care, comprehensive_newborn_care", "module_six"],
+    ["drills", "identification_of_newborn_danger_signs_and_management_of_neonatal_sepsis", "Identification of Newborn Danger Signs and Management of Neonatal Sepsis", "essential_newborn_care, comprehensive_newborn_care", "module_seven"],
+    ["drills", "care_of_the_small_and_sick_newborn", "Care of the Small and Sick Newborn", "essential_newborn_care, comprehensive_newborn_care", "module_eight"],
+    ["drills", "neonatal_jaundice", "Neonatal Jaundice", "essential_newborn_care, comprehensive_newborn_care", "module_nine"],
+    ["drills", "neonatal_hypoglycaemia", "Neonatal Hypoglycaemia", "essential_newborn_care, comprehensive_newborn_care", "module_ten"],
+    ["drills", "breastfeeding_techniques_and_lactation_support", "Breastfeeding Techniques and Lactation Support", "essential_newborn_care, comprehensive_newborn_care", "module_eleven"],
+
+    ["role_plays", "effective_communication_with_a_mother_family_good_communication_skills", "Effective Communication with a Mother/Family – Good Communication Skills", "essential_newborn_care, comprehensive_newborn_care", "module_two"],
+    ["role_plays", "effective_communication_with_a_mother_family_bad_communication_skills", "Effective Communication with a Mother/Family – Bad Communication Skills", "essential_newborn_care, comprehensive_newborn_care", "module_two"]
   ];
 }
 
