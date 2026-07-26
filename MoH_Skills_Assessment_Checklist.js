@@ -754,7 +754,7 @@ function getMoHSACMentorsMenteeSurveyRows_(sourceSs) {
 
 /**
  * Section 2 opener + skill picker + UBT (Free Flow) checklist.
- * skills_assessment group left open for additional skill groups.
+ * skills_assessment is closed by getMoHSACSection2ClosingRows_().
  */
 function getMoHSACSection2Rows_() {
   var sectionRelevant =
@@ -949,7 +949,9 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACAorticCompressionRows_())
     .concat(getMoHSACHipRows_())
     .concat(getMoHSACUterineInversionRows_())
-    .concat(getMoHSACEmotiveRows_());
+    .concat(getMoHSACEmotiveRows_())
+    .concat(getMoHSACPartographRows_())
+    .concat(getMoHSACSection2ClosingRows_());
 }
 
 /**
@@ -3001,6 +3003,136 @@ function getMoHSACEmotiveRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Partograph checklist + score.
+ */
+function getMoHSACPartographRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_partograph",
+      "Section 2b: Partograph",
+      "",
+      "",
+      "",
+      "",
+      "${skill_evaluation} = 'Partograph'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_partograph", "***Case Scenario:*** *Francisca Atieno is a 16-year-old primigravida at 40 weeks’ gestation. She has been in labour at home for 8 hours before admission. Her membranes ruptured 6 hours before admission.*", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "table",
+      "Partograph Table",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "field-list w3"
+    ],
+    ["note", "note", "Time", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_001", "Dilatation", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_002", "Contraction", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_003", "FHR", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_004", "Liquor", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_005", "Descent", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_006", "Moulding", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_007", "Pulse", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_008", "BP", "", "", "", "", "", "", "", "", "w1"],
+    ["note", "note_009", "Temp", "", "", "", "", "", "", "", "", "w1"],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""],
+    ["select_one explain_procedure_mother", "explain_procedure_mother", "1. Explains the procedure to the mother and birth companion.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one obtain_informed_consent", "obtain_informed_consent", "2. Obtains informed consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one decide_partograph_case", "decide_partograph_case", "3. Decides if case is for partograph or not based on dilatation correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_patient_biodata", "plot_patient_biodata", "4. Plots patient biodata and information correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_cervical_dilatation", "plot_cervical_dilatation", "5. Plots cervical dilatation correctly (and with correct symbol).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_descent", "plot_descent", "6. Plots descent correctly (and with correct symbol).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_fetal_heart", "plot_fetal_heart", "7. Plots fetal heart rate correctly (and with correct symbol).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_amniotic_fluid", "plot_amniotic_fluid", "8. Plots amniotic fluid correctly (and with correct symbol).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_moulding", "plot_moulding", "9. Plots moulding correctly (and with correct symbol).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_contractions", "plot_contractions", "10. Plots contractions correctly (number and strength).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one plot_maternal_vitals", "plot_maternal_vitals", "11. Plots maternal vitals correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one interpret_findings", "interpret_findings", "12. Makes interpretation correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one explain_labour_progress", "explain_labour_progress", "13. Explains to the mother the progress of labour correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one joint_decision_mother", "joint_decision_mother", "14. Makes joint decision with mother correctly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one document_procedures", "document_procedures", "15. Documentation of all procedures.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "partograph_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${explain_procedure_mother}='yes')+(${obtain_informed_consent}='yes')+(${decide_partograph_case}='yes')+(${plot_patient_biodata}='yes')+(${plot_cervical_dilatation}='yes')+(${plot_descent}='yes')+(${plot_fetal_heart}='yes')+(${plot_amniotic_fluid}='yes')+(${plot_moulding}='yes')+(${plot_contractions}='yes')+(${plot_maternal_vitals}='yes')+(${interpret_findings}='yes')+(${explain_labour_progress}='yes')+(${joint_decision_mother}='yes')+(${document_procedures}='yes'))*100 div 15,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "partograph_pass",
+      "*Congratulations! Your score is **[${partograph_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${partograph_score} >= 84.5 and ${document_procedures}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "partograph_fail",
+      "*Sorry! Your score is **[${partograph_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${partograph_score} < 84.5 and ${document_procedures}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Close Section 2 and show thank-you note after any completed skill checklist.
+ */
+function getMoHSACSection2ClosingRows_() {
+  return [
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""], // close skills_assessment
+    [
+      "note",
+      "Thank_you",
+      "*The end. Thank you for completing this skills assessment checklist. The information you have provided will help track improvements in knowledge and skills and support continuous improvement of MENTORS activities.*",
+      "",
+      "false",
+      "",
+      "",
+      "(${skill_evaluation}!='') and (${Document} != '' or ${other_managment} != '' or ${documentation} != '' or ${prepare_to_resuscitate} != '' or ${documentation_001} != '' or ${message_to_mother_003} != '' or ${document_procedure1} != '' or ${document_results} != '' or ${documentation_nnr} != '' or ${IV_antibiotics} != '' or ${document_results2} != '' or ${health_talk} != '' or ${recovery_position} != '' or ${document_results3} != '' or ${message_to_mother_012} != '' or ${message_to_mother_013} != '' or ${mgso4_antidote} != '' or ${document_blood_loss} != '' or ${document_management_chart} != '' or ${document_procedures} != '')",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+}
+
 function getMoHSACNnrChoices_() {
   var rows = [];
   var lists = {
@@ -3307,6 +3439,21 @@ function getMoHSACExtraSkillYesNoChoices_() {
     "provide_respectful_care",
     "inform_mother_progress",
     "document_management_chart",
+        "explain_procedure_mother",
+    "obtain_informed_consent",
+    "decide_partograph_case",
+    "plot_patient_biodata",
+    "plot_cervical_dilatation",
+    "plot_descent",
+    "plot_fetal_heart",
+    "plot_amniotic_fluid",
+    "plot_moulding",
+    "plot_contractions",
+    "plot_maternal_vitals",
+    "interpret_findings",
+    "explain_labour_progress",
+    "joint_decision_mother",
+    "document_procedures",
   ]);
 }
 function getMoHSACUbtFreeflowChecklistRows_() {
@@ -3492,6 +3639,12 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "EMOTIVE",
       "EMOTIVE",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Partograph",
+      "Partograph",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
