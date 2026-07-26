@@ -1072,6 +1072,8 @@ function generateNewbornChoicesSheet() {
 
 // =====================================================
 // 1️⃣2️⃣ SURVEY SHEET (IFM) – UPDATED COLUMN ORDER
+// Unique Facility Code rows where at least one IFM at that
+// facility has Status = Active. Details come from an Active row.
 // =====================================================
 function generateSurveySheetIFM() {
 
@@ -1083,14 +1085,21 @@ function generateSurveySheetIFM() {
   var ifmData = ifmSheet.getDataRange().getValues();
   var ifmHeader = ifmData[0];
 
-  // Mentor (IFM) Database 2026 headers: county (was County), Facility, Facility Code
+  // Mentor (IFM) Database 2026 headers: county (was County), Facility, Facility Code, Status
   var countyIndex = findHeaderIndex_(ifmHeader, ["county", "County"]);
   var facilityIndex = findHeaderIndex_(ifmHeader, "Facility");
   var facilityCodeIndex = findHeaderIndex_(ifmHeader, "Facility Code");
+  var statusIndex = findHeaderIndex_(ifmHeader, "Status");
 
-  if (countyIndex === -1 || facilityIndex === -1 || facilityCodeIndex === -1) {
+  if (
+    countyIndex === -1 ||
+    facilityIndex === -1 ||
+    facilityCodeIndex === -1 ||
+    statusIndex === -1
+  ) {
     throw new Error(
-      "IFM List is missing required columns: county/County, Facility, Facility Code"
+      "IFM List is missing required columns: county/County, Facility, " +
+      "Facility Code, Status"
     );
   }
 
@@ -1110,17 +1119,46 @@ function generateSurveySheetIFM() {
     "relevant"
   ]];
 
-  var processed = {}; // ensure facility appears once
+  // Group by facility code. Include facility if ANY row is Active;
+  // prefer county/facility details from an Active row.
+  var facilitiesByCode = {};
 
   for (var i = 1; i < ifmData.length; i++) {
-
     var county = ifmData[i][countyIndex];
     var facility = ifmData[i][facilityIndex];
     var code = ifmData[i][facilityCodeIndex];
+    var status = String(
+      ifmData[i][statusIndex] == null ? "" : ifmData[i][statusIndex]
+    ).trim();
 
     if (!county || !facility || !code) continue;
-    if (processed[code]) continue;
-    processed[code] = true;
+
+    var key = String(code);
+    if (!facilitiesByCode[key]) {
+      facilitiesByCode[key] = {
+        county: county,
+        facility: facility,
+        code: code,
+        hasActive: false
+      };
+    }
+
+    if (status.toLowerCase() === "active") {
+      facilitiesByCode[key].hasActive = true;
+      facilitiesByCode[key].county = county;
+      facilitiesByCode[key].facility = facility;
+      facilitiesByCode[key].code = code;
+    }
+  }
+
+  var codes = Object.keys(facilitiesByCode);
+  for (var c = 0; c < codes.length; c++) {
+    var rec = facilitiesByCode[codes[c]];
+    if (!rec.hasActive) continue;
+
+    var county = rec.county;
+    var facility = rec.facility;
+    var code = rec.code;
 
     // Clean facility
     var cleanedFacility = cleanForKobo(facility);
@@ -1139,7 +1177,7 @@ function generateSurveySheetIFM() {
     var facilityValue = code + "_" + cleanedFacility;
 
     // County variable for ${county_facilities} format
-    var countyVar = county.toLowerCase().replace(/\s+/g, "_");
+    var countyVar = String(county).toLowerCase().replace(/\s+/g, "_");
 
     // Relevant string
     var relevant = `\${${countyVar}_facilities} = '${facilityValue}' and (\${program} = 'ifm_assessment' or \${program} = 'tot')`;
