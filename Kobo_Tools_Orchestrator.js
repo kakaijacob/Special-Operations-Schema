@@ -8,6 +8,7 @@
 //   3) EmONC_Curriculum_Tracking_Form_2026.js
 //   4) Newborn_Curriculum_Tracking_Form.js
 //   5) MoH_Skills_Assessment_Checklist.js
+//   6) Newborn_Knowledge_Assessment.js
 //
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
@@ -47,6 +48,12 @@ function getKoboToolsRegistry_() {
       id: "moh_sac",
       label: "MoH Skills Assessment Checklist",
       buildFnName: "createMoHSkillsAssessmentChecklist",
+      enabled: true
+    },
+    {
+      id: "newborn_ka",
+      label: "Newborn Knowledge Assessment",
+      buildFnName: "createNewbornKnowledgeAssessment",
       enabled: true
     }
     // Add more tools below as needed.
