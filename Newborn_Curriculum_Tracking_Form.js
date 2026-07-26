@@ -34,18 +34,9 @@ var NEWBORN_CTF_SETTINGS_HEADERS = [
 ];
 
 /**
- * Spreadsheet menu: Newborn CTF
- * If EmONC CTF is also installed in this project, merge both menus into one onOpen.
- */
-function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu("Newborn CTF")
-    .addItem("Create / Update Form", "createNewbornCurriculumTrackingForm")
-    .addToUi();
-}
-
-/**
- * Create the form spreadsheet on first run; later runs overwrite in place.
+ * Create / update this form only.
+ * Prefer the shared pipeline refreshAllKoboTools() from Kobo_Tools_Orchestrator.js
+ * (sync → kobocreator → all registered forms). Menu/trigger live there.
  */
 function createNewbornCurriculumTrackingForm() {
   return upsertNewbornCurriculumTrackingForm_(
