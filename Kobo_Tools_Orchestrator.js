@@ -21,10 +21,6 @@ var KOBO_TOOLS_LOCAL_MENTEE_SHEET = "Mentee Database";
 /**
  * Register each form builder here as you add tools (~10 planned).
  * buildFnName must match a global function in another Apps Script file.
- *
- * Example when EmONC file is also installed:
- *   { id: "emonc_ctf_2026", label: "EmONC Curriculum Tracking Form 2026",
- *     buildFnName: "createEmONCCurriculumTrackingForm2026", enabled: true }
  */
 function getKoboToolsRegistry_() {
   return [
