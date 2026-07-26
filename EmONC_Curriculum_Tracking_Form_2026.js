@@ -42,11 +42,92 @@ var EMONC_CTF_2026_DEFAULT_SOURCE_ID =
   "1W6YzsLt8BKIWkZvCT-Ggvs3CtA2GBnW7ggSfujlJypA";
 
 /**
+ * Spreadsheet menu: EmONC CTF 2026
+ * - Refresh Now → runs the full sequential pipeline once
+ * - Install Daily Auto-Refresh → time trigger on the same pipeline
+ * - Remove Auto-Refresh → deletes those triggers
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("EmONC CTF 2026")
+    .addItem("Refresh Now", "refreshEmONCCurriculumTrackingForm2026")
+    .addItem("Install Daily Auto-Refresh", "installEmONCCTF2026DailyTrigger")
+    .addItem("Remove Auto-Refresh", "removeEmONCCTF2026Triggers")
+    .addToUi();
+}
+
+/**
  * One-click setup for the known Mentee Database 2026 spreadsheet.
  * Run this once from the Apps Script dropdown, then run refresh.
  */
 function setupEmONCCTF2026() {
   setEmONCCTF2026Config(EMONC_CTF_2026_DEFAULT_SOURCE_ID);
+}
+
+/**
+ * Install a daily time-driven trigger that runs ONLY
+ * refreshEmONCCurriculumTrackingForm2026().
+ *
+ * That function already runs steps in order:
+ *   1) syncMenteeDatabaseFrom2026
+ *   2) kobocreator generators
+ *   3) upsert EmONC Curriculum Tracking Form 2026
+ *
+ * Do NOT create separate triggers for the sub-steps.
+ */
+function installEmONCCTF2026DailyTrigger() {
+  // Avoid duplicate triggers for the same function
+  removeEmONCCTF2026Triggers();
+
+  // Runs once per day (Apps Script chooses a time window).
+  // To pin a time, change to: .atHour(6).everyDays(1)
+  ScriptApp.newTrigger("refreshEmONCCurriculumTrackingForm2026")
+    .timeBased()
+    .everyDays(1)
+    .create();
+
+  Logger.log(
+    "Installed daily auto-refresh trigger for refreshEmONCCurriculumTrackingForm2026()."
+  );
+}
+
+/**
+ * Optional: install an hourly auto-refresh trigger instead of daily.
+ * Run this once from the Apps Script editor if you prefer hourly.
+ */
+function installEmONCCTF2026HourlyTrigger() {
+  removeEmONCCTF2026Triggers();
+
+  ScriptApp.newTrigger("refreshEmONCCurriculumTrackingForm2026")
+    .timeBased()
+    .everyHours(1)
+    .create();
+
+  Logger.log(
+    "Installed hourly auto-refresh trigger for refreshEmONCCurriculumTrackingForm2026()."
+  );
+}
+
+/**
+ * Remove all time triggers that call the EmONC CTF refresh pipeline.
+ */
+function removeEmONCCTF2026Triggers() {
+  var triggers = ScriptApp.getProjectTriggers();
+  var removed = 0;
+
+  for (var i = 0; i < triggers.length; i++) {
+    var handler = triggers[i].getHandlerFunction();
+    if (
+      handler === "refreshEmONCCurriculumTrackingForm2026" ||
+      handler === "installEmONCCTF2026DailyTrigger" ||
+      handler === "installEmONCCTF2026HourlyTrigger"
+    ) {
+      ScriptApp.deleteTrigger(triggers[i]);
+      removed++;
+    }
+  }
+
+  Logger.log("Removed " + removed + " EmONC CTF auto-refresh trigger(s).");
 }
 
 /**
