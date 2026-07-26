@@ -683,7 +683,8 @@ function getMoHSACNewbornMenteeSurveyRows_(sourceSs) {
 /**
  * MENTORS / EmONC mentee selects from kobocreator sheet
  * "MoH Skills Assessment Checklist".
- * Pulls type, name, label, relevant only.
+ * Pulls type, name, label, relevant.
+ * Source required is blank — emit text "true" for Kobo.
  */
 function getMoHSACMentorsMenteeSurveyRows_(sourceSs) {
   var sourceSheet = sourceSs.getSheetByName("MoH Skills Assessment Checklist");
@@ -729,12 +730,13 @@ function getMoHSACMentorsMenteeSurveyRows_(sourceSs) {
     // type, name, label, hint, required, required_message,
     // constraint_message, relevant, choice_filter, calculation,
     // constraint, appearance
+    // Source required column is blank → always write "true"
     rows.push([
       type || "",
       name || "",
       label || "",
       "",
-      "",
+      "true",
       "",
       "",
       relevant || "",
