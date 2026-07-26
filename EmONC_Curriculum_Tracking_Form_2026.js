@@ -116,12 +116,7 @@ function removeEmONCCTF2026Triggers() {
   var removed = 0;
 
   for (var i = 0; i < triggers.length; i++) {
-    var handler = triggers[i].getHandlerFunction();
-    if (
-      handler === "refreshEmONCCurriculumTrackingForm2026" ||
-      handler === "installEmONCCTF2026DailyTrigger" ||
-      handler === "installEmONCCTF2026HourlyTrigger"
-    ) {
+    if (triggers[i].getHandlerFunction() === "refreshEmONCCurriculumTrackingForm2026") {
       ScriptApp.deleteTrigger(triggers[i]);
       removed++;
     }
