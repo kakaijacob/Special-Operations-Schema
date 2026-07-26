@@ -117,10 +117,10 @@ function removeExtraMoHSACSheets_(ss, keepNames) {
 // SURVEY
 // =====================================================
 function writeMoHSACSurvey_(sheet, sourceSs) {
-  // sourceSs reserved for later dynamic mentee rows
   var rows = [MOH_SAC_SURVEY_HEADERS]
     .concat(getMoHSACSurveyRows_())
-    .concat(getMoHSACSection1bRows_());
+    .concat(getMoHSACSection1bRows_())
+    .concat(getMoHSACSection1cRows_(sourceSs));
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -382,6 +382,197 @@ function mohSacFacilitySelectRow_(listName, fieldName, countyLabel) {
   ];
 }
 
+/**
+ * Section 1c: ToT IFM capture, Lead Mentors/POs, and IFM selects
+ * imported from kobocreator "Survey Sheet (IFM)".
+ * Group left open for later mentee selects.
+ */
+function getMoHSACSection1cRows_(sourceSs) {
+  return getMoHSACSection1cStaticRows_()
+    .concat(getMoHSACIfmSurveyRows_(sourceSs));
+}
+
+function getMoHSACSection1cStaticRows_() {
+  return [
+    [
+      "begin_group",
+      "mentees",
+      "Section 1c: List of Mentees, IFMs or POs",
+      "",
+      "false",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "text",
+      "ifm_name",
+      "6. Please record the first and last name of the IFM being trained.",
+      "Enumerator Note: Record only the first and last names, in Title Case e.g Leonard Omusula",
+      "true",
+      "Enumerator Note: Record only the first and last names, in Title Case e.g Leonard Omusula",
+      "",
+      "${program}='tot'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "integer",
+      "ifm_id",
+      "7a. Please enter the phone number of the IFM being trained.",
+      "Please enter the phone number in this format: 07XXXXXXXX or 01XXXXXXXX.",
+      "true",
+      "Please enter the phone number in this format: 07XXXXXXXX or 01XXXXXXXX.",
+      "Please enter a 10-digit phone number starting with 07 or 01.",
+      "${program}='tot'",
+      "",
+      "",
+      "regex(., '^[0-9]{9}$')",
+      ""
+    ],
+    [
+      "integer",
+      "ifm_id_2",
+      "7b. Please confirm the phone number of the IFM being trained.",
+      "Ensure that this number matches the phone number entered above.",
+      "true",
+      "Ensure that this number matches the phone number entered above.",
+      "The phone numbers do not match! Please check and try again.",
+      "${program}='tot'",
+      "",
+      "",
+      ". = ${ifm_id}",
+      ""
+    ],
+    [
+      "select_one lm_po",
+      "lm_po",
+      "Lead Mentors & Program Officers",
+      "",
+      "true",
+      "",
+      "",
+      "${JHSL_facilities} = 'JHSL'",
+      "contains(allowed, ${program})",
+      "",
+      "",
+      ""
+    ]
+  ];
+}
+
+/**
+ * IFM facility selects from kobocreator "Survey Sheet (IFM)".
+ * - Forces relevant to ifm_assessment only (ToT uses free-text fields above)
+ * - Deduplicates colliding names as name_001, name_002, ...
+ */
+function getMoHSACIfmSurveyRows_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Survey Sheet (IFM)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Survey Sheet (IFM)' not found. " +
+      "Run generateSurveySheetIFM() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var typeIndex = header.indexOf("type");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var requiredIndex = header.indexOf("required");
+  var requiredMessageIndex = header.indexOf("required_message");
+  var relevantIndex = header.indexOf("relevant");
+
+  if (
+    typeIndex === -1 ||
+    nameIndex === -1 ||
+    labelIndex === -1 ||
+    requiredIndex === -1 ||
+    relevantIndex === -1
+  ) {
+    throw new Error(
+      "Survey Sheet (IFM) is missing required columns: " +
+      "type, name, label, required, relevant"
+    );
+  }
+
+  var rows = [];
+  var nameCounts = {};
+
+  for (var i = 1; i < data.length; i++) {
+    var type = data[i][typeIndex];
+    var baseName = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var required = normalizeMoHSACRequired_(data[i][requiredIndex]);
+    var requiredMessage =
+      requiredMessageIndex === -1 ? "" : (data[i][requiredMessageIndex] || "");
+    var relevant = normalizeMoHSACIfmRelevant_(data[i][relevantIndex]);
+
+    if (!type && !baseName) continue;
+
+    var name = String(baseName || "");
+    if (name) {
+      if (nameCounts[name] === undefined) {
+        nameCounts[name] = 0;
+      } else {
+        nameCounts[name] += 1;
+        name = name + "_" + padMoHSACNumber_(nameCounts[name], 3);
+      }
+    }
+
+    rows.push([
+      type || "",
+      name,
+      label || "",
+      "",
+      required,
+      requiredMessage || "",
+      "",
+      relevant || "",
+      "",
+      "",
+      "",
+      ""
+    ]);
+  }
+
+  return rows;
+}
+
+function normalizeMoHSACRequired_(value) {
+  var cleaned = String(value == null ? "" : value).trim().toLowerCase();
+  if (cleaned === "true" || cleaned === "false") return cleaned;
+  return cleaned;
+}
+
+/**
+ * Keep facility equality from Survey Sheet (IFM), but show IFM selects
+ * only for program = ifm_assessment.
+ */
+function normalizeMoHSACIfmRelevant_(relevant) {
+  var raw = String(relevant == null ? "" : relevant);
+  var match = raw.match(/(\$\{[^}]+_facilities\}\s*=\s*'[^']+')/);
+  if (match) {
+    return match[1] + " and ((${program} = 'ifm_assessment'))";
+  }
+  return raw;
+}
+
+function padMoHSACNumber_(num, width) {
+  var s = String(num);
+  while (s.length < width) s = "0" + s;
+  return s;
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
@@ -390,21 +581,78 @@ function writeMoHSACChoices_(sheet, sourceSs) {
   var rows = [MOH_SAC_CHOICES_HEADERS]
     .concat(getMoHSACProgramChoices_())
     .concat(getMoHSACCountyChoices_(facilityRows))
-    .concat(facilityRows);
+    .concat(facilityRows)
+    .concat(getMoHSACLmPoChoices_())
+    .concat(getMoHSACIfmChoices_(sourceSs));
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
 }
 
 /**
- * Program options aligned with kobocreator Skills Assessments logic:
- * mentors_curriculum / newborn_curriculum.
+ * Program options used by MoH Skills Assessment Checklist.
  */
 function getMoHSACProgramChoices_() {
   return [
     ["program", "mentors_curriculum", "MENTORS Curriculum (EmONC)", ""],
-    ["program", "newborn_curriculum", "Newborn Curriculum", ""]
+    ["program", "newborn_curriculum", "Newborn Curriculum", ""],
+    ["program", "ifm_assessment", "IFM Assessment", ""],
+    ["program", "tot", "Training of Trainers (ToT)", ""]
   ];
+}
+
+/**
+ * Lead Mentors & Program Officers choices (lm_po).
+ * Populate when the source list is provided.
+ */
+function getMoHSACLmPoChoices_() {
+  return [];
+}
+
+/**
+ * IFM person choices from kobocreator "IFM List (Choices)".
+ */
+function getMoHSACIfmChoices_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("IFM List (Choices)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'IFM List (Choices)' not found. " +
+      "Run generateIFMChoicesSheet() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var listNameIndex = header.indexOf("list_name");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+
+  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
+    throw new Error(
+      "IFM List (Choices) is missing required columns: list_name, name, label"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var listName = data[i][listNameIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+
+    if (!listName && !name) continue;
+
+    rows.push([
+      listName || "",
+      name || "",
+      label || "",
+      ""
+    ]);
+  }
+
+  return rows;
 }
 
 /**
