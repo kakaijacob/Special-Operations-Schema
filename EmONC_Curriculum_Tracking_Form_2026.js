@@ -222,7 +222,31 @@ function getEmONCCTF2026SurveyRows_() {
       "",
       nextGroupHideCalc
     ],
-    ["end_group", "", "", "", "", "", "", "", "", ""]
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "mentee_details",
+      "Section 1c: List of Mentees",
+      "",
+      "",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "mentee_notes",
+      "***Enumerator Note:*** *Please select only the mentees who were present and participated in the session delivered.*",
+      "",
+      "",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ]
   ];
 }
 
