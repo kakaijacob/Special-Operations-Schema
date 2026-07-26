@@ -344,7 +344,8 @@ function getNewbornKAAssessmentRows_() {
 function writeNewbornKAChoices_(sheet, sourceSs) {
   var rows = [NEWBORN_KA_CHOICES_HEADERS]
     .concat(getNewbornKACountyChoices_())
-    .concat(getNewbornKAFacilityChoices_(sourceSs));
+    .concat(getNewbornKAFacilityChoices_(sourceSs))
+    .concat(getNewbornKAQuestionChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -416,6 +417,114 @@ function getNewbornKAFacilityChoices_(sourceSs) {
   }
 
   return rows;
+}
+
+/**
+ * Multiple-choice options for the 20 knowledge questions.
+ * Columns: list_name, name, label
+ */
+function getNewbornKAQuestionChoices_() {
+  return [
+    ["initiating_breastfeeding", "a", "A. Breastfeeding should take place within the first 24 hours post birth"],
+    ["initiating_breastfeeding", "b", "B. Breastfeeding should be delayed until the infant passes meconium"],
+    ["initiating_breastfeeding", "c", "C. Breastfeeding should take place once the baby gives hunger signals"],
+    ["initiating_breastfeeding", "Correct", "D. Breastfeeding should take place within an hour post birth"],
+
+    ["neonatal_heatloss", "a", "A. Place the baby immediately under a radiant warmer"],
+    ["neonatal_heatloss", "b", "B. Ensure no draughts from doors or windows in the delivery room"],
+    ["neonatal_heatloss", "Correct", "C. Dry the newborn immediately after delivery"],
+    ["neonatal_heatloss", "d", "D. Immediately take the infant's temperature"],
+
+    ["hyperthermia_risk_factors", "a", "A. Increased risk of hypoglycaemia"],
+    ["hyperthermia_risk_factors", "b", "B. Increased risk of respiratory distress"],
+    ["hyperthermia_risk_factors", "c", "C. Increased risk of mortality"],
+    ["hyperthermia_risk_factors", "Correct", "D. All of the above"],
+
+    ["skin_to_skin", "a", "A. Clinically unstable babies should always be placed skin-to-skin"],
+    ["skin_to_skin", "Correct", "B. Skin to skin promotes early breastfeeding and bonding"],
+    ["skin_to_skin", "c", "C. There is a slight increased risk of infection"],
+    ["skin_to_skin", "d", "D. If skin to skin lasts too long, a baby may develop hyperthermia"],
+
+    ["golden_minute", "a", "A. The moment a new mother is allowed to latch her baby and initiate breastfeeding"],
+    ["golden_minute", "b", "B. The minute after the neonate shows signs of life following resuscitation"],
+    ["golden_minute", "c", "C. One whole minute of counting infant's first breath by the health provider"],
+    ["golden_minute", "Correct", "D. The 1st 60 secs of a neonate's life"],
+
+    ["mask_size", "Correct", "A. Size 0 - should cover the chin, mouth and nose of the infant"],
+    ["mask_size", "b", "B. Size 1 - should cover the chin, mouth and nose of the infant"],
+    ["mask_size", "c", "C. Size 2 - should cover the chin, mouth and nose of the infant"],
+    ["mask_size", "d", "D. Appropriate size of mask depends on infant's face and size, but most often size 1"],
+
+    ["sga_infant", "a", "A. Any infant weighing less than 1000g"],
+    ["sga_infant", "b", "B. Any infant born prior to 37 weeks"],
+    ["sga_infant", "Correct", "C. Any baby whose birth weight falls below the 10th percentile for that gestational age"],
+    ["sga_infant", "d", "D. Any infant greater than 1499g and less than 2500g"],
+
+    ["weight_gain", "a", "A. 5g/kg/day"],
+    ["weight_gain", "Correct", "B. 15g/kg/day"],
+    ["weight_gain", "c", "C. 10g/kg/day"],
+    ["weight_gain", "d", "D. 20g/kg/day"],
+
+    ["medication_seizure", "a", "A. Levetiracetam at 30mg/kg"],
+    ["medication_seizure", "b", "B. Phenytoin15mg/kg IV"],
+    ["medication_seizure", "c", "C. Phenytoin 20mg/kg IV"],
+    ["medication_seizure", "Correct", "D. Phenobarbitone 20mg/kg IM"],
+
+    ["hypoglycemia_prevention", "a", "A. Keep warm to prevent hypothermia"],
+    ["hypoglycemia_prevention", "b", "B. Early initiation of breastfeeding"],
+    ["hypoglycemia_prevention", "d", "C. Postpone infant bathing for at least 6 hours post birth"],
+    ["hypoglycemia_prevention", "Correct", "D. All of the above"],
+
+    ["cpap_contrandication", "Correct", "A. The infant is seizing"],
+    ["cpap_contrandication", "b", "B. The infant weighs>1000g"],
+    ["cpap_contrandication", "c", "C. The infant is hypoglycemic"],
+    ["cpap_contrandication", "d", "D. O₂ saturation is <90%"],
+
+    ["meconium_aspiration", "a", "A. Asphyxia, Pneumonia & Preterm birth"],
+    ["meconium_aspiration", "b", "B. Pneumonia, Diarrhoea & HIV"],
+    ["meconium_aspiration", "Correct", "C. Preterm birth, asphyxia & Infections"],
+    ["meconium_aspiration", "d", "D. Infections, Diarrhoea & Pneumonia"],
+
+    ["neonate_transfer", "a", "A. Preterm infants ALWAYS require referral to a NICU facility"],
+    ["neonate_transfer", "b", "B. Infants being referred ALWAYS require IV dextrose infusion prior to transfer"],
+    ["neonate_transfer", "c", "C. The ideal method of thermal care during transfer is plastic wrap"],
+    ["neonate_transfer", "Correct", "D. There are high rates of hypothermia and oxygen deprivation upon arrival to receiving facilities"],
+
+    ["nicu_admission", "a", "A. Normal weight for a term newborn"],
+    ["nicu_admission", "Correct", "B. LBW"],
+    ["nicu_admission", "C", "C. Very LBW"],
+    ["nicu_admission", "d", "D. Above normal weight for male infants"],
+
+    ["handling_sharps", "a", "A. All syringes should be recapped prior to being discarded in the sharps container"],
+    ["handling_sharps", "b", "B. Most needles can be used more than once for cost effectiveness on the same patient"],
+    ["handling_sharps", "Correct", "C. Sharps containers should be placed as close to the point of use as possible - ideally within arm’s reach"],
+    ["handling_sharps", "d", "D. Sharps containers should have a fill line at 50% full"],
+
+    ["nbu_hygiene", "a", "A. Clean windows, walls, lamps and chairs to prevent dust accumulation"],
+    ["nbu_hygiene", "b", "B. Wiping of all equipment, cots and examination tables"],
+    ["nbu_hygiene", "Correct", "C. Wet-mop floors with a disinfectant and detergent solution"],
+    ["nbu_hygiene", "d", "D. Clean mattresses with disinfectant solution"],
+
+    ["feeding_regimen", "a", "A. Keep newborn exclusively on IV fluids"],
+    ["feeding_regimen", "b", "B. Start 10% dextrose IV at 60mls/kg/day +2ml/kg EBM (trophic feeds) 4 hourly"],
+    ["feeding_regimen", "Correct", "C. Start 10% dextrose IV at 60mls/kg/day + 2ml/kg EBM (trophic feeds) 3 hourly"],
+    ["feeding_regimen", "d", "D. Encourage breastfeeding on demand"],
+
+    ["weight_monitoring", "a", "A. 10% dextrose has 50% more calories than expressed breast milk"],
+    ["weight_monitoring", "Correct", "B. As babies lose weight in the first 1-2 weeks, intake should be calculated using birth weight until current weight exceeds birth weight"],
+    ["weight_monitoring", "c_1", "C. Feeding in a stable neonate <1.5kg should be advanced as quickly as possible"],
+    ["weight_monitoring", "d", "D. Aspiration in a neonate <1.5kg is uncommon"],
+
+    ["cpr_ratio", "a", "A. 30 compressions to 2 breaths"],
+    ["cpr_ratio", "c", "B. 15 compressions to 1 breaths"],
+    ["cpr_ratio", "d", "C. 5 compressions against 1 breath"],
+    ["cpr_ratio", "Correct", "D. 3 compressions and 1 breath"],
+
+    ["starting_cpr", "a", "A. 30 beats per minute"],
+    ["starting_cpr", "b", "B. 40 beats per minute"],
+    ["starting_cpr", "Correct", "C. 60 beats per minute"],
+    ["starting_cpr", "d", "D. 50 beats per minute"]
+  ];
 }
 
 // =====================================================
