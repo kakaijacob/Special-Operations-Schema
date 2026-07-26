@@ -2,6 +2,13 @@
 // Kobo Tools Orchestrator
 // Shared pipeline for all curriculum / assessment Kobo form builders.
 //
+// Apps Script project file order (recommended):
+//   1) kobocreator.js
+//   2) Kobo_Tools_Orchestrator.js  ← this file (ONLY onOpen / trigger)
+//   3) EmONC_Curriculum_Tracking_Form_2026.js
+//   4) Newborn_Curriculum_Tracking_Form.js
+//   5) MoH_Skills_Assessment_Checklist.js
+//
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
 //   1) Sync external Mentee Database 2026 → local "Mentee Database"
@@ -19,21 +26,21 @@ var KOBO_TOOLS_DEFAULT_SOURCE_SHEET = "Mentee Database";
 var KOBO_TOOLS_LOCAL_MENTEE_SHEET = "Mentee Database";
 
 /**
- * Register each form builder here as you add tools (~10 planned).
+ * Register each form builder here as you add tools.
  * buildFnName must match a global function in another Apps Script file.
  */
 function getKoboToolsRegistry_() {
   return [
     {
-      id: "newborn_ctf",
-      label: "Newborn Curriculum Tracking Form",
-      buildFnName: "createNewbornCurriculumTrackingForm",
+      id: "emonc_ctf",
+      label: "EmONC Curriculum Tracking Form",
+      buildFnName: "createEmONCCurriculumTrackingForm2026",
       enabled: true
     },
     {
-      id: "emonc_ctf_2026",
-      label: "EmONC Curriculum Tracking Form",
-      buildFnName: "createEmONCCurriculumTrackingForm2026",
+      id: "newborn_ctf",
+      label: "Newborn Curriculum Tracking Form",
+      buildFnName: "createNewbornCurriculumTrackingForm",
       enabled: true
     },
     {
@@ -42,13 +49,7 @@ function getKoboToolsRegistry_() {
       buildFnName: "createMoHSkillsAssessmentChecklist",
       enabled: true
     }
-    // Add more tools below, e.g.:
-    // {
-    //   id: "ifm_assessment",
-    //   label: "IFM Assessment Form",
-    //   buildFnName: "createIFMAssessmentForm",
-    //   enabled: true
-    // }
+    // Add more tools below as needed.
   ];
 }
 
@@ -62,6 +63,7 @@ function onOpen() {
     .addItem("Refresh All Forms", "refreshAllKoboTools")
     .addItem("Setup Source Database", "setupKoboToolsSource")
     .addSeparator()
+    .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
     .addItem("Install Daily Auto-Refresh", "installKoboToolsDailyTrigger")
     .addItem("Remove Auto-Refresh", "removeKoboToolsTriggers")
     .addToUi();
@@ -304,6 +306,20 @@ function resolveGlobalFunction_(fnName) {
   } catch (e3) {}
 
   return null;
+}
+
+/**
+ * Preferred: install weekly trigger on refreshAllKoboTools only.
+ */
+function installKoboToolsWeeklyTrigger() {
+  removeKoboToolsTriggers();
+
+  ScriptApp.newTrigger("refreshAllKoboTools")
+    .timeBased()
+    .everyWeeks(1)
+    .create();
+
+  Logger.log("Installed weekly trigger for refreshAllKoboTools().");
 }
 
 /**
