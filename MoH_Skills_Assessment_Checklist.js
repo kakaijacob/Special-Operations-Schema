@@ -4012,10 +4012,8 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACCountyChoices_())
     .concat(getMoHSACJhslChoices_())
     .concat(facilityRows)
-    // >>> IFM CHOICES START — ADJUSTMENT PENDING <<<
     .concat(getMoHSACLmPoChoices_())
     .concat(getMoHSACIfmChoices_(sourceSs))
-    // >>> IFM CHOICES END — ADJUSTMENT PENDING <<<
     .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
     .concat(getMoHSACMentorsMenteeChoices_(sourceSs))
     .concat(getMoHSACSkillEvaluationChoices_())
