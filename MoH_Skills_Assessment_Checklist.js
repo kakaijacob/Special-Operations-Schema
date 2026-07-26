@@ -934,7 +934,9 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACManualPlacentaRows_())
     .concat(getMoHSACUbtRows_())
     .concat(getMoHSACCordProlapseRows_())
-    .concat(getMoHSACAssistedBreechRows_());
+    .concat(getMoHSACAssistedBreechRows_())
+    .concat(getMoHSACAvdRows_())
+    .concat(getMoHSACShoulderDystociaRows_());
 }
 
 /**
@@ -1485,6 +1487,272 @@ function getMoHSACAssistedBreechRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Assisted Vaginal Vacuum Delivery checklist + score.
+ */
+function getMoHSACAvdRows_() {
+  var whenToHaltLabel =
+    "19. Stop when:\n" +
+    "  • The head does not advance with each pull\n" +
+    "  • The cup slips and disengages three times\n" +
+    "  • The fetus is not delivered after 20 minutes";
+
+  var scoreCalc =
+    "round(((" +
+    "(${obtain_consent_005}='yes')+" +
+    "(${ask_for_help}='yes')+" +
+    "(${avd_contraindication}='yes')+" +
+    "(${empty_bladder_002}='yes')+" +
+    "(${alert_theatre}='yes')+" +
+    "(${proper_dilatation_descent}='yes')+" +
+    "(${adequate_contractions}='yes')+" +
+    "(${determine_position}='yes')+" +
+    "(${mcroberts_position}='yes')+" +
+    "(${equipment_check}='yes')+" +
+    "(${vacuum_placement}='yes')+" +
+    "(${evaluates_for_episiotomy}='yes')+" +
+    "(${check_maternal_soft_tissue}='yes')+" +
+    "(${negative_pressure}='yes')+" +
+    "(${apply_gentle_traction}='yes')+" +
+    "(${cup_removal}='yes')+" +
+    "(${fhr_check}='yes')+" +
+    "(${proceed_as_normal_delivery}='yes')+" +
+    "(${when_to_halt}='yes')+" +
+    "(${message_to_mother_003}='yes')" +
+    ")*100 div 20,0)";
+
+  var items = [
+    ["obtain_consent", "obtain_consent_005", "1. Address the patient and explain the diagnosis, the procedure, and reasons why, and obtain consent."],
+    ["ask_for_help", "ask_for_help", "2. Ask for help from at least three people, those to assist in the delivery, and a neonatologist."],
+    ["avd_contraindication", "avd_contraindication", "3. Rule out contraindications and confirm the indication for assisted vaginal vacuum delivery and that the fetus is term."],
+    ["empty_bladder", "empty_bladder_002", "4. Make sure the bladder is empty and remove the catheter."],
+    ["alert_theatre", "alert_theatre", "5. Make a back-up plan (alert theatre in case the procedure fails)."],
+    ["proper_dilatation_descent", "proper_dilatation_descent", "6. Check that the cervix is fully dilated, membranes are ruptured, vertex presentation, and head not more than 1/5 palpable above the pelvic brim."],
+    ["adequate_contractions", "adequate_contractions", "7. Confirm adequate contractions; if not adequate, augment."],
+    ["determine_position", "determine_position", "8. Determine the position of the head by feeling for the posterior fontanelle, sagittal suture line, and anterior fontanelle. Then identify the flexion point."],
+    ["mcroberts_position", "mcroberts_position", "9. Position the patient in a McRoberts position because of possibility of shoulder dystocia."],
+    ["equipment_check", "equipment_check", "10. Make sure the equipment works, check connections, and test pressure on a gloved hand."],
+    ["vacuum_placement", "vacuum_placement", "11. Place the largest vacuum cup that will fit over the flexion point, with the center of the cup at 2–3 cm anterior to the posterior fontanelle on the sagittal line."],
+    ["evaluates_for_episiotomy", "evaluates_for_episiotomy", "12. Assess for need for episiotomy."],
+    ["check_maternal_soft_tissue", "check_maternal_soft_tissue", "13. Check around the cup to ensure that there is no maternal soft tissue within the vacuum rim."],
+    ["negative_pressure", "negative_pressure", "14. Create a vacuum of 0.2 kg/cm² negative pressure (yellow area), check for maternal tissues, and keep pumping until 0.8 kg/cm² (green area). Check again to ensure that it is on the flexion point and no maternal tissues are trapped. In case maternal tissue is trapped, release vacuum and reapply the cup."],
+    ["apply_gentle_traction", "apply_gentle_traction", "15. Apply gentle traction in the line of the pelvic axis and perpendicular to the cup with each contraction in a J-shaped motion. Do not pull between contractions; do not use the vacuum cup to rotate the baby’s head."],
+    ["cup_removal", "cup_removal", "16. Remove the vacuum cup when the baby’s jaw is felt."],
+    ["fhr_check", "fhr_check", "17. Check fetal heart rate and the application of the cup between contractions."],
+    ["proceed_as_normal_delivery", "proceed_as_normal_delivery", "18. Proceed after this as for normal delivery process."],
+    ["when_to_halt", "when_to_halt", whenToHaltLabel],
+    ["message_to_mother", "message_to_mother_003", "20. Explain to the mother the results of the procedure."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_avd",
+      "Section 2b: Assisted Vaginal Vacuum Delivery",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Assisted_vaginal_vacuum_delivery'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_avd",
+      "***Case Scenario:*** *The interns call you to perform a vacuum-assisted vaginal delivery on a para 2+0, gravida 3 at 38 weeks’ gestation. The patient is a cardiac case and is fully dilated.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "avd_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "avd_pass",
+      "*Congratulations! Your score is **[${avd_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${avd_score} >= 84.5 and ${message_to_mother_003}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "avd_fail",
+      "*Sorry! Your score is **[${avd_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${avd_score} < 84.5 and ${message_to_mother_003}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
+/**
+ * Section 2b: Shoulder dystocia checklist + score.
+ */
+function getMoHSACShoulderDystociaRows_() {
+  var scoreCalc =
+    "round(((" +
+    "(${shout_for_help_002}='yes')+" +
+    "(${obtain_consent_006}='yes')+" +
+    "(${aim_to_deliver_within_5_min}='yes')+" +
+    "(${woman_not_to_push}='yes')+" +
+    "(${evaluates_for_episiotomy_001}='yes')+" +
+    "(${Mcrobert_position}='yes')+" +
+    "(${rubin_1_maneuver}='yes')+" +
+    "(${rubin_2_maneuver}='yes')+" +
+    "(${wood_screw_maneuver}='yes')+" +
+    "(${deliver_posterior_shoulder}='yes')+" +
+    "(${gaskins_maneuver}='yes')+" +
+    "(${_3rd_stage_labor}='yes')+" +
+    "(${prep_for_nnr}='yes')+" +
+    "(${message_to_mother_004}='yes')+" +
+    "(${Monitor_the_baby}='yes')" +
+    ")*100 div 15,0)";
+
+  var items = [
+    ["shout_for_help", "shout_for_help_002", "1. Shout for help."],
+    ["obtain_consent", "obtain_consent_006", "2. Explain the procedure to the mother and obtain consent."],
+    ["aim_to_deliver_within_5_min", "aim_to_deliver_within_5_min", "3. Aim to deliver within 5 minutes."],
+    ["woman_not_to_push", "woman_not_to_push", "4. Ask the woman not to push throughout the procedure."],
+    ["evaluates_for_episiotomy", "evaluates_for_episiotomy_001", "5. Evaluate for an episiotomy to prevent soft tissue obstruction and give room for other manoeuvres."],
+    ["Mcrobert_position", "Mcrobert_position", "6. Put the woman in McRoberts’ position."],
+    ["rubin_1_maneuver", "rubin_1_maneuver", "7. Apply suprapubic pressure while maintaining McRoberts’ position (Rubin I manoeuvre)."],
+    ["rubin_2_maneuver", "rubin_2_maneuver", "8. Using two fingers, apply pressure to the anterior shoulder through the vagina in the direction of the baby’s sternum to rotate the shoulder and decrease the inter-shoulder diameter (Rubin II manoeuvre)."],
+    ["wood_screw_maneuver", "wood_screw_maneuver", "9. Do internal rotation by placing two fingers behind the anterior shoulder and two fingers in front of the posterior shoulder and rotate the shoulders 180 degrees (Woods screw manoeuvre)."],
+    ["deliver_posterior_shoulder", "deliver_posterior_shoulder", "10. Deliver the posterior shoulder first by grasping the humerus of the posterior arm and keeping the arm flexed at the elbow, sweep the arm across the chest (this will provide room for the anterior shoulder to move under the pelvis)."],
+    ["gaskins_maneuver", "gaskins_maneuver", "11. If delivery is unsuccessful, roll over the patient and position the patient on all fours (Gaskin’s manoeuvre)."],
+    ["_3rd_stage_labor", "_3rd_stage_labor", "12. If successful, initiate management of third stage of labour."],
+    ["prep_for_nnr", "prep_for_nnr", "13. Always be prepared to resuscitate the newborn."],
+    ["message_to_mother", "message_to_mother_004", "14. Explain results of the procedure to the mother."],
+    ["Monitor_the_baby", "Monitor_the_baby", "15. Monitor the baby closely."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_shoulder_dystocia",
+      "Section 2b: Shoulder dystocia checklist",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Shoulder_dystocia'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario",
+      "***Case Scenario:*** *During a ward round in the labor ward, a nurse calls for help: “Help, help, we have shoulder dystocia; we urgently need to perform an assisted shoulder dystocia delivery.” Run and confirm shoulder dystocia, then take charge of the delivery, giving a running commentary.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "shoulder_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "shoulder_pass",
+      "*Congratulations! Your score is **[${shoulder_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${shoulder_score} >= 84.5 and ${Monitor_the_baby}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "shoulder_fail",
+      "*Sorry! Your score is **[${shoulder_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${shoulder_score} < 84.5 and ${Monitor_the_baby}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
 function getMoHSACUbtFreeflowChecklistRows_() {
   var items = [
     ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
@@ -1578,6 +1846,18 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "Assisted_breech_delivery",
       "Assisted Breech Delivery",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Assisted_vaginal_vacuum_delivery",
+      "Assisted Vaginal Vacuum Delivery",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Shoulder_dystocia",
+      "Shoulder Dystocia",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
@@ -1701,6 +1981,44 @@ function getMoHSACAssistedBreechYesNoChoices_() {
   ]);
 }
 
+function getMoHSACAvdYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "ask_for_help",
+    "avd_contraindication",
+    "alert_theatre",
+    "proper_dilatation_descent",
+    "adequate_contractions",
+    "determine_position",
+    "mcroberts_position",
+    "equipment_check",
+    "vacuum_placement",
+    "evaluates_for_episiotomy",
+    "check_maternal_soft_tissue",
+    "negative_pressure",
+    "apply_gentle_traction",
+    "cup_removal",
+    "fhr_check",
+    "proceed_as_normal_delivery",
+    "when_to_halt"
+  ]);
+}
+
+function getMoHSACShoulderDystociaYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "aim_to_deliver_within_5_min",
+    "woman_not_to_push",
+    "Mcrobert_position",
+    "rubin_1_maneuver",
+    "rubin_2_maneuver",
+    "wood_screw_maneuver",
+    "deliver_posterior_shoulder",
+    "gaskins_maneuver",
+    "_3rd_stage_labor",
+    "prep_for_nnr",
+    "Monitor_the_baby"
+  ]);
+}
+
 function getMoHSACYesNoChoicesForLists_(listNames) {
   var rows = [];
   for (var i = 0; i < listNames.length; i++) {
@@ -1730,7 +2048,9 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACManualPlacentaYesNoChoices_())
     .concat(getMoHSACUbtYesNoChoices_())
     .concat(getMoHSACCordProlapseYesNoChoices_())
-    .concat(getMoHSACAssistedBreechYesNoChoices_());
+    .concat(getMoHSACAssistedBreechYesNoChoices_())
+    .concat(getMoHSACAvdYesNoChoices_())
+    .concat(getMoHSACShoulderDystociaYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
