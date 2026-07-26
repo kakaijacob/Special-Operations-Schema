@@ -590,7 +590,57 @@ function getEmONCCTF2026Section2Rows_() {
       "",
       ""
     ],
-    ["end_group", "", "", "", "", "", "", "", "", ""]
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_drills",
+      "Section 2d: Simulation & Drills",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'drills')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_drills",
+      "***Enumerator Note:*** *This section captures whether mentees participated in simulation drills. Please record the drill conducted by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one drills",
+      "drills",
+      "11. Please select the simulation drill module that the selected mentee(s) participated in.",
+      "Enumerator note: Select the simulation drill conducted during the session.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'drills')",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", ""], // close group_drills
+    ["end_group", "", "", "", "", "", "", "", "", ""], // close emonc_training_curriculum
+    [
+      "note",
+      "Thank_you",
+      "*The end. Thank you for completing this curriculum tracking form. The information you have provided will help monitor session coverage and support continuous improvement of MENTORS activities.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "(${emonc_activities} !='') and (${cmes} != '' or ${videos} != '' or ${case_scenarios} != '' or ${mentor_skills_demo} != '' or ${mentee_skills_return_demo} != '' or ${drills} != '')",
+      "",
+      ""
+    ]
   ];
 }
 
