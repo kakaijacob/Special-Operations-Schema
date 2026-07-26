@@ -1082,7 +1082,8 @@ function generateSurveySheetIFM() {
 
   if (!ifmSheet) return;
 
-  var ifmData = ifmSheet.getDataRange().getValues();
+  // Use display values so Status dropdown labels (e.g. "Active") match.
+  var ifmData = ifmSheet.getDataRange().getDisplayValues();
   var ifmHeader = ifmData[0];
 
   // Mentor (IFM) Database 2026 headers: county (was County), Facility, Facility Code, Status
@@ -1099,11 +1100,9 @@ function generateSurveySheetIFM() {
   ) {
     throw new Error(
       "IFM List is missing required columns: county/County, Facility, " +
-      "Facility Code, Status"
+      "Facility Code, Status. Found headers: " + ifmHeader.join(" | ")
     );
   }
-
-  var sheet = getOrCreateSheet("Survey Sheet (IFM)");
 
   // Reordered columns: type, name, label, hint, required, required_message, relevant
   var output = [[
@@ -1119,46 +1118,47 @@ function generateSurveySheetIFM() {
     "relevant"
   ]];
 
-  // Group by facility code. Include facility if ANY row is Active;
-  // prefer county/facility details from an Active row.
-  var facilitiesByCode = {};
+  // First pass: mark facility codes that have at least one Active IFM.
+  var activeCodes = {};
+  var statusSamples = [];
 
   for (var i = 1; i < ifmData.length; i++) {
-    var county = ifmData[i][countyIndex];
-    var facility = ifmData[i][facilityIndex];
-    var code = ifmData[i][facilityCodeIndex];
-    var status = String(
-      ifmData[i][statusIndex] == null ? "" : ifmData[i][statusIndex]
+    var code = String(
+      ifmData[i][facilityCodeIndex] == null ? "" : ifmData[i][facilityCodeIndex]
     ).trim();
+    var status = normalizeIFMStatus_(ifmData[i][statusIndex]);
 
-    if (!county || !facility || !code) continue;
-
-    var key = String(code);
-    if (!facilitiesByCode[key]) {
-      facilitiesByCode[key] = {
-        county: county,
-        facility: facility,
-        code: code,
-        hasActive: false
-      };
+    if (statusSamples.length < 8 && status) {
+      statusSamples.push(status);
     }
 
-    if (status.toLowerCase() === "active") {
-      facilitiesByCode[key].hasActive = true;
-      facilitiesByCode[key].county = county;
-      facilitiesByCode[key].facility = facility;
-      facilitiesByCode[key].code = code;
+    if (!code) continue;
+    if (status === "active") {
+      activeCodes[code] = true;
     }
   }
 
-  var codes = Object.keys(facilitiesByCode);
-  for (var c = 0; c < codes.length; c++) {
-    var rec = facilitiesByCode[codes[c]];
-    if (!rec.hasActive) continue;
+  // Second pass: one row per unique Active facility code.
+  // Details taken from the first Active row for that code.
+  var processed = {};
 
-    var county = rec.county;
-    var facility = rec.facility;
-    var code = rec.code;
+  for (var r = 1; r < ifmData.length; r++) {
+    var county = String(
+      ifmData[r][countyIndex] == null ? "" : ifmData[r][countyIndex]
+    ).trim();
+    var facility = String(
+      ifmData[r][facilityIndex] == null ? "" : ifmData[r][facilityIndex]
+    ).trim();
+    var code = String(
+      ifmData[r][facilityCodeIndex] == null ? "" : ifmData[r][facilityCodeIndex]
+    ).trim();
+    var status = normalizeIFMStatus_(ifmData[r][statusIndex]);
+
+    if (!county || !facility || !code) continue;
+    if (!activeCodes[code]) continue;
+    if (status !== "active") continue;
+    if (processed[code]) continue;
+    processed[code] = true;
 
     // Clean facility
     var cleanedFacility = cleanForKobo(facility);
@@ -1177,14 +1177,16 @@ function generateSurveySheetIFM() {
     var facilityValue = code + "_" + cleanedFacility;
 
     // County variable for ${county_facilities} format
-    var countyVar = String(county).toLowerCase().replace(/\s+/g, "_");
+    var countyVar = county.toLowerCase().replace(/\s+/g, "_");
 
     // Relevant string
-    var relevant = `\${${countyVar}_facilities} = '${facilityValue}' and (\${program} = 'ifm_assessment' or \${program} = 'tot')`;
+    var relevant =
+      "${" + countyVar + "_facilities} = '" + facilityValue +
+      "' and (${program} = 'ifm_assessment' or ${program} = 'tot')";
 
     // New columns: hint (blank), required (true), required_message
     var hint = "";
-    var required = "true".toString().toLowerCase();
+    var required = "true";
     var required_message = "Sorry, this answer is required";
 
     // Push row with reordered columns
@@ -1202,13 +1204,41 @@ function generateSurveySheetIFM() {
     ]);
   }
 
+  if (output.length < 2) {
+    Logger.log(
+      "Survey Sheet (IFM): no rows written. IFM List data rows=" +
+      (ifmData.length - 1) +
+      ". Sample Status values: [" + statusSamples.join(", ") + "]. " +
+      "Expected Status 'Active' (case-insensitive)."
+    );
+  } else {
+    Logger.log(
+      "Survey Sheet (IFM): wrote " + (output.length - 1) +
+      " unique Active facility code row(s)."
+    );
+  }
+
   // Sort alphabetically by Facility
   output = [output[0]].concat(
-    output.slice(1).sort((a,b)=>a[1].localeCompare(b[1]))
+    output.slice(1).sort(function(a, b) {
+      return String(a[1]).localeCompare(String(b[1]));
+    })
   );
 
-  sheet.getRange(1,1,output.length,output[0].length)
-       .setValues(output);
+  // Clear/write only after rows are built (avoids blank sheet on errors)
+  var sheet = getOrCreateSheet("Survey Sheet (IFM)");
+  sheet.getRange(1, 1, output.length, output[0].length).setValues(output);
+}
+
+/**
+ * Normalize IFM Status cell text for Active checks.
+ */
+function normalizeIFMStatus_(value) {
+  return String(value == null ? "" : value)
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 // =====================================================
