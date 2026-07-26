@@ -841,8 +841,8 @@ function writeNewbornCTFChoices_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_CHOICES_HEADERS]
     .concat(getNewbornCTFCountyChoices_())
     .concat(getNewbornCTFFacilityChoices_(sourceSs))
-    .concat(getNewbornCTFProgramChoices_())
-    .concat(getNewbornCTFMenteeChoices_(sourceSs));
+    .concat(getNewbornCTFMenteeChoices_(sourceSs))
+    .concat(getNewbornCTFProgramChoices_());
 
   // Later: newborn_modules / activities / cmes / etc. will append here.
 
@@ -933,14 +933,51 @@ function getNewbornCTFFacilityChoices_(sourceSs) {
 /**
  * Mentee choices from kobocreator sheet
  * "Newborn Mentees List (Choices)" → list_name, name, label
+ * (allowed + module_constraint left blank)
  */
 function getNewbornCTFMenteeChoices_(sourceSs) {
-  return getNewbornCTFChoicesFromSheet_(
-    sourceSs,
-    "Newborn Mentees List (Choices)",
-    "generateNewbornChoicesSheet()",
-    false
-  );
+  var sourceSheet = sourceSs.getSheetByName("Newborn Mentees List (Choices)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Newborn Mentees List (Choices)' not found. " +
+      "Run generateNewbornChoicesSheet() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var listNameIndex = header.indexOf("list_name");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+
+  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
+    throw new Error(
+      "Newborn Mentees List (Choices) is missing required columns: " +
+      "list_name, name, label"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var listName = data[i][listNameIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+
+    if (!listName && !name) continue;
+
+    rows.push([
+      listName || "",
+      name || "",
+      label || "",
+      "", // allowed
+      ""  // module_constraint
+    ]);
+  }
+
+  return rows;
 }
 
 /**
