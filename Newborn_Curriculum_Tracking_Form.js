@@ -123,9 +123,10 @@ function removeExtraNewbornCTFSheets_(ss, keepNames) {
 function writeNewbornCTFSurvey_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_SURVEY_HEADERS]
     .concat(getNewbornCTFSurveyRows_())
-    .concat(getNewbornCTFSection1bRows_());
+    .concat(getNewbornCTFSection1bRows_())
+    .concat(getNewbornCTFMenteeSurveyRows_(sourceSs));
 
-  // Later: mentee select rows + curriculum sections will append here.
+  // Later: close mentee_details / demographic_information + curriculum sections.
   // mentee_details / demographic_information groups stay open for now.
 
   sheet.clear();
@@ -320,6 +321,78 @@ function newbornFacilitySelectRow_(listName, countyLabel) {
   ];
 }
 
+/**
+ * Section 1b body: pull type / name / label / required / relevant from
+ * kobocreator's "Survey Sheet (Newborn)".
+ */
+function getNewbornCTFMenteeSurveyRows_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Survey Sheet (Newborn)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Survey Sheet (Newborn)' not found. " +
+      "Run generateSurveySheetNewborn() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var typeIndex = header.indexOf("type");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var requiredIndex = header.indexOf("required");
+  var relevantIndex = header.indexOf("relevant");
+
+  if (
+    typeIndex === -1 ||
+    nameIndex === -1 ||
+    labelIndex === -1 ||
+    requiredIndex === -1 ||
+    relevantIndex === -1
+  ) {
+    throw new Error(
+      "Survey Sheet (Newborn) is missing required columns: " +
+      "type, name, label, required, relevant"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var type = data[i][typeIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var required = normalizeNewbornCTFRequired_(data[i][requiredIndex]);
+    var relevant = data[i][relevantIndex];
+
+    if (!type && !name) continue;
+
+    // Map into survey columns:
+    // type, name, label, required, required_message,
+    // constraint_message, relevant, choice_filter, calculation
+    rows.push([
+      type || "",
+      name || "",
+      label || "",
+      required,
+      "",
+      "",
+      relevant || "",
+      "",
+      ""
+    ]);
+  }
+
+  return rows;
+}
+
+function normalizeNewbornCTFRequired_(value) {
+  var cleaned = String(value == null ? "" : value).trim().toLowerCase();
+  if (cleaned === "true" || cleaned === "false") return cleaned;
+  return cleaned;
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
@@ -327,9 +400,10 @@ function writeNewbornCTFChoices_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_CHOICES_HEADERS]
     .concat(getNewbornCTFProgramChoices_())
     .concat(getNewbornCTFCountyChoices_())
-    .concat(getNewbornCTFFacilityChoices_(sourceSs));
+    .concat(getNewbornCTFFacilityChoices_(sourceSs))
+    .concat(getNewbornCTFMenteeChoices_(sourceSs));
 
-  // Later: mentees, modules will append here.
+  // Later: modules will append here.
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -361,11 +435,41 @@ function getNewbornCTFCountyChoices_() {
  * "Newborn Facilities List (Choices)" → list_name, name, label, allowed
  */
 function getNewbornCTFFacilityChoices_(sourceSs) {
-  var sourceSheet = sourceSs.getSheetByName("Newborn Facilities List (Choices)");
+  return getNewbornCTFChoicesFromSheet_(
+    sourceSs,
+    "Newborn Facilities List (Choices)",
+    "generateNewbornAssessmentSheet()",
+    true
+  );
+}
+
+/**
+ * Mentee choices from kobocreator sheet
+ * "Newborn Mentees List (Choices)" → list_name, name, label
+ */
+function getNewbornCTFMenteeChoices_(sourceSs) {
+  return getNewbornCTFChoicesFromSheet_(
+    sourceSs,
+    "Newborn Mentees List (Choices)",
+    "generateNewbornChoicesSheet()",
+    false
+  );
+}
+
+/**
+ * Generic pull of list_name / name / label [/ allowed] from a kobocreator choices sheet.
+ */
+function getNewbornCTFChoicesFromSheet_(
+  sourceSs,
+  sheetName,
+  generatorHint,
+  includeAllowed
+) {
+  var sourceSheet = sourceSs.getSheetByName(sheetName);
   if (!sourceSheet) {
     throw new Error(
-      "Sheet 'Newborn Facilities List (Choices)' not found. " +
-      "Run generateNewbornAssessmentSheet() or generateAllOutputs() first."
+      "Sheet '" + sheetName + "' not found. " +
+      "Run " + generatorHint + " or generateAllOutputs() first."
     );
   }
 
@@ -380,7 +484,7 @@ function getNewbornCTFFacilityChoices_(sourceSs) {
 
   if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
     throw new Error(
-      "Newborn Facilities List (Choices) is missing required columns: list_name, name, label"
+      sheetName + " is missing required columns: list_name, name, label"
     );
   }
 
@@ -390,7 +494,8 @@ function getNewbornCTFFacilityChoices_(sourceSs) {
     var listName = data[i][listNameIndex];
     var name = data[i][nameIndex];
     var label = data[i][labelIndex];
-    var allowed = allowedIndex === -1 ? "" : data[i][allowedIndex];
+    var allowed =
+      includeAllowed && allowedIndex !== -1 ? data[i][allowedIndex] : "";
 
     if (!listName && !name) continue;
 
