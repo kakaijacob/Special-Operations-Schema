@@ -371,14 +371,27 @@ function resolveIFMSourceSheet_(sourceSs, props) {
   var gid = parseInt(gidRaw, 10);
 
   if (!isNaN(gid)) {
+    // Native API (newer Apps Script)
     try {
-      var byId = sourceSs.getSheetById(gid);
-      if (byId) return byId;
+      if (typeof sourceSs.getSheetById === "function") {
+        var byId = sourceSs.getSheetById(gid);
+        if (byId) return byId;
+      }
     } catch (err) {
-      Logger.log(
-        "IFM source sheet gid " + gid + " not found; trying name fallback."
-      );
+      Logger.log("getSheetById failed for IFM gid " + gid + ": " + err);
     }
+
+    // Portable fallback: match Sheet.getSheetId() to URL gid
+    var sheets = sourceSs.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getSheetId() === gid) {
+        return sheets[i];
+      }
+    }
+
+    Logger.log(
+      "IFM source sheet gid " + gid + " not found; trying name fallback."
+    );
   }
 
   var sourceSheetName =
