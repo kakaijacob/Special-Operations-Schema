@@ -6,6 +6,14 @@
 
 var EMONC_CTF_2026_TITLE = "EmONC Curriculum Tracking Form 2026";
 
+// Script Properties keys
+var EMONC_CTF_2026_PROP_SOURCE_ID = "MENTEE_DATABASE_2026_SPREADSHEET_ID";
+var EMONC_CTF_2026_PROP_SOURCE_SHEET = "MENTEE_DATABASE_2026_SHEET_NAME";
+var EMONC_CTF_2026_PROP_FORM_ID = "EMONC_CTF_2026_SPREADSHEET_ID";
+
+var EMONC_CTF_2026_DEFAULT_SOURCE_SHEET = "Mentee Database";
+var EMONC_CTF_2026_LOCAL_MENTEE_SHEET = "Mentee Database";
+
 var EMONC_CTF_2026_SURVEY_HEADERS = [
   "type",
   "name",
@@ -30,28 +38,186 @@ var EMONC_CTF_2026_SETTINGS_HEADERS = [
 ];
 
 /**
- * Entry point: create a new Google Spreadsheet with survey, choices, settings.
- * Run this from the same Apps Script project / workbook that hosts kobocreator.js
- * (after generateCurriculumTrackingForm / generateAllOutputs).
+ * One-time setup: store the external Mentee Database 2026 spreadsheet ID.
+ * Optional sheetName defaults to "Mentee Database".
+ *
+ * Example:
+ *   setEmONCCTF2026Config("1abc...xyz");
+ *   setEmONCCTF2026Config("1abc...xyz", "Mentee Database");
+ */
+function setEmONCCTF2026Config(sourceSpreadsheetId, sheetName) {
+  if (!sourceSpreadsheetId) {
+    throw new Error("sourceSpreadsheetId is required.");
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(EMONC_CTF_2026_PROP_SOURCE_ID, String(sourceSpreadsheetId).trim());
+
+  if (sheetName) {
+    props.setProperty(EMONC_CTF_2026_PROP_SOURCE_SHEET, String(sheetName).trim());
+  }
+
+  Logger.log(
+    "Saved Mentee Database 2026 source ID. Optional form ID is set automatically on first refresh."
+  );
+}
+
+/**
+ * Full refresh pipeline:
+ * 1) Pull Mentee Database 2026 → local "Mentee Database"
+ * 2) Run kobocreator generators needed for this form
+ * 3) Create or overwrite EmONC Curriculum Tracking Form 2026 in place
+ */
+function refreshEmONCCurriculumTrackingForm2026() {
+  var localSs = SpreadsheetApp.getActiveSpreadsheet();
+
+  syncMenteeDatabaseFrom2026();
+  runEmONCCTF2026KobocreatorSteps_();
+
+  var formSs = upsertEmONCCurriculumTrackingForm2026_(localSs);
+
+  Logger.log("Refresh complete: " + formSs.getUrl());
+  return formSs;
+}
+
+/**
+ * Copy the external Mentee Database 2026 sheet into this workbook's
+ * "Mentee Database" tab (full overwrite).
+ */
+function syncMenteeDatabaseFrom2026() {
+  var props = PropertiesService.getScriptProperties();
+  var sourceId = props.getProperty(EMONC_CTF_2026_PROP_SOURCE_ID);
+
+  if (!sourceId) {
+    throw new Error(
+      "Mentee Database 2026 spreadsheet ID is not configured. " +
+      "Run setEmONCCTF2026Config('<spreadsheet_id>') first."
+    );
+  }
+
+  var sourceSs = SpreadsheetApp.openById(sourceId);
+  var sourceSheetName =
+    props.getProperty(EMONC_CTF_2026_PROP_SOURCE_SHEET) ||
+    EMONC_CTF_2026_DEFAULT_SOURCE_SHEET;
+
+  var sourceSheet = sourceSs.getSheetByName(sourceSheetName);
+  if (!sourceSheet) {
+    // Fall back to the first tab if the expected name is missing
+    sourceSheet = sourceSs.getSheets()[0];
+  }
+  if (!sourceSheet) {
+    throw new Error("No sheets found in Mentee Database 2026 spreadsheet.");
+  }
+
+  var values = sourceSheet.getDataRange().getValues();
+  if (!values || values.length === 0) {
+    throw new Error("Mentee Database 2026 source sheet is empty.");
+  }
+
+  var localSs = SpreadsheetApp.getActiveSpreadsheet();
+  var localSheet = localSs.getSheetByName(EMONC_CTF_2026_LOCAL_MENTEE_SHEET);
+  if (!localSheet) {
+    localSheet = localSs.insertSheet(EMONC_CTF_2026_LOCAL_MENTEE_SHEET);
+  }
+
+  localSheet.clear();
+  localSheet
+    .getRange(1, 1, values.length, values[0].length)
+    .setValues(values);
+
+  Logger.log(
+    "Synced " + (values.length - 1) +
+    " mentee rows from '" + sourceSheet.getName() + "' into '" +
+    EMONC_CTF_2026_LOCAL_MENTEE_SHEET + "'."
+  );
+
+  return localSheet;
+}
+
+/**
+ * Run only the kobocreator outputs required by this form.
+ */
+function runEmONCCTF2026KobocreatorSteps_() {
+  generateVariableNames();
+  generateCurriculumTrackingForm();
+  generateChoicesSheet();
+  generateEmONCFacilitiesChoicesSheet();
+}
+
+/**
+ * Create the form spreadsheet on first run; later runs overwrite in place.
  */
 function createEmONCCurriculumTrackingForm2026() {
-  var sourceSs = SpreadsheetApp.getActiveSpreadsheet();
-  var ss = SpreadsheetApp.create(EMONC_CTF_2026_TITLE);
+  return upsertEmONCCurriculumTrackingForm2026_(
+    SpreadsheetApp.getActiveSpreadsheet()
+  );
+}
 
-  var surveySheet = ss.getSheets()[0];
-  surveySheet.setName("survey");
-  var choicesSheet = ss.insertSheet("choices");
-  var settingsSheet = ss.insertSheet("settings");
+/**
+ * Open the saved form spreadsheet (or create it), then overwrite
+ * survey / choices / settings from the kobocreator workbook.
+ */
+function upsertEmONCCurriculumTrackingForm2026_(sourceSs) {
+  var props = PropertiesService.getScriptProperties();
+  var formId = props.getProperty(EMONC_CTF_2026_PROP_FORM_ID);
+  var formSs;
+  var created = false;
+
+  if (formId) {
+    try {
+      formSs = SpreadsheetApp.openById(formId);
+    } catch (err) {
+      formSs = null;
+    }
+  }
+
+  if (!formSs) {
+    formSs = SpreadsheetApp.create(EMONC_CTF_2026_TITLE);
+    props.setProperty(EMONC_CTF_2026_PROP_FORM_ID, formSs.getId());
+    created = true;
+  }
+
+  var surveySheet = getOrCreateNamedSheet_(formSs, "survey");
+  var choicesSheet = getOrCreateNamedSheet_(formSs, "choices");
+  var settingsSheet = getOrCreateNamedSheet_(formSs, "settings");
+
+  // Keep only the three Kobo tabs
+  removeExtraSheets_(formSs, ["survey", "choices", "settings"]);
 
   writeEmONCCTF2026Survey_(surveySheet, sourceSs);
   writeEmONCCTF2026Choices_(choicesSheet, sourceSs);
   writeEmONCCTF2026Settings_(settingsSheet);
 
-  // Leave the builder focused on the survey tab
-  ss.setActiveSheet(surveySheet);
+  formSs.setActiveSheet(surveySheet);
 
-  Logger.log("Created: " + ss.getUrl());
-  return ss;
+  Logger.log(
+    (created ? "Created" : "Updated in place") + ": " + formSs.getUrl()
+  );
+  return formSs;
+}
+
+function getOrCreateNamedSheet_(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+  }
+  return sheet;
+}
+
+function removeExtraSheets_(ss, keepNames) {
+  var sheets = ss.getSheets();
+  var keep = {};
+  for (var i = 0; i < keepNames.length; i++) {
+    keep[keepNames[i]] = true;
+  }
+
+  // Spreadsheet must keep at least one sheet; delete extras only when safe
+  for (var s = sheets.length - 1; s >= 0; s--) {
+    var sheet = sheets[s];
+    if (!keep[sheet.getName()] && ss.getSheets().length > 1) {
+      ss.deleteSheet(sheet);
+    }
+  }
 }
 
 // =====================================================
