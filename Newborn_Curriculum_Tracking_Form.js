@@ -25,7 +25,8 @@ var NEWBORN_CTF_CHOICES_HEADERS = [
   "list_name",
   "name",
   "label",
-  "allowed"
+  "allowed",
+  "module_constraint"
 ];
 
 var NEWBORN_CTF_SETTINGS_HEADERS = [
@@ -838,35 +839,37 @@ function getNewbornCTFSection2Rows_() {
 // =====================================================
 function writeNewbornCTFChoices_(sheet, sourceSs) {
   var rows = [NEWBORN_CTF_CHOICES_HEADERS]
-    .concat(getNewbornCTFProgramChoices_())
     .concat(getNewbornCTFCountyChoices_())
+    .concat(getNewbornCTFProgramChoices_())
     .concat(getNewbornCTFFacilityChoices_(sourceSs))
     .concat(getNewbornCTFMenteeChoices_(sourceSs));
 
-  // Later: modules will append here.
+  // Later: newborn_modules / activities / cmes / etc. will append here.
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
 }
 
 /**
- * Newborn program options for select_one program.
+ * County options for select_one county.
+ * Columns: list_name, name, label, allowed, module_constraint
  */
-function getNewbornCTFProgramChoices_() {
-  // list_name, name, label, allowed
+function getNewbornCTFCountyChoices_() {
   return [
-    ["program", "essential_newborn_care", "Essential Newborn Care", ""],
-    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care", ""]
+    ["county", "Kakamega", "Kakamega", "", ""],
+    ["county", "Makueni", "Makueni", "", ""],
+    ["county", "Mombasa", "Mombasa", "", ""],
+    ["county", "Muranga", "Murang'a", "", ""]
   ];
 }
 
-function getNewbornCTFCountyChoices_() {
-  // list_name, name, label, allowed
+/**
+ * Newborn program options for select_one program.
+ */
+function getNewbornCTFProgramChoices_() {
   return [
-    ["county", "Kakamega", "Kakamega", ""],
-    ["county", "Makueni", "Makueni", ""],
-    ["county", "Mombasa", "Mombasa", ""],
-    ["county", "Muranga", "Murang'a", ""]
+    ["program", "essential_newborn_care", "Essential Newborn Care", "", ""],
+    ["program", "comprehensive_newborn_care", "Comprehensive Newborn Care", "", ""]
   ];
 }
 
@@ -943,7 +946,8 @@ function getNewbornCTFChoicesFromSheet_(
       listName || "",
       name || "",
       label || "",
-      allowed || ""
+      allowed || "",
+      "" // module_constraint (filled for curriculum lists later)
     ]);
   }
 
