@@ -3931,49 +3931,152 @@ function getMoHSACLmPoChoices_() {
 }
 
 /**
- * ADJUSTMENT PENDING: IFM person choices from kobocreator "IFM List (Choices)".
+ * >>> IFM CHOICES — TEMPORARY STATIC LIST (ADJUSTMENT PENDING) <<<
+ * Placeholder IFM person choices until IFM database guidance is provided.
+ * sourceSs kept for later switch to a dynamic IFM source.
  */
 function getMoHSACIfmChoices_(sourceSs) {
-  var sourceSheet = sourceSs.getSheetByName("IFM List (Choices)");
-  if (!sourceSheet) {
-    throw new Error(
-      "Sheet 'IFM List (Choices)' not found. " +
-      "Run generateIFMChoicesSheet() or generateAllOutputs() first."
-    );
-  }
-
-  var data = sourceSheet.getDataRange().getValues();
-  if (!data || data.length < 2) return [];
-
-  var header = data[0];
-  var listNameIndex = header.indexOf("list_name");
-  var nameIndex = header.indexOf("name");
-  var labelIndex = header.indexOf("label");
-
-  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
-    throw new Error(
-      "IFM List (Choices) is missing required columns: list_name, name, label"
-    );
-  }
-
-  var rows = [];
-
-  for (var i = 1; i < data.length; i++) {
-    var listName = data[i][listNameIndex];
-    var name = data[i][nameIndex];
-    var label = data[i][labelIndex];
-
-    if (!listName && !name) continue;
-
-    rows.push([
-      listName || "",
-      name || "",
-      label || "",
-      ""
-    ]);
-  }
-
-  return rows;
+  // sourceSs unused until IFM database wiring is guided.
+  return [
+    ["athi_ifms", "717062122_lydia_juma", "Lydia Juma", ""],
+    ["emali_ifms", "725642472_juliana_mulee_masika", "Juliana Mulee Masika", ""],
+    ["emali_ifms", "727005523_jemimah_mueke_makau", "Jemimah Mueke Makau", ""],
+    ["ilatu_ifms", "723583033_jacinta_mbula_mwosa", "Jacinta Mbula Mwosa", ""],
+    ["itumbule_ifms", "710120721_millicent_muoki", "Millicent Muoki", ""],
+    ["kako_ifms", "724646901_rossane_kimatu", "Rossane Kimatu", ""],
+    ["kalanzoni_ifms", "714515010_erick_bosire", "Erick Bosire", ""],
+    ["kalawa_ifms", "729293581_joseph_mwongela_mwanzia", "Joseph Mwongela Mwanzia", ""],
+    ["kali_ifms", "734589201_felix_mwendwa", "Felix Mwendwa", ""],
+    ["kaliani_ifms", "727409137_sylvia_musyoki", "Sylvia Musyoki", ""],
+    ["kalulini_ifms", "711214374_solomon_maingi", "Solomon Maingi", ""],
+    ["kamboo_ifms", "726648603_francis_muli", "Francis Muli", ""],
+    ["kambu_ifms", "725845978_patrick_kunga_mukiti", "Patrick Kunga Mukiti", ""],
+    ["kambu_ifms", "254720240858_alice_nyambura", "Alice Nyambura", ""],
+    ["kambu_ifms", "708830975_dorcas_mwikali_kiio", "Dorcas Mwikali Kiio", ""],
+    ["kanzokea_ifms", "790831850_edna_mumbi", "Edna Mumbi", ""],
+    ["kanzokea_ifms", "708041779_michael_musembi", "Michael Musembi", ""],
+    ["kasikeu_ifms", "719303887_jacinta_mueni_mwongela", "Jacinta Mueni Mwongela", ""],
+    ["kasikeu_ifms", "723066044_mumbi_muia", "Mumbi Muia", ""],
+    ["kathonzweni_ifms", "717891117_consolata_n_ndavi", "Consolata N. Ndavi", ""],
+    ["kathonzweni_ifms", "706025677_janet_wavinya", "Janet Wavinya", ""],
+    ["kathulumbi_ifms", "710723466_judith_mueni", "Judith Mueni", ""],
+    ["kathyaka_ifms", "714245280_rosemary_mulewa", "Rosemary Mulewa", ""],
+    ["kibwezi_ifms", "720807788_patricia_mumbua_mutinda", "Patricia Mumbua Mutinda", ""],
+    ["kibwezi_ifms", "712862222_sylvia_mutisya", "Sylvia Mutisya", ""],
+    ["kibwezi_ifms", "726583098_felister_mwikali_ngata", "Felister Mwikali Ng’ata", ""],
+    ["kibwezi_ifms", "714581543_mutanu_musembi", "Mutanu Musembi", ""],
+    ["kikoko_ifms", "741689815_victor_malika", "Victor Malika", ""],
+    ["kikumini_ifms", "729098516_emma_ndunge_nbwika", "Emma Ndunge Nbwika", ""],
+    ["kilala_ifms", "727219403_elizabeth_mumo_muia", "Elizabeth Mumo Muia", ""],
+    ["kilili_ifms", "718170831_immaculate_k_maundu", "Immaculate K. Maundu", ""],
+    ["kilili_ifms", "716828586_lorna_monica", "Lorna Monica", ""],
+    ["kilungu_ifms", "721751394_annie_mutio_musilu", "Annie Mutio Musilu", ""],
+    ["kilungu_ifms", "727478559_veronica_ndunge_mutua", "Veronica Ndunge Mutua", ""],
+    ["kilungu_ifms", "712350905_cecilia_kamene_malua", "Cecilia Kamene Malua", ""],
+    ["kilungu_ifms", "727762098_anne_mumbe_munyoki", "Anne Mumbe Munyoki", ""],
+    ["kilungu_ifms", "701760992_mary_mwangi", "Mary Mwangi", ""],
+    ["kilungu_ifms", "710298748_daniel_mwendwa", "Daniel Mwendwa", ""],
+    ["kisau_ifms", "711342436_francis_kiio_mutiso", "Francis Kiio Mutiso", ""],
+    ["kisau_ifms", "254712075590_ceaser_kisyula", "Ceaser Kisyula", ""],
+    ["kisoi_ifms", "796728030_everlyne_mutuku", "Everlyne Mutuku", ""],
+    ["kithyululu_ifms", "727396693_lawrence_mugo", "Lawrence Mugo", ""],
+    ["kitise_ifms", "702176193_nicholas_nguthi_mutua", "Nicholas Nguthi Mutua", ""],
+    ["kyambeke_ifms", "714029455_onesmus_kimanthi", "Onesmus Kimanthi", ""],
+    ["makindu_ifms", "791318051_zipporah_mutindi_ngila", "Zipporah Mutindi Ngila", ""],
+    ["makindu_ifms", "721640268_janet_muthio_wambua", "Janet Muthio Wambua", ""],
+    ["makindu_ifms", "725206410_peter_iseu_masika", "Peter Iseu Masika", ""],
+    ["makindu_ifms", "722592571_scolastika_loko_muthiani", "Scolastika Loko Muthiani", ""],
+    ["makindu_ifms", "725089876_niceta_utuku_mbuthia", "Niceta Utuku Mbuthia", ""],
+    ["makindu_ifms", "714806751_margaret_ngina_katuma", "Margaret Ngina Katuma", ""],
+    ["makindu_ifms", "710483054_magdalene_nzisa_mukula", "Magdalene Nzisa Mukula", ""],
+    ["makindu_ifms", "254706988880_troon_s_kyalo", "Troon S. Kyalo", ""],
+    ["makueni_ifms", "712844529_benedict_wambua_mutuga", "Benedict Wambua Mutuga", ""],
+    ["makueni_ifms", "721985623_mercy_ndanu_waita", "Mercy Ndanu Waita", ""],
+    ["makueni_ifms", "721813362_martin_musyoka_mutisya", "Martin Musyoka Mutisya", ""],
+    ["makueni_ifms", "724448358_nester_n_mbogo", "Nester N. Mbogo", ""],
+    ["makueni_ifms", "722585617_regina_mwikali_kyalo", "Regina Mwikali Kyalo", ""],
+    ["makueni_ifms", "727791090_loise_nzilani_muthami", "Loise Nzilani Muthami", ""],
+    ["makueni_ifms", "254723295484_christine_muteria", "Christine Muteria", ""],
+    ["makueni_ifms", "254720513148_lilian_mutua", "Lilian Mutua", ""],
+    ["makueni_ifms", "254712108005_rosetta_wanza_kimatu", "Rosetta Wanza Kimatu", ""],
+    ["matiliku_ifms", "727430984_lindsy_wanjiru", "Lindsy Wanjiru", ""],
+    ["matiliku_ifms", "704722781_loise_mutete", "Loise Mutete", ""],
+    ["matiliku_ifms", "254721695351_samuel_muoki_mutua", "Samuel Muoki Mutua", ""],
+    ["mavindini_ifms", "717935978_felisters_muli", "Felisters Muli", ""],
+    ["mavivye_ifms", "728538193_ruth_muindi", "Ruth Muindi", ""],
+    ["mbooni_ifms", "743737489_johstone_mathii_william", "Johstone Mathii William", ""],
+    ["mbooni_ifms", "727422586_onesmus_muendo_maundu", "Onesmus Muendo Maundu", ""],
+    ["mbooni_ifms", "712099931_lucy_mwelu", "Lucy Mwelu", ""],
+    ["mbooni_ifms", "254728817659_gertrude_mwende_kiio", "Gertrude Mwende Kiio", ""],
+    ["mbuvo_ifms", "791254673_felister_mutie", "Felister Mutie", ""],
+    ["mtito_ifms", "722927859_ndamange_daniel_mutinda", "Ndamange Daniel Mutinda", ""],
+    ["mtito_ifms", "254799855452_nancy_loko_kovu", "Nancy Loko Kovu", ""],
+    ["mukuyuni_ifms", "726619853_joseph_musango_kitungai", "Joseph Musango Kitung'ai", ""],
+    ["mukuyuni_ifms", "727547661_catherine_murugi_njue", "Catherine Murugi Njue", ""],
+    ["mukuyuni_ifms", "254728638595_colletor_makau", "Colletor Makau", ""],
+    ["mutyambua_ifms", "708057783_richard_kimuli", "Richard Kimuli", ""],
+    ["mwaani_ifms", "724534495_richard_muli", "Richard Muli", ""],
+    ["ngwata_ifms", "725683898_james_ndiku", "James Ndiku", ""],
+    ["nthangu_ifms", "720477556_raphael_mulinge", "Raphael Mulinge", ""],
+    ["nthongoni_ifms", "704261068_mary_musyoki", "Mary Musyoki", ""],
+    ["nthongoni_ifms", "254716508834_eddah_benson", "Eddah Benson", ""],
+    ["nzeveni_ifms", "723745574_justina_mwangangi", "Justina Mwangangi", ""],
+    ["nziu_ifms", "725352637_lucia_k_wambua", "Lucia K. Wambua", ""],
+    ["rapha_ifms", "708940081_faith_nzilani_mbithi", "Faith Nzilani Mbithi", ""],
+    ["royalstar_ifms", "721791236_mary_muthengi", "Mary Muthengi", ""],
+    ["sultan_ifms", "720868197_zipporah_maria_paul", "Zipporah Maria Paul", ""],
+    ["sultan_ifms", "702566054_mutisya_benjamin_mwanzia", "Mutisya Benjamin Mwanzia", ""],
+    ["sultan_ifms", "722163926_doreen_syokau_kisese", "Doreen Syokau Kisese", ""],
+    ["sultan_ifms", "701688390_samuel_mwaka_julius", "Samuel Mwaka Julius", ""],
+    ["sultan_ifms", "254719773498_faith_musau", "Faith Musau", ""],
+    ["sultan_ifms", "254721546149_regina_kiragu", "Regina Kiragu", ""],
+    ["tawa_ifms", "722463829_margaret_mukonyo_mbolu", "Margaret Mukonyo Mbolu", ""],
+    ["tawa_ifms", "723737449_pauline_mwongeli_kimuyu", "Pauline Mwongeli Kimuyu", ""],
+    ["tawa_ifms", "254712299026_martin_muema", "Martin Muema", ""],
+    ["tulimani_ifms", "727758039_elizabeth_mutindi_musau", "Elizabeth Mutindi Musau", ""],
+    ["uvete_ifms", "720127958_jacob_ngungule", "Jacob Ng’ung’ule", ""],
+    ["vololo_ifms", "706039543_stephen_kyalo", "Stephen Kyalo", ""],
+    ["gaichanjiru_ifms", "729418190_alice_wachira", "Alice Wachira", ""],
+    ["gatura_ifms", "722310438_lucy_njoroge", "Lucy Njoroge", ""],
+    ["ithanga_ifms", "720930049_caroline_wanjiru_mwangi", "Caroline Wanjiru Mwangi", ""],
+    ["ithanga_ifms", "254703842943_jennifer_wanjiru_muchiri", "Jennifer Wanjiru Muchiri", ""],
+    ["kandara_ifms", "717505561_beatrice_njeri_kimani", "Beatrice Njeri Kimani", ""],
+    ["kandara_ifms", "722494184_magdalene_njuguna", "Magdalene Njuguna", ""],
+    ["kangari_ifms", "720910646_isaac_ngotho_maina", "Isaac Ngotho Maina", ""],
+    ["kangari_ifms", "720912875_marclus_kinyua", "Marclus Kinyua", ""],
+    ["kangema_ifms", "720499070_alice_maina", "Alice Maina", ""],
+    ["kangema_ifms", "723704837_susan_wanjiku_ireri", "Susan Wanjiku ireri", ""],
+    ["kangema_ifms", "718122594_john_chege", "John Chege", ""],
+    ["kanyenyaini_ifms", "729380390_simon_muritu_waruiru", "Simon Muritu Waruiru", ""],
+    ["kanyenyaini_ifms", "703757927_faith_nyakio", "Faith Nyakio", ""],
+    ["kigumo_ifms", "726526841_simon_mwangi", "Simon Mwangi", ""],
+    ["kigumo_ifms", "711810190_veronica_nyambura_maina", "Veronica Nyambura Maina", ""],
+    ["kigumo_ifms", "723600079_immaculate_wambui_karanja", "Immaculate Wambui Karanja", ""],
+    ["kigumo_ifms", "723738568_josephine_okeari", "Josephine Okeari", ""],
+    ["kirogo_ifms", "717592696_ruth_mwangi", "Ruth Mwangi", ""],
+    ["kirogo_ifms", "722423035_loise_kimaru", "Loise Kimaru", ""],
+    ["kirwara_ifms", "719317206_beatrice_wambui_kihoro", "Beatrice Wambui Kihoro", ""],
+    ["kirwara_ifms", "723851059_susan_githinji", "Susan Githinji", ""],
+    ["makuyu_ifms", "728691232_george_maina", "George Maina", ""],
+    ["makuyu_ifms", "724661048_fellystus_musau", "Fellystus Musau", ""],
+    ["makuyu_ifms", "254720677280_jane_wkagunya", "Jane .w.Kagunya", ""],
+    ["maragua_ifms", "721446695_lucy_wangui_muringo", "Lucy Wangui Muringo", ""],
+    ["maragua_ifms", "725508272_mercy_wanjiru_kabera", "Mercy Wanjiru Kabera", ""],
+    ["maragua_ifms", "723688158_anne_warui", "Anne Warui", ""],
+    ["maragua_ifms", "721554248_ruth_muturi", "Ruth Muturi", ""],
+    ["maragua_ifms", "727311619_helen_mulehi", "Helen Mulehi", ""],
+    ["maragua_ifms", "725473290_angelica_wambui_ngugi", "Angelica Wambui Ngugi", ""],
+    ["muranga_ifms", "721545247_rose_macharia", "Rose Macharia", ""],
+    ["muranga_ifms", "721904960_caroline_m_macharia", "Caroline M. Macharia", ""],
+    ["muranga_ifms", "721974375_john_kiama", "John Kiama", ""],
+    ["muranga_ifms", "723058279_eunice_muthoni_muriuki", "Eunice Muthoni Muriuki", ""],
+    ["muranga_ifms", "722617918_bancy_wamitha_kimani", "Bancy Wamitha Kimani", ""],
+    ["murarandia_ifms", "720678156_elizabeth_wambui_minjire", "Elizabeth Wambui Minjire", ""],
+    ["muriranjas_ifms", "726525852_gabriel_kamau_ndwaru", "Gabriel Kamau Ndwaru", ""],
+    ["muriranjas_ifms", "702512272_grace_nyokabi", "Grace Nyokabi", ""],
+    ["nyakianga_ifms", "723875887_sabina_wamuyu_nganga", "Sabina Wamuyu Ng'ang'a", ""],
+    ["nyakianga_ifms", "722562543_nancy_thiongo", "Nancy Thiong'o", ""],
+  ];
 }
 
 /**
