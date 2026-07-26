@@ -303,6 +303,11 @@ function normalizeSourceProgramValues_(values) {
 /**
  * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
  * Prefers sheet gid from the source URL; falls back to sheet name, then first tab.
+ *
+ * Downstream consumers (kobocreator):
+ *   IFM List → IFM List (Choices)
+ *   IFM List → Survey Sheet (IFM)
+ *   IFM List → IFM Assessment Facilities List (Choices)
  */
 function syncIFMListFromSource() {
   var props = PropertiesService.getScriptProperties();
@@ -331,6 +336,35 @@ function syncIFMListFromSource() {
     throw new Error("Mentor (IFM) Database 2026 source sheet is empty.");
   }
 
+  // Drop title rows above the real header (Mentor ID / Facility / county…).
+  var headerRowIndex = findIFMSourceHeaderRowIndex_(values);
+  if (headerRowIndex === -1) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 sheet '" +
+      sourceSheet.getName() +
+      "' has no header row with Mentor ID/IFM ID, county/County, Facility, " +
+      "Facility Code. First row: [" +
+      (values[0] || []).join(" | ") +
+      "]. Check gid " +
+      KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID +
+      "."
+    );
+  }
+
+  if (headerRowIndex > 0) {
+    values = values.slice(headerRowIndex);
+  }
+
+  var header = values[0];
+  var dataRows = values.length - 1;
+  if (dataRows < 1) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 sheet '" +
+      sourceSheet.getName() +
+      "' has headers but 0 data rows."
+    );
+  }
+
   var localSs = SpreadsheetApp.getActiveSpreadsheet();
   var localSheet = localSs.getSheetByName(KOBO_TOOLS_LOCAL_IFM_SHEET);
   if (!localSheet) {
@@ -356,12 +390,48 @@ function syncIFMListFromSource() {
     .setValues(values);
 
   Logger.log(
-    "Synced " + (values.length - 1) +
-    " IFM rows from '" + sourceSheet.getName() + "' into '" +
-    KOBO_TOOLS_LOCAL_IFM_SHEET + "'."
+    "Synced " + dataRows +
+    " IFM rows from '" + sourceSheet.getName() +
+    "' (spreadsheet " + sourceId +
+    ") into '" + KOBO_TOOLS_LOCAL_IFM_SHEET +
+    "'. Headers: [" + header.join(" | ") + "]"
   );
 
   return localSheet;
+}
+
+/**
+ * Find header row in Mentor (IFM) source values (first ~15 rows).
+ * Mirrors kobocreator findIFMHeaderRowIndex_ so sync and generators agree.
+ */
+function findIFMSourceHeaderRowIndex_(rows) {
+  var maxScan = Math.min(rows.length, 15);
+  for (var r = 0; r < maxScan; r++) {
+    var row = rows[r];
+    var hasId = false;
+    var hasFacility = false;
+    var hasCode = false;
+    var hasCounty = false;
+
+    for (var c = 0; c < row.length; c++) {
+      var cell = String(row[c] == null ? "" : row[c]).trim().toLowerCase();
+      if (
+        cell === "mentor id" ||
+        cell === "ifm id" ||
+        cell === "mentorid"
+      ) {
+        hasId = true;
+      }
+      if (cell === "facility") hasFacility = true;
+      if (cell === "facility code") hasCode = true;
+      if (cell === "county") hasCounty = true;
+    }
+
+    if (hasId && hasFacility && hasCode && hasCounty) {
+      return r;
+    }
+  }
+  return -1;
 }
 
 function resolveIFMSourceSheet_(sourceSs, props) {
