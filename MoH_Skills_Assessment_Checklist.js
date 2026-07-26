@@ -938,7 +938,12 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACAvdRows_())
     .concat(getMoHSACShoulderDystociaRows_())
     .concat(getMoHSACAmtslRows_())
-    .concat(getMoHSACNasgRows_());
+    .concat(getMoHSACNasgRows_())
+    .concat(getMoHSACNnrRows_())
+    .concat(getMoHSACMaternalShockRows_())
+    .concat(getMoHSACBlynchRows_())
+    .concat(getMoHSACPerinealTearRows_())
+    .concat(getMoHSACMaternalResuscitationRows_());
 }
 
 /**
@@ -2037,6 +2042,662 @@ function getMoHSACNasgRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Newborn resuscitation checklist + score.
+ */
+function getMoHSACNnrRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_nnr",
+      "Section 2b: Newborn resuscitation-Checklist",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Newborn_resuscitation'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_nnr", "***Scenario:*** *A term baby is about to be delivered after a prolonged second stage, and there is a history of fetal distress. What do you do?*\n \n *In this case scenario, the assessor should observe the assessee performing and verbalizing the following steps. Only tick if the assessee performs the steps listed below.*", "", "", "", "", "", "", "", "", ""],
+    ["note", "note_nnr1", "1. Check that the following steps are done during birth prepation.", "", "", "", "", "", "", "", "", ""],
+    ["select_multiple review_anc_history", "review_anc_history", "a) Review ANC and Maternal History", "", "true", "", "", "", "", "", "not(selected(${review_anc_history}, 'missed_all_steps') and count-selected(${review_anc_history}) > 1)", ""],
+    ["select_multiple check_safety", "check_safety", "b) Safety.", "", "true", "", "", "", "", "", "not(selected(${check_safety}, 'missed_all_steps') and count-selected(${check_safety}) > 1)", ""],
+    ["select_multiple check_equipment_warmth", "check_equipment_warmth", "c) Equipment/Warmth.", "", "true", "", "", "", "", "", "not(selected(${check_equipment_warmth}, 'missed_all_steps') and count-selected(${check_equipment_warmth}) > 1)", ""],
+    ["select_multiple check_airway", "check_airway", "d) Airway.", "", "true", "", "", "", "", "", "not(selected(${check_airway}, 'missed_all_steps') and count-selected(${check_airway}) > 1)", ""],
+    ["select_multiple check_breathing", "check_breathing", "e) Breathing.", "", "true", "", "", "", "", "", "not(selected(${check_breathing}, 'missed_all_steps') and count-selected(${check_breathing}) > 1)", ""],
+    ["select_multiple check_circulation", "check_circulation", "f) Circulation.", "", "true", "", "", "", "", "", "not(selected(${check_circulation}, 'missed_all_steps') and count-selected(${check_circulation}) > 1)", ""],
+    ["select_one essential_newborn_care", "essential_newborn_care", "g) Essential Newborn Care Drugs (Chlorehexidine, T.E.O, Vitamin K).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_apgar_timing", "check_apgar_timing", "h) Wear sterile gloves and start the timer/note the time or start the APGAR timer.", "", "true", "", "", "", "", "", "", ""],
+    ["select_multiple dry_stimulate", "dry_stimulate", "2. Dry or stimulate the baby with one towel (while on the mother’s abdomen). Assess for:", "", "true", "", "", "", "", "", "not(selected(${dry_stimulate}, 'missed_all_steps') and count-selected(${dry_stimulate}) > 1)", ""],
+    ["select_multiple wet_dry_cloth", "wet_dry_cloth", "3. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${wet_dry_cloth}, 'missed_all_steps') and count-selected(${wet_dry_cloth}) > 1)", ""],
+    ["select_multiple immediate_nb_management", "immediate_nb_management", "4. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${immediate_nb_management}, 'missed_all_steps') and count-selected(${immediate_nb_management}) > 1)", ""],
+    ["select_multiple initial_abc_assessment", "initial_abc_assessment", "5. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${initial_abc_assessment}, 'missed_all_steps') and count-selected(${initial_abc_assessment}) > 1)", ""],
+    ["select_multiple abc_assessment", "abc_assessment", "6. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${abc_assessment}, 'missed_all_steps') and count-selected(${abc_assessment}) > 1)", ""],
+    ["select_one shout_help_nnr", "shout_help_nnr", "7. Shout for Help.", "", "true", "", "", "", "", "", "", ""],
+    ["select_multiple begin_bvm", "begin_bvm", "8. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${begin_bvm}, 'missed_all_steps') and count-selected(${begin_bvm}) > 1)", ""],
+    ["select_multiple assess_pulse", "assess_pulse", "9. Assess large pulse/HR: umbilicus and listen.", "", "true", "", "", "", "", "", "not(selected(${assess_pulse}, 'missed_all_steps') and count-selected(${assess_pulse}) > 1)", ""],
+    ["select_multiple continue_bvm", "continue_bvm", "10. Continue with BVM. The mentee asks the helper to perform hand hygiene or gives instructions to the helper as follows:", "", "true", "", "", "", "", "", "not(selected(${continue_bvm}, 'missed_all_steps') and count-selected(${continue_bvm}) > 1)", ""],
+    ["select_one reassess_abc", "reassess_abc", "11. Re-assess Airway, Breathing and Circulation together.", "", "true", "", "", "", "", "", "", ""],
+    ["select_multiple vetilations", "vetilations", "12. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${vetilations}, 'missed_all_steps') and count-selected(${vetilations}) > 1)", ""],
+    ["select_one reassess_abc_2", "reassess_abc_2", "13. Re-assess Airway, Breathing and Circulation together.", "", "true", "", "", "", "", "", "", ""],
+    ["select_multiple post_resus_stablization", "post_resus_stablization", "14. Observe whether the following steps have been followed.", "", "true", "", "", "", "", "", "not(selected(${post_resus_stablization}, 'missed_all_steps') and count-selected(${post_resus_stablization}) > 1)", ""],
+    ["select_multiple continue_observation", "continue_observation", "15. Continue to observe the baby:", "", "true", "", "", "", "", "", "not(selected(${continue_observation}, 'missed_all_steps') and count-selected(${continue_observation}) > 1)", ""],
+    ["select_one documentation_nnr", "documentation_nnr", "16. Documentation, treatment plan.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "nnr_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((if(selected(${review_anc_history},'gestational_age'),0.5,0)+if(selected(${review_anc_history},'maternal_comorbidities_complications'),0.5,0)+if(selected(${review_anc_history},'prenatal_care_visits'),0.5,0)+if(selected(${review_anc_history},'anc_profile_lab_works'),0.5,0)+if(selected(${check_safety},'warm_room_25_28c_digital_room_thermometer'),0.5,0)+if(selected(${check_safety},'environment_no_sharps_spilage'),0.5,0)+if(selected(${check_safety},'gloves_both_sterile_and_clean'),0.5,0)+if(selected(${check_equipment_warmth},'perform_hand_hygiene_and_wear_clean_gloves'),0.5,0)+if(selected(${check_equipment_warmth},'radiant_warmer_prewarm_mode_with_two_towels_and_hat'),0.5,0)+if(selected(${check_equipment_warmth},'two_prewarmed_towels_and_hat'),0.5,0)+if(selected(${check_equipment_warmth},'mentions_about_clock'),0.5,0)+if(selected(${check_airway},'penguine_sucker_or_suction_machine'),0.5,0)+if(selected(${check_airway},'set_suction_machine_pressure_80_100mmhg'),0.5,0)+if(selected(${check_airway},'suction_catheter_6f_8f_and_wide_bore_yankauer_sucker'),0.5,0)+if(selected(${check_airway},'equipment_clean_and_functionality_checked'),0.5,0)+if(selected(${check_breathing},'bvm_size_200_300ml'),0.5,0)+if(selected(${check_breathing},'bvm_size_00_0_1'),0.5,0)+if(selected(${check_breathing},'nasal_prongs'),0.5,0)+if(selected(${check_breathing},'neonatal_non_rebreather_mask'),0.5,0)+if(selected(${check_breathing},'oxygen_source'),0.5,0)+if(selected(${check_breathing},'oxygen_tubings'),0.5,0)+if(selected(${check_breathing},'pulse_oximeter_with_neonatal_probe_cardiorespiratory_monitor'),0.5,0)+if(selected(${check_breathing},'equipment_clean_and_functionality_checked'),0.5,0)+if(selected(${check_circulation},'stethoscope'),0.5,0)+if(selected(${check_circulation},'iv_adrenaline_0_2ml_per_kg_1_10000'),0.5,0)+if(selected(${check_circulation},'normal_saline'),0.5,0)+if(${essential_newborn_care}='yes',0.5,0)+if(${check_apgar_timing}='yes',0.5,0)+if(selected(${dry_stimulate},'cry_respiratory_effort'),0.5,0)+if(selected(${dry_stimulate},'tone_activity'),0.5,0)+if(selected(${wet_dry_cloth},'remove_wet_cloth'),1,0)+if(selected(${wet_dry_cloth},'wrap_in_dry_warm_towel_cloth'),1,0)+if(selected(${wet_dry_cloth},'put_hat_on_baby_head'),1,0)+if(selected(${immediate_nb_management},'immediately_cut_cord'),1,0)+if(selected(${immediate_nb_management},'place_baby_on_prewarmed_radiant_warmer'),1,0)+if(selected(${initial_abc_assessment},'look_in_mouth_and_nose'),1,0)+if(selected(${initial_abc_assessment},'clear_airway'),1,0)+if(selected(${abc_assessment},'open_airway_sniffing_position_head_tilt_chin_lift'),1,0)+if(selected(${abc_assessment},'look_listen_feel_breathing_5_seconds'),1,0)+if(${shout_help_nnr}='yes',1,0)+if(selected(${begin_bvm},'size_bvm_mask'),1,0)+if(selected(${begin_bvm},'good_c_and_e_grip'),1,0)+if(selected(${begin_bvm},'give_40_60_continuous_ventilations_60_seconds'),1,0)+if(selected(${begin_bvm},'correct_rate_breath_two_three'),1,0)+if(selected(${begin_bvm},'ensure_chest_rises'),1,0)+if(selected(${assess_pulse},'feel_umbilical_pulse_5_seconds'),1,0)+if(selected(${assess_pulse},'connect_bvm_to_100_percent_oxygen'),1,0)+if(selected(${assess_pulse},'connect_pulse_oximeter'),1,0)+if(selected(${continue_bvm},'give_3_chest_compressions_1_ventilation_3_1_ratio_1_minute'),1,0)+if(selected(${continue_bvm},'use_2_thumb_hand_encircling_technique'),1,0)+if(selected(${continue_bvm},'location_lower_1_3_sternum'),0.5,0)+if(selected(${continue_bvm},'compress_1_3_ap_diameter'),0.5,0)+if(selected(${continue_bvm},'allow_chest_to_recoil'),0.5,0)+if(selected(${continue_bvm},'about_120_events_30_ventilations_90_chest_compressions_per_minute'),0.5,0)+if(${reassess_abc}='yes',0.5,0)+if(selected(${vetilations},'give_ventilations_40_60_breaths_per_min_60_seconds_chest_rise'),0.5,0)+if(selected(${vetilations},'checking_for_chest_movement'),0.5,0)+if(selected(${vetilations},'ensure_baby_kept_warm'),0.5,0)+if(${reassess_abc_2}='yes',0.5,0)+if(selected(${post_resus_stablization},'connect_pulse_oximeter_and_monitor_spo2'),0.5,0)+if(selected(${post_resus_stablization},'monitor_breathing_adequacy'),0.5,0)+if(selected(${post_resus_stablization},'switch_to_baby_mode_on_radiant_warmer'),0.5,0)+if(selected(${post_resus_stablization},'give_oxygen_using_nrm_10l_min_monitor_spo2_and_work_of_breathing'),0.5,0)+if(selected(${post_resus_stablization},'titrate_wean_off_oxygen_based_on_spo2'),0.5,0)+if(selected(${post_resus_stablization},'ensure_baby_kept_warm_36_5_37_5c'),0.5,0)+if(selected(${continue_observation},'airway'),0.5,0)+if(selected(${continue_observation},'breathing'),0.5,0)+if(selected(${continue_observation},'circulation'),0.5,0)+if(selected(${continue_observation},'disability'),0.5,0)+if(selected(${continue_observation},'exposure'),0.5,0)+if(selected(${continue_observation},'ifcdc'),0.5,0)+if(${documentation_nnr}='yes',1,0))*100 div 46.5),0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "nnr_pass",
+      "*Congratulations! Your score is **[${nnr_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${nnr_score} >= 84.5 and ${documentation_nnr}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "nnr_fail",
+      "*Sorry! Your score is **[${nnr_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${nnr_score} < 84.5 and ${documentation_nnr}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Maternal Shock checklist + score.
+ */
+function getMoHSACMaternalShockRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_maternal_shock",
+      "Section 2b: Maternal Shock",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Maternal_shock'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_maternalshock", "***Case Scenario:*** *A mother has just been brought into your facility after severe postpartum hemorrhage (PPH) and is in shock. Demonstrate how you would manage the patient.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one check_for_safety", "check_for_safety", "1. Rule out danger to self and patient.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_for_response", "check_for_response", "2. Check for response: “Hello Mary, are you okay?”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one call_for_help", "call_for_help_002", "3. If patient is unresponsive, call for help as you place patient on left lateral tilt.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one initiate_cpr", "initiate_cpr", "4. Start CPR as the team comes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assign_team_tasks", "assign_team_tasks", "5. Debrief and assign the team tasks: one person for airway and breathing and another for circulation.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one Offer_leadership", "Offer_leadership", "6. Offer leadership to the team.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_airway", "assess_airway", "7. Assess the airway – look, listen, and feel. If airway is obstructed, perform airway opening manoeuvres (head tilt and chin lift).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one oropharyngeal_airway", "oropharyngeal_airway", "8. If airway is not maintained, insert an oropharyngeal airway.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_breathing", "assess_breathing", "9. Look, listen, and feel for breathing.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_carotid_pulse", "assess_carotid_pulse", "10. Feel for carotid pulse.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one cpr_30_2", "cpr_30_2", "11. Start chest compressions alternating with breaths: give 30 compressions followed by 2 slow breaths, each lasting.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one breathing_assessment", "breathing_assessment", "12. Look, listen, and feel for breathing.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one give_oxygen", "give_oxygen", "13. Give oxygen.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one manage_circulation", "manage_circulation", "14. Assess and treat circulation: get IV access and send blood samples.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_pulse_bp", "check_pulse_bp", "15. Check pulse and blood pressure.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one iv_fluids", "iv_fluids", "16. Give IV fluids: 1 litre in 20 minutes and another 1 litre in 30 minutes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one transfuse_in_anemia", "transfuse_in_anemia", "17. Transfuse blood if there is severe anaemia.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one palpate_the_uterus", "palpate_the_uterus", "18. Palpate the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one inspect_external_genitalia", "inspect_external_genitalia", "19. Inspect the external genitalia.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one vaginal_exam", "vaginal_exam_001", "20. Do a digital vaginal examination and observe for any bleeding.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one repeat_vital_signs", "repeat_vital_signs", "21. Check vital signs again.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one input_output_monitoring", "input_output_monitoring", "22. Insert a catheter to monitor input and output.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one IV_antibiotics", "IV_antibiotics", "23. Give IV antibiotics.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "maternal_shock_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${check_for_safety}='yes')+(${check_for_response}='yes')+(${call_for_help_002}='yes')+(${initiate_cpr}='yes')+(${assign_team_tasks}='yes')+(${Offer_leadership}='yes')+(${assess_airway}='yes')+(${oropharyngeal_airway}='yes')+(${assess_breathing}='yes')+(${assess_carotid_pulse}='yes')+(${cpr_30_2}='yes')+(${breathing_assessment}='yes')+(${give_oxygen}='yes')+(${manage_circulation}='yes')+(${check_pulse_bp}='yes')+(${iv_fluids}='yes')+(${transfuse_in_anemia}='yes')+(${palpate_the_uterus}='yes')+(${inspect_external_genitalia}='yes')+(${vaginal_exam_001}='yes')+(${repeat_vital_signs}='yes')+(${input_output_monitoring}='yes')+(${IV_antibiotics}='yes'))*100 div 23,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "maternal_shock_pass",
+      "*Congratulations! Your score is **[${maternal_shock_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${maternal_shock_score} >= 84.5 and ${IV_antibiotics}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "maternal_shock_fail",
+      "*Sorry! Your score is **[${maternal_shock_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${maternal_shock_score} < 84.5 and ${IV_antibiotics}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: B-Lynch checklist + score.
+ */
+function getMoHSACBlynchRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_b-lynch",
+      "Section 2b: B-Lynch Checklist",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'B-LYNCH'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_blynch", "***Case Scenario:*** *You are the consultant on call. You are urgently called to the theatre to attend to a patient with uterine atony. You arrive in the theatre just as the patient is being wheeled in. You place a B-Lynch suture in the uterus, which stops the bleeding. After the patient is successfully reversed and stable, the interns ask you to slowly demonstrate how to insert the B-Lynch suture using the model provided. Give a running commentary throughout the procedure.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one qualified_medical_officer", "qualified_medical_officer", "1. The procedure is done by a qualified medical officer.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one obtain_consent", "obtain_consent_009", "2. Briefly explain the procedure to the mother and obtain consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one drape_in_place", "drape_in_place", "3. Ensure blood collection drape is in situ.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one anesthesia", "anesthesia", "4. The patient is given anaesthesia in supine position.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one cleaning_draping_abdomen", "cleaning_draping_abdomen", "5. The abdomen is cleaned and draped.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one vital_signs", "vital_signs_003", "6. Take the vital signs (BP, respiratory rate, pulse rate).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one open_abdomen_identify_uterus", "open_abdomen_identify_uterus", "7. Open the abdomen and identify the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_for_atony", "assess_for_atony", "8. Assess the uterus for atony.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one lower_uterine_segment_incision", "lower_uterine_segment_incision", "9. Make a lower uterine segment incision.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one remove_pcos", "remove_pcos", "10. Remove any placental tissue or products of conception.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one start_from_right_side", "start_from_right_side", "11. Start from the right side (if right-handed) – 3 cm using a round-bodied large needle.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one insert_compression_suture", "insert_compression_suture", "12. Insert the compression suture starting from the lower edge of the lower segment uterine incision.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one suture_over_funds", "suture_over_funds", "13. Pass the suture over the fundus, enter the uterine cavity posteriorly at the level of the lower segment incision.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one loop_the_uterus_horizontally", "loop_the_uterus_horizontally", "14. Pass the suture horizontally to the left lower uterus and exit posteriorly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one another_loop", "another_loop", "15. Pass the suture over the fundus anteriorly to the upper edge of the left side of the incision, and then exit from the lower edge.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assistant_compress_uterus", "assistant_compress_uterus", "16. Ask assistant to compress the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one tie_ends_together", "tie_ends_together", "17. Pull the two ends and tie them together.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one vaginal_bleeding_controlled", "vaginal_bleeding_controlled", "18. Ask an assistant to confirm that vaginal bleeding is controlled.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one close_uterine_incision", "close_uterine_incision", "19. Close the uterine incision if bleeding is controlled.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one hysteroctomy_indication", "hysteroctomy_indication", "20. If the bleeding is not controlled, proceed and perform a hysterectomy.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_008", "21. Explain the results of the procedure to the mother.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one document_results2", "document_results2", "22. Document the results and the blood loss monitoring chart.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "blynch_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${qualified_medical_officer}='yes')+(${obtain_consent_009}='yes')+(${drape_in_place}='yes')+(${anesthesia}='yes')+(${cleaning_draping_abdomen}='yes')+(${vital_signs_003}='yes')+(${open_abdomen_identify_uterus}='yes')+(${assess_for_atony}='yes')+(${lower_uterine_segment_incision}='yes')+(${remove_pcos}='yes')+(${start_from_right_side}='yes')+(${insert_compression_suture}='yes')+(${suture_over_funds}='yes')+(${loop_the_uterus_horizontally}='yes')+(${another_loop}='yes')+(${assistant_compress_uterus}='yes')+(${tie_ends_together}='yes')+(${vaginal_bleeding_controlled}='yes')+(${close_uterine_incision}='yes')+(${hysteroctomy_indication}='yes')+(${message_to_mother_008}='yes')+(${document_results2}='yes'))*100 div 22,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "blynch_pass",
+      "*Congratulations! Your score is **[${blynch_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${blynch_score} >= 84.5 and ${document_results2}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "blynch_fail",
+      "*Sorry! Your score is **[${blynch_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${blynch_score} < 84.5 and ${document_results2}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Perineal Tear Repair checklist + score.
+ */
+function getMoHSACPerinealTearRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_perineal_tear",
+      "Section 2b: Perineal Tear Repair-Checklist",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Perineal_repair'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_perenealtear", "***Case Scenario:*** *Mary, a primigravida, had a precipitate labour. She delivered a live male infant weighing 4 kg. She subsequently started bleeding profusely. On examination, a perineal tear is identified. Using the mannequin provided, demonstrate how to repair the perineal tear.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one obtain_consent", "obtain_consent_010", "1. Briefly explain the procedure to the mother and obtain consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one drape_in_place2", "drape_in_place2", "2. Ensure blood collection drape is in place.", "", "", "", "", "", "", "", "", ""],
+    ["select_one high_lithotomy_position", "high_lithotomy_position", "3. Place woman in high lithotomy position and ensure proper lighting.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one asepsis", "asepsis", "4. Perform hand hygiene and put on sterile gloves.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one clean_perinuem", "clean_perinuem_001", "5. Aseptically clean the vulva.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one draping_catheterization", "draping_catheterization", "6. Drape the patient, catheterize the patient.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one local_anesthesia_examination", "local_anesthesia_examination", "7. Infiltrate the perineum with local anaesthesia, examine and classify the perineal tear.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one classify_tear_degree", "classify_tear_degree", "8. Classify the perineal tear: first degree, second degree, third degree, buttonhole and fourth degree. NB: third-, fourth-degree and buttonhole tears should be repaired in theatre under regional or general anaesthesia.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one gauze_to_improve_visibility", "gauze_to_improve_visibility", "9. Place sterile gauze to collect lochia loss to improve visibility of the perineal tear.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one suturing_from_appex", "suturing_from_appex", "10. Identify the apex of the vaginal trauma and insert the first stitch 5–10 mm above this point.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one non_locking_stitch", "non_locking_stitch", "11. Suture posterior vaginal trauma and the hymenal remnants using a loose continuous non-locking stitch.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one avoiding_hematoma", "avoiding_hematoma", "12. Bring the needle through the tissue underneath the hymenal ring and continue to repair the deep and superficial perineal muscles using a loose continuous stitch, sealing off any dead space to avoid haematoma formation.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one completing_perineal_repair", "completing_perineal_repair", "13. Appose skin edges and complete the perineal repair.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_009", "14. Complete the subcutaneous repair to the hymenal ring, swing the needle under the tissue into the vagina, and complete the repair using a terminal loop knot.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one anal_sphincter_repair", "anal_sphincter_repair", "15. Ensure that for third- and fourth-degree tears, the integrity of the anal sphincter is secured by using Allis forceps to mobilize and appose the internal anal sphincter followed by the external anal sphincter.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_010", "16. Explain to the mother the results of the procedure.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one health_talk", "health_talk", "17. Give health messages to the mother and companion: perineal hygiene, sex education, drug compliance, hospital delivery for 3º & 4º tears in a CEmONC facility, pelvic muscle exercises, family planning.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "perineal_tear_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${obtain_consent_010}='yes')+(${drape_in_place2}='yes')+(${high_lithotomy_position}='yes')+(${asepsis}='yes')+(${clean_perinuem_001}='yes')+(${draping_catheterization}='yes')+(${local_anesthesia_examination}='yes')+(${classify_tear_degree}='yes')+(${gauze_to_improve_visibility}='yes')+(${suturing_from_appex}='yes')+(${non_locking_stitch}='yes')+(${avoiding_hematoma}='yes')+(${completing_perineal_repair}='yes')+(${message_to_mother_009}='yes')+(${anal_sphincter_repair}='yes')+(${message_to_mother_010}='yes')+(${health_talk}='yes'))*100 div 17,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "perineal_tear_pass",
+      "*Congratulations! Your score is **[${perineal_tear_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${perineal_tear_score} >= 84.5 and ${health_talk}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "perineal_tear_fail",
+      "*Sorry! Your score is **[${perineal_tear_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${perineal_tear_score} < 84.5 and ${health_talk}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Maternal Resuscitation checklist + score.
+ */
+function getMoHSACMaternalResuscitationRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_maternal_resuscitation",
+      "Section 2b: Maternal Resuscitation",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Maternal_resuscitation'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_maternalresuscitation", "***Case Scenario:*** *A gravid mother has just had a cardiopulmonary arrest, and you have been called to perform maternal resuscitation. Using the mannequin provided, demonstrate how you would proceed.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one safety_assessement", "safety_assessement", "1. Rule out danger to self and patient.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_response", "check_response", "2. Check for response: “Hello Mary, are you okay?”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one shout_for_help", "shout_for_help_003", "3. If patient unresponsive, shout for help, give the woman a left lateral tilt, and use a pillow as a wedge.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one initiate_cpr", "initiate_cpr_001", "4. Start CPR as the team comes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one debrief_and_assign_tasks", "debrief_or_assign_tasks", "5. Debrief the team and assign tasks: one person for airway and breathing and another for circulation.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one offer_leadership", "offer_leadership", "6. Offer leadership to the team.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess", "assess", "7. Assess the patient: look, listen, feel.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one head_titl_chin_lift", "head_titl_chin_lift", "8. If airway is obstructed, start simple airway manoeuvre: head tilt and chin lift.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one jaw_thrust", "jaw_thrust", "9. Do jaw thrust if airway falls back.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one maintain_airway", "maintain_airway", "10. Insert an oropharyngeal airway if patency of airway cannot be achieved by the above manoeuvres.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one identify_cpr_landmarks", "identify_cpr_lormarks", "11. Start CPR, identify the landmarks for CPR, correct positioning of the Ambu bag.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one demo_cpr", "demo_cpr", "12. Demonstrate cardiac compression, identify lower part of sternum (center of the chest), use of bag and mask, and observe chest rise. Ratio of compression to ventilation is 30:2.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one _30_2_cpr", "_30_2_cpr", "13. Give 30 compressions followed by 2 slow breaths each lasting 2–3 seconds.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one reassess_breathing", "reassess_breathing", "14. Reassess: look, listen, and feel for breathing.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one _2min_exchanges_cpr", "_2min_exchanges_cpr", "15. Change the person doing compressions after 2 minutes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one perimotem_cs", "perimotem_cs", "16. Perform perimortem caesarean section if patient is still not breathing after 5 minutes of CPR. Aim is to improve circulation and not the baby.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one O2_recovery_room", "O2_recovery_room", "17. If patient responds and does not require perimortem C/S, give oxygen by mask 4–6 L/min and place patient in recovery position.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_circulation_inverted_j", "assess_circulation_inverted_j", "18. Assess circulation using inverted J: capillary refill, skin temperature, pallor, pulse rate, blood pressure, axillary temperature, level of consciousness, fetal heart rate, urine output.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one IV_fluids", "IV_fluids", "19. If blood pressure is low, insert IV line, take blood for laboratory work, and start IV fluids.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one perform_secondary_survey", "perform_secondary_survey", "20. Perform a secondary survey; consider and treat causes of cardiopulmonary arrest.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one recovery_position", "recovery_position", "21. Place patient in recovery position.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "maternal_resuscitation_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${safety_assessement}='yes')+(${check_response}='yes')+(${shout_for_help_003}='yes')+(${initiate_cpr_001}='yes')+(${debrief_or_assign_tasks}='yes')+(${offer_leadership}='yes')+(${assess}='yes')+(${head_titl_chin_lift}='yes')+(${jaw_thrust}='yes')+(${maintain_airway}='yes')+(${identify_cpr_lormarks}='yes')+(${demo_cpr}='yes')+(${_30_2_cpr}='yes')+(${reassess_breathing}='yes')+(${_2min_exchanges_cpr}='yes')+(${perimotem_cs}='yes')+(${O2_recovery_room}='yes')+(${assess_circulation_inverted_j}='yes')+(${IV_fluids}='yes')+(${perform_secondary_survey}='yes')+(${recovery_position}='yes'))*100 div 21,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "maternal_resuscitation_pass",
+      "*Congratulations! Your score is **[${maternal_resuscitation_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${maternal_resuscitation_score} >= 84.5 and ${recovery_position}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "maternal_resuscitation_fail",
+      "*Sorry! Your score is **[${maternal_resuscitation_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${maternal_resuscitation_score} < 84.5 and ${recovery_position}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+function getMoHSACNnrChoices_() {
+  var rows = [];
+  var lists = {
+    "review_anc_history": [
+      ["gestational_age", "Gestational age"],
+      ["maternal_comorbidities_complications", "Maternal comorbidities / complications"],
+      ["prenatal_care_visits", "Prenatal care visits"],
+      ["anc_profile_lab_works", "ANC profile / lab works"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "check_safety": [
+      ["warm_room_25_28c_digital_room_thermometer", "Warm room 25\u201328\u00b0C with digital room thermometer"],
+      ["environment_no_sharps_spilage", "Environment free of sharps / spillage"],
+      ["gloves_both_sterile_and_clean", "Gloves (sterile and clean)"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "check_equipment_warmth": [
+      ["perform_hand_hygiene_and_wear_clean_gloves", "Perform hand hygiene and wear clean gloves"],
+      ["radiant_warmer_prewarm_mode_with_two_towels_and_hat", "Radiant warmer on prewarm mode with two towels and hat"],
+      ["two_prewarmed_towels_and_hat", "Two prewarmed towels and hat"],
+      ["mentions_about_clock", "Mentions about clock"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "check_airway": [
+      ["penguine_sucker_or_suction_machine", "Penguin sucker or suction machine"],
+      ["set_suction_machine_pressure_80_100mmhg", "Set suction machine pressure 80\u2013100 mmHg"],
+      ["suction_catheter_6f_8f_and_wide_bore_yankauer_sucker", "Suction catheter 6F/8F and wide-bore Yankauer sucker"],
+      ["equipment_clean_and_functionality_checked", "Equipment clean and functionality checked"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "check_breathing": [
+      ["bvm_size_200_300ml", "BVM size 200\u2013300 mL"],
+      ["bvm_size_00_0_1", "BVM mask size 00/0/1"],
+      ["nasal_prongs", "Nasal prongs"],
+      ["neonatal_non_rebreather_mask", "Neonatal non-rebreather mask"],
+      ["oxygen_source", "Oxygen source"],
+      ["oxygen_tubings", "Oxygen tubings"],
+      ["pulse_oximeter_with_neonatal_probe_cardiorespiratory_monitor", "Pulse oximeter with neonatal probe / cardiorespiratory monitor"],
+      ["equipment_clean_and_functionality_checked", "Equipment clean and functionality checked"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "check_circulation": [
+      ["stethoscope", "Stethoscope"],
+      ["iv_adrenaline_0_2ml_per_kg_1_10000", "IV adrenaline 0.2 mL/kg (1:10,000)"],
+      ["normal_saline", "Normal saline"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "dry_stimulate": [
+      ["cry_respiratory_effort", "Cry / respiratory effort"],
+      ["tone_activity", "Tone / activity"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "wet_dry_cloth": [
+      ["remove_wet_cloth", "Remove wet cloth"],
+      ["wrap_in_dry_warm_towel_cloth", "Wrap in dry warm towel/cloth"],
+      ["put_hat_on_baby_head", "Put hat on baby's head"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "immediate_nb_management": [
+      ["immediately_cut_cord", "Immediately cut cord"],
+      ["place_baby_on_prewarmed_radiant_warmer", "Place baby on prewarmed radiant warmer"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "initial_abc_assessment": [
+      ["look_in_mouth_and_nose", "Look in mouth and nose"],
+      ["clear_airway", "Clear airway"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "abc_assessment": [
+      ["open_airway_sniffing_position_head_tilt_chin_lift", "Open airway (sniffing position / head tilt chin lift)"],
+      ["look_listen_feel_breathing_5_seconds", "Look, listen, feel breathing for 5 seconds"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "begin_bvm": [
+      ["size_bvm_mask", "Size BVM mask"],
+      ["good_c_and_e_grip", "Good C and E grip"],
+      ["give_40_60_continuous_ventilations_60_seconds", "Give 40\u201360 continuous ventilations for 60 seconds"],
+      ["correct_rate_breath_two_three", "Correct rate (breath two three)"],
+      ["ensure_chest_rises", "Ensure chest rises"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "assess_pulse": [
+      ["feel_umbilical_pulse_5_seconds", "Feel umbilical pulse for 5 seconds"],
+      ["connect_bvm_to_100_percent_oxygen", "Connect BVM to 100% oxygen"],
+      ["connect_pulse_oximeter", "Connect pulse oximeter"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "continue_bvm": [
+      ["give_3_chest_compressions_1_ventilation_3_1_ratio_1_minute", "Give 3 chest compressions : 1 ventilation (3:1) for 1 minute"],
+      ["use_2_thumb_hand_encircling_technique", "Use 2-thumb hand-encircling technique"],
+      ["location_lower_1_3_sternum", "Location: lower 1/3 of sternum"],
+      ["compress_1_3_ap_diameter", "Compress 1/3 AP diameter"],
+      ["allow_chest_to_recoil", "Allow chest to recoil"],
+      ["about_120_events_30_ventilations_90_chest_compressions_per_minute", "About 120 events (30 ventilations / 90 compressions) per minute"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "vetilations": [
+      ["give_ventilations_40_60_breaths_per_min_60_seconds_chest_rise", "Give ventilations 40\u201360 breaths/min for 60 seconds with chest rise"],
+      ["checking_for_chest_movement", "Checking for chest movement"],
+      ["ensure_baby_kept_warm", "Ensure baby kept warm"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "post_resus_stablization": [
+      ["connect_pulse_oximeter_and_monitor_spo2", "Connect pulse oximeter and monitor SpO2"],
+      ["monitor_breathing_adequacy", "Monitor breathing adequacy"],
+      ["switch_to_baby_mode_on_radiant_warmer", "Switch to baby mode on radiant warmer"],
+      ["give_oxygen_using_nrm_10l_min_monitor_spo2_and_work_of_breathing", "Give oxygen using NRM 10 L/min; monitor SpO2 and work of breathing"],
+      ["titrate_wean_off_oxygen_based_on_spo2", "Titrate / wean off oxygen based on SpO2"],
+      ["ensure_baby_kept_warm_36_5_37_5c", "Ensure baby kept warm 36.5\u201337.5\u00b0C"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+    "continue_observation": [
+      ["airway", "Airway"],
+      ["breathing", "Breathing"],
+      ["circulation", "Circulation"],
+      ["disability", "Disability"],
+      ["exposure", "Exposure"],
+      ["ifcdc", "IFCDC"],
+      ["missed_all_steps", "Missed all steps"]
+    ],
+  };
+  var keys = Object.keys(lists);
+  for (var i = 0; i < keys.length; i++) {
+    var listName = keys[i];
+    var opts = lists[listName];
+    for (var j = 0; j < opts.length; j++) {
+      rows.push([listName, opts[j][0], opts[j][1], ""]);
+    }
+  }
+  return rows;
+}
+
+function getMoHSACExtraSkillYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "check_for_safety",
+    "check_for_response",
+    "assign_team_tasks",
+    "Offer_leadership",
+    "assess_airway",
+    "oropharyngeal_airway",
+    "assess_breathing",
+    "assess_carotid_pulse",
+    "cpr_30_2",
+    "breathing_assessment",
+    "give_oxygen",
+    "manage_circulation",
+    "check_pulse_bp",
+    "iv_fluids",
+    "transfuse_in_anemia",
+    "palpate_the_uterus",
+    "inspect_external_genitalia",
+    "repeat_vital_signs",
+    "input_output_monitoring",
+    "IV_antibiotics",
+    "qualified_medical_officer",
+    "drape_in_place",
+    "anesthesia",
+    "cleaning_draping_abdomen",
+    "open_abdomen_identify_uterus",
+    "assess_for_atony",
+    "lower_uterine_segment_incision",
+    "remove_pcos",
+    "start_from_right_side",
+    "insert_compression_suture",
+    "suture_over_funds",
+    "loop_the_uterus_horizontally",
+    "another_loop",
+    "assistant_compress_uterus",
+    "tie_ends_together",
+    "vaginal_bleeding_controlled",
+    "close_uterine_incision",
+    "hysteroctomy_indication",
+    "document_results2",
+    "essential_newborn_care",
+    "check_apgar_timing",
+    "shout_help_nnr",
+    "reassess_abc",
+    "reassess_abc_2",
+    "documentation_nnr",
+    "drape_in_place2",
+    "high_lithotomy_position",
+    "asepsis",
+    "draping_catheterization",
+    "local_anesthesia_examination",
+    "classify_tear_degree",
+    "gauze_to_improve_visibility",
+    "suturing_from_appex",
+    "non_locking_stitch",
+    "avoiding_hematoma",
+    "completing_perineal_repair",
+    "anal_sphincter_repair",
+    "health_talk",
+    "safety_assessement",
+    "check_response",
+    "initiate_cpr",
+    "debrief_and_assign_tasks",
+    "offer_leadership",
+    "assess",
+    "head_titl_chin_lift",
+    "jaw_thrust",
+    "maintain_airway",
+    "identify_cpr_landmarks",
+    "demo_cpr",
+    "_30_2_cpr",
+    "reassess_breathing",
+    "_2min_exchanges_cpr",
+    "perimotem_cs",
+    "O2_recovery_room",
+    "assess_circulation_inverted_j",
+    "IV_fluids",
+    "perform_secondary_survey",
+    "recovery_position",
+  ]);
+}
 function getMoHSACUbtFreeflowChecklistRows_() {
   var items = [
     ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
@@ -2154,6 +2815,36 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "NASG",
       "Non Pneumatic Antishock Garment",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Newborn_resuscitation",
+      "Newborn Resuscitation",
+      "mentors_curriculum,newborn_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Maternal_shock",
+      "Maternal Shock",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "B-LYNCH",
+      "B-Lynch",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Perineal_repair",
+      "Perineal Tear Repair",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Maternal_resuscitation",
+      "Maternal Resuscitation",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
@@ -2389,7 +3080,9 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACAvdYesNoChoices_())
     .concat(getMoHSACShoulderDystociaYesNoChoices_())
     .concat(getMoHSACAmtslYesNoChoices_())
-    .concat(getMoHSACNasgYesNoChoices_());
+    .concat(getMoHSACNasgYesNoChoices_())
+    .concat(getMoHSACNnrChoices_())
+    .concat(getMoHSACExtraSkillYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
