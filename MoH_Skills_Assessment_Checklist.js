@@ -943,7 +943,9 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACMaternalShockRows_())
     .concat(getMoHSACBlynchRows_())
     .concat(getMoHSACPerinealTearRows_())
-    .concat(getMoHSACMaternalResuscitationRows_());
+    .concat(getMoHSACMaternalResuscitationRows_())
+    .concat(getMoHSACCervicalTearRows_())
+    .concat(getMoHSACBimanualCompressionRows_());
 }
 
 /**
@@ -2484,6 +2486,169 @@ function getMoHSACMaternalResuscitationRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Cervical Tear Repair checklist + score.
+ */
+function getMoHSACCervicalTearRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_cervical_tear",
+      "Section 2b: Cervical Tear Repair",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Cervical_tear_repair'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_cervicaltear", "***Case Scenario:*** *You are called to examine a patient with PPH. On examination, the uterus is well contracted, and the placenta was successfully delivered and complete. You confirm a cervical tear. Using the mannequin provided, demonstrate how to locate and repair a cervical tear.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one obtain_consent", "obtain_consent_011", "1. Briefly explain the procedure to the mother and obtain consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one drape_in_place3", "drape_in_place3", "2. Ensure blood collection drape is in situ.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one analgesics_antibiotics", "analgesics_antibiotics_001", "3. Give analgesics and antibiotics.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one lithotomy_position", "lithotomy_position_002", "4. Place the woman in high lithotomy position.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one clean_perinuem", "clean_perinuem_002", "5. Clean the perineum, vulva, and vagina with antiseptic.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one empty_bladder", "empty_bladder_003", "6. Insert a catheter to empty the bladder.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one regional_anesthesia_sedation", "regional_anesthesia_sedation", "7. Administer regional anaesthesia/sedation (ketamine hydrochloride and diazepam).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one tear_examination", "tear_examination", "8. Examine clockwise periurethral area, perineum, vaginal opening, vagina, and cervix.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one apply_local_anesthetic", "apply_local_anesthetic", "9. Identify the cervical tear and apply local anaesthetic agent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one grasp_cervix_oneside", "grasp_cervix_oneside", "10. Grasp the cervix on one side of the tear with sponge forceps.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one grasp_otherside_of_cervix", "grasp_otherside_of_cervix", "11. Grasp the other side of the cervical tear with a second sponge forceps.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one locate_tip_of_cervix", "locate_tip_of_cervix", "12. Gently pull the cervix and rotate the sponge forceps to make sure that the tip of the tear is located.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one place_both_forceps_in_one_hand", "place_both_forceps_in_one_hor", "13. After identifying the tip of the cervical tear, place both forceps in one hand.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one placement_1st_suture", "placement_1st_suture", "14. Place first suture above the tip (1 cm above) of the tear and then place 2 more continuous sutures.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one place_continous_suture", "place_continous_suture", "15. Use continuous sutures to complete repair.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one theatre_if_no_hemostasis", "theatre_if_no_hemostasis", "16. If haemostasis is not achieved, take the patient to theatre.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_011", "17. Explain the results of the procedure to the mother.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one document_results3", "document_results3", "18. Document results and blood monitoring chart.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "cervical_tear_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${obtain_consent_011}='yes')+(${drape_in_place3}='yes')+(${analgesics_antibiotics_001}='yes')+(${lithotomy_position_002}='yes')+(${clean_perinuem_002}='yes')+(${empty_bladder_003}='yes')+(${regional_anesthesia_sedation}='yes')+(${tear_examination}='yes')+(${apply_local_anesthetic}='yes')+(${grasp_cervix_oneside}='yes')+(${grasp_otherside_of_cervix}='yes')+(${locate_tip_of_cervix}='yes')+(${place_both_forceps_in_one_hor}='yes')+(${placement_1st_suture}='yes')+(${place_continous_suture}='yes')+(${theatre_if_no_hemostasis}='yes')+(${message_to_mother_011}='yes')+(${document_results3}='yes'))*100 div 18,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "cervical_tear_pass",
+      "*Congratulations! Your score is **[${cervical_tear_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${cervical_tear_score} >= 84.5 and ${document_results3}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "cervical_tear_fail",
+      "*Sorry! Your score is **[${cervical_tear_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${cervical_tear_score} < 84.5 and ${document_results3}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Bimanual Uterine Compression checklist + score.
+ */
+function getMoHSACBimanualCompressionRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_bimanual_compressions",
+      "Section 2b: Bimanual Uterine Compression",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'Bimanual_uterine_compression'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_bimanualuterine", "***Case Scenario:*** *You are managing PPH and you have used all the available options, but the uterus is still not contracted. You have decided to perform bimanual uterine compression as a remedy. Give a running commentary as you perform the procedure.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one shout_for_help", "shout_for_help_004", "1. Shout for help.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one obtain_consent", "obtain_consent_012", "2. Briefly explain the procedure to the mother depending on the client’s condition and obtain consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one hand_hygiene", "hor_hygiene", "3. Perform hand hygiene and put on gynecological gloves (double gloving).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one vaginal_exam", "vaginal_exam_002", "4. Perform a vaginal examination.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one insert_whole_hand", "insert_whole_hor", "5. Insert the whole hand into the vagina.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one identify_anterior_fornix", "identify_anterior_fornix", "6. With the hand in the vagina, identify the anterior fornix.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one fist_thumb_outside", "fist_thumb_outside", "7. Form a fist with the thumb outside.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one fist_on_anterior_wall", "fist_on_anterior_wall", "8. Place the fist in the anterior wall of the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one pressure_posterior_wall", "pressure_posterior_wall", "9. With the other hand on the suprapubic area, press deeply into the abdomen behind the uterus, applying pressure against the posterior wall of the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one pressure_until_hemostasis", "pressure_until_hemostasis", "10. Maintain pressure until bleeding is controlled and the uterus contracts while continuing to resuscitate the mother.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_012", "11. Explain to the mother the results of the procedure and next steps.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "bimanual_compressions_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${shout_for_help_004}='yes')+(${obtain_consent_012}='yes')+(${hor_hygiene}='yes')+(${vaginal_exam_002}='yes')+(${insert_whole_hor}='yes')+(${identify_anterior_fornix}='yes')+(${fist_thumb_outside}='yes')+(${fist_on_anterior_wall}='yes')+(${pressure_posterior_wall}='yes')+(${pressure_until_hemostasis}='yes')+(${message_to_mother_012}='yes'))*100 div 11,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "bimanual_compressions_pass",
+      "*Congratulations! Your score is **[${bimanual_compressions_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${bimanual_compressions_score} >= 84.5 and ${message_to_mother_012}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "bimanual_compressions_fail",
+      "*Sorry! Your score is **[${bimanual_compressions_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${bimanual_compressions_score} < 84.5 and ${message_to_mother_012}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
 function getMoHSACNnrChoices_() {
   var rows = [];
   var lists = {
@@ -2696,6 +2861,25 @@ function getMoHSACExtraSkillYesNoChoices_() {
     "IV_fluids",
     "perform_secondary_survey",
     "recovery_position",
+    "drape_in_place3",
+    "regional_anesthesia_sedation",
+    "tear_examination",
+    "apply_local_anesthetic",
+    "grasp_cervix_oneside",
+    "grasp_otherside_of_cervix",
+    "locate_tip_of_cervix",
+    "place_both_forceps_in_one_hand",
+    "placement_1st_suture",
+    "place_continous_suture",
+    "theatre_if_no_hemostasis",
+    "document_results3",
+    "hand_hygiene",
+    "insert_whole_hand",
+    "identify_anterior_fornix",
+    "fist_thumb_outside",
+    "fist_on_anterior_wall",
+    "pressure_posterior_wall",
+    "pressure_until_hemostasis",
   ]);
 }
 function getMoHSACUbtFreeflowChecklistRows_() {
@@ -2845,6 +3029,18 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "Maternal_resuscitation",
       "Maternal Resuscitation",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Cervical_tear_repair",
+      "Cervical Tear Repair",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Bimanual_uterine_compression",
+      "Bimanual Uterine Compression",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
