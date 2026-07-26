@@ -37,6 +37,18 @@ var EMONC_CTF_2026_SETTINGS_HEADERS = [
   "allow_choice_duplicates"
 ];
 
+// Default external source: Mentee Database 2026
+var EMONC_CTF_2026_DEFAULT_SOURCE_ID =
+  "1W6YzsLt8BKIWkZvCT-Ggvs3CtA2GBnW7ggSfujlJypA";
+
+/**
+ * One-click setup for the known Mentee Database 2026 spreadsheet.
+ * Run this once from the Apps Script dropdown, then run refresh.
+ */
+function setupEmONCCTF2026() {
+  setEmONCCTF2026Config(EMONC_CTF_2026_DEFAULT_SOURCE_ID);
+}
+
 /**
  * One-time setup: store the external Mentee Database 2026 spreadsheet ID.
  * Optional sheetName defaults to "Mentee Database".
@@ -46,6 +58,10 @@ var EMONC_CTF_2026_SETTINGS_HEADERS = [
  *   setEmONCCTF2026Config("1abc...xyz", "Mentee Database");
  */
 function setEmONCCTF2026Config(sourceSpreadsheetId, sheetName) {
+  if (!sourceSpreadsheetId) {
+    sourceSpreadsheetId = EMONC_CTF_2026_DEFAULT_SOURCE_ID;
+  }
+
   if (!sourceSpreadsheetId) {
     throw new Error("sourceSpreadsheetId is required.");
   }
@@ -58,7 +74,8 @@ function setEmONCCTF2026Config(sourceSpreadsheetId, sheetName) {
   }
 
   Logger.log(
-    "Saved Mentee Database 2026 source ID. Optional form ID is set automatically on first refresh."
+    "Saved Mentee Database 2026 source ID: " + sourceSpreadsheetId +
+    ". Form ID is set automatically on first refresh."
   );
 }
 
