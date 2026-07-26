@@ -651,7 +651,8 @@ function writeEmONCCTF2026Choices_(sheet, sourceSs) {
   var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
     .concat(getEmONCCTF2026CountyChoices_())
     .concat(getEmONCCTF2026FacilityChoices_(sourceSs))
-    .concat(getEmONCCTF2026MenteeChoices_(sourceSs));
+    .concat(getEmONCCTF2026MenteeChoices_(sourceSs))
+    .concat(getEmONCCTF2026ActivityChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -700,6 +701,106 @@ function getEmONCCTF2026MenteeChoices_(sourceSs) {
     "EmONC Mentees List (Choices)",
     "generateChoicesSheet()"
   );
+}
+
+/**
+ * Static activity / module choice lists for Section 2.
+ */
+function getEmONCCTF2026ActivityChoices_() {
+  // list_name, name, label
+  return [
+    ["emonc_activities", "cmes", "Activity 1: Lecturettes"],
+    ["emonc_activities", "videos", "Activity 2: Videos"],
+    ["emonc_activities", "case_scenarios", "Activity 3: Case scenarios & role plays"],
+    ["emonc_activities", "skill_demos_mentor", "Activity 4: Skill demonstrations by mentor"],
+    ["emonc_activities", "skills_demos_mentee", "Activity 5: Return demonstrations by mentee"],
+    ["emonc_activities", "drills", "Activity 6: Simulations and drills"],
+
+    ["cmes", "Antepartum_Haemorrhage", "1. Antepartum Haemorrhage"],
+    ["cmes", "AMTSL", "2. Active management of third stage of labor (AMTSL)"],
+    ["cmes", "Newborn_resuscitation", "3. Immediate newborn resuscitation"],
+    ["cmes", "Partograph_use_and_interpretation", "4. Labor Monitoring - Partograph or labor care guide use"],
+    ["cmes", "Maternal_resuscitation", "5. Maternal resuscitation"],
+    ["cmes", "Maternal_shock", "6. Management of maternal shock"],
+    ["cmes", "Cord_prolapse", "7. Management of cord prolapse"],
+    ["cmes", "Postpartum_haemorrhage_(PPH)", "8. Management of postpartum haemorrhage (PPH)"],
+    ["cmes", "Hypertension_in_pregnancy", "9. Management of pre-eclampsia/eclampsia"],
+    ["cmes", "Obstructed_Labor", "10. Obstructed Labor"],
+    ["cmes", "Shoulder_dystocia", "11. Shoulder dystocia delivery"],
+    ["cmes", "Vaginal_breech_delivery", "12. Vaginal breech delivery"],
+    ["cmes", "Vaginal_AVD", "13. Vaginal vacuum-assisted delivery (AVD)"],
+
+    ["videos", "AMTSL", "1. Active Management of third stage"],
+    ["videos", "Bimanual_compression", "2. Bimanual Compression of the Uterus"],
+    ["videos", "Compression_of_Abdominal_Aorta", "3. Compression of Abdominal Aorta"],
+    ["videos", "Cord_Prolapse", "4. First response bundle for PPH treatment"],
+    ["videos", "Cervical_Tear_Repair", "5. Immediate newborn resuscitation"],
+    ["videos", "Newborn_Resuscitation", "6. Management of Cord prolapse"],
+    ["videos", "NASG_placement", "7. Placement of Blynch Suture"],
+    ["videos", "NASG_placement", "8. Placement of Non Pneumatic garment"],
+    ["videos", "Perineal_Tear_Repair", "9. Placement of Uterine Ballon Tamponade"],
+    ["videos", "Postpartum_haemorrhage_(PPH)", "10. Placement of Uterine Balloon Tamponade - Free Flow System"],
+    ["videos", "Retained_Placenta_Removal", "11. Repair of Cervical tear"],
+    ["videos", "Shoulder_Dystocia", "12. Repair of perineal tear repair"],
+    ["videos", "UBT", "13. Removal of retained Placenta"],
+    ["videos", "UBT_Freeflow", "14. Shoulder dystocia delivery"],
+    ["videos", "Uterine_Inversion", "15. Uterine Inversion"],
+    ["videos", "Vaginal_Breech_Delivery", "16. Vaginal breech delivery"],
+    ["videos", "Vacuum_Assisted_Delivery", "17. Vaginal vacuum assisted delivery"],
+
+    ["case_scenarios", "Labor_Monitoring", "1. Labor monitoring - Partograph and labor care guide (practicum case scenarios)"],
+    ["case_scenarios", "Obstructed_Labor", "2. Obstructed labour (practicum case scenarios)"],
+    ["case_scenarios", "Maternal_Shock_Resuscitaion", "3. Maternal shock & resuscitation (role play)"],
+    ["case_scenarios", "Preeclampsia_Eclampsia_Management", "4. Management of pre-eclampsia/eclampsia (role play)"],
+
+    ["mentor_skills_demo", "AMTSL", "1. Active Management of Third Stage (AMTSL)"],
+    ["mentor_skills_demo", "Bimanual_compression", "2. Bimanual Compression of the Uterus"],
+    ["mentor_skills_demo", "Compression_abdominal_aorta", "3. Compression of the Abdominal Aorta"],
+    ["mentor_skills_demo", "Postpartum_haemorrhage_(PPH)", "4. First response bundle for PPH treatment"],
+    ["mentor_skills_demo", "Newborn_resuscitation", "5. Immediate newborn resuscitation"],
+    ["mentor_skills_demo", "Cord_prolapse", "6. Management of Cord Prolapse"],
+    ["mentor_skills_demo", "Maternal_shock", "7. Management of maternal shock"],
+    ["mentor_skills_demo", "Maternal_resuscitation", "8. Maternal resuscitation"],
+    ["mentor_skills_demo", "Preeclampsia_/_Eclampsia", "9. Management OF Pre-eclampsia /Eclampsia"],
+    ["mentor_skills_demo", "B-lynch_suture", "10. Placement of Blynch Suture"],
+    ["mentor_skills_demo", "NASG_placement", "11. Placement of Non-Pneumatic Garment"],
+    ["mentor_skills_demo", "Ubt_placement", "12. Placement of Uterine Ballon Tamponade"],
+    ["mentor_skills_demo", "Ubt_placement_(free_flow)", "13. Placement of Uterine Balloon Tamponade - Free Flow System"],
+    ["mentor_skills_demo", "Cervical_tear_repair", "14. Repair of Cervical tear"],
+    ["mentor_skills_demo", "Perineal_tear_repair", "15. Repair of perineal tear repair"],
+    ["mentor_skills_demo", "Retained_placenta_removal", "16. Removal of retained Placenta"],
+    ["mentor_skills_demo", "Shoulder_dystocia", "17. Shoulder dystocia delivery"],
+    ["mentor_skills_demo", "Uterine_Inversion", "19. Uterine Inversion"],
+    ["mentor_skills_demo", "Vaginal_breech_delivery", "20. Vaginal breech delivery"],
+    ["mentor_skills_demo", "Vaginal_AVD", "21. Vaginal vacuum-assisted delivery"],
+
+    ["mentee_skills_return_demo", "AMTSL", "1. Active Management of third stage (AMTSL)"],
+    ["mentee_skills_return_demo", "Bimanual_compression", "2. Bimanual Compression of the Uterus"],
+    ["mentee_skills_return_demo", "Compression_abdominal_aorta", "3. Compression of the Abdominal Aorta"],
+    ["mentee_skills_return_demo", "Postpartum_haemorrhage_(PPH)", "4. First response bundle for PPH treatment"],
+    ["mentee_skills_return_demo", "Newborn_resuscitation", "5. Immediate newborn resuscitation"],
+    ["mentee_skills_return_demo", "Cord_prolapse", "6. Management of Cord Prolapse"],
+    ["mentee_skills_return_demo", "Maternal_shock", "7. Management of maternal shock"],
+    ["mentee_skills_return_demo", "Maternal_resuscitation", "8. Maternal resuscitation"],
+    ["mentee_skills_return_demo", "Preeclampsia_/_Eclampsia", "9. Management OF Pre-eclampsia /Eclampsia"],
+    ["mentee_skills_return_demo", "B-lynch_suture", "10. Placement of Blynch Suture"],
+    ["mentee_skills_return_demo", "NASG_placement", "11. Placement of Non-Pneumatic Garment"],
+    ["mentee_skills_return_demo", "Ubt_placement", "12. Placement of Uterine Ballon Tamponade"],
+    ["mentee_skills_return_demo", "Ubt_placement_(free_flow)", "13. Placement of Uterine Balloon Tamponade - Free Flow System"],
+    ["mentee_skills_return_demo", "Cervical_tear_repair", "14. Repair of Cervical tear"],
+    ["mentee_skills_return_demo", "Perineal_tear_repair", "15. Repair of perineal tear repair"],
+    ["mentee_skills_return_demo", "Retained_placenta_removal", "16. Removal of retained Placenta"],
+    ["mentee_skills_return_demo", "Shoulder_dystocia", "17. Shoulder dystocia delivery"],
+    ["mentee_skills_return_demo", "Uterine_Inversion", "19. Uterine Inversion"],
+    ["mentee_skills_return_demo", "Vaginal_breech_delivery", "20. Vaginal breech delivery"],
+    ["mentee_skills_return_demo", "Vaginal_AVD", "21. Vaginal vacuum-assisted delivery"],
+
+    ["drills", "Neonatal_resuscitation", "1. Immediate newborn resuscitation"],
+    ["drills", "Maternal_shock", "2. Management of maternal shock"],
+    ["drills", "Maternal_resuscitation", "3. Maternal resuscitation"],
+    ["drills", "Preeclampsia_/_eclampsia", "4. Management of Pre-eclampsia /Eclampsia"],
+    ["drills", "PPH_Drill", "5. PPH drill & simulation"]
+  ];
 }
 
 /**
