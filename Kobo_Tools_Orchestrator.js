@@ -13,11 +13,12 @@
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
 //   1) Sync external Mentee Database 2026 → local "Mentee Database"
-//   2) Run kobocreator.js generateAllOutputs()
-//   3) Create/update every registered Kobo form tool
+//   2) Sync external Mentor (IFM) Database 2026 → local "IFM List"
+//   3) Run kobocreator.js generateAllOutputs()
+//   4) Create/update every registered Kobo form tool
 // =====================================================
 
-// Script Properties
+// Script Properties — Mentee Database 2026
 var KOBO_TOOLS_PROP_SOURCE_ID = "MENTEE_DATABASE_2026_SPREADSHEET_ID";
 var KOBO_TOOLS_PROP_SOURCE_SHEET = "MENTEE_DATABASE_2026_SHEET_NAME";
 
@@ -25,6 +26,17 @@ var KOBO_TOOLS_DEFAULT_SOURCE_ID =
   "1W6YzsLt8BKIWkZvCT-Ggvs3CtA2GBnW7ggSfujlJypA";
 var KOBO_TOOLS_DEFAULT_SOURCE_SHEET = "Mentee Database";
 var KOBO_TOOLS_LOCAL_MENTEE_SHEET = "Mentee Database";
+
+// Script Properties — Mentor (IFM) Database 2026
+var KOBO_TOOLS_PROP_IFM_SOURCE_ID = "MENTOR_IFM_DATABASE_2026_SPREADSHEET_ID";
+var KOBO_TOOLS_PROP_IFM_SOURCE_SHEET = "MENTOR_IFM_DATABASE_2026_SHEET_NAME";
+var KOBO_TOOLS_PROP_IFM_SOURCE_GID = "MENTOR_IFM_DATABASE_2026_SHEET_GID";
+
+var KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID =
+  "1VPz5l3LwbMvwjEWv55c-4Fftm2sz7JCgZlX2TYwm0PY";
+var KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET = "Mentor (IFM) Database 2026";
+var KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID = 586824847;
+var KOBO_TOOLS_LOCAL_IFM_SHEET = "IFM List";
 
 /**
  * Register each form builder here as you add tools.
@@ -77,14 +89,19 @@ function onOpen() {
 }
 
 /**
- * One-time setup: store external Mentee Database 2026 spreadsheet ID.
+ * One-time setup: store external Mentee + Mentor (IFM) Database 2026 IDs.
  */
 function setupKoboToolsSource() {
   setKoboToolsSourceConfig(KOBO_TOOLS_DEFAULT_SOURCE_ID);
+  setKoboToolsIFMSourceConfig(
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID,
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET,
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID
+  );
 }
 
 /**
- * Store source spreadsheet ID (and optional sheet name).
+ * Store mentee source spreadsheet ID (and optional sheet name).
  *   setKoboToolsSourceConfig("1abc...xyz");
  *   setKoboToolsSourceConfig("1abc...xyz", "Mentee Database");
  */
@@ -109,6 +126,50 @@ function setKoboToolsSourceConfig(sourceSpreadsheetId, sheetName) {
 }
 
 /**
+ * Store Mentor (IFM) Database 2026 source spreadsheet ID.
+ * Optional sheetName and/or sheetGid (tab gid from the Sheets URL).
+ *   setKoboToolsIFMSourceConfig("1VPz5...");
+ *   setKoboToolsIFMSourceConfig("1VPz5...", "Mentor (IFM) Database 2026", 586824847);
+ */
+function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
+  if (!sourceSpreadsheetId) {
+    sourceSpreadsheetId = KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID;
+  }
+  if (!sourceSpreadsheetId) {
+    throw new Error("IFM sourceSpreadsheetId is required.");
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(
+    KOBO_TOOLS_PROP_IFM_SOURCE_ID,
+    String(sourceSpreadsheetId).trim()
+  );
+
+  if (sheetName) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_SHEET,
+      String(sheetName).trim()
+    );
+  }
+
+  if (sheetGid != null && sheetGid !== "") {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(sheetGid).trim()
+    );
+  } else if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID)
+    );
+  }
+
+  Logger.log(
+    "Saved Mentor (IFM) Database 2026 source ID: " + sourceSpreadsheetId
+  );
+}
+
+/**
  * MASTER PIPELINE — call this from the trigger / menu.
  * Do NOT put separate triggers on sync, kobocreator, or individual form builders.
  */
@@ -118,12 +179,15 @@ function refreshAllKoboTools() {
   // 1) Sync mentee database first
   syncMenteeDatabaseFromSource();
 
-  // 2) Run kobocreator generators (shared intermediate sheets)
+  // 2) Sync IFM mentor database → local IFM List
+  syncIFMListFromSource();
+
+  // 3) Run kobocreator generators (shared intermediate sheets)
   Logger.log("Running kobocreator generateAllOutputs()...");
   generateAllOutputs();
   Logger.log("kobocreator complete.");
 
-  // 3) Build / update every registered form
+  // 4) Build / update every registered form
   var results = buildRegisteredKoboTools_();
 
   Logger.log("=== Kobo Tools refresh finished ===");
@@ -237,7 +301,98 @@ function normalizeSourceProgramValues_(values) {
 }
 
 /**
- * Step 3: call every enabled registry builder that exists in this project.
+ * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
+ * Prefers sheet gid from the source URL; falls back to sheet name, then first tab.
+ */
+function syncIFMListFromSource() {
+  var props = PropertiesService.getScriptProperties();
+  var sourceId =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_ID) ||
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID;
+
+  if (!sourceId) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 spreadsheet ID is not configured. " +
+      "Run setupKoboToolsSource() first."
+    );
+  }
+
+  var sourceSs = SpreadsheetApp.openById(sourceId);
+  var sourceSheet = resolveIFMSourceSheet_(sourceSs, props);
+
+  if (!sourceSheet) {
+    throw new Error(
+      "No sheets found in Mentor (IFM) Database 2026 spreadsheet."
+    );
+  }
+
+  var values = sourceSheet.getDataRange().getValues();
+  if (!values || values.length === 0) {
+    throw new Error("Mentor (IFM) Database 2026 source sheet is empty.");
+  }
+
+  var localSs = SpreadsheetApp.getActiveSpreadsheet();
+  var localSheet = localSs.getSheetByName(KOBO_TOOLS_LOCAL_IFM_SHEET);
+  if (!localSheet) {
+    localSheet = localSs.insertSheet(KOBO_TOOLS_LOCAL_IFM_SHEET);
+  }
+
+  var fullRange = localSheet.getRange(
+    1,
+    1,
+    localSheet.getMaxRows(),
+    localSheet.getMaxColumns()
+  );
+  fullRange.clearDataValidations();
+
+  var filter = localSheet.getFilter();
+  if (filter) {
+    filter.remove();
+  }
+
+  localSheet.clearContents();
+  localSheet
+    .getRange(1, 1, values.length, values[0].length)
+    .setValues(values);
+
+  Logger.log(
+    "Synced " + (values.length - 1) +
+    " IFM rows from '" + sourceSheet.getName() + "' into '" +
+    KOBO_TOOLS_LOCAL_IFM_SHEET + "'."
+  );
+
+  return localSheet;
+}
+
+function resolveIFMSourceSheet_(sourceSs, props) {
+  var gidRaw =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID) ||
+    String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID);
+  var gid = parseInt(gidRaw, 10);
+
+  if (!isNaN(gid)) {
+    try {
+      var byId = sourceSs.getSheetById(gid);
+      if (byId) return byId;
+    } catch (err) {
+      Logger.log(
+        "IFM source sheet gid " + gid + " not found; trying name fallback."
+      );
+    }
+  }
+
+  var sourceSheetName =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET) ||
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET;
+
+  var byName = sourceSs.getSheetByName(sourceSheetName);
+  if (byName) return byName;
+
+  return sourceSs.getSheets()[0] || null;
+}
+
+/**
+ * Step 4: call every enabled registry builder that exists in this project.
  */
 function buildRegisteredKoboTools_() {
   var registry = getKoboToolsRegistry_();

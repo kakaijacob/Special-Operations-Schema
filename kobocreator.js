@@ -223,6 +223,38 @@ function getOrCreateSheet(name) {
 
 
 // =====================================================
+// Helper: Find header column by exact or case-insensitive alias
+// =====================================================
+function findHeaderIndex_(header, names) {
+  var aliases =
+    Object.prototype.toString.call(names) === "[object Array]"
+      ? names
+      : [names];
+  var i;
+  var c;
+  var want;
+
+  for (i = 0; i < aliases.length; i++) {
+    var exact = header.indexOf(aliases[i]);
+    if (exact !== -1) return exact;
+  }
+
+  for (i = 0; i < aliases.length; i++) {
+    want = String(aliases[i] == null ? "" : aliases[i]).trim().toLowerCase();
+    for (c = 0; c < header.length; c++) {
+      if (
+        String(header[c] == null ? "" : header[c]).trim().toLowerCase() ===
+        want
+      ) {
+        return c;
+      }
+    }
+  }
+
+  return -1;
+}
+
+// =====================================================
 // Helper: Clean for Kobo variable naming
 // =====================================================
 function cleanForKobo(str) {
@@ -641,9 +673,16 @@ function generateIFMAssessmentSheet() {
   var data = sourceSheet.getDataRange().getValues();
   var header = data[0];
 
-  var countyIndex = header.indexOf("County");
-  var facilityIndex = header.indexOf("Facility");
-  var facilityCodeIndex = header.indexOf("Facility Code");
+  // Mentor (IFM) Database 2026 headers: county (was County), Facility, Facility Code
+  var countyIndex = findHeaderIndex_(header, ["county", "County"]);
+  var facilityIndex = findHeaderIndex_(header, "Facility");
+  var facilityCodeIndex = findHeaderIndex_(header, "Facility Code");
+
+  if (countyIndex === -1 || facilityIndex === -1 || facilityCodeIndex === -1) {
+    throw new Error(
+      "IFM List is missing required columns: county/County, Facility, Facility Code"
+    );
+  }
 
   var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
@@ -698,9 +737,9 @@ function generateMenteeFacilityLogic() {
   var ifmData = ifmSheet.getDataRange().getValues();
   var ifmHeader = ifmData[0];
 
-  var ifmFacilityIndex = ifmHeader.indexOf("Facility");
-  var ifmFacilityCodeIndex = ifmHeader.indexOf("Facility Code");
-  var ifmCountyIndex = ifmHeader.indexOf("County");
+  var ifmFacilityIndex = findHeaderIndex_(ifmHeader, "Facility");
+  var ifmFacilityCodeIndex = findHeaderIndex_(ifmHeader, "Facility Code");
+  var ifmCountyIndex = findHeaderIndex_(ifmHeader, ["county", "County"]);
 
   // Map of IFM facility codes to cleaned names
   var ifmMap = {};
@@ -777,11 +816,26 @@ function generateIFMChoicesSheet() {
   var data = ifmSheet.getDataRange().getValues();
   var header = data[0];
 
-  var countyIndex = header.indexOf("County");
-  var facilityIndex = header.indexOf("Facility");
-  var facilityCodeIndex = header.indexOf("Facility Code");
-  var nameIndex = header.indexOf("Name");
-  var idIndex = header.indexOf("IFM ID");
+  // Mentor (IFM) Database 2026: county, Facility, Facility Code, Name, Mentor ID
+  // (Mentor ID replaces legacy "IFM ID")
+  var countyIndex = findHeaderIndex_(header, ["county", "County"]);
+  var facilityIndex = findHeaderIndex_(header, "Facility");
+  var facilityCodeIndex = findHeaderIndex_(header, "Facility Code");
+  var nameIndex = findHeaderIndex_(header, "Name");
+  var idIndex = findHeaderIndex_(header, ["Mentor ID", "IFM ID"]);
+
+  if (
+    countyIndex === -1 ||
+    facilityIndex === -1 ||
+    facilityCodeIndex === -1 ||
+    nameIndex === -1 ||
+    idIndex === -1
+  ) {
+    throw new Error(
+      "IFM List is missing required columns: county/County, Facility, " +
+      "Facility Code, Name, Mentor ID (or IFM ID)"
+    );
+  }
 
   var sheet = getOrCreateSheet("IFM List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
@@ -795,7 +849,7 @@ function generateIFMChoicesSheet() {
 
     if (!county || !facility || !code || !name || !rawID) continue;
 
-    // ✅ Clean IFM ID: remove all spaces
+    // ✅ Clean Mentor ID / IFM ID: remove all spaces
     var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
 
     // Clean facility
@@ -1029,9 +1083,16 @@ function generateSurveySheetIFM() {
   var ifmData = ifmSheet.getDataRange().getValues();
   var ifmHeader = ifmData[0];
 
-  var countyIndex = ifmHeader.indexOf("County");
-  var facilityIndex = ifmHeader.indexOf("Facility");
-  var facilityCodeIndex = ifmHeader.indexOf("Facility Code");
+  // Mentor (IFM) Database 2026 headers: county (was County), Facility, Facility Code
+  var countyIndex = findHeaderIndex_(ifmHeader, ["county", "County"]);
+  var facilityIndex = findHeaderIndex_(ifmHeader, "Facility");
+  var facilityCodeIndex = findHeaderIndex_(ifmHeader, "Facility Code");
+
+  if (countyIndex === -1 || facilityIndex === -1 || facilityCodeIndex === -1) {
+    throw new Error(
+      "IFM List is missing required columns: county/County, Facility, Facility Code"
+    );
+  }
 
   var sheet = getOrCreateSheet("Survey Sheet (IFM)");
 
