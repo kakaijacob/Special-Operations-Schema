@@ -3863,7 +3863,8 @@ function writeMoHSACChoices_(sheet, sourceSs) {
   var facilityRows = getMoHSACFacilityChoices_(sourceSs);
   var rows = [MOH_SAC_CHOICES_HEADERS]
     .concat(getMoHSACProgramChoices_())
-    .concat(getMoHSACCountyChoices_(facilityRows))
+    .concat(getMoHSACCountyChoices_())
+    .concat(getMoHSACJhslChoices_())
     .concat(facilityRows)
     // >>> IFM CHOICES START — ADJUSTMENT PENDING <<<
     .concat(getMoHSACLmPoChoices_())
@@ -3893,10 +3894,21 @@ function writeMoHSACChoices_(sheet, sourceSs) {
  */
 function getMoHSACProgramChoices_() {
   return [
-    ["program", "mentors_curriculum", "MENTORS Curriculum (EmONC)", ""],
-    ["program", "newborn_curriculum", "Newborn Curriculum", ""],
-    ["program", "ifm_assessment", "IFM Assessment", ""],
-    ["program", "tot", "Training of Trainers (ToT)", ""]
+    ["program", "mentors_curriculum", "EmONC training curriculum", ""],
+    ["program", "newborn_curriculum", "Newborn training curriculum", ""],
+    ["program", "ifm_assessment", "IFM skills assessment", ""],
+    ["program", "po_assessment", "PO skills assessment", ""],
+    ["program", "tot", "Trainings (ToT)", ""]
+  ];
+}
+
+/**
+ * JHSL facility/site choice for PO skills assessment.
+ * Kept static (not pulled from All Facilities List).
+ */
+function getMoHSACJhslChoices_() {
+  return [
+    ["jhsl", "JHSL", "JHSL", "po_assessment"]
   ];
 }
 
@@ -4025,83 +4037,26 @@ function getMoHSACChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
 }
 
 /**
- * County choices derived from All Facilities List (Choices).
- * allowed is the union of facility allowed values in that county
- * so contains(allowed, ${program}) works on the county select.
+ * County choices with program filters (choice_filter contains(allowed, ${program})).
  */
-function getMoHSACCountyChoices_(facilityRows) {
-  var byCounty = {};
-
-  for (var i = 0; i < facilityRows.length; i++) {
-    var listName = String(facilityRows[i][0] || "");
-    var allowed = String(facilityRows[i][3] || "");
-    var countyName = countyNameFromMoHSACFacilityList_(listName);
-    if (!countyName) continue;
-
-    if (!byCounty[countyName]) {
-      byCounty[countyName] = {
-        name: countyName,
-        label: countyLabelForMoHSAC_(countyName),
-        allowedParts: {}
-      };
-    }
-
-    var parts = allowed.split(",");
-    for (var p = 0; p < parts.length; p++) {
-      var part = String(parts[p] || "").trim();
-      if (part) byCounty[countyName].allowedParts[part] = true;
-    }
-  }
-
-  var order = [
-    "JHSL",
-    "Busia",
-    "Kakamega",
-    "Kiambu",
-    "Kilifi",
-    "Kisii",
-    "Kirinyaga",
-    "Machakos",
-    "Makueni",
-    "Meru",
-    "Mombasa",
-    "Muranga",
-    "Nairobi",
-    "Nakuru",
-    "Nyeri",
-    "Siaya"
+function getMoHSACCountyChoices_() {
+  return [
+    ["county", "Busia", "Busia", "mentors_curriculum"],
+    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum"],
+    ["county", "Kiambu", "Kiambu", "mentors_curriculum"],
+    ["county", "Kilifi", "Kilifi", "mentors_curriculum"],
+    ["county", "Kisii", "Kisii", "mentors_curriculum"],
+    ["county", "Machakos", "Machakos", "mentors_curriculum"],
+    ["county", "Makueni", "Makueni", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
+    ["county", "Meru", "Meru", "mentors_curriculum"],
+    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, tot"],
+    ["county", "Muranga", "Muranga", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
+    ["county", "Nairobi", "Nairobi", "mentors_curriculum"],
+    ["county", "Nakuru", "Nakuru", "mentors_curriculum"],
+    ["county", "Nyeri", "Nyeri", "mentors_curriculum"],
+    ["county", "Siaya", "Siaya", "mentors_curriculum"],
+    ["county", "JHSL", "JHSL", "po_assessment"]
   ];
-
-  var rows = [];
-  var seen = {};
-
-  for (var o = 0; o < order.length; o++) {
-    var key = order[o];
-    if (!byCounty[key]) continue;
-    seen[key] = true;
-    rows.push([
-      "county",
-      byCounty[key].name,
-      byCounty[key].label,
-      Object.keys(byCounty[key].allowedParts).join(",")
-    ]);
-  }
-
-  // Any unexpected counties from source, sorted
-  var extras = Object.keys(byCounty).filter(function (k) {
-    return !seen[k];
-  }).sort();
-  for (var e = 0; e < extras.length; e++) {
-    var extra = byCounty[extras[e]];
-    rows.push([
-      "county",
-      extra.name,
-      extra.label,
-      Object.keys(extra.allowedParts).join(",")
-    ]);
-  }
-
-  return rows;
 }
 
 function countyNameFromMoHSACFacilityList_(listName) {
@@ -4187,8 +4142,12 @@ function getMoHSACFacilityChoices_(sourceSs) {
     if (!listName && !name) continue;
 
     var mappedListName = String(listName || "");
-    if (mappedListName.toLowerCase() === "jhsl_facilities") {
-      mappedListName = "jhsl";
+    // JHSL is authored statically via getMoHSACJhslChoices_()
+    if (
+      mappedListName.toLowerCase() === "jhsl_facilities" ||
+      mappedListName.toLowerCase() === "jhsl"
+    ) {
+      continue;
     }
 
     rows.push([
