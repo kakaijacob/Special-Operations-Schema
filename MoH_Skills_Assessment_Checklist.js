@@ -931,7 +931,8 @@ function getMoHSACSection2Rows_() {
       ],
       ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close group_ubt_free_flow
     ])
-    .concat(getMoHSACManualPlacentaRows_());
+    .concat(getMoHSACManualPlacentaRows_())
+    .concat(getMoHSACUbtRows_());
 }
 
 /**
@@ -1078,6 +1079,141 @@ function getMoHSACManualPlacentaRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: UBT (standard) checklist + score.
+ */
+function getMoHSACUbtRows_() {
+  var scoreCalc =
+    "round(((" +
+    "(${obtain_consent_002}='yes')+" +
+    "(${sterile_gloves_001}='yes')+" +
+    "(${balloon_over_catheter}='yes')+" +
+    "(${tie_the_balloon}='yes')+" +
+    "(${inflate_balloon_with_20cc}='yes')+" +
+    "(${inflate_balloon_with_20cc_001}='yes')+" +
+    "(${grasp_anterior_cervix}='yes')+" +
+    "(${place_balloon_into_uterus}='yes')+" +
+    "(${inflate_balloon_300ml_500ml}='yes')+" +
+    "(${clamp_catheter}='yes')+" +
+    "(${balloon_insitu_24hrs}='yes')+" +
+    "(${oxytocin_20iu_in_ns}='yes')+" +
+    "(${antibiotics_001}='yes')+" +
+    "(${monitoring}='yes')+" +
+    "(${deflate_50mls_q_hr}='yes')+" +
+    "(${reinflate_50mls_bleeding_recur}='yes')+" +
+    "(${surgical_intervention_bleeding}='yes')+" +
+    "(${transfusion}='yes')+" +
+    "(${message_to_mother_001}='yes')+" +
+    "(${documentation}='yes')" +
+    ")*100 div 20,0)";
+
+  var items = [
+    ["obtain_consent", "obtain_consent_002", "1. Briefly explain the procedure to the mother depending on the client’s condition and obtain consent."],
+    ["sterile_gloves", "sterile_gloves_001", "2. Wear sterile gloves."],
+    ["balloon_over_catheter", "balloon_over_catheter", "3. Place balloon (condom) over the end of Foley’s catheter and balloon the catheter."],
+    ["tie_the_balloon", "tie_the_balloon", "4. Tie the lower end of the balloon tightly below the level of the balloon using suture/string. Tie tightly enough to prevent leakage of water but do not strangulate the catheter to prevent inflow of water into the balloon."],
+    ["inflate_balloon_with_20cc", "inflate_balloon_with_20cc", "5. Inflate the urinary catheter balloon with about 20 cc of water."],
+    ["inflate_balloon_with_20cc_001", "inflate_balloon_with_20cc_001", "6. Place the speculum into the vagina and identify the cervix."],
+    ["grasp_anterior_cervix", "grasp_anterior_cervix", "7. Grasp the anterior aspect of the cervix with ovum forceps."],
+    ["place_balloon_into_uterus", "place_balloon_into_uterus", "8. Aseptically place the end of the balloon high into the uterus with forceps and ensure the entire balloon is in position."],
+    ["inflate_balloon_300ml_500ml", "inflate_balloon_300ml_500ml", "9. Connect Foley’s catheter to an IV set connected to an infusion set and inflate the balloon with 300–500 mL of saline until bleeding stops."],
+    ["clamp_catheter", "clamp_catheter", "10. Clamp the catheter when the desired volume is achieved and bleeding is controlled."],
+    ["balloon_insitu_24hrs", "balloon_insitu_24hrs", "11. The balloon is maintained in situ for 24 hours after bleeding is controlled and the patient is stable."],
+    ["oxytocin_20iu_in_ns", "oxytocin_20iu_in_ns", "12. Give oxytocin 20 IU in 500 mL normal saline at 60 drops per minute."],
+    ["antibiotics", "antibiotics_001", "13. Give broad-spectrum antibiotic cover."],
+    ["monitoring", "monitoring", "14. Monitor vital signs, uterine tone, bleeding, and urinary output every 15 minutes for the first 2 hours, then every 30 minutes until 6 hours postpartum."],
+    ["deflate_50mls_q_hr", "deflate_50mls_q_hr", "15. When the patient is stable (after 24 hours), slowly deflate the balloon by letting out 50 mL of water/saline every hour."],
+    ["reinflate_50mls_bleeding_recur", "reinflate_50mls_bleeding_recur", "16. Re-inflate with 50 mL to the previous level if bleeding recurs."],
+    ["surgical_intervention_bleeding", "surgical_intervention_bleeding", "17. If bleeding is not controlled within 15 minutes or if the mother is hemodynamically unstable, abandon the procedure and seek surgical intervention immediately."],
+    ["transfusion", "transfusion", "18. Transfuse as indicated."],
+    ["message_to_mother", "message_to_mother_001", "19. Explain the results of the procedure to the mother."],
+    ["documentation", "documentation", "20. Documentation."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_UBT",
+      "Section 2b: UBT",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'UBT'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_ubt",
+      "***Case Scenario:*** *The final-year midwifery students were managing a case of PPH that required placement of a balloon tamponade. They were hesitant to perform the procedure. Demonstrate the procedure to the students for intrauterine balloon tamponade insertion, explaining every step to the students.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "ubt_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "ubt_pass",
+      "*Congratulations! Your score is **[${ubt_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${ubt_score} >= 84.5 and ${documentation}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "ubt_fail",
+      "*Sorry! Your score is **[${ubt_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${ubt_score} < 84.5 and ${documentation}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
 function getMoHSACUbtFreeflowChecklistRows_() {
   var items = [
     ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
@@ -1154,6 +1290,12 @@ function getMoHSACSkillEvaluationChoices_() {
       "Manual_removal_of_placenta",
       "Manual Removal of Placenta",
       "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "UBT",
+      "UBT",
+      "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
 }
@@ -1222,6 +1364,28 @@ function getMoHSACManualPlacentaYesNoChoices_() {
   ]);
 }
 
+function getMoHSACUbtYesNoChoices_() {
+  // Only lists not already covered by earlier skill checklists
+  return getMoHSACYesNoChoicesForLists_([
+    "balloon_over_catheter",
+    "tie_the_balloon",
+    "inflate_balloon_with_20cc",
+    "inflate_balloon_with_20cc_001",
+    "grasp_anterior_cervix",
+    "place_balloon_into_uterus",
+    "inflate_balloon_300ml_500ml",
+    "clamp_catheter",
+    "balloon_insitu_24hrs",
+    "oxytocin_20iu_in_ns",
+    "monitoring",
+    "deflate_50mls_q_hr",
+    "reinflate_50mls_bleeding_recur",
+    "surgical_intervention_bleeding",
+    "transfusion",
+    "documentation"
+  ]);
+}
+
 function getMoHSACYesNoChoicesForLists_(listNames) {
   var rows = [];
   for (var i = 0; i < listNames.length; i++) {
@@ -1248,7 +1412,8 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACMentorsMenteeChoices_(sourceSs))
     .concat(getMoHSACSkillEvaluationChoices_())
     .concat(getMoHSACUbtFreeflowYesNoChoices_())
-    .concat(getMoHSACManualPlacentaYesNoChoices_());
+    .concat(getMoHSACManualPlacentaYesNoChoices_())
+    .concat(getMoHSACUbtYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
