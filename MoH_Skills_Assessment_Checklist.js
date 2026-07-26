@@ -385,10 +385,9 @@ function mohSacFacilitySelectRow_(listName, fieldName, countyLabel) {
 
 /**
  * Section 1c: mentees / IFMs / POs.
- * Order: group open → IFM block (adjustment pending) →
- *        Newborn mentees → MENTORS/EmONC mentees from
- *        kobocreator "MoH Skills Assessment Checklist".
- * Group left open for later close rows.
+ * Order: group open → ToT IFM fields + lm_po →
+ *        IFM facility selects from kobocreator "Survey Sheet (IFM)" →
+ *        Newborn mentees → MENTORS/EmONC mentees.
  */
 function getMoHSACSection1cRows_(sourceSs) {
   return [
@@ -407,9 +406,7 @@ function getMoHSACSection1cRows_(sourceSs) {
       ""
     ]
   ]
-    // >>> IFM BLOCK START — ADJUSTMENT PENDING <<<
     .concat(getMoHSACIfmBlockRows_(sourceSs))
-    // >>> IFM BLOCK END — ADJUSTMENT PENDING <<<
     .concat(getMoHSACNewbornMenteeSurveyRows_(sourceSs))
     .concat(getMoHSACMentorsMenteeSurveyRows_(sourceSs))
     .concat([
@@ -419,24 +416,23 @@ function getMoHSACSection1cRows_(sourceSs) {
 }
 
 // =====================================================
-// IFM BLOCK — ADJUSTMENT PENDING
-// Marked for later revision. Currently includes:
+// IFM BLOCK
 //   1) ToT free-text IFM fields (ifm_name / ifm_id / ifm_id_2)
-//   2) lm_po (Lead Mentors & Program Officers)
-//   3) IFM facility selects from "Survey Sheet (IFM)"
+//   2) lm_po (Lead Mentors & Program Officers) — kept as authored
+//   3) IFM facility selects from kobocreator "Survey Sheet (IFM)"
+//      columns used: type, name, label, relevant
 // Related choices: getMoHSACLmPoChoices_(), getMoHSACIfmChoices_()
 // =====================================================
 
 /**
- * Full IFM block (static ToT/lm_po + imported IFM selects).
- * ADJUSTMENT PENDING — do not rely on final shape yet.
+ * Full IFM block (static ToT/lm_po + Survey Sheet (IFM) selects).
  */
 function getMoHSACIfmBlockRows_(sourceSs) {
   return getMoHSACIfmStaticRows_()
     .concat(getMoHSACIfmSurveyRows_(sourceSs));
 }
 
-/** ADJUSTMENT PENDING: ToT IFM text/phone fields + lm_po. */
+/** ToT IFM text/phone fields + lm_po (leave as-is; do not pull from Survey Sheet). */
 function getMoHSACIfmStaticRows_() {
   return [
     [
@@ -499,9 +495,11 @@ function getMoHSACIfmStaticRows_() {
 }
 
 /**
- * ADJUSTMENT PENDING: IFM facility selects from "Survey Sheet (IFM)".
- * - Forces relevant to ifm_assessment only (ToT uses free-text fields above)
- * - Deduplicates colliding names as name_001, name_002, ...
+ * IFM facility selects from kobocreator "Survey Sheet (IFM)".
+ * Pulls only: type, name, label, relevant.
+ * - required always text "true"
+ * - relevant kept as facility match, forced to program = ifm_assessment
+ * - colliding names become name_001, name_002, ...
  */
 function getMoHSACIfmSurveyRows_(sourceSs) {
   var sourceSheet = sourceSs.getSheetByName("Survey Sheet (IFM)");
@@ -519,20 +517,17 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
   var typeIndex = header.indexOf("type");
   var nameIndex = header.indexOf("name");
   var labelIndex = header.indexOf("label");
-  var requiredIndex = header.indexOf("required");
-  var requiredMessageIndex = header.indexOf("required_message");
   var relevantIndex = header.indexOf("relevant");
 
   if (
     typeIndex === -1 ||
     nameIndex === -1 ||
     labelIndex === -1 ||
-    requiredIndex === -1 ||
     relevantIndex === -1
   ) {
     throw new Error(
       "Survey Sheet (IFM) is missing required columns: " +
-      "type, name, label, required, relevant"
+      "type, name, label, relevant"
     );
   }
 
@@ -543,9 +538,6 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     var type = data[i][typeIndex];
     var baseName = data[i][nameIndex];
     var label = data[i][labelIndex];
-    var required = normalizeMoHSACRequired_(data[i][requiredIndex]);
-    var requiredMessage =
-      requiredMessageIndex === -1 ? "" : (data[i][requiredMessageIndex] || "");
     var relevant = normalizeMoHSACIfmRelevant_(data[i][relevantIndex]);
 
     if (!type && !baseName) continue;
@@ -560,13 +552,17 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
       }
     }
 
+    // Map into MoH SAC survey columns:
+    // type, name, label, hint, required, required_message,
+    // constraint_message, relevant, choice_filter, calculation,
+    // constraint, appearance
     rows.push([
       type || "",
       name,
       label || "",
       "",
-      required,
-      requiredMessage || "",
+      "true",
+      "",
       "",
       relevant || "",
       "",
@@ -589,9 +585,8 @@ function normalizeMoHSACRequired_(value) {
 }
 
 /**
- * ADJUSTMENT PENDING helper for IFM relevant.
  * Keep facility equality from Survey Sheet (IFM), but show IFM selects
- * only for program = ifm_assessment.
+ * only for program = ifm_assessment (ToT uses free-text fields above lm_po).
  */
 function normalizeMoHSACIfmRelevant_(relevant) {
   var raw = String(relevant == null ? "" : relevant);

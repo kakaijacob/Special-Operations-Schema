@@ -632,6 +632,8 @@ function generateFacilitiesChoicesSheet() {
 
 // =====================================================
 // 7️⃣ IFM ASSESSMENT (FACILITY-BASED)
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Status
 // =====================================================
 function generateIFMAssessmentSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -644,6 +646,7 @@ function generateIFMAssessmentSheet() {
   var countyIndex = header.indexOf("County");
   var facilityIndex = header.indexOf("Facility");
   var facilityCodeIndex = header.indexOf("Facility Code");
+  var statusIndex = header.indexOf("Status");
 
   var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
@@ -654,8 +657,14 @@ function generateIFMAssessmentSheet() {
     var county = data[i][countyIndex];
     var facility = data[i][facilityIndex];
     var code = data[i][facilityCodeIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
 
     if (!county || !facility || !code) continue;
+
+    // Status filter: Active only
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
 
     // Skip if this facility code is already processed
     if (seenFacilities[code]) continue;
@@ -701,14 +710,19 @@ function generateMenteeFacilityLogic() {
   var ifmFacilityIndex = ifmHeader.indexOf("Facility");
   var ifmFacilityCodeIndex = ifmHeader.indexOf("Facility Code");
   var ifmCountyIndex = ifmHeader.indexOf("County");
+  var ifmStatusIndex = ifmHeader.indexOf("Status");
 
-  // Map of IFM facility codes to cleaned names
+  // Map of IFM facility codes to cleaned names (Active rows only)
   var ifmMap = {};
   for (var i = 1; i < ifmData.length; i++) {
     var code = ifmData[i][ifmFacilityCodeIndex];
     var facility = ifmData[i][ifmFacilityIndex];
     var county = ifmData[i][ifmCountyIndex];
+    var status = ifmStatusIndex === -1 ? "" : ifmData[i][ifmStatusIndex];
     if (!code || !facility || !county) continue;
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
     ifmMap[code] = {
       facility: code + "_" + cleanForKobo(facility),
       county: cleanForKobo(county) + "_facilities",
@@ -768,6 +782,8 @@ function generateMenteeFacilityLogic() {
 
 // =====================================================
 // 9️⃣ IFM (CHOICES) – FIRST WORD BASED
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Name, IFM ID, Status
 // =====================================================
 function generateIFMChoicesSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -782,6 +798,7 @@ function generateIFMChoicesSheet() {
   var facilityCodeIndex = header.indexOf("Facility Code");
   var nameIndex = header.indexOf("Name");
   var idIndex = header.indexOf("IFM ID");
+  var statusIndex = header.indexOf("Status");
 
   var sheet = getOrCreateSheet("IFM List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
@@ -792,8 +809,14 @@ function generateIFMChoicesSheet() {
     var code = data[i][facilityCodeIndex];
     var name = data[i][nameIndex];
     var rawID = data[i][idIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
 
     if (!county || !facility || !code || !name || !rawID) continue;
+
+    // Status filter: Active only
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
 
     // ✅ Clean IFM ID: remove all spaces
     var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
@@ -1018,6 +1041,9 @@ function generateNewbornChoicesSheet() {
 
 // =====================================================
 // 1️⃣2️⃣ SURVEY SHEET (IFM) – UPDATED COLUMN ORDER
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Status
+// Unique Facility Code + Status Active
 // =====================================================
 function generateSurveySheetIFM() {
 
@@ -1032,6 +1058,7 @@ function generateSurveySheetIFM() {
   var countyIndex = ifmHeader.indexOf("County");
   var facilityIndex = ifmHeader.indexOf("Facility");
   var facilityCodeIndex = ifmHeader.indexOf("Facility Code");
+  var statusIndex = ifmHeader.indexOf("Status");
 
   var sheet = getOrCreateSheet("Survey Sheet (IFM)");
 
@@ -1056,8 +1083,15 @@ function generateSurveySheetIFM() {
     var county = ifmData[i][countyIndex];
     var facility = ifmData[i][facilityIndex];
     var code = ifmData[i][facilityCodeIndex];
+    var status = statusIndex === -1 ? "" : ifmData[i][statusIndex];
 
     if (!county || !facility || !code) continue;
+
+    // Status filter: Active only (unique Facility Code among Active rows)
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
+
     if (processed[code]) continue;
     processed[code] = true;
 
