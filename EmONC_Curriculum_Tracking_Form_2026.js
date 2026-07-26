@@ -103,12 +103,14 @@ function refreshEmONCCurriculumTrackingForm2026() {
  */
 function syncMenteeDatabaseFrom2026() {
   var props = PropertiesService.getScriptProperties();
-  var sourceId = props.getProperty(EMONC_CTF_2026_PROP_SOURCE_ID);
+  var sourceId =
+    props.getProperty(EMONC_CTF_2026_PROP_SOURCE_ID) ||
+    EMONC_CTF_2026_DEFAULT_SOURCE_ID;
 
   if (!sourceId) {
     throw new Error(
       "Mentee Database 2026 spreadsheet ID is not configured. " +
-      "Run setEmONCCTF2026Config('<spreadsheet_id>') first."
+      "Run setupEmONCCTF2026() first."
     );
   }
 
