@@ -139,7 +139,23 @@ function syncMenteeDatabaseFrom2026() {
     localSheet = localSs.insertSheet(EMONC_CTF_2026_LOCAL_MENTEE_SHEET);
   }
 
-  localSheet.clear();
+  // Local "Mentee Database" often has dropdown / validation rules.
+  // Those block setValues() when source cells don't match the rule
+  // (e.g. cell A2340). Clear validations + filter before overwrite.
+  var fullRange = localSheet.getRange(
+    1,
+    1,
+    localSheet.getMaxRows(),
+    localSheet.getMaxColumns()
+  );
+  fullRange.clearDataValidations();
+
+  var filter = localSheet.getFilter();
+  if (filter) {
+    filter.remove();
+  }
+
+  localSheet.clearContents();
   localSheet
     .getRange(1, 1, values.length, values[0].length)
     .setValues(values);
