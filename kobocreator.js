@@ -784,22 +784,26 @@ function generateFacilitiesChoicesSheet() {
 // 7️⃣ IFM ASSESSMENT (FACILITY-BASED)
 // =====================================================
 function generateIFMAssessmentSheet() {
+  // Source: local "IFM List" (same upstream as Survey Sheet / IFM List Choices)
   var table = readIFMListTable_();
   var indexes = table.indexes;
   var displays = table.displays;
   var start = table.headerRowIndex + 1;
 
-  var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
 
   var seenFacilities = {}; // Track unique facility codes
+  var skippedIncomplete = 0;
 
   for (var i = start; i < displays.length; i++) {
     var county = cellText_(displays[i], indexes.county);
     var facility = cellText_(displays[i], indexes.facility);
     var code = cellText_(displays[i], indexes.facilityCode);
 
-    if (!county || !facility || !code) continue;
+    if (!county || !facility || !code) {
+      skippedIncomplete++;
+      continue;
+    }
 
     // Skip if this facility code is already processed
     if (seenFacilities[code]) continue;
@@ -816,6 +820,19 @@ function generateIFMAssessmentSheet() {
     output.push([county, facility, code, listName, combinedName, facility]);
   }
 
+  if (output.length < 2) {
+    throw new Error(
+      "IFM Assessment Facilities List (Choices) produced 0 rows from IFM List (" +
+      table.dataRowCount +
+      " data row(s); incomplete county/Facility/Facility Code rows skipped=" +
+      skippedIncomplete +
+      "). Headers: [" +
+      table.header.join(" | ") +
+      "]. Open local IFM List — if it is also blank, run syncIFMListFromSource() " +
+      "from Mentor (IFM) Database 2026 first."
+    );
+  }
+
   // Sort alphabetically by Facility
   output = [output[0]].concat(
     output.slice(1).sort(function(a, b) {
@@ -823,7 +840,14 @@ function generateIFMAssessmentSheet() {
     })
   );
 
+  var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   sheet.getRange(1,1,output.length,output[0].length).setValues(output);
+
+  Logger.log(
+    "IFM Assessment Facilities List (Choices): wrote " +
+    (output.length - 1) +
+    " unique facility row(s)."
+  );
 }
 
 // =====================================================

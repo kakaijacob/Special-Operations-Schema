@@ -302,9 +302,9 @@ function normalizeSourceProgramValues_(values) {
 
 /**
  * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
- * Prefers sheet gid from the source URL; falls back to sheet name, then first tab.
+ * Chooses the source tab with real mentor rows (gid preferred, then best match).
  *
- * Downstream consumers (kobocreator):
+ * Downstream consumers (kobocreator) — ALL read local IFM List only:
  *   IFM List → IFM List (Choices)
  *   IFM List → Survey Sheet (IFM)
  *   IFM List → IFM Assessment Facilities List (Choices)
@@ -323,45 +323,30 @@ function syncIFMListFromSource() {
   }
 
   var sourceSs = SpreadsheetApp.openById(sourceId);
-  var sourceSheet = resolveIFMSourceSheet_(sourceSs, props);
+  var selected = selectIFMSourceTable_(sourceSs, props);
 
-  if (!sourceSheet) {
+  if (!selected || !selected.values || selected.values.length < 2) {
     throw new Error(
-      "No sheets found in Mentor (IFM) Database 2026 spreadsheet."
+      "Mentor (IFM) Database 2026 (" +
+      sourceId +
+      ") has no usable IFM table with Mentor ID/IFM ID, county, Facility, " +
+      "Facility Code and at least one filled data row. " +
+      (selected && selected.scanLog ? selected.scanLog : "")
     );
   }
 
-  var values = sourceSheet.getDataRange().getValues();
-  if (!values || values.length === 0) {
-    throw new Error("Mentor (IFM) Database 2026 source sheet is empty.");
-  }
-
-  // Drop title rows above the real header (Mentor ID / Facility / county…).
-  var headerRowIndex = findIFMSourceHeaderRowIndex_(values);
-  if (headerRowIndex === -1) {
-    throw new Error(
-      "Mentor (IFM) Database 2026 sheet '" +
-      sourceSheet.getName() +
-      "' has no header row with Mentor ID/IFM ID, county/County, Facility, " +
-      "Facility Code. First row: [" +
-      (values[0] || []).join(" | ") +
-      "]. Check gid " +
-      KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID +
-      "."
-    );
-  }
-
-  if (headerRowIndex > 0) {
-    values = values.slice(headerRowIndex);
-  }
-
+  var values = selected.values;
   var header = values[0];
-  var dataRows = values.length - 1;
-  if (dataRows < 1) {
+  var usableRows = countIFMUsableRows_(values);
+
+  if (usableRows < 1) {
     throw new Error(
-      "Mentor (IFM) Database 2026 sheet '" +
-      sourceSheet.getName() +
-      "' has headers but 0 data rows."
+      "Selected IFM source sheet '" +
+      selected.sheetName +
+      "' has headers but 0 rows with county + Facility + Facility Code filled. " +
+      "Headers: [" +
+      header.join(" | ") +
+      "]."
     );
   }
 
@@ -390,42 +375,155 @@ function syncIFMListFromSource() {
     .setValues(values);
 
   Logger.log(
-    "Synced " + dataRows +
-    " IFM rows from '" + sourceSheet.getName() +
-    "' (spreadsheet " + sourceId +
-    ") into '" + KOBO_TOOLS_LOCAL_IFM_SHEET +
-    "'. Headers: [" + header.join(" | ") + "]"
+    "Synced IFM List from '" +
+    selected.sheetName +
+    "' (gid=" +
+    selected.sheetId +
+    ", spreadsheet " +
+    sourceId +
+    "): " +
+    (values.length - 1) +
+    " row(s), " +
+    usableRows +
+    " with county/Facility/Facility Code. Headers: [" +
+    header.join(" | ") +
+    "]"
   );
 
   return localSheet;
 }
 
 /**
+ * Prefer configured gid/name sheet when it has usable rows; otherwise pick
+ * the workbook tab with the most usable IFM rows.
+ */
+function selectIFMSourceTable_(sourceSs, props) {
+  var gidRaw =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID) ||
+    String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID);
+  var gid = parseInt(gidRaw, 10);
+  var preferredName =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET) ||
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET;
+
+  var sheets = sourceSs.getSheets();
+  var scanParts = [];
+  var best = null;
+  var preferred = null;
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sh = sheets[i];
+    var parsed = parseIFMSourceSheet_(sh);
+    scanParts.push(
+      sh.getName() +
+      "(gid=" +
+      sh.getSheetId() +
+      ", usable=" +
+      parsed.usableRows +
+      ")"
+    );
+
+    if (parsed.usableRows < 1) continue;
+
+    if (!best || parsed.usableRows > best.usableRows) {
+      best = parsed;
+    }
+
+    var isPreferredGid = !isNaN(gid) && sh.getSheetId() === gid;
+    var isPreferredName = sh.getName() === preferredName;
+    if ((isPreferredGid || isPreferredName) && !preferred) {
+      preferred = parsed;
+    }
+  }
+
+  var chosen = preferred && preferred.usableRows > 0 ? preferred : best;
+  if (!chosen) {
+    return { scanLog: "Tabs scanned: " + scanParts.join("; ") };
+  }
+
+  chosen.scanLog = "Tabs scanned: " + scanParts.join("; ");
+  return chosen;
+}
+
+/**
+ * Read one source sheet and normalize to header-first values if it looks like IFM.
+ */
+function parseIFMSourceSheet_(sheet) {
+  var values = sheet.getDataRange().getValues();
+  var headerRowIndex = findIFMSourceHeaderRowIndex_(values);
+  if (headerRowIndex === -1) {
+    return {
+      sheetName: sheet.getName(),
+      sheetId: sheet.getSheetId(),
+      values: null,
+      usableRows: 0
+    };
+  }
+
+  if (headerRowIndex > 0) {
+    values = values.slice(headerRowIndex);
+  }
+
+  return {
+    sheetName: sheet.getName(),
+    sheetId: sheet.getSheetId(),
+    values: values,
+    usableRows: countIFMUsableRows_(values)
+  };
+}
+
+function countIFMUsableRows_(values) {
+  if (!values || values.length < 2) return 0;
+
+  var header = values[0];
+  var countyIndex = findIFMSourceHeaderIndex_(header, ["county", "County"]);
+  var facilityIndex = findIFMSourceHeaderIndex_(header, ["Facility"]);
+  var codeIndex = findIFMSourceHeaderIndex_(header, [
+    "Facility Code",
+    "Facility code"
+  ]);
+
+  if (countyIndex === -1 || facilityIndex === -1 || codeIndex === -1) {
+    return 0;
+  }
+
+  var usable = 0;
+  for (var i = 1; i < values.length; i++) {
+    var county = String(
+      values[i][countyIndex] == null ? "" : values[i][countyIndex]
+    ).trim();
+    var facility = String(
+      values[i][facilityIndex] == null ? "" : values[i][facilityIndex]
+    ).trim();
+    var code = String(
+      values[i][codeIndex] == null ? "" : values[i][codeIndex]
+    ).trim();
+    if (county && facility && code) usable++;
+  }
+  return usable;
+}
+
+/**
  * Find header row in Mentor (IFM) source values (first ~15 rows).
- * Mirrors kobocreator findIFMHeaderRowIndex_ so sync and generators agree.
  */
 function findIFMSourceHeaderRowIndex_(rows) {
+  if (!rows || !rows.length) return -1;
   var maxScan = Math.min(rows.length, 15);
   for (var r = 0; r < maxScan; r++) {
     var row = rows[r];
-    var hasId = false;
-    var hasFacility = false;
-    var hasCode = false;
-    var hasCounty = false;
-
-    for (var c = 0; c < row.length; c++) {
-      var cell = String(row[c] == null ? "" : row[c]).trim().toLowerCase();
-      if (
-        cell === "mentor id" ||
-        cell === "ifm id" ||
-        cell === "mentorid"
-      ) {
-        hasId = true;
-      }
-      if (cell === "facility") hasFacility = true;
-      if (cell === "facility code") hasCode = true;
-      if (cell === "county") hasCounty = true;
-    }
+    var hasId =
+      findIFMSourceHeaderIndex_(row, [
+        "Mentor ID",
+        "IFM ID",
+        "Mentor Id",
+        "MentorID"
+      ]) !== -1;
+    var hasFacility = findIFMSourceHeaderIndex_(row, ["Facility"]) !== -1;
+    var hasCode =
+      findIFMSourceHeaderIndex_(row, ["Facility Code", "Facility code"]) !==
+      -1;
+    var hasCounty =
+      findIFMSourceHeaderIndex_(row, ["county", "County"]) !== -1;
 
     if (hasId && hasFacility && hasCode && hasCounty) {
       return r;
@@ -434,44 +532,32 @@ function findIFMSourceHeaderRowIndex_(rows) {
   return -1;
 }
 
-function resolveIFMSourceSheet_(sourceSs, props) {
-  var gidRaw =
-    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID) ||
-    String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID);
-  var gid = parseInt(gidRaw, 10);
+function findIFMSourceHeaderIndex_(headerRow, names) {
+  var aliases =
+    Object.prototype.toString.call(names) === "[object Array]"
+      ? names
+      : [names];
+  var i;
+  var c;
+  var want;
 
-  if (!isNaN(gid)) {
-    // Native API (newer Apps Script)
-    try {
-      if (typeof sourceSs.getSheetById === "function") {
-        var byId = sourceSs.getSheetById(gid);
-        if (byId) return byId;
-      }
-    } catch (err) {
-      Logger.log("getSheetById failed for IFM gid " + gid + ": " + err);
-    }
-
-    // Portable fallback: match Sheet.getSheetId() to URL gid
-    var sheets = sourceSs.getSheets();
-    for (var i = 0; i < sheets.length; i++) {
-      if (sheets[i].getSheetId() === gid) {
-        return sheets[i];
-      }
-    }
-
-    Logger.log(
-      "IFM source sheet gid " + gid + " not found; trying name fallback."
-    );
+  for (i = 0; i < aliases.length; i++) {
+    var exact = headerRow.indexOf(aliases[i]);
+    if (exact !== -1) return exact;
   }
 
-  var sourceSheetName =
-    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET) ||
-    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET;
-
-  var byName = sourceSs.getSheetByName(sourceSheetName);
-  if (byName) return byName;
-
-  return sourceSs.getSheets()[0] || null;
+  for (i = 0; i < aliases.length; i++) {
+    want = String(aliases[i] == null ? "" : aliases[i]).trim().toLowerCase();
+    for (c = 0; c < headerRow.length; c++) {
+      if (
+        String(headerRow[c] == null ? "" : headerRow[c]).trim().toLowerCase() ===
+        want
+      ) {
+        return c;
+      }
+    }
+  }
+  return -1;
 }
 
 /**
