@@ -479,6 +479,117 @@ function getEmONCCTF2026Section2Rows_() {
       "",
       ""
     ],
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_case_scenarios",
+      "Section 2b: Videos or Case Scenarios",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'case_scenarios')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_scenarios",
+      "***Enumerator Note:*** *This section captures whether mentees were taken through case scenarios. Please record the specific module covered by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one case_scenarios",
+      "case_scenarios",
+      "8. Please select the case scenario session that the selected mentee(s) participated in.",
+      "Enumerator note: Select the Video or case scenario completed.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'case_scenarios')",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_mentor_demo",
+      "Section 2c: Skill Demonstrations by Mentor",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'skill_demos_mentor')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_mentor_demo",
+      "***Enumerator Note:*** *This section captures whether the mentor demonstrated specific skills during the session. Please record the skill covered by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_multiple mentor_skills_demo",
+      "mentor_skills_demo",
+      "9. Please select the skill module demonstrated to the participant mentees(s).",
+      "Enumerator note: Select all skills demonstrated by the mentor during the session.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'skill_demos_mentor')",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_return_demo",
+      "Section 2d: Return Demonstrations by Mentee",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'skills_demos_mentee')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_retrun_demo",
+      "***Enumerator Note:*** *This section captures whether mentees performed return demonstrations of specific skills. Please record the skill covered by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_multiple mentee_skills_return_demo",
+      "mentee_skills_return_demo",
+      "10. Please select the skill module demonstrated by the participant mentees(s).",
+      "Enumerator note: Select all skills performed by the mentee during the return demonstration.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'skills_demos_mentee')",
+      "",
+      ""
+    ],
     ["end_group", "", "", "", "", "", "", "", "", ""]
   ];
 }
