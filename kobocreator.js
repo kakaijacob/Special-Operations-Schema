@@ -1150,6 +1150,7 @@ function generateSurveySheetNewborn() {
   var facilityIndex = header.indexOf("Facility");
   var facilityCodeIndex = header.indexOf("Facility Code");
   var programIndex = header.indexOf("Program");
+  var statusIndex = header.indexOf("Status");
 
   // Build map: facilityCode + program -> logic
   var varData = variableSheet.getDataRange().getValues();
@@ -1188,7 +1189,9 @@ function generateSurveySheetNewborn() {
     "relevant"
   ]];
 
-  var processedFacilities = {};
+  // Aggregate by Facility Code: include only if at least one Active
+  // Newborn Curriculum / Both mentee exists (exclude all-Inactive facilities)
+  var facilityMap = {};
 
   for (var i = 1; i < data.length; i++) {
 
@@ -1196,6 +1199,7 @@ function generateSurveySheetNewborn() {
     var facility = data[i][facilityIndex];
     var code = data[i][facilityCodeIndex];
     var program = data[i][programIndex];
+    var status = statusIndex !== -1 ? data[i][statusIndex] : "";
 
     if (!county || !facility || !code || !program) continue;
 
@@ -1203,15 +1207,29 @@ function generateSurveySheetNewborn() {
     var cleanedProgram = program.toLowerCase().replace(/\s+/g, "_");
     if (cleanedProgram !== "newborn_curriculum" && cleanedProgram !== "both") continue;
 
-    // === Remove duplicates by facility code ===
-    if (processedFacilities[code]) continue;
-    processedFacilities[code] = true;
+    if (!facilityMap[code]) {
+      facilityMap[code] = {
+        county: county,
+        facility: facility,
+        hasActive: false
+      };
+    }
 
-    if (cleanedProgram === "both") 
-      cleanedProgram = "newborn_curriculum";
+    if (status === "Active") {
+      facilityMap[code].hasActive = true;
+    }
+  }
+
+  for (var code in facilityMap) {
+    var f = facilityMap[code];
+
+    // === FILTER: skip facility if all mentees are Inactive ===
+    if (!f.hasActive) continue;
+
+    var cleanedProgram = "newborn_curriculum";
 
     // === KOBO VARIABLE (NBC CONTEXT) ===
-    var listName = generateKoboVariable(facility, true);
+    var listName = generateKoboVariable(f.facility, true);
     var type = "select_one " + listName;
 
     var label = listName
@@ -1227,8 +1245,8 @@ function generateSurveySheetNewborn() {
     var required_message = "Sorry, this answer is required";
 
     output.push([
-      county,
-      facility,
+      f.county,
+      f.facility,
       code,
       cleanedProgram,
       type,
