@@ -18,6 +18,8 @@
 //   2) Sync external Mentor (IFM) Database 2026 → local "IFM List"
 //   3) Run kobocreator.js generateAllOutputs()
 //   4) Create/update every registered Kobo form tool
+//   5) Upload / deploy each built form to Kobo (Kobo_Tools_Deployer.js)
+//      Skipped automatically if deployer file or API token is missing.
 // =====================================================
 
 // Script Properties — Mentee Database 2026
@@ -87,7 +89,8 @@ function getKoboToolsRegistry_() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Kobo Tools")
-    .addItem("Refresh All Forms", "refreshAllKoboTools")
+    .addItem("Refresh All Forms (+ Deploy)", "refreshAllKoboTools")
+    .addItem("Deploy All to Kobo", "deployAllKoboToolsFromMenu_")
     .addItem("Setup Source Database", "setupKoboToolsSource")
     .addSeparator()
     .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
@@ -179,7 +182,8 @@ function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
 
 /**
  * MASTER PIPELINE — call this from the trigger / menu.
- * Do NOT put separate triggers on sync, kobocreator, or individual form builders.
+ * Do NOT put separate triggers on sync, kobocreator, individual builders,
+ * or the Kobo deployer.
  */
 function refreshAllKoboTools() {
   Logger.log("=== Kobo Tools refresh started ===");
@@ -196,11 +200,73 @@ function refreshAllKoboTools() {
   Logger.log("kobocreator complete.");
 
   // 4) Build / update every registered form
-  var results = buildRegisteredKoboTools_();
+  var buildResults = buildRegisteredKoboTools_();
+
+  // 5) Upload / deploy built forms to Kobo (if deployer + token configured)
+  var deployResults = deployRegisteredKoboTools_();
+
+  var summary = {
+    build: buildResults,
+    deploy: deployResults
+  };
 
   Logger.log("=== Kobo Tools refresh finished ===");
+  Logger.log(JSON.stringify(summary));
+  return summary;
+}
+
+/**
+ * Menu helper — deploy only (no sync / rebuild).
+ * Requires Kobo_Tools_Deployer.js + setupKoboDeployConfig().
+ */
+function deployAllKoboToolsFromMenu_() {
+  var results = deployRegisteredKoboTools_();
   Logger.log(JSON.stringify(results));
   return results;
+}
+
+/**
+ * Step 5: deploy every enabled tool via Kobo_Tools_Deployer.js.
+ * Forms were just rebuilt, so rebuildFirst is always false here.
+ * Gracefully skips when deployer or API token is not configured.
+ */
+function deployRegisteredKoboTools_() {
+  var deployFn = resolveGlobalFunction_("deployAllKoboTools");
+  if (!deployFn) {
+    Logger.log(
+      "Skipping Kobo deploy — deployAllKoboTools() not found. " +
+      "Add Kobo_Tools_Deployer.js to this project to enable upload/deploy."
+    );
+    return [{ status: "skipped_missing_deployer" }];
+  }
+
+  var tokenProp =
+    typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
+      ? KOBO_DEPLOY_PROP_API_TOKEN
+      : "KOBO_KPI_API_TOKEN";
+  var token = PropertiesService.getScriptProperties().getProperty(tokenProp);
+  if (!token) {
+    Logger.log(
+      "Skipping Kobo deploy — API token not configured. " +
+      "Run setupKoboDeployConfig() once, then re-run refreshAllKoboTools()."
+    );
+    return [{ status: "skipped_missing_token" }];
+  }
+
+  Logger.log("Deploying registered tools to Kobo...");
+  try {
+    var results = deployFn(false);
+    Logger.log("Kobo deploy complete.");
+    return results;
+  } catch (err) {
+    Logger.log("Kobo deploy failed: " + err.message);
+    return [
+      {
+        status: "error",
+        error: String(err.message || err)
+      }
+    ];
+  }
 }
 
 /**
