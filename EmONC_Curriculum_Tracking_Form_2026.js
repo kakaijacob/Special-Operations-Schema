@@ -29,7 +29,8 @@ var EMONC_CTF_2026_SETTINGS_HEADERS = [
   "form_title",
   "form_id",
   "version",
-  "default_language"
+  "default_language",
+  "allow_choice_duplicates"
 ];
 
 /**
@@ -858,7 +859,8 @@ function writeEmONCCTF2026Settings_(sheet) {
       EMONC_CTF_2026_TITLE,
       "emonc_curriculum_tracking_form_2026",
       "2026.01.01",
-      "English (en)"
+      "English (en)",
+      "yes"
     ]
   ];
   sheet.clear();
