@@ -3913,11 +3913,21 @@ function getMoHSACJhslChoices_() {
 }
 
 /**
- * ADJUSTMENT PENDING: Lead Mentors & Program Officers choices (lm_po).
- * Populate when the source list is provided.
+ * Lead Mentors & Program Officers choices (lm_po) for PO skills assessment.
  */
 function getMoHSACLmPoChoices_() {
-  return [];
+  return [
+    ["lm_po", "238_Perez_Musyoki", "Perez Musyoki", "po_assessment"],
+    ["lm_po", "226_Agatha_Nthenya", "Agatha Nthenya", "po_assessment"],
+    ["lm_po", "214_Wilson_Maina", "Wilson Maina", "po_assessment"],
+    ["lm_po", "203_Anne_Njeri", "Anne Njeri", "po_assessment"],
+    ["lm_po", "192_Charles_Michieka", "Charles Michieka", "po_assessment"],
+    ["lm_po", "165_Janet_Achieng", "Janet Achieng", "po_assessment"],
+    ["lm_po", "154_Jedidah_Maina", "Jedidah Maina", "po_assessment"],
+    ["lm_po", "146_Lucy_Kamau", "Lucy Kamau", "po_assessment"],
+    ["lm_po", "135_Fridah_Gathogo", "Fridah Gathogo", "po_assessment"],
+    ["lm_po", "116_John_Mbithi", "John Mbithi", "po_assessment"]
+  ];
 }
 
 /**
