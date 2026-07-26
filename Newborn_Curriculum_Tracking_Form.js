@@ -260,7 +260,7 @@ function getNewbornCTFSurveyRows_() {
 
 /**
  * Section 1b: county + facility selects (choice_filter by program).
- * mentee_details group left open for mentee attendance rows next.
+ * Mentee select rows are appended from Survey Sheet (Newborn).
  */
 function getNewbornCTFSection1bRows_() {
   var sectionRelevant =
@@ -360,7 +360,7 @@ function getNewbornCTFMenteeSurveyRows_(sourceSs) {
   var rows = [];
 
   for (var i = 1; i < data.length; i++) {
-    var type = data[i][typeIndex];
+    var type = convertNewbornCTFSelectOneToMultiple_(data[i][typeIndex]);
     var name = data[i][nameIndex];
     var label = data[i][labelIndex];
     var required = normalizeNewbornCTFRequired_(data[i][requiredIndex]);
@@ -391,6 +391,17 @@ function normalizeNewbornCTFRequired_(value) {
   var cleaned = String(value == null ? "" : value).trim().toLowerCase();
   if (cleaned === "true" || cleaned === "false") return cleaned;
   return cleaned;
+}
+
+/**
+ * When importing Survey Sheet (Newborn), convert select_one → select_multiple
+ * so mentees can be multi-selected for attendance.
+ */
+function convertNewbornCTFSelectOneToMultiple_(type) {
+  if (type == null || type === "") return type;
+  var raw = String(type);
+  // Only replace the leading question type token
+  return raw.replace(/^select_one\b/i, "select_multiple");
 }
 
 // =====================================================
