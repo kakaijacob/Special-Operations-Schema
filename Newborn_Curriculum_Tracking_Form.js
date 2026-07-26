@@ -33,8 +33,9 @@ var NEWBORN_CTF_SETTINGS_HEADERS = [
 
 /**
  * Spreadsheet menu: Newborn CTF
+ * If EmONC CTF is also installed in this project, merge both menus into one onOpen.
  */
-function onOpenNewbornCTF() {
+function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Newborn CTF")
     .addItem("Create / Update Form", "createNewbornCurriculumTrackingForm")
