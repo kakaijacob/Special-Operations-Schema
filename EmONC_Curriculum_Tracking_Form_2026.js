@@ -47,7 +47,7 @@ function createEmONCCurriculumTrackingForm2026() {
   var settingsSheet = ss.insertSheet("settings");
 
   writeEmONCCTF2026Survey_(surveySheet, sourceSs);
-  writeEmONCCTF2026ChoicesStub_(choicesSheet);
+  writeEmONCCTF2026Choices_(choicesSheet, sourceSs);
   writeEmONCCTF2026Settings_(settingsSheet);
 
   // Leave the builder focused on the survey tab
@@ -645,12 +645,35 @@ function getEmONCCTF2026Section2Rows_() {
 }
 
 // =====================================================
-// CHOICES (stub — next step: feed from kobocreator sheets)
+// CHOICES
 // =====================================================
-function writeEmONCCTF2026ChoicesStub_(sheet) {
+function writeEmONCCTF2026Choices_(sheet, sourceSs) {
+  var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
+    .concat(getEmONCCTF2026CountyChoices_());
+
   sheet.clear();
-  sheet.getRange(1, 1, 1, EMONC_CTF_2026_CHOICES_HEADERS.length)
-    .setValues([EMONC_CTF_2026_CHOICES_HEADERS]);
+  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+function getEmONCCTF2026CountyChoices_() {
+  // list_name, name, label
+  return [
+    ["county", "Busia", "Busia"],
+    ["county", "Kakamega", "Kakamega"],
+    ["county", "Kiambu", "Kiambu"],
+    ["county", "Kilifi", "Kilifi"],
+    ["county", "Kisii", "Kisii"],
+    ["county", "Kirinyaga", "Kirinyaga"],
+    ["county", "Machakos", "Machakos"],
+    ["county", "Makueni", "Makueni"],
+    ["county", "Meru", "Meru"],
+    ["county", "Mombasa", "Mombasa"],
+    ["county", "Muranga", "Murang'a"],
+    ["county", "Nairobi", "Nairobi"],
+    ["county", "Nakuru", "Nakuru"],
+    ["county", "Nyeri", "Nyeri"],
+    ["county", "Siaya", "Siaya"]
+  ];
 }
 
 // =====================================================
