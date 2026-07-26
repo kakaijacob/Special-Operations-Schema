@@ -4059,47 +4059,10 @@ function getMoHSACCountyChoices_() {
   ];
 }
 
-function countyNameFromMoHSACFacilityList_(listName) {
-  var cleaned = String(listName || "").trim().toLowerCase();
-  if (!cleaned) return "";
-
-  // Survey uses select_one jhsl (not jhsl_facilities)
-  if (cleaned === "jhsl" || cleaned === "jhsl_facilities") return "JHSL";
-
-  if (cleaned.slice(-11) === "_facilities") {
-    cleaned = cleaned.slice(0, -11);
-  }
-
-  var map = {
-    busia: "Busia",
-    kakamega: "Kakamega",
-    kiambu: "Kiambu",
-    kilifi: "Kilifi",
-    kisii: "Kisii",
-    kirinyaga: "Kirinyaga",
-    machakos: "Machakos",
-    makueni: "Makueni",
-    meru: "Meru",
-    mombasa: "Mombasa",
-    muranga: "Muranga",
-    nairobi: "Nairobi",
-    nakuru: "Nakuru",
-    nyeri: "Nyeri",
-    siaya: "Siaya"
-  };
-
-  return map[cleaned] || "";
-}
-
-function countyLabelForMoHSAC_(countyName) {
-  if (countyName === "Muranga") return "Murang'a";
-  return countyName;
-}
-
 /**
  * Facility choices from kobocreator sheet
  * "All Facilities List (Choices)" → list_name, name, label, allowed
- * Remap jhsl_facilities → jhsl to match select_one jhsl.
+ * JHSL rows are skipped (authored via getMoHSACJhslChoices_).
  */
 function getMoHSACFacilityChoices_(sourceSs) {
   var sourceSheet = sourceSs.getSheetByName("All Facilities List (Choices)");
