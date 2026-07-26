@@ -650,7 +650,8 @@ function getEmONCCTF2026Section2Rows_() {
 function writeEmONCCTF2026Choices_(sheet, sourceSs) {
   var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
     .concat(getEmONCCTF2026CountyChoices_())
-    .concat(getEmONCCTF2026FacilityChoices_(sourceSs));
+    .concat(getEmONCCTF2026FacilityChoices_(sourceSs))
+    .concat(getEmONCCTF2026MenteeChoices_(sourceSs));
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -682,11 +683,34 @@ function getEmONCCTF2026CountyChoices_() {
  * "EmONC Facilities List (Choices)" → list_name, name, label
  */
 function getEmONCCTF2026FacilityChoices_(sourceSs) {
-  var sourceSheet = sourceSs.getSheetByName("EmONC Facilities List (Choices)");
+  return getEmONCCTF2026ChoicesFromSheet_(
+    sourceSs,
+    "EmONC Facilities List (Choices)",
+    "generateEmONCFacilitiesChoicesSheet()"
+  );
+}
+
+/**
+ * Mentee choices from kobocreator sheet
+ * "EmONC Mentees List (Choices)" → list_name, name, label
+ */
+function getEmONCCTF2026MenteeChoices_(sourceSs) {
+  return getEmONCCTF2026ChoicesFromSheet_(
+    sourceSs,
+    "EmONC Mentees List (Choices)",
+    "generateChoicesSheet()"
+  );
+}
+
+/**
+ * Generic pull of list_name / name / label from a kobocreator choices sheet.
+ */
+function getEmONCCTF2026ChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
+  var sourceSheet = sourceSs.getSheetByName(sheetName);
   if (!sourceSheet) {
     throw new Error(
-      "Sheet 'EmONC Facilities List (Choices)' not found. " +
-      "Run generateEmONCFacilitiesChoicesSheet() or generateAllOutputs() first."
+      "Sheet '" + sheetName + "' not found. " +
+      "Run " + generatorHint + " or generateAllOutputs() first."
     );
   }
 
@@ -700,7 +724,7 @@ function getEmONCCTF2026FacilityChoices_(sourceSs) {
 
   if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
     throw new Error(
-      "EmONC Facilities List (Choices) is missing required columns: list_name, name, label"
+      sheetName + " is missing required columns: list_name, name, label"
     );
   }
 
