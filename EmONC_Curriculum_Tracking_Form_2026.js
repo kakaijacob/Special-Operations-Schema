@@ -26,10 +26,6 @@ var EMONC_CTF_2026_CHOICES_HEADERS = [
 ];
 
 var EMONC_CTF_2026_SETTINGS_HEADERS = [
-  "form_title",
-  "form_id",
-  "version",
-  "default_language",
   "allow_choice_duplicates"
 ];
 
@@ -855,13 +851,7 @@ function getEmONCCTF2026ChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
 function writeEmONCCTF2026Settings_(sheet) {
   var rows = [
     EMONC_CTF_2026_SETTINGS_HEADERS,
-    [
-      EMONC_CTF_2026_TITLE,
-      "emonc_curriculum_tracking_form_2026",
-      "2026.01.01",
-      "English (en)",
-      "yes"
-    ]
+    ["yes"]
   ];
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
