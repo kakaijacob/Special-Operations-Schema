@@ -410,7 +410,11 @@ function getMoHSACSection1cRows_(sourceSs) {
     .concat(getMoHSACIfmBlockRows_(sourceSs))
     // >>> IFM BLOCK END — ADJUSTMENT PENDING <<<
     .concat(getMoHSACNewbornMenteeSurveyRows_(sourceSs))
-    .concat(getMoHSACMentorsMenteeSurveyRows_(sourceSs));
+    .concat(getMoHSACMentorsMenteeSurveyRows_(sourceSs))
+    .concat([
+      ["end_group", "", "", "", "", "", "", "", "", "", "", ""], // close mentees
+      ["end_group", "", "", "", "", "", "", "", "", "", "", ""]  // close group_mentorship_details
+    ]);
 }
 
 // =====================================================
