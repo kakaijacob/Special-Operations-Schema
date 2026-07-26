@@ -121,13 +121,14 @@ function removeExtraNewbornCTFSheets_(ss, keepNames) {
 // SURVEY
 // =====================================================
 function writeNewbornCTFSurvey_(sheet, sourceSs) {
+  var menteeRows = getNewbornCTFMenteeSurveyRows_(sourceSs);
+
   var rows = [NEWBORN_CTF_SURVEY_HEADERS]
     .concat(getNewbornCTFSurveyRows_())
     .concat(getNewbornCTFSection1bRows_())
-    .concat(getNewbornCTFMenteeSurveyRows_(sourceSs));
-
-  // Later: close mentee_details / demographic_information + curriculum sections.
-  // mentee_details / demographic_information groups stay open for now.
+    .concat(menteeRows)
+    .concat(getNewbornCTFCloseSection1Rows_(menteeRows))
+    .concat(getNewbornCTFSection2Rows_());
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -324,6 +325,7 @@ function newbornFacilitySelectRow_(listName, countyLabel) {
 /**
  * Section 1b body: pull type / name / label / required / relevant from
  * kobocreator's "Survey Sheet (Newborn)".
+ * Converts select_one → select_multiple on import.
  */
 function getNewbornCTFMenteeSurveyRows_(sourceSs) {
   var sourceSheet = sourceSs.getSheetByName("Survey Sheet (Newborn)");
@@ -402,6 +404,433 @@ function convertNewbornCTFSelectOneToMultiple_(type) {
   var raw = String(type);
   // Only replace the leading question type token
   return raw.replace(/^select_one\b/i, "select_multiple");
+}
+
+/**
+ * After mentee selects: next_group_hide1 calculate, then close
+ * mentee_details + demographic_information.
+ * Calculation is built dynamically from imported mentee question names.
+ */
+function getNewbornCTFCloseSection1Rows_(menteeRows) {
+  return [
+    [
+      "calculate",
+      "next_group_hide1",
+      "Next Group Hide 1",
+      "true",
+      "",
+      "",
+      "",
+      "",
+      buildNewbornCTFNextGroupHideCalc_(menteeRows)
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""], // close mentee_details
+    ["end_group", "", "", "", "", "", "", "", ""]  // close demographic_information
+  ];
+}
+
+function buildNewbornCTFNextGroupHideCalc_(menteeRows) {
+  var names = [];
+  for (var i = 0; i < menteeRows.length; i++) {
+    var name = menteeRows[i][1];
+    if (name) names.push(String(name));
+  }
+
+  if (names.length === 0) return "''";
+
+  var calc = "''";
+  for (var j = names.length - 1; j >= 0; j--) {
+    var n = names[j];
+    calc = "if(${" + n + "} != '', ${" + n + "}, " + calc + ")";
+  }
+  return calc;
+}
+
+// =====================================================
+// SECTION 2: Newborn Training Curriculum
+// =====================================================
+function getNewbornCTFSection2Rows_() {
+  // Columns: type, name, label, required, required_message,
+  //          constraint_message, relevant, choice_filter, calculation
+  var activityFilter =
+    "contains(allowed, ${program}) and contains(module_constraint, ${newborn_modules})";
+
+  return [
+    [
+      "begin_group",
+      "newborn_training_Curriculum",
+      "Section 2: Newborn Training Curriculum",
+      "false",
+      "",
+      "",
+      "${next_group_hide1}!=''",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "sec2_note",
+      "***Section Note:*** *This section captures newborn curriculum training conducted for the selected mentee(s) during this mentorship session. Record all newborn modules covered and the specific learning activities completed. Only select items that were actually delivered during this session.*",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "begin_group",
+      "newborn_modules_section",
+      "Section 2 (a): Newborn Modules",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "modules_note",
+      "***Enumerator note:*** *Select the newborn curriculum module covered during the session. Module selection determines the curriculum content delivered and guides the available training activities in subsequent sections.*",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one newborn_modules",
+      "newborn_modules",
+      "6. Please select the newborn module that the selected mentee(s) were trained in.",
+      "true",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "program_activities",
+      "Section 2 (b): Newborn Curriculum Activities",
+      "",
+      "",
+      "",
+      "${newborn_modules}!=''",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "activities_note",
+      "***Enumerator note:*** *Select the training activities or sessions conducted for the selected module during this session. Only activities actually delivered to the selected mentee(s) should be recorded.*",
+      "",
+      "",
+      "",
+      "${newborn_modules}!=''",
+      "",
+      ""
+    ],
+    [
+      "select_multiple newborn_activities",
+      "newborn_activities",
+      "7. Please select the newborn activities that the mentees were trained in.",
+      "true",
+      "",
+      "",
+      "",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_cmes",
+      "Section 2 (c): Newborn CME Lecturettes & Discussions",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'cmes')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "cmes_note",
+      "***Enumerator note:*** *Select the CME lecturette and discussion module completed by the selected mentee(s). Record only the CME topic that was conducted during this mentorship session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'cmes')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple cmes",
+      "cmes",
+      "8. Please select the CME lecture topic that the selected mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'cmes')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_videos",
+      "Section 2 (d): Newborn Videos",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'videos')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "videos_note",
+      "***Enumerator note:*** *Select the video-based learning module viewed by the selected mentee(s) during this session. Only include videos that were fully or substantially delivered as part of the training.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'videos')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple videos",
+      "videos",
+      "9. Please select the videos that the mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'videos')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_case_scenarios",
+      "Section 2 (e): Case Scenarios",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'case_scenarios')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenarios_note",
+      "***Enumerator note:*** *Select the case scenario module(s) discussed or worked through by the selected mentee(s). Record only scenario-based learning activities completed during this session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'case_scenarios')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple case_scenarios",
+      "case_scenarios",
+      "10. Please select the case scenario that the mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'case_scenarios')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_role_plays",
+      "Section 2 (f): Role Plays",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'role_plays')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "role_plays_note",
+      "***Enumerator note:*** *Select the role play module participated in by the selected mentee(s). Only include facilitated role-play exercises conducted during this session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'role_plays')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple role_plays",
+      "role_plays",
+      "11. Please select the role play that the mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'role_plays')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_skills_demonstrations",
+      "Section 2 (g): Newborn Skill Demonstrations",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'mentor_skills_demonstrations')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "skill_demo_note",
+      "***Enumerator note:*** *Select the skill demonstration module demonstrated to the selected mentee(s). Record only practical demonstrations performed as part of the training session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'mentor_skills_demonstrations')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple skill_demonstrations",
+      "mentor_demonstrations",
+      "12. Please select the skill topic demonstrated to the selected mentees(s).",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'mentor_skills_demonstrations')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_practicum",
+      "Section 2 (h): Newborn Practicum",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'practicum')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "practicum_note",
+      "***Enumerator note:*** *Select the practicum module session completed by the selected mentee(s). Only include supervised hands-on practice conducted during this session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'practicum')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple practicums",
+      "practicum",
+      "13. Please select the practicum topic session that the selected mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'practicum')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_drills",
+      "Section 2 (i): Newborn Simulation Drills",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'drills')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "drills_note",
+      "***Enumerator note:*** *Select the simulation drill module completed by the selected mentee(s). Record only structured simulation exercises conducted during this session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'drills')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple drills",
+      "drills",
+      "14. Please select the simulation drill topic that the selected mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'drills')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "newborn_group_discussions",
+      "Section 2 (j): Group Discussions",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'group_discussions')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "discussions_note",
+      "***Enumerator note:** Select the group discussion topic conducted during this session. Record only structured group discussions facilitated as part of the mentorship session.*",
+      "",
+      "",
+      "",
+      "selected(${newborn_activities}, 'group_discussions')",
+      "",
+      ""
+    ],
+    [
+      "select_multiple group_discussions",
+      "group_discussions",
+      "15. Please select the group discussion topic that the selected mentee(s) participated in.",
+      "true",
+      "",
+      "",
+      "selected(${newborn_activities}, 'group_discussions')",
+      activityFilter,
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", ""], // close newborn_group_discussions
+    ["end_group", "", "", "", "", "", "", "", ""], // close newborn_training_Curriculum
+    [
+      "note",
+      "thank_you",
+      "*Thank you for completing this tool! The information recorded will be used to track mentorship activities, assess mentee progress, and strengthen newborn care practices across facilities. Please ensure all sections are accurately filled before submitting.*",
+      "false",
+      "",
+      "",
+      "(${next_group_hide1}!='' and ${program}!='' and ${newborn_modules}!='' and ${newborn_activities}!='') and (${cmes}!='' or ${videos}!='' or ${case_scenarios}!='' or ${role_plays}!='' or ${mentor_demonstrations}!='' or ${practicum}!='' or ${drills}!='' or ${group_discussions}!='')",
+      "",
+      ""
+    ]
+  ];
 }
 
 // =====================================================
