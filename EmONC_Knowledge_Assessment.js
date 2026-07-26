@@ -726,7 +726,7 @@ function getEmONCKACountyChoices_() {
     ["county", "Makueni", "Makueni"],
     ["county", "Meru", "Meru"],
     ["county", "Mombasa", "Mombasa"],
-    ["county", "Muranga", "Muranga"],
+    ["county", "Muranga", "Murang'a"],
     ["county", "Nairobi", "Nairobi"],
     ["county", "Nakuru", "Nakuru"],
     ["county", "Nyeri", "Nyeri"],
