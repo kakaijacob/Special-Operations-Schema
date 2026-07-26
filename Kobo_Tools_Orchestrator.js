@@ -35,6 +35,12 @@ function getKoboToolsRegistry_() {
       label: "EmONC Curriculum Tracking Form",
       buildFnName: "createEmONCCurriculumTrackingForm2026",
       enabled: true
+    },
+    {
+      id: "moh_sac",
+      label: "MoH Skills Assessment Checklist",
+      buildFnName: "createMoHSkillsAssessmentChecklist",
+      enabled: true
     }
     // Add more tools below, e.g.:
     // {
