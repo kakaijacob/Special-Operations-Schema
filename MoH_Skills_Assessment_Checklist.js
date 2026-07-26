@@ -425,6 +425,7 @@ function getMoHSACSection1cRows_(sourceSs) {
 //   2) lm_po (Lead Mentors & Program Officers)
 //   3) IFM facility selects from "Survey Sheet (IFM)"
 // Related choices: getMoHSACLmPoChoices_(), getMoHSACIfmChoices_()
+// (IFM choices currently temporary/static — pending IFM database guidance)
 // =====================================================
 
 /**
