@@ -63,7 +63,11 @@ function createEmONCCurriculumTrackingForm2026() {
 function writeEmONCCTF2026Survey_(sheet, sourceSs) {
   var rows = [EMONC_CTF_2026_SURVEY_HEADERS]
     .concat(getEmONCCTF2026SurveyRows_())
-    .concat(getEmONCCTF2026MenteeSurveyRows_(sourceSs));
+    .concat(getEmONCCTF2026MenteeSurveyRows_(sourceSs))
+    .concat([
+      ["end_group", "", "", "", "", "", "", "", "", ""], // close mentee_details
+      ["end_group", "", "", "", "", "", "", "", "", ""]  // close demographic_information
+    ]);
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
