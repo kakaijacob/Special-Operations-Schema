@@ -384,8 +384,10 @@ function mohSacFacilitySelectRow_(listName, fieldName, countyLabel) {
 
 /**
  * Section 1c: mentees / IFMs / POs.
- * Order: group open → IFM block (adjustment pending) → Newborn mentee selects.
- * Group left open for later mentee / close rows.
+ * Order: group open → IFM block (adjustment pending) →
+ *        Newborn mentees → MENTORS/EmONC mentees from
+ *        kobocreator "MoH Skills Assessment Checklist".
+ * Group left open for later close rows.
  */
 function getMoHSACSection1cRows_(sourceSs) {
   return [
@@ -407,7 +409,8 @@ function getMoHSACSection1cRows_(sourceSs) {
     // >>> IFM BLOCK START — ADJUSTMENT PENDING <<<
     .concat(getMoHSACIfmBlockRows_(sourceSs))
     // >>> IFM BLOCK END — ADJUSTMENT PENDING <<<
-    .concat(getMoHSACNewbornMenteeSurveyRows_(sourceSs));
+    .concat(getMoHSACNewbornMenteeSurveyRows_(sourceSs))
+    .concat(getMoHSACMentorsMenteeSurveyRows_(sourceSs));
 }
 
 // =====================================================
@@ -672,6 +675,74 @@ function getMoHSACNewbornMenteeSurveyRows_(sourceSs) {
   return rows;
 }
 
+/**
+ * MENTORS / EmONC mentee selects from kobocreator sheet
+ * "MoH Skills Assessment Checklist".
+ * Pulls type, name, label, relevant only.
+ */
+function getMoHSACMentorsMenteeSurveyRows_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("MoH Skills Assessment Checklist");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'MoH Skills Assessment Checklist' not found. " +
+      "Run generateMoHSkillsChecklist() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var typeIndex = header.indexOf("type");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var relevantIndex = header.indexOf("relevant");
+
+  if (
+    typeIndex === -1 ||
+    nameIndex === -1 ||
+    labelIndex === -1 ||
+    relevantIndex === -1
+  ) {
+    throw new Error(
+      "MoH Skills Assessment Checklist is missing required columns: " +
+      "type, name, label, relevant"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var type = data[i][typeIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var relevant = data[i][relevantIndex];
+
+    if (!type && !name) continue;
+
+    // Map into survey columns:
+    // type, name, label, hint, required, required_message,
+    // constraint_message, relevant, choice_filter, calculation,
+    // constraint, appearance
+    rows.push([
+      type || "",
+      name || "",
+      label || "",
+      "",
+      "",
+      "",
+      "",
+      relevant || "",
+      "",
+      "",
+      "",
+      ""
+    ]);
+  }
+
+  return rows;
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
@@ -685,7 +756,8 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACLmPoChoices_())
     .concat(getMoHSACIfmChoices_(sourceSs))
     // >>> IFM CHOICES END — ADJUSTMENT PENDING <<<
-    .concat(getMoHSACNewbornMenteeChoices_(sourceSs));
+    .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
+    .concat(getMoHSACMentorsMenteeChoices_(sourceSs));
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -762,11 +834,34 @@ function getMoHSACIfmChoices_(sourceSs) {
  * "Newborn Mentees List (Choices)" → list_name, name, label.
  */
 function getMoHSACNewbornMenteeChoices_(sourceSs) {
-  var sourceSheet = sourceSs.getSheetByName("Newborn Mentees List (Choices)");
+  return getMoHSACChoicesFromSheet_(
+    sourceSs,
+    "Newborn Mentees List (Choices)",
+    "generateNewbornChoicesSheet()"
+  );
+}
+
+/**
+ * MENTORS / EmONC mentee choices from kobocreator
+ * "EmONC Mentees List (Choices)" → list_name, name, label.
+ */
+function getMoHSACMentorsMenteeChoices_(sourceSs) {
+  return getMoHSACChoicesFromSheet_(
+    sourceSs,
+    "EmONC Mentees List (Choices)",
+    "generateChoicesSheet()"
+  );
+}
+
+/**
+ * Generic pull of list_name / name / label from a kobocreator choices sheet.
+ */
+function getMoHSACChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
+  var sourceSheet = sourceSs.getSheetByName(sheetName);
   if (!sourceSheet) {
     throw new Error(
-      "Sheet 'Newborn Mentees List (Choices)' not found. " +
-      "Run generateNewbornChoicesSheet() or generateAllOutputs() first."
+      "Sheet '" + sheetName + "' not found. " +
+      "Run " + generatorHint + " or generateAllOutputs() first."
     );
   }
 
@@ -780,8 +875,7 @@ function getMoHSACNewbornMenteeChoices_(sourceSs) {
 
   if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
     throw new Error(
-      "Newborn Mentees List (Choices) is missing required columns: " +
-      "list_name, name, label"
+      sheetName + " is missing required columns: list_name, name, label"
     );
   }
 
