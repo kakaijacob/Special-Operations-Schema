@@ -383,16 +383,11 @@ function mohSacFacilitySelectRow_(listName, fieldName, countyLabel) {
 }
 
 /**
- * Section 1c: ToT IFM capture, Lead Mentors/POs, and IFM selects
- * imported from kobocreator "Survey Sheet (IFM)".
- * Group left open for later mentee selects.
+ * Section 1c: mentees / IFMs / POs.
+ * Order: group open → IFM block (adjustment pending) → Newborn mentee selects.
+ * Group left open for later mentee / close rows.
  */
 function getMoHSACSection1cRows_(sourceSs) {
-  return getMoHSACSection1cStaticRows_()
-    .concat(getMoHSACIfmSurveyRows_(sourceSs));
-}
-
-function getMoHSACSection1cStaticRows_() {
   return [
     [
       "begin_group",
@@ -407,7 +402,35 @@ function getMoHSACSection1cStaticRows_() {
       "",
       "",
       ""
-    ],
+    ]
+  ]
+    // >>> IFM BLOCK START — ADJUSTMENT PENDING <<<
+    .concat(getMoHSACIfmBlockRows_(sourceSs))
+    // >>> IFM BLOCK END — ADJUSTMENT PENDING <<<
+    .concat(getMoHSACNewbornMenteeSurveyRows_(sourceSs));
+}
+
+// =====================================================
+// IFM BLOCK — ADJUSTMENT PENDING
+// Marked for later revision. Currently includes:
+//   1) ToT free-text IFM fields (ifm_name / ifm_id / ifm_id_2)
+//   2) lm_po (Lead Mentors & Program Officers)
+//   3) IFM facility selects from "Survey Sheet (IFM)"
+// Related choices: getMoHSACLmPoChoices_(), getMoHSACIfmChoices_()
+// =====================================================
+
+/**
+ * Full IFM block (static ToT/lm_po + imported IFM selects).
+ * ADJUSTMENT PENDING — do not rely on final shape yet.
+ */
+function getMoHSACIfmBlockRows_(sourceSs) {
+  return getMoHSACIfmStaticRows_()
+    .concat(getMoHSACIfmSurveyRows_(sourceSs));
+}
+
+/** ADJUSTMENT PENDING: ToT IFM text/phone fields + lm_po. */
+function getMoHSACIfmStaticRows_() {
+  return [
     [
       "text",
       "ifm_name",
@@ -468,7 +491,7 @@ function getMoHSACSection1cStaticRows_() {
 }
 
 /**
- * IFM facility selects from kobocreator "Survey Sheet (IFM)".
+ * ADJUSTMENT PENDING: IFM facility selects from "Survey Sheet (IFM)".
  * - Forces relevant to ifm_assessment only (ToT uses free-text fields above)
  * - Deduplicates colliding names as name_001, name_002, ...
  */
@@ -549,12 +572,16 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
 }
 
 function normalizeMoHSACRequired_(value) {
+  // Always emit lowercase text "true"/"false" for Kobo (never Sheets boolean)
+  if (value === true) return "true";
+  if (value === false) return "false";
   var cleaned = String(value == null ? "" : value).trim().toLowerCase();
   if (cleaned === "true" || cleaned === "false") return cleaned;
   return cleaned;
 }
 
 /**
+ * ADJUSTMENT PENDING helper for IFM relevant.
  * Keep facility equality from Survey Sheet (IFM), but show IFM selects
  * only for program = ifm_assessment.
  */
@@ -573,6 +600,78 @@ function padMoHSACNumber_(num, width) {
   return s;
 }
 
+/**
+ * Newborn mentee selects from kobocreator "Survey Sheet (Newborn)".
+ * Pulls type, name, label, required, relevant.
+ * - required forced to text "true"/"false"
+ * - select_one left as select_one (no conversion)
+ */
+function getMoHSACNewbornMenteeSurveyRows_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Survey Sheet (Newborn)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Survey Sheet (Newborn)' not found. " +
+      "Run generateSurveySheetNewborn() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var typeIndex = header.indexOf("type");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var requiredIndex = header.indexOf("required");
+  var relevantIndex = header.indexOf("relevant");
+
+  if (
+    typeIndex === -1 ||
+    nameIndex === -1 ||
+    labelIndex === -1 ||
+    requiredIndex === -1 ||
+    relevantIndex === -1
+  ) {
+    throw new Error(
+      "Survey Sheet (Newborn) is missing required columns: " +
+      "type, name, label, required, relevant"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var type = data[i][typeIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var required = normalizeMoHSACRequired_(data[i][requiredIndex]);
+    var relevant = data[i][relevantIndex];
+
+    if (!type && !name) continue;
+
+    // Map into survey columns:
+    // type, name, label, hint, required, required_message,
+    // constraint_message, relevant, choice_filter, calculation,
+    // constraint, appearance
+    rows.push([
+      type || "",
+      name || "",
+      label || "",
+      "",
+      required,
+      "",
+      "",
+      relevant || "",
+      "",
+      "",
+      "",
+      ""
+    ]);
+  }
+
+  return rows;
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
@@ -582,8 +681,11 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACProgramChoices_())
     .concat(getMoHSACCountyChoices_(facilityRows))
     .concat(facilityRows)
+    // >>> IFM CHOICES START — ADJUSTMENT PENDING <<<
     .concat(getMoHSACLmPoChoices_())
-    .concat(getMoHSACIfmChoices_(sourceSs));
+    .concat(getMoHSACIfmChoices_(sourceSs))
+    // >>> IFM CHOICES END — ADJUSTMENT PENDING <<<
+    .concat(getMoHSACNewbornMenteeChoices_(sourceSs));
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -602,7 +704,7 @@ function getMoHSACProgramChoices_() {
 }
 
 /**
- * Lead Mentors & Program Officers choices (lm_po).
+ * ADJUSTMENT PENDING: Lead Mentors & Program Officers choices (lm_po).
  * Populate when the source list is provided.
  */
 function getMoHSACLmPoChoices_() {
@@ -610,7 +712,7 @@ function getMoHSACLmPoChoices_() {
 }
 
 /**
- * IFM person choices from kobocreator "IFM List (Choices)".
+ * ADJUSTMENT PENDING: IFM person choices from kobocreator "IFM List (Choices)".
  */
 function getMoHSACIfmChoices_(sourceSs) {
   var sourceSheet = sourceSs.getSheetByName("IFM List (Choices)");
@@ -632,6 +734,54 @@ function getMoHSACIfmChoices_(sourceSs) {
   if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
     throw new Error(
       "IFM List (Choices) is missing required columns: list_name, name, label"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var listName = data[i][listNameIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+
+    if (!listName && !name) continue;
+
+    rows.push([
+      listName || "",
+      name || "",
+      label || "",
+      ""
+    ]);
+  }
+
+  return rows;
+}
+
+/**
+ * Newborn mentee choices from kobocreator
+ * "Newborn Mentees List (Choices)" → list_name, name, label.
+ */
+function getMoHSACNewbornMenteeChoices_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Newborn Mentees List (Choices)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Newborn Mentees List (Choices)' not found. " +
+      "Run generateNewbornChoicesSheet() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var listNameIndex = header.indexOf("list_name");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+
+  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
+    throw new Error(
+      "Newborn Mentees List (Choices) is missing required columns: " +
+      "list_name, name, label"
     );
   }
 
