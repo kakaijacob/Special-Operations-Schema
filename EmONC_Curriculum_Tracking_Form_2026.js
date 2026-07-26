@@ -34,9 +34,11 @@ var EMONC_CTF_2026_SETTINGS_HEADERS = [
 
 /**
  * Entry point: create a new Google Spreadsheet with survey, choices, settings.
- * Run this from the same Apps Script project / workbook that hosts kobocreator.js.
+ * Run this from the same Apps Script project / workbook that hosts kobocreator.js
+ * (after generateCurriculumTrackingForm / generateAllOutputs).
  */
 function createEmONCCurriculumTrackingForm2026() {
+  var sourceSs = SpreadsheetApp.getActiveSpreadsheet();
   var ss = SpreadsheetApp.create(EMONC_CTF_2026_TITLE);
 
   var surveySheet = ss.getSheets()[0];
@@ -44,7 +46,7 @@ function createEmONCCurriculumTrackingForm2026() {
   var choicesSheet = ss.insertSheet("choices");
   var settingsSheet = ss.insertSheet("settings");
 
-  writeEmONCCTF2026Survey_(surveySheet);
+  writeEmONCCTF2026Survey_(surveySheet, sourceSs);
   writeEmONCCTF2026ChoicesStub_(choicesSheet);
   writeEmONCCTF2026Settings_(settingsSheet);
 
@@ -58,8 +60,11 @@ function createEmONCCurriculumTrackingForm2026() {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeEmONCCTF2026Survey_(sheet) {
-  var rows = [EMONC_CTF_2026_SURVEY_HEADERS].concat(getEmONCCTF2026SurveyRows_());
+function writeEmONCCTF2026Survey_(sheet, sourceSs) {
+  var rows = [EMONC_CTF_2026_SURVEY_HEADERS]
+    .concat(getEmONCCTF2026SurveyRows_())
+    .concat(getEmONCCTF2026MenteeSurveyRows_(sourceSs));
+
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
 }
@@ -263,6 +268,69 @@ function facilitySelectRow_(listName, countyLabel) {
     "",
     ""
   ];
+}
+
+/**
+ * Section 1c body: pull type / name / label / relevant from
+ * kobocreator's "Curriculum Tracking Form" sheet.
+ */
+function getEmONCCTF2026MenteeSurveyRows_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("Curriculum Tracking Form");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'Curriculum Tracking Form' not found. " +
+      "Run generateCurriculumTrackingForm() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var typeIndex = header.indexOf("type");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+  var relevantIndex = header.indexOf("relevant");
+
+  if (
+    typeIndex === -1 ||
+    nameIndex === -1 ||
+    labelIndex === -1 ||
+    relevantIndex === -1
+  ) {
+    throw new Error(
+      "Curriculum Tracking Form is missing required columns: type, name, label, relevant"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var type = data[i][typeIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+    var relevant = data[i][relevantIndex];
+
+    if (!type && !name) continue;
+
+    // Map into survey columns:
+    // type, name, label, hint, required, required_message,
+    // constraint_message, relevant, parameters, calculation
+    rows.push([
+      type || "",
+      name || "",
+      label || "",
+      "",
+      "",
+      "",
+      "",
+      relevant || "",
+      "",
+      ""
+    ]);
+  }
+
+  return rows;
 }
 
 // =====================================================
