@@ -10,7 +10,7 @@
 //   5) MoH_Skills_Assessment_Checklist.js
 //   6) Newborn_Knowledge_Assessment.js
 //   7) EmONC_Knowledge_Assessment.js
-//   8) Kobo_Tools_Deployer.js  (optional: upload/deploy built forms to Kobo)
+//   8) Kobo_Tools_Deployer.js  (upload/deploy; refresh skips deploy if missing)
 //
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
