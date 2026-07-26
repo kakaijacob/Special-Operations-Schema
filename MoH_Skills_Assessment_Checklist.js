@@ -120,7 +120,8 @@ function writeMoHSACSurvey_(sheet, sourceSs) {
   var rows = [MOH_SAC_SURVEY_HEADERS]
     .concat(getMoHSACSurveyRows_())
     .concat(getMoHSACSection1bRows_())
-    .concat(getMoHSACSection1cRows_(sourceSs));
+    .concat(getMoHSACSection1cRows_(sourceSs))
+    .concat(getMoHSACSection2Rows_());
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -748,6 +749,311 @@ function getMoHSACMentorsMenteeSurveyRows_(sourceSs) {
 }
 
 // =====================================================
+// SECTION 2: Skills Assessment
+// =====================================================
+
+/**
+ * Section 2 opener + skill picker + UBT (Free Flow) checklist.
+ * skills_assessment group left open for additional skill groups.
+ */
+function getMoHSACSection2Rows_() {
+  var sectionRelevant =
+    "${next_group_hide1} != '' or (${next_group_hide1} != '' and ${ifm_id_2}!='') or (${next_group_hide1} != '' and ${lm_po}!='')";
+
+  var freeflowScoreCalc =
+    "round(((" +
+    "(${obtain_consent}='yes')+" +
+    "(${sterile_gloves}='yes')+" +
+    "(${assemble_ubt}='yes')+" +
+    "(${hungon_drip_stor_valve_closed}='yes')+" +
+    "(${lithotomy_position}='yes')+" +
+    "(${clean_perinuem}='yes')+" +
+    "(${catheterize}='yes')+" +
+    "(${drape_patient}='yes')+" +
+    "(${visualize_cervix_sims_speculum}='yes')+" +
+    "(${stabilize_uterus}='yes')+" +
+    "(${remove_speculum}='yes')+" +
+    "(${insert_balloon}='yes')+" +
+    "(${withdraw_forceps}='yes')+" +
+    "(${prevent_expulsion_when_inflati}='yes')+" +
+    "(${inflate_balloon}='yes')+" +
+    "(${inflate_until_equilibrium}='yes')+" +
+    "(${balloon_insitu_check_bleeding}='yes')+" +
+    "(${determine_approp_bag_height}='yes')+" +
+    "(${not_level_when_bleeding_stops}='yes')+" +
+    "(${observe_patient}='yes')+" +
+    "(${secure_tubing}='yes')+" +
+    "(${antibiotics}='yes')+" +
+    "(${documentation_time_level}='yes')+" +
+    "(${continue_iv_fluids}='yes')+" +
+    "(${vital_signs}='yes')+" +
+    "(${when_to_remove}='yes')+" +
+    "(${drain_balloon}='yes')+" +
+    "(${remove_balloon_gently}='yes')+" +
+    "(${post_removal_monitoring}='yes')+" +
+    "(${activity_resumption}='yes')+" +
+    "(${what_if_bleeing_resumes}='yes')+" +
+    "(${referral}='yes')+" +
+    "(${close_valve_in_transfer}='yes')+" +
+    "(${Document}='yes')" +
+    ")*100 div 34)";
+
+  return [
+    [
+      "begin_group",
+      "skills_assessment",
+      "Section 2: Skills Assessment",
+      "",
+      "",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "section2_note",
+      "***Section Note:*** *In this section, you will assess the participant’s practical competence in selected emergency obstetric, newborn, and intrapartum care skills using standardized case scenarios, mannequins, and structured checklists. Begin by selecting the skill being evaluated, then observe the participant as they demonstrate the procedure step by step while giving a clear running commentary. Tick each checklist item only if the participant correctly performs or clearly verbalizes the required action, paying close attention to clinical accuracy, infection prevention, respectful maternity care, communication, decision-making, and documentation. At the end of each assessment, an automatic score will be generated to determine competency, identify skill gaps, and guide targeted mentorship, coaching, remediation, and continuous quality improvement within the MENTORS program.*",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "begin_group",
+      "group_skills_checklist",
+      "Section 2a: Skills Assessment Checklists",
+      "",
+      "true",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one skill_evaluation",
+      "skill_evaluation",
+      "8. Please select the skill being evaluated.",
+      "",
+      "true",
+      "",
+      "",
+      "",
+      "contains(allowed, ${program})",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_ubt_free_flow",
+      "Section 2b: UBT (Free Flow)",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'UBT_(free flow)'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "scenario_ubt_freeflow",
+      "***Case Scenario:*** *The final-year midwifery students were managing a case of PPH that required placement of the Free Flow System balloon tamponade. They were hesitant to perform the procedure. Demonstrate the procedure for Free Flow System intrauterine balloon tamponade insertion, explaining every step to the students.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ]
+    .concat(getMoHSACUbtFreeflowChecklistRows_())
+    .concat([
+      [
+        "calculate",
+        "freeflow_score",
+        "UBT (Free Flow) Score",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        freeflowScoreCalc,
+        "",
+        ""
+      ],
+      [
+        "note",
+        "freeflow_pass",
+        "*Congratulations! Your score is **[${freeflow_score}%]**. You have fulfilled the requirements for this skill!*",
+        "",
+        "",
+        "",
+        "",
+        "${freeflow_score} >= 84.5 and ${Document}!=''",
+        "",
+        "",
+        "",
+        ""
+      ],
+      [
+        "note",
+        "freeflow_fail",
+        "*Sorry! Your score is **[${freeflow_score}%]**. Please review the relevant material or content, then try again.*",
+        "",
+        "",
+        "",
+        "",
+        "${freeflow_score} < 84.5 and ${Document}!=''",
+        "",
+        "",
+        "",
+        ""
+      ],
+      ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close group_ubt_free_flow
+    ]);
+}
+
+function getMoHSACUbtFreeflowChecklistRows_() {
+  var items = [
+    ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
+    ["sterile_gloves", "sterile_gloves", "2. Wear sterile gloves."],
+    ["assemble_ubt", "assemble_ubt", "3. Assemble the Free Flow System (FFS) UBT by filling the supply bag manually or using the spike with a litre of sterile water or normal saline."],
+    ["hungon_drip_stand_valve_closed", "hungon_drip_stor_valve_closed", "4. Hang the supply bag on a drip stand with the T-valve closed."],
+    ["lithotomy_position", "lithotomy_position", "5. Position the patient in the dorsal or lithotomy position."],
+    ["clean_perinuem", "clean_perinuem", "6. Clean the vulva and perineum with antiseptic solution."],
+    ["catheterize", "catheterize", "7. Catheterize the mother and ensure that the bladder is empty, leaving the catheter in situ for monitoring urine output."],
+    ["drape_patient", "drape_patient", "8. Drape the patient using sterile drapes."],
+    ["visualize_cervix_sims_speculum", "visualize_cervix_sims_speculum", "9. Introduce the Sim’s speculum to visualize the cervix."],
+    ["stabilize_uterus", "stabilize_uterus", "10. Apply 2 sponge-holding or Kelly’s forceps to the anterior lip of the cervix to stabilize the uterus by applying gentle traction."],
+    ["remove_speculum", "remove_speculum", "11. Remove the Sim’s speculum."],
+    ["insert_balloon", "insert_balloon", "12. Introduce the balloon unit into the uterus by holding it in the palm of the inserting hand, with the thumb, index, and middle fingers inserted into the cervical canal."],
+    ["withdraw_forceps", "withdraw_forceps", "13. Gently withdraw the forceps to release the anterior lip of the cervix, leaving the balloon unit in position within the uterus."],
+    ["prevent_expulsion_when_inflati", "prevent_expulsion_when_inflati", "14. Position 2 fingers (index and middle) at the cervix to maintain the balloon unit in position and prevent expulsion when inflating."],
+    ["inflate_balloon", "inflate_balloon", "15. Open the T-valve to allow water to flow into the balloon from the water bag by gravity, and continue to inflate the balloon while keeping the 2 fingers in place and checking to ensure that the balloon is still well secured within the uterine cavity (balloon fills within 45 seconds)."],
+    ["inflate_until_equilibrium", "inflate_until_equilibrium", "16. Allow water to flow until the flow stops, indicating equilibrium with the uterine cavity."],
+    ["balloon_insitu_check_bleeding", "balloon_insitu_check_bleeding", "17. Remove the 2 fingers at the cervix and wait for 2 minutes after inflation, then recheck whether the balloon remains in the uterine cavity (observe the vulva to monitor the level of vaginal bleeding)."],
+    ["determine_approp_bag_height", "determine_approp_bag_height", "18. The appropriate height for the supply bag is determined by the patient’s systolic blood pressure. The device tubing has 4 markings corresponding as follows: 60 mmHg (0.8 m), 80 mmHg (1.1 m), 100 mmHg (1.3 m), and 120 mmHg (1.6 m), read from the T-valve towards the supply bag."],
+    ["not_level_when_bleeding_stops", "not_level_when_bleeding_stops", "19. Keep the T-valve open and note the level of the water in the bag when bleeding ceases."],
+    ["observe_patient", "observe_patient", "20. Observe the patient and note any discomfort."],
+    ["secure_tubing", "secure_tubing", "21. Tape the tubing to the patient’s thigh to secure it in place, leaving enough leeway to allow for movement of the thigh."],
+    ["antibiotics", "antibiotics", "22. Administer broad-spectrum intravenous antibiotics."],
+    ["documentation_time_level", "documentation_time_level", "23. Document the time of insertion and record total volume of water inflated into the balloon and the level in the bag."],
+    ["continue_iv_fluids", "continue_iv_fluids", "24. Continue with intravenous fluid resuscitation and uterotonic treatment."],
+    ["vital_signs", "vital_signs", "25. Continue to monitor the patient closely for active bleeding: vital signs (blood pressure, pulse, respiratory rate) every 15 minutes for the first hour, 30 minutes for the second hour, and hourly thereafter."],
+    ["when_to_remove", "when_to_remove", "26. Consider removal after 6–8 hours (to allow for physiological contraction and relaxation of the uterus) or after a maximum of 24 hours."],
+    ["drain_balloon", "drain_balloon", "27. Drain water from the balloon tamponade into the water bag by positioning the water bag at the same level as the patient or lower, with the T-valve open (60 seconds)."],
+    ["remove_balloon_gently", "remove_balloon_gently", "28. When all water has drained out of the balloon (1 litre of fluid in the supply bag), remove the balloon by gently pulling on the tubing."],
+    ["post_removal_monitoring", "post_removal_monitoring", "29. After balloon tamponade removal, confirm that the uterus is firmly contracted, check for active vaginal bleeding, and monitor the mother’s vital signs (every 15 minutes for the first hour, 30 minutes for the second hour, and hourly thereafter)."],
+    ["activity_resumption", "activity_resumption", "30. Observe closely for resumption of active bleeding during decompression of the balloon."],
+    ["what_if_bleeing_resumes", "what_if_bleeing_resumes", "31. If bleeding resumes after 6–8 hours, reposition the bag above the level of the patient and re-inflate the balloon for continued tamponade effect."],
+    ["referral", "referral", "32. If not at a referral center, arrange to transfer the patient to a CEmONC facility with the balloon in situ."],
+    ["close_valve_in_transfer", "close_valve_in_transfer", "33. Close the T-valve for the duration of the journey."],
+    ["Document", "Document", "34. Document procedure findings and all outcomes in the client record."]
+  ];
+
+  var rows = [];
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+  return rows;
+}
+
+function mohSacYesNoSelectRow_(listName, fieldName, label) {
+  return [
+    "select_one " + listName,
+    fieldName,
+    label,
+    "",
+    "true",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ];
+}
+
+function getMoHSACSkillEvaluationChoices_() {
+  // list_name, name, label, allowed
+  return [
+    [
+      "skill_evaluation",
+      "UBT_(free flow)",
+      "UBT (Free Flow)",
+      "mentors_curriculum,ifm_assessment,tot"
+    ]
+  ];
+}
+
+function getMoHSACUbtFreeflowYesNoChoices_() {
+  var listNames = [
+    "obtain_consent",
+    "sterile_gloves",
+    "assemble_ubt",
+    "hungon_drip_stand_valve_closed",
+    "lithotomy_position",
+    "clean_perinuem",
+    "catheterize",
+    "drape_patient",
+    "visualize_cervix_sims_speculum",
+    "stabilize_uterus",
+    "remove_speculum",
+    "insert_balloon",
+    "withdraw_forceps",
+    "prevent_expulsion_when_inflati",
+    "inflate_balloon",
+    "inflate_until_equilibrium",
+    "balloon_insitu_check_bleeding",
+    "determine_approp_bag_height",
+    "not_level_when_bleeding_stops",
+    "observe_patient",
+    "secure_tubing",
+    "antibiotics",
+    "documentation_time_level",
+    "continue_iv_fluids",
+    "vital_signs",
+    "when_to_remove",
+    "drain_balloon",
+    "remove_balloon_gently",
+    "post_removal_monitoring",
+    "activity_resumption",
+    "what_if_bleeing_resumes",
+    "referral",
+    "close_valve_in_transfer",
+    "Document"
+  ];
+
+  var rows = [];
+  for (var i = 0; i < listNames.length; i++) {
+    rows.push([listNames[i], "yes", "Yes", ""]);
+    rows.push([listNames[i], "no", "No", ""]);
+  }
+  return rows;
+}
+
+// =====================================================
 // CHOICES
 // =====================================================
 function writeMoHSACChoices_(sheet, sourceSs) {
@@ -761,7 +1067,9 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACIfmChoices_(sourceSs))
     // >>> IFM CHOICES END — ADJUSTMENT PENDING <<<
     .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
-    .concat(getMoHSACMentorsMenteeChoices_(sourceSs));
+    .concat(getMoHSACMentorsMenteeChoices_(sourceSs))
+    .concat(getMoHSACSkillEvaluationChoices_())
+    .concat(getMoHSACUbtFreeflowYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
