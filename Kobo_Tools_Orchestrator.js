@@ -336,7 +336,6 @@ function syncIFMListFromSource() {
   }
 
   var values = selected.values;
-  var header = values[0];
   var usableRows = countIFMUsableRows_(values);
 
   if (usableRows < 1) {
@@ -345,10 +344,15 @@ function syncIFMListFromSource() {
       selected.sheetName +
       "' has headers but 0 rows with county + Facility + Facility Code filled. " +
       "Headers: [" +
-      header.join(" | ") +
+      values[0].join(" | ") +
       "]."
     );
   }
+
+  // Map Mentor (IFM) Database headers → original kobocreator IFM List names
+  // so generateIFM* can keep using County / IFM ID / Status / etc.
+  values = normalizeIFMListHeadersForKobocreator_(values);
+  var header = values[0];
 
   var localSs = SpreadsheetApp.getActiveSpreadsheet();
   var localSheet = localSs.getSheetByName(KOBO_TOOLS_LOCAL_IFM_SHEET);
@@ -385,12 +389,54 @@ function syncIFMListFromSource() {
     (values.length - 1) +
     " row(s), " +
     usableRows +
-    " with county/Facility/Facility Code. Headers: [" +
+    " with County/Facility/Facility Code. " +
+    "Normalized headers: [" +
     header.join(" | ") +
     "]"
   );
 
   return localSheet;
+}
+
+/**
+ * Rename Mentor (IFM) Database 2026 headers to the names kobocreator expects.
+ *   county     → County
+ *   Mentor ID  → IFM ID
+ * Other familiar names (Facility, Facility Code, Name, Status) stay as-is.
+ */
+function normalizeIFMListHeadersForKobocreator_(values) {
+  if (!values || !values.length) return values;
+
+  var header = values[0];
+  var mapped = [];
+
+  for (var c = 0; c < header.length; c++) {
+    var raw = String(header[c] == null ? "" : header[c]).trim();
+    var key = raw.toLowerCase();
+
+    if (key === "county") {
+      mapped.push("County");
+    } else if (
+      key === "mentor id" ||
+      key === "mentorid" ||
+      key === "ifm id"
+    ) {
+      mapped.push("IFM ID");
+    } else if (key === "facility code") {
+      mapped.push("Facility Code");
+    } else if (key === "facility") {
+      mapped.push("Facility");
+    } else if (key === "name") {
+      mapped.push("Name");
+    } else if (key === "status") {
+      mapped.push("Status");
+    } else {
+      mapped.push(raw);
+    }
+  }
+
+  values[0] = mapped;
+  return values;
 }
 
 /**

@@ -223,156 +223,6 @@ function getOrCreateSheet(name) {
 
 
 // =====================================================
-// Helper: Find header column by exact or case-insensitive alias
-// =====================================================
-function findHeaderIndex_(header, names) {
-  var aliases =
-    Object.prototype.toString.call(names) === "[object Array]"
-      ? names
-      : [names];
-  var i;
-  var c;
-  var want;
-
-  for (i = 0; i < aliases.length; i++) {
-    var exact = header.indexOf(aliases[i]);
-    if (exact !== -1) return exact;
-  }
-
-  for (i = 0; i < aliases.length; i++) {
-    want = String(aliases[i] == null ? "" : aliases[i]).trim().toLowerCase();
-    for (c = 0; c < header.length; c++) {
-      if (
-        String(header[c] == null ? "" : header[c]).trim().toLowerCase() ===
-        want
-      ) {
-        return c;
-      }
-    }
-  }
-
-  return -1;
-}
-
-/**
- * Locate IFM List header row (supports title rows above headers).
- * Looks for Mentor ID/IFM ID plus Facility / Facility Code / county.
- */
-function findIFMHeaderRowIndex_(rows) {
-  var maxScan = Math.min(rows.length, 15);
-  for (var r = 0; r < maxScan; r++) {
-    var row = rows[r];
-    var hasId =
-      findHeaderIndex_(row, ["Mentor ID", "IFM ID", "Mentor Id", "MentorID"]) !==
-      -1;
-    var hasFacility = findHeaderIndex_(row, "Facility") !== -1;
-    var hasCode =
-      findHeaderIndex_(row, ["Facility Code", "Facility code"]) !== -1;
-    var hasCounty = findHeaderIndex_(row, ["county", "County"]) !== -1;
-    if (hasId && hasFacility && hasCode && hasCounty) {
-      return r;
-    }
-  }
-  return -1;
-}
-
-/**
- * Shared reader for local "IFM List" (source for Survey Sheet (IFM)
- * and IFM List (Choices)).
- *
- * Data path:
- *   Mentor (IFM) Database 2026  --syncIFMListFromSource()-->  IFM List
- *   IFM List  --generateIFMChoicesSheet()-->  IFM List (Choices)
- *   IFM List  --generateSurveySheetIFM()-->  Survey Sheet (IFM)
- */
-function readIFMListTable_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("IFM List");
-  if (!sheet) {
-    throw new Error(
-      'Sheet "IFM List" not found. Run syncIFMListFromSource() or ' +
-      "Refresh All Forms first (orchestrator syncs Mentor (IFM) Database 2026)."
-    );
-  }
-
-  var range = sheet.getDataRange();
-  var values = range.getValues();
-  var displays = range.getDisplayValues();
-
-  if (!displays || displays.length === 0) {
-    throw new Error('Sheet "IFM List" is empty.');
-  }
-
-  var headerRowIndex = findIFMHeaderRowIndex_(displays);
-  if (headerRowIndex === -1) {
-    throw new Error(
-      'Could not find IFM List header row with Mentor ID/IFM ID, county/County, ' +
-      "Facility, Facility Code. First row cells: [" +
-      (displays[0] || []).join(" | ") +
-      "]. Re-run IFM sync from Mentor (IFM) Database 2026."
-    );
-  }
-
-  var header = displays[headerRowIndex];
-  var indexes = {
-    county: findHeaderIndex_(header, ["county", "County"]),
-    facility: findHeaderIndex_(header, "Facility"),
-    facilityCode: findHeaderIndex_(header, ["Facility Code", "Facility code"]),
-    name: findHeaderIndex_(header, "Name"),
-    mentorId: findHeaderIndex_(header, [
-      "Mentor ID",
-      "IFM ID",
-      "Mentor Id",
-      "MentorID"
-    ]),
-    status: findHeaderIndex_(header, ["Status", "status", "STATUS"])
-  };
-
-  var missing = [];
-  if (indexes.county === -1) missing.push("county/County");
-  if (indexes.facility === -1) missing.push("Facility");
-  if (indexes.facilityCode === -1) missing.push("Facility Code");
-  if (indexes.name === -1) missing.push("Name");
-  if (indexes.mentorId === -1) missing.push("Mentor ID (or IFM ID)");
-  if (indexes.status === -1) missing.push("Status");
-
-  if (missing.length) {
-    throw new Error(
-      "IFM List is missing columns: " +
-      missing.join(", ") +
-      ". Found headers: " +
-      header.join(" | ")
-    );
-  }
-
-  var dataRowCount = displays.length - headerRowIndex - 1;
-  Logger.log(
-    "IFM List reader: header row " +
-    (headerRowIndex + 1) +
-    ", data rows=" +
-    dataRowCount +
-    ", headers=[" +
-    header.join(" | ") +
-    "]"
-  );
-
-  return {
-    sheet: sheet,
-    header: header,
-    indexes: indexes,
-    values: values,
-    displays: displays,
-    headerRowIndex: headerRowIndex,
-    dataRowCount: dataRowCount
-  };
-}
-
-function cellText_(row, index) {
-  if (index === -1 || !row) return "";
-  return String(row[index] == null ? "" : row[index]).trim();
-}
-
-// =====================================================
 // Helper: Clean for Kobo variable naming
 // =====================================================
 function cleanForKobo(str) {
@@ -782,26 +632,37 @@ function generateFacilitiesChoicesSheet() {
 
 // =====================================================
 // 7️⃣ IFM ASSESSMENT (FACILITY-BASED)
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Status
 // =====================================================
 function generateIFMAssessmentSheet() {
-  // Source: local "IFM List" (same upstream as Survey Sheet / IFM List Choices)
-  var table = readIFMListTable_();
-  var indexes = table.indexes;
-  var displays = table.displays;
-  var start = table.headerRowIndex + 1;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceSheet = ss.getSheetByName("IFM List");
+  if (!sourceSheet) return;
 
+  var data = sourceSheet.getDataRange().getValues();
+  var header = data[0];
+
+  var countyIndex = header.indexOf("County");
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  var statusIndex = header.indexOf("Status");
+
+  var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
 
   var seenFacilities = {}; // Track unique facility codes
-  var skippedIncomplete = 0;
 
-  for (var i = start; i < displays.length; i++) {
-    var county = cellText_(displays[i], indexes.county);
-    var facility = cellText_(displays[i], indexes.facility);
-    var code = cellText_(displays[i], indexes.facilityCode);
+  for (var i = 1; i < data.length; i++) {
+    var county = data[i][countyIndex];
+    var facility = data[i][facilityIndex];
+    var code = data[i][facilityCodeIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
 
-    if (!county || !facility || !code) {
-      skippedIncomplete++;
+    if (!county || !facility || !code) continue;
+
+    // Status filter: Active only
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
       continue;
     }
 
@@ -820,34 +681,10 @@ function generateIFMAssessmentSheet() {
     output.push([county, facility, code, listName, combinedName, facility]);
   }
 
-  if (output.length < 2) {
-    throw new Error(
-      "IFM Assessment Facilities List (Choices) produced 0 rows from IFM List (" +
-      table.dataRowCount +
-      " data row(s); incomplete county/Facility/Facility Code rows skipped=" +
-      skippedIncomplete +
-      "). Headers: [" +
-      table.header.join(" | ") +
-      "]. Open local IFM List — if it is also blank, run syncIFMListFromSource() " +
-      "from Mentor (IFM) Database 2026 first."
-    );
-  }
-
   // Sort alphabetically by Facility
-  output = [output[0]].concat(
-    output.slice(1).sort(function(a, b) {
-      return String(a[1]).localeCompare(String(b[1]));
-    })
-  );
+  output = [output[0]].concat(output.slice(1).sort((a,b)=>a[1].localeCompare(b[1])));
 
-  var sheet = getOrCreateSheet("IFM Assessment Facilities List (Choices)");
   sheet.getRange(1,1,output.length,output[0].length).setValues(output);
-
-  Logger.log(
-    "IFM Assessment Facilities List (Choices): wrote " +
-    (output.length - 1) +
-    " unique facility row(s)."
-  );
 }
 
 // =====================================================
@@ -865,18 +702,27 @@ function generateMenteeFacilityLogic() {
   var programIndex = header.indexOf("Program");
   var facilityCodeIndex = header.indexOf("Facility Code");
 
-  var ifmTable = readIFMListTable_();
-  var ifmDisplays = ifmTable.displays;
-  var ifmIndexes = ifmTable.indexes;
-  var ifmStart = ifmTable.headerRowIndex + 1;
+  var ifmSheet = ss.getSheetByName("IFM List");
+  if (!ifmSheet) return;
+  var ifmData = ifmSheet.getDataRange().getValues();
+  var ifmHeader = ifmData[0];
 
-  // Map of IFM facility codes to cleaned names
+  var ifmFacilityIndex = ifmHeader.indexOf("Facility");
+  var ifmFacilityCodeIndex = ifmHeader.indexOf("Facility Code");
+  var ifmCountyIndex = ifmHeader.indexOf("County");
+  var ifmStatusIndex = ifmHeader.indexOf("Status");
+
+  // Map of IFM facility codes to cleaned names (Active rows only)
   var ifmMap = {};
-  for (var i = ifmStart; i < ifmDisplays.length; i++) {
-    var code = cellText_(ifmDisplays[i], ifmIndexes.facilityCode);
-    var facility = cellText_(ifmDisplays[i], ifmIndexes.facility);
-    var county = cellText_(ifmDisplays[i], ifmIndexes.county);
+  for (var i = 1; i < ifmData.length; i++) {
+    var code = ifmData[i][ifmFacilityCodeIndex];
+    var facility = ifmData[i][ifmFacilityIndex];
+    var county = ifmData[i][ifmCountyIndex];
+    var status = ifmStatusIndex === -1 ? "" : ifmData[i][ifmStatusIndex];
     if (!code || !facility || !county) continue;
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
     ifmMap[code] = {
       facility: code + "_" + cleanForKobo(facility),
       county: cleanForKobo(county) + "_facilities",
@@ -936,51 +782,44 @@ function generateMenteeFacilityLogic() {
 
 // =====================================================
 // 9️⃣ IFM (CHOICES) – FIRST WORD BASED
-// Source: local "IFM List" (synced from Mentor (IFM) Database 2026)
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Name, IFM ID, Status
 // =====================================================
 function generateIFMChoicesSheet() {
-  var table = readIFMListTable_();
-  var indexes = table.indexes;
-  var displays = table.displays;
-  var values = table.values;
-  var start = table.headerRowIndex + 1;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ifmSheet = ss.getSheetByName("IFM List");
+  if (!ifmSheet) return;
 
+  var data = ifmSheet.getDataRange().getValues();
+  var header = data[0];
+
+  var countyIndex = header.indexOf("County");
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  var nameIndex = header.indexOf("Name");
+  var idIndex = header.indexOf("IFM ID");
+  var statusIndex = header.indexOf("Status");
+
+  var sheet = getOrCreateSheet("IFM List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
-  var skipped = {
-    missingFields: 0,
-    missingId: 0,
-    inactive: 0,
-    kept: 0
-  };
 
-  for (var i = start; i < displays.length; i++) {
-    var county = cellText_(displays[i], indexes.county);
-    var facility = cellText_(displays[i], indexes.facility);
-    var code = cellText_(displays[i], indexes.facilityCode);
-    var name = cellText_(displays[i], indexes.name);
-    var rawID =
-      cellText_(displays[i], indexes.mentorId) ||
-      cellText_(values[i], indexes.mentorId);
-    var statusDisplay = displays[i][indexes.status];
-    var statusRaw = values[i][indexes.status];
+  for (var i = 1; i < data.length; i++) {
+    var county = data[i][countyIndex];
+    var facility = data[i][facilityIndex];
+    var code = data[i][facilityCodeIndex];
+    var name = data[i][nameIndex];
+    var rawID = data[i][idIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
 
-    if (!county || !facility || !code || !name) {
-      skipped.missingFields++;
-      continue;
-    }
-    if (!rawID) {
-      skipped.missingId++;
+    if (!county || !facility || !code || !name || !rawID) continue;
+
+    // Status filter: Active only
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
       continue;
     }
 
-    // Keep Active mentors only (same rule as Survey Sheet (IFM) facilities)
-    if (!isIFMStatusActive_(statusDisplay) && !isIFMStatusActive_(statusRaw)) {
-      skipped.inactive++;
-      continue;
-    }
-
-    // ✅ Clean Mentor ID / IFM ID: remove all spaces
-    var cleanedID = String(rawID).replace(/\s+/g, "").trim();
+    // ✅ Clean IFM ID: remove all spaces
+    var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
 
     // Clean facility
     var cleanedFacility = cleanForKobo(facility);
@@ -1001,41 +840,15 @@ function generateIFMChoicesSheet() {
       fullName,
       name
     ]);
-    skipped.kept++;
-  }
-
-  if (output.length < 2) {
-    throw new Error(
-      "IFM List (Choices) produced 0 rows from IFM List (" +
-      table.dataRowCount +
-      " data row(s)). " +
-      "skipped missing county/facility/code/name=" +
-      skipped.missingFields +
-      ", missing Mentor ID=" +
-      skipped.missingId +
-      ", not Active=" +
-      skipped.inactive +
-      ". Headers: [" +
-      table.header.join(" | ") +
-      "]. Confirm syncIFMListFromSource() filled IFM List from Mentor (IFM) Database 2026."
-    );
   }
 
   // Sort alphabetically by Facility
   output = [output[0]].concat(
-    output.slice(1).sort(function(a, b) {
-      return String(a[1]).localeCompare(String(b[1]));
-    })
+    output.slice(1).sort((a,b)=>a[1].localeCompare(b[1]))
   );
 
-  var sheet = getOrCreateSheet("IFM List (Choices)");
   sheet.getRange(1,1,output.length,output[0].length)
        .setValues(output);
-
-  Logger.log(
-    "IFM List (Choices): wrote " + skipped.kept +
-    " Active mentor row(s)."
-  );
 }
 
 // =====================================================
@@ -1228,17 +1041,26 @@ function generateNewbornChoicesSheet() {
 
 // =====================================================
 // 1️⃣2️⃣ SURVEY SHEET (IFM) – UPDATED COLUMN ORDER
-// Unique Facility Code rows where at least one IFM at that
-// facility has Status = Active. Prefer details from an Active
-// row; fall back to any complete row for that facility code.
+// Source: local "IFM List" (synced + headers normalized by orchestrator)
+// Original kobocreator columns: County, Facility, Facility Code, Status
+// Unique Facility Code + Status Active
 // =====================================================
 function generateSurveySheetIFM() {
-  // Source: local "IFM List" (synced from Mentor (IFM) Database 2026)
-  var table = readIFMListTable_();
-  var indexes = table.indexes;
-  var displayData = table.displays;
-  var valueData = table.values;
-  var start = table.headerRowIndex + 1;
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ifmSheet = ss.getSheetByName("IFM List");
+
+  if (!ifmSheet) return;
+
+  var ifmData = ifmSheet.getDataRange().getValues();
+  var ifmHeader = ifmData[0];
+
+  var countyIndex = ifmHeader.indexOf("County");
+  var facilityIndex = ifmHeader.indexOf("Facility");
+  var facilityCodeIndex = ifmHeader.indexOf("Facility Code");
+  var statusIndex = ifmHeader.indexOf("Status");
+
+  var sheet = getOrCreateSheet("Survey Sheet (IFM)");
 
   // Reordered columns: type, name, label, hint, required, required_message, relevant
   var output = [[
@@ -1254,58 +1076,24 @@ function generateSurveySheetIFM() {
     "relevant"
   ]];
 
-  // code -> { hasActive, activeDetail, anyDetail }
-  var facilitiesByCode = {};
-  var statusUnique = {};
+  var processed = {}; // ensure facility appears once
 
-  for (var i = start; i < displayData.length; i++) {
-    var county = cellText_(displayData[i], indexes.county);
-    var facility = cellText_(displayData[i], indexes.facility);
-    var code = cellText_(displayData[i], indexes.facilityCode);
+  for (var i = 1; i < ifmData.length; i++) {
 
-    var statusRaw = valueData[i][indexes.status];
-    var statusDisplay = displayData[i][indexes.status];
-    var statusKey = normalizeIFMStatus_(statusDisplay) || normalizeIFMStatus_(statusRaw);
-    if (statusKey) statusUnique[statusKey] = true;
+    var county = ifmData[i][countyIndex];
+    var facility = ifmData[i][facilityIndex];
+    var code = ifmData[i][facilityCodeIndex];
+    var status = statusIndex === -1 ? "" : ifmData[i][statusIndex];
 
-    if (!code) continue;
+    if (!county || !facility || !code) continue;
 
-    if (!facilitiesByCode[code]) {
-      facilitiesByCode[code] = {
-        hasActive: false,
-        activeDetail: null,
-        anyDetail: null
-      };
+    // Status filter: Active only (unique Facility Code among Active rows)
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
     }
 
-    var detail = null;
-    if (county && facility) {
-      detail = { county: county, facility: facility, code: code };
-      if (!facilitiesByCode[code].anyDetail) {
-        facilitiesByCode[code].anyDetail = detail;
-      }
-    }
-
-    if (isIFMStatusActive_(statusDisplay) || isIFMStatusActive_(statusRaw)) {
-      facilitiesByCode[code].hasActive = true;
-      if (detail) {
-        facilitiesByCode[code].activeDetail = detail;
-      }
-    }
-  }
-
-  for (var codeKey in facilitiesByCode) {
-    if (!facilitiesByCode.hasOwnProperty(codeKey)) continue;
-
-    var entry = facilitiesByCode[codeKey];
-    if (!entry.hasActive) continue;
-
-    var rec = entry.activeDetail || entry.anyDetail;
-    if (!rec) continue;
-
-    var county = rec.county;
-    var facility = rec.facility;
-    var code = rec.code;
+    if (processed[code]) continue;
+    processed[code] = true;
 
     // Clean facility
     var cleanedFacility = cleanForKobo(facility);
@@ -1327,10 +1115,14 @@ function generateSurveySheetIFM() {
     var countyVar = county.toLowerCase().replace(/\s+/g, "_");
 
     // Relevant string
-    var relevant =
-      "${" + countyVar + "_facilities} = '" + facilityValue +
-      "' and (${program} = 'ifm_assessment' or ${program} = 'tot')";
+    var relevant = `\${${countyVar}_facilities} = '${facilityValue}' and (\${program} = 'ifm_assessment' or \${program} = 'tot')`;
 
+    // New columns: hint (blank), required (true), required_message
+    var hint = "";
+    var required = "true".toString().toLowerCase();
+    var required_message = "Sorry, this answer is required";
+
+    // Push row with reordered columns
     output.push([
       county,
       facility,
@@ -1338,73 +1130,20 @@ function generateSurveySheetIFM() {
       type,
       listName,
       label,
-      "",
-      "true",
-      "Sorry, this answer is required",
+      hint,
+      required,
+      required_message,
       relevant
     ]);
   }
 
-  if (output.length < 2) {
-    var statusList = [];
-    for (var s in statusUnique) {
-      if (statusUnique.hasOwnProperty(s)) statusList.push(s);
-    }
-    throw new Error(
-      "Survey Sheet (IFM) produced 0 rows from IFM List (" +
-      table.dataRowCount +
-      " data row(s)). Unique Status values found: [" +
-      (statusList.length ? statusList.join(", ") : "(all blank)") +
-      "]. Need Status = Active (case-insensitive) plus county, Facility, Facility Code. " +
-      "Headers: [" +
-      table.header.join(" | ") +
-      "]. Confirm IFM List was synced from Mentor (IFM) Database 2026."
-    );
-  }
-
-  Logger.log(
-    "Survey Sheet (IFM): wrote " + (output.length - 1) +
-    " unique Active facility code row(s)."
-  );
-
   // Sort alphabetically by Facility
   output = [output[0]].concat(
-    output.slice(1).sort(function(a, b) {
-      return String(a[1]).localeCompare(String(b[1]));
-    })
+    output.slice(1).sort((a,b)=>a[1].localeCompare(b[1]))
   );
 
-  // Clear/write only after rows are built (avoids blank sheet on errors)
-  var sheet = getOrCreateSheet("Survey Sheet (IFM)");
-  sheet.getRange(1, 1, output.length, output[0].length).setValues(output);
-}
-
-/**
- * Normalize IFM Status cell text for Active checks.
- */
-function normalizeIFMStatus_(value) {
-  return String(value == null ? "" : value)
-    .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
-    .replace(/\u00a0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-/**
- * True when Status means Active (not Inactive).
- * Accepts "Active", "ACTIVE", and values that contain "active"
- * without "inactive".
- */
-function isIFMStatusActive_(value) {
-  var s = normalizeIFMStatus_(value);
-  if (!s) return false;
-  if (s.indexOf("inactive") !== -1 || s.indexOf("not active") !== -1) {
-    return false;
-  }
-  if (s === "active") return true;
-  if (s.replace(/[^a-z]/g, "") === "active") return true;
-  return /(^|[^a-z])active([^a-z]|$)/.test(s);
+  sheet.getRange(1,1,output.length,output[0].length)
+       .setValues(output);
 }
 
 // =====================================================
