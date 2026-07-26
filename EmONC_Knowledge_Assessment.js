@@ -828,7 +828,7 @@ function getEmONCKAQuestionChoices_() {
     ["vaginal_breech_maneuver", "C", "C. Woods screw maneuver"],
     ["vaginal_breech_maneuver", "D", "D. Lovset’s maneuver"],
 
-    ["Managing_shoulder_dystocia", "A", "A. Apply gentle downward torque on the baby’s head"],
+    ["Managing_shoulder_dystocia", "A", "A. Apply gentle downward traction on the baby’s head"],
     ["Managing_shoulder_dystocia", "B", "B. Perform the McRoberts maneuver"],
     ["Managing_shoulder_dystocia", "C", "C. Apply fundal pressure to assist delivery"],
     ["Managing_shoulder_dystocia", "Correct", "D. Shout for help!"],
