@@ -405,6 +405,80 @@ function getEmONCCTF2026Section2Rows_() {
       "",
       ""
     ],
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_cmes",
+      "EmONC Lecturettes (CMEs)",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'cmes')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_cme",
+      "***Enumerator Note:*** *This section captures whether mentees attended CME lecturettes. Please record the specific topic covered by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one cmes",
+      "cmes",
+      "7. Please select the CME module lecturette that the selected mentee(s) participated in.",
+      "Enumerator note: Select the CME lecturette completed.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'cmes')",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", ""],
+    [
+      "begin_group",
+      "group_videos",
+      "Section 2b: Videos",
+      "",
+      "FALSE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'videos')",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "note_videos",
+      "***Enumerator Note:*** *This section captures whether mentees were taken through videos sessions. Please record the specific module covered by selecting the appropriate option from the list provided.*",
+      "",
+      "FALSE",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "select_one videos",
+      "videos",
+      "8. Please select the video session that the selected mentee(s) participated in.",
+      "Enumerator note: Select the Video or case scenario completed.",
+      "TRUE",
+      "",
+      "",
+      "selected(${emonc_activities}, 'videos')",
+      "",
+      ""
+    ],
     ["end_group", "", "", "", "", "", "", "", "", ""]
   ];
 }
