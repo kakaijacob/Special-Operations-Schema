@@ -3521,132 +3521,27 @@ function mohSacYesNoSelectRow_(listName, fieldName, label) {
 function getMoHSACSkillEvaluationChoices_() {
   // list_name, name, label, allowed
   return [
-    [
-      "skill_evaluation",
-      "UBT_(free flow)",
-      "UBT (Free Flow)",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Manual_removal_of_placenta",
-      "Manual Removal of Placenta",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "UBT",
-      "UBT",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Cord_prolapse",
-      "Management of Cord Prolapse",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Assisted_breech_delivery",
-      "Assisted Breech Delivery",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Assisted_vaginal_vacuum_delivery",
-      "Assisted Vaginal Vacuum Delivery",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Shoulder_dystocia",
-      "Shoulder Dystocia",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "AMTSL",
-      "Active Management of Third Stage of Labor",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "NASG",
-      "Non Pneumatic Antishock Garment",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Newborn_resuscitation",
-      "Newborn Resuscitation",
-      "mentors_curriculum,newborn_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Maternal_shock",
-      "Maternal Shock",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "B-LYNCH",
-      "B-Lynch",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Perineal_repair",
-      "Perineal Tear Repair",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Maternal_resuscitation",
-      "Maternal Resuscitation",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Cervical_tear_repair",
-      "Cervical Tear Repair",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Bimanual_uterine_compression",
-      "Bimanual Uterine Compression",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Compression_of_abdominal_aorta",
-      "Compression of Abdominal Aorta",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Preeclampsia_/_Eclampsia",
-      "Preeclampsia / Eclampsia",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Uterine_inversion",
-      "Uterine Inversion",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "EMOTIVE",
-      "EMOTIVE",
-      "mentors_curriculum,ifm_assessment,tot"
-    ],
-    [
-      "skill_evaluation",
-      "Partograph",
-      "Partograph",
-      "mentors_curriculum,ifm_assessment,tot"
-    ]
+    ["skill_evaluation", "AMTSL", "AMTSL", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Assisted_breech_delivery", "Assisted breech delivery", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Assisted_vaginal_vacuum_delivery", "Assisted vaginal vacuum delivery", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "B-LYNCH", "B-LYNCH", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Bimanual_uterine_compression", "Bimanual uterine compression", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Cervical_tear_repair", "Cervical tear repair", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Compression_of_abdominal_aorta", "Compression of abdominal aorta", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Cord_prolapse", "Cord prolapse", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "EMOTIVE", "EMOTIVE", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Manual_removal_of_placenta", "Manual removal of placenta", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Maternal_resuscitation", "Maternal resuscitation", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Maternal_shock", "Maternal shock", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "NASG", "Non pneumatic anti-shock garment", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Newborn_resuscitation", "Newborn resuscitation", "mentors_curriculum, newborn_curriculum,ifm_assessment,po_assessment,tot"],
+    ["skill_evaluation", "Partograph", "Partograph", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Perineal_repair", "Perineal repair", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Preeclampsia_/_Eclampsia", "Preeclampsia/Eclampsia", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Shoulder_dystocia", "Shoulder dystocia", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "UBT", "UBT", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "UBT_(free flow)", "UBT (free flow)", "mentors_curriculum,po_assessment,ifm_assessment"],
+    ["skill_evaluation", "Uterine_inversion", "Uterine Inversion", "mentors_curriculum,po_assessment,ifm_assessment"]
   ];
 }
 
