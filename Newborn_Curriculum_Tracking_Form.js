@@ -980,61 +980,6 @@ function getNewbornCTFMenteeChoices_(sourceSs) {
   return rows;
 }
 
-/**
- * Generic pull of list_name / name / label [/ allowed] from a kobocreator choices sheet.
- */
-function getNewbornCTFChoicesFromSheet_(
-  sourceSs,
-  sheetName,
-  generatorHint,
-  includeAllowed
-) {
-  var sourceSheet = sourceSs.getSheetByName(sheetName);
-  if (!sourceSheet) {
-    throw new Error(
-      "Sheet '" + sheetName + "' not found. " +
-      "Run " + generatorHint + " or generateAllOutputs() first."
-    );
-  }
-
-  var data = sourceSheet.getDataRange().getValues();
-  if (!data || data.length < 2) return [];
-
-  var header = data[0];
-  var listNameIndex = header.indexOf("list_name");
-  var nameIndex = header.indexOf("name");
-  var labelIndex = header.indexOf("label");
-  var allowedIndex = header.indexOf("allowed");
-
-  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
-    throw new Error(
-      sheetName + " is missing required columns: list_name, name, label"
-    );
-  }
-
-  var rows = [];
-
-  for (var i = 1; i < data.length; i++) {
-    var listName = data[i][listNameIndex];
-    var name = data[i][nameIndex];
-    var label = data[i][labelIndex];
-    var allowed =
-      includeAllowed && allowedIndex !== -1 ? data[i][allowedIndex] : "";
-
-    if (!listName && !name) continue;
-
-    rows.push([
-      listName || "",
-      name || "",
-      label || "",
-      allowed || "",
-      "" // module_constraint (filled for curriculum lists later)
-    ]);
-  }
-
-  return rows;
-}
-
 // =====================================================
 // SETTINGS
 // =====================================================
