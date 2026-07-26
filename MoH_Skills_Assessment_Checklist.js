@@ -945,7 +945,11 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACPerinealTearRows_())
     .concat(getMoHSACMaternalResuscitationRows_())
     .concat(getMoHSACCervicalTearRows_())
-    .concat(getMoHSACBimanualCompressionRows_());
+    .concat(getMoHSACBimanualCompressionRows_())
+    .concat(getMoHSACAorticCompressionRows_())
+    .concat(getMoHSACHipRows_())
+    .concat(getMoHSACUterineInversionRows_())
+    .concat(getMoHSACEmotiveRows_());
 }
 
 /**
@@ -2649,6 +2653,354 @@ function getMoHSACBimanualCompressionRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Compression of Abdominal Aorta checklist + score.
+ */
+function getMoHSACAorticCompressionRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_aortic_compression",
+      "Section 2b: Compression of Abdominal Aorta",
+      "",
+      "false",
+      "",
+      "",
+      "${skill_evaluation} = 'Compression_of_abdominal_aorta'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_abdominalaorta", "***Case Scenario:*** *You are managing PPH, and you have used all the options available, but the uterus is still not contracted. You have decided to perform Compression of Abdominal Aorta as a remedy, give a running commentary as you perform the procedure.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one shout_for_help", "shout_for_help_005", "1. Shout for help.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one obtain_consent", "obtain_consent_013", "2. Briefly explain the procedure to the mother depending on the client’s condition and obtain informed consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one v_drape2", "v_drape2", "3. Place the calibrated blood collection drape.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one locate_femoral_pulse", "locate_femoral_pulse", "4. Locate the femoral pulse.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one fist_placement", "fist_placement", "5. Place a closed fist above the umbilicus, slightly to the patient’s left.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one apply_down_pressure", "apply_down_pressure", "6. Apply downward pressure through the abdominal wall to the abdominal aorta.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one femoral_pulse_check", "femoral_pulse_check", "7. With the other hand, palpate the femoral pulse to check the adequacy of the compression.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one adequacy_of_compression", "adequacy_of_compression", "8. Check if the pulse is present or not. If the pulse is present, then the compression is inadequate. If the pulse is not palpable, the compression is adequate.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one compression_until_hemostasis", "compression_until_hemostasis", "9. Maintain compression until the bleeding is controlled or the patient reaches the operating table.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one message_to_mother", "message_to_mother_013", "10. Explain to the mother the results of the procedure and next steps.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "aortic_compression_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${shout_for_help_005}='yes')+(${obtain_consent_013}='yes')+(${v_drape2}='yes')+(${locate_femoral_pulse}='yes')+(${fist_placement}='yes')+(${apply_down_pressure}='yes')+(${femoral_pulse_check}='yes')+(${adequacy_of_compression}='yes')+(${compression_until_hemostasis}='yes')+(${message_to_mother_013}='yes'))*100 div 10,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "aortic_compression_pass",
+      "*Congratulations! Your score is **[${aortic_compression_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${aortic_compression_score} >= 84.5 and ${message_to_mother_013}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "aortic_compression_fail",
+      "*Sorry! Your score is **[${aortic_compression_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${aortic_compression_score} < 84.5 and ${message_to_mother_013}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Management of Preeclampsia or Eclampsia checklist + score.
+ */
+function getMoHSACHipRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_hip",
+      "Section 2b: Management of Preeclampsia or Eclampsia",
+      "",
+      "false",
+      "",
+      "",
+      "${skill_evaluation} = 'Preeclampsia_/_Eclampsia'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_preeclampsia", "***Case Scenario:*** *Mrs. B presented to you at 37 weeks with severe headache unrelieved by analgesics and epigastric pains. Blood pressure 172/115 mmHg and 2+ protein on dipstick. RR 26 bpm. You are called to manage the patient.*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one diagnosis", "diagnosis", "1. Asks, “What is your diagnosis based on the scenario given?”\n Expected answer: Severe preeclampsia at 37 weeks’ gestation.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one management_principles", "management_principles", "2. Asks, \"What are the principles of managing this condition?\"\n Expected answers:\n • Prevent and treat fits\n • Blood pressure control\n • Fluid management\n • Delivery\n • Management of complications\n Says, “Now manage the patient.”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one explain_to_mother", "explain_to_mother", "3. Briefly explains to the mother the diagnosis and management.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one handwashing_and_start", "horwashing_or_start", "4. Washes hands with soap and water or uses alcohol hand rub. Says, “Start with preventing fit, use the IV regimen.”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one fix_iv_line", "fix_iv_line", "5. Fixes an IV line. Says, “Fix the IV.”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one mgso4_preparation", "mgso4_preparation", "6. In presence of infusion, draws up MgSO₄ 50% solution 4 g (1 g/2 mL × 4 ampoules) and adds to 12 mL of water for injection or normal saline to make 20 mL of 20% solution. GIVE PARENTERAL ANTIHYPERTENSIVE.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one iv_loading_dose", "iv_loading_dose", "7. Gives a loading dose of MgSO₄ 4 g IV 20% slow intravenously. Says, “Inject slowly.”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one duration_mgso4_bolus", "duration_mgso4_bolus", "8. Asks, “For how long will you give the bolus?”\n Expected answer: For 15–20 minutes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one dosage_duration", "dosage_duration", "9. Asks, “For how long will you continue to give magnesium sulfate?”\n Expected answer: Give maintenance dose of 1 g/hour.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one maintenance_dose_duration", "maintenance_dose_duration", "10. Asks, “For how long will you give maintenance dose?”\n Expected answer: Up to 24 hours from last fit or delivery, whichever comes last.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one dosing_iv_im", "dosing_iv_im", "11. Asks, “How would you have given the combined IV and IM regimen?”\n Expected answer:\n \n IM Regimen \n • Loading dose: Initially 4 g of 20% MgSO₄ IV bolus dose, immediately followed by 10 g of 50% MgSO₄ IM (5 g each buttock) \n • If a convulsion persists after 15 minutes: 2 g of 20% MgSO₄ IV bolus over 5 minutes \n • Maintenance dose: 5 g of 50% MgSO₄ IM 4 hourly in alternate buttocks up to 24 hours from delivery or last fit, whichever comes last \n \n IV Regimen \n • Loading dose: Initially MgSO₄ 4 g is given as IV bolus \n • If convulsion persists after 15 minutes: 2 g of 20% MgSO₄ IV bolus over 5 minutes \n • Maintenance dose: 1 g/hour intravenous infusion up to 24 hours after the last convulsion", "", "true", "", "", "", "", "", "", ""],
+    ["note", "patient_convulsing", "***Enumerator Note:*** *After one hour a relative calls: “Help, Mrs B is having a convulsion, we do not know what to do.”*", "", "false", "", "", "", "", "", "", ""],
+    ["select_one eclampsia_diagnosis", "eclampsia_diagnosis", "12. Ask: “What is the most likely diagnosis now?”\n Expected answer: Eclampsia.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_for_danger", "assess_for_danger", "13. Assess for danger and response. Call for help.\n Says: “No one is available, what would you do next to care for her?”", "", "true", "", "", "", "", "", "", ""],
+    ["select_one toxicity_monitoring", "toxicity_monitoring", "14. Check airway and breathing. Says respiration 26/minute. Start oxygen at 4–6 litres/minute. If they do not verbalize, ask for rate.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one left_lateral_tilt_position", "left_lateral_tilt_position", "15. Turn the woman into LEFT LATERAL TILT.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one airway_protection", "airway_protection", "16. Do not attempt to place an object in the mouth.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one convulsions_controlled", "convulsions_controlled", "17. Says: she has stopped convulsing now. Checks blood pressure 152/112.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one _80mls_hr_infusion", "_80mls_hr_infusion", "18. States and simulates that s/he will start an infusion of normal saline or Ringer’s lactate at a rate of 1 ml/kg/hour (80 mL/hour).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one managing_recurrent_seizures", "managing_recurrent_seizures", "19. Ask: what will you give if a convulsion recurs?\n Expected answer: Prepare and give MgSO₄ 20% solution 2–4 g IV bolus over 15 minutes depending on whether weight is more or less than 70 kg.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one monitoring_before_next_dose", "monitoring_before_next_dose", "20. Asks: what will you check before giving the next dose of MgSO₄ to be sure she is not having MgSO₄ toxicity?\n Expected answer:\n • Respiratory rate <16 \n • Absent patella reflexes \n • Urine output less than 30 mL per hour over 4 hours", "", "true", "", "", "", "", "", "", ""],
+    ["select_one first_signs_mgso4_toxicity", "first_signs_mgso4_toxicity", "21. Asks: what are the first signs of MgSO₄ toxicity?\n Expected answer: Loss of patella reflexes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one mgso4_toxicity_checks", "mgso4_toxicity_checks", "22. Asks: how often will you check for MgSO₄ toxicity?\n Expected answer: Every hour.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one mgso4_antidote", "mgso4_antidote", "23. Asks: what is the antidote and dose for MgSO₄ toxicity?\n Expected answer: Calcium gluconate 10% 1 g (10 mL) IV slowly over 10 minutes.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "hip_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${diagnosis}='yes')+(${management_principles}='yes')+(${explain_to_mother}='yes')+(${horwashing_or_start}='yes')+(${fix_iv_line}='yes')+(${mgso4_preparation}='yes')+(${iv_loading_dose}='yes')+(${duration_mgso4_bolus}='yes')+(${dosage_duration}='yes')+(${maintenance_dose_duration}='yes')+(${dosing_iv_im}='yes')+(${patient_convulsing}='yes')+(${eclampsia_diagnosis}='yes')+(${assess_for_danger}='yes')+(${toxicity_monitoring}='yes')+(${left_lateral_tilt_position}='yes')+(${airway_protection}='yes')+(${convulsions_controlled}='yes')+(${_80mls_hr_infusion}='yes')+(${managing_recurrent_seizures}='yes')+(${monitoring_before_next_dose}='yes')+(${first_signs_mgso4_toxicity}='yes')+(${mgso4_toxicity_checks}='yes')+(${mgso4_antidote}='yes'))*100 div 23,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "hip_pass",
+      "*Congratulations! Your score is **[${hip_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${hip_score} >= 84.5 and ${mgso4_antidote}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "hip_fail",
+      "*Sorry! Your score is **[${hip_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${hip_score} < 84.5 and ${mgso4_antidote}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: Uterine Inversion checklist + score.
+ */
+function getMoHSACUterineInversionRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_Uterine_inversion",
+      "Section 2b: Uterine Inversion",
+      "",
+      "",
+      "",
+      "",
+      "${skill_evaluation} = 'Uterine_inversion'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_uterineinversion", "***Case scenario:*** *You are on duty and have been informed by the midwife that while she was trying to deliver the placenta, the patient complains of very severe lower abdominal pain and a feeling of fullness inside the vagina. On abdominal examination, the uterine fundus is not palpable and the placenta is not yet separated. Currently, the patient has only minimal bleeding.*", "", "", "", "", "", "", "", "", ""],
+    ["select_one shout_for_help", "shout_for_help", "1. Shouts for help.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one blood_monitoring_drape", "blood_monitoring_drape", "2. Places blood monitoring drape.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one emergency_team_roles", "emergency_team_roles", "3. Assembles the emergency team and assigns roles.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one rapid_initial_assessment", "rapid_initial_assessment", "4. Performs a quick survey.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one ensure_patient_privacy", "ensure_patient_privacy", "5. Ensures privacy.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one explain_procedure_mother1", "explain_procedure_mother1", "6. Explains the procedure to the mother.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one obtain_informed_consent1", "obtain_informed_consent1", "7. Obtains informed consent.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_blood_loss", "assess_blood_loss", "8. Assesses blood loss.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_abcs_resuscitate1", "assess_abcs_resuscitate1", "9. Quickly assesses ABCs and resuscitates as necessary.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one stop_uterotonic_drugs", "stop_uterotonic_drugs", "10. Discontinues uterotonic drugs if any.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one insert_iv_cannulae", "insert_iv_cannulae", "11. Insert 2 wide-bore cannulae (gauge 16 or 18).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one collect_blood_samples1", "collect_blood_samples1", "12. Take blood for FHG, U/E/CR, GXM, and coagulation profile.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one start_crystalloid_infusion", "start_crystalloid_infusion", "13. Start infusion of crystalloids: normal saline or Ringer’s lactate.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one insert_urinary_catheter", "insert_urinary_catheter", "14. Insert a Foley’s catheter and empty bladder.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one administer_analgesics_antibiotics", "administer_analgesics_antibiotics", "15. Administers analgesics and antibiotics:\n  • Ampicillin 2 g IV, or\n  • Cefazolin 1 g IV, or\n  • Ceftriaxone 2 g IV, plus\n  • Metronidazole 500 mg IV.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one hand_hygiene_ppe", "hor_hygiene_ppe", "16. Perform hand hygiene, wear PPE (personal protective equipment), and put on gynecological gloves.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one replace_uterine_fundus", "replace_uterine_fundus", "17. Replace the uterine fundus to its correct position.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one remove_retained_placenta", "remove_retained_placenta", "18. Manually remove the placenta or any remaining bits of the placenta.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one start_oxytocin_infusion", "start_oxytocin_infusion", "19. Commence oxytocin infusion after successful removal of the placenta – oxytocin 20 units in 1 L of normal saline to run over 4 hours.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one examine_repair_tears", "examine_repair_tears", "20. Examine the cervix, vagina, and perineum for any tears and repair accordingly.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one monitor_vitals_bleeding", "monitor_vitals_bleeding", "21. Monitor uterine tone, per vaginal bleeding, and vital signs every 15 minutes for the first 2 hours, then every 30 minutes for the next 4 hours.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one explain_procedure_results", "explain_procedure_results", "22. Explain to the mother the results of the procedure.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one prepare_operating_theatre", "prepare_operating_theatre", "23. The patient should be taken promptly to the operating room, and surgical correction of the inversion under spinal or general anaesthesia should be done.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one inform_client_outcomes", "inform_client_outcomes", "24. Inform client on the outcomes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one document_blood_loss", "document_blood_loss", "25. Document blood loss/procedure in the blood monitoring chart.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "uterine_inversion_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${shout_for_help}='yes')+(${blood_monitoring_drape}='yes')+(${emergency_team_roles}='yes')+(${rapid_initial_assessment}='yes')+(${ensure_patient_privacy}='yes')+(${explain_procedure_mother1}='yes')+(${obtain_informed_consent1}='yes')+(${assess_blood_loss}='yes')+(${assess_abcs_resuscitate1}='yes')+(${stop_uterotonic_drugs}='yes')+(${insert_iv_cannulae}='yes')+(${collect_blood_samples1}='yes')+(${start_crystalloid_infusion}='yes')+(${insert_urinary_catheter}='yes')+(${administer_analgesics_antibiotics}='yes')+(${hor_hygiene_ppe}='yes')+(${replace_uterine_fundus}='yes')+(${remove_retained_placenta}='yes')+(${start_oxytocin_infusion}='yes')+(${examine_repair_tears}='yes')+(${monitor_vitals_bleeding}='yes')+(${explain_procedure_results}='yes')+(${prepare_operating_theatre}='yes')+(${inform_client_outcomes}='yes')+(${document_blood_loss}='yes'))*100 div 25,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "uterine_inversion_pass",
+      "*Congratulations! Your score is **[${uterine_inversion_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${uterine_inversion_score} >= 84.5 and ${document_blood_loss}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "uterine_inversion_fail",
+      "*Sorry! Your score is **[${uterine_inversion_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${uterine_inversion_score} < 84.5 and ${document_blood_loss}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
+/**
+ * Section 2b: EMOTIVE checklist + score.
+ */
+function getMoHSACEmotiveRows_() {
+  var rows = [
+    [
+      "begin_group",
+      "group_emotive",
+      "Section 2b: EMOTIVE",
+      "",
+      "",
+      "",
+      "",
+      "${skill_evaluation} = 'EMOTIVE'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["note", "case_scenario_emotive", "***Case scenario:*** *Nancy is a para 3+0 now. She has just successfully delivered a live male infant who scored 10/10 at 1 and 5 minutes. The placenta was successfully delivered and is complete. She has a history of prolonged labour.*", "", "", "", "", "", "", "", "", ""],
+    ["select_one shout_assemble_team", "shout_assemble_team", "1. Shouts for help, quickly assembles the emergency team and asks for the PPH kit (help will be from the other mentees).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assign_team_roles", "assign_team_roles", "2. The team lead assigns individual team members a role.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one reassure_explain_mother", "reassure_explain_mother", "3. The team leader reassures the mother and briefly explains what is going on as the other team members continue emergency management.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_bleeding_amount", "check_bleeding_amount", "4. Checks bleeding and amount of blood lost in the drape (“Keep bleeding steady, there is 500 mL in the drape”).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one assess_abcs_resuscitate", "assess_abcs_resuscitate", "5. Quickly assesses ABCs and resuscitates as necessary (“What will you do next?”).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one trigger_first_bundle", "trigger_first_bundle", "6. Triggers the first response bundle.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one trigger_uterus_massage", "trigger_uterus_massage", "7. Triggers the bundle – massages the uterus.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_bladder_catheter", "check_bladder_catheter", "8. Checks the bladder and catheterizes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one insert_iv_cannulas", "insert_iv_cannulas", "9. Asks the assistant OR inserts 2 wide-bore cannulas.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one collect_blood_samples", "collect_blood_samples", "10. Asks the assistant/collects blood samples: complete blood count, grouping and cross-match (GXM), U/E/C, coagulation profile.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one infuse_oxytocin", "infuse_oxytocin", "11. Infuses 10 IU oxytocin in 500 mL of crystalloid over 10 minutes or as fast as possible; 20 IU oxytocin in 1 litre of crystalloid to run over 4 hours.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one administer_misoprostol", "administer_misoprostol", "12. Asks the assistant OR administers 800 µg misoprostol sublingually.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one administer_tranexamic_acid", "administer_tranexamic_acid", "13. Asks the assistant OR administers 1 g TXA at the rate of 1 mL per minute over 10 minutes.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one give_iv_fluids", "give_iv_fluids", "14. Gives IV fluids if clinically indicated.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one recheck_uterus", "recheck_uterus", "15. Asks the assistant/rechecks the uterus (“Say uterus is well contracted”).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_for_tears", "check_for_tears", "16. Asks the assistant/checks for tears (“If the mentee checks, say, ‘There are no tears’”).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one check_placenta_completeness", "check_placenta_completeness", "17. Asks the assistant/checks the placenta for completeness (“Say the placenta is complete”).", "", "true", "", "", "", "", "", "", ""],
+    ["select_one monitor_bleeding_vitals", "monitor_bleeding_vitals", "18. Once bleeding is controlled, monitors blood in drape, uterine tone, per vaginal bleeding, and vital signs (BP, pulse) every 15 minutes for the first 2 hours, then every 30 minutes for the next 4 hours.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one provide_respectful_care", "provide_respectful_care", "19. Provides respectful care and good communication.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one inform_mother_progress", "inform_mother_progress", "20. Informs the mother of the management progress.", "", "true", "", "", "", "", "", "", ""],
+    ["select_one document_management_chart", "document_management_chart", "21. Documents the findings/management including the blood loss monitoring chart.", "", "true", "", "", "", "", "", "", ""],
+    [
+      "calculate",
+      "emotive_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "round(((${shout_assemble_team}='yes')+(${assign_team_roles}='yes')+(${reassure_explain_mother}='yes')+(${check_bleeding_amount}='yes')+(${assess_abcs_resuscitate}='yes')+(${trigger_first_bundle}='yes')+(${trigger_uterus_massage}='yes')+(${check_bladder_catheter}='yes')+(${insert_iv_cannulas}='yes')+(${collect_blood_samples}='yes')+(${infuse_oxytocin}='yes')+(${administer_misoprostol}='yes')+(${administer_tranexamic_acid}='yes')+(${give_iv_fluids}='yes')+(${recheck_uterus}='yes')+(${check_for_tears}='yes')+(${check_placenta_completeness}='yes')+(${monitor_bleeding_vitals}='yes')+(${provide_respectful_care}='yes')+(${inform_mother_progress}='yes')+(${document_management_chart}='yes'))*100 div 21,0)",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "emotive_pass",
+      "*Congratulations! Your score is **[${emotive_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${emotive_score} >= 84.5 and ${document_management_chart}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "emotive_fail",
+      "*Sorry! Your score is **[${emotive_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${emotive_score} < 84.5 and ${document_management_chart}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  ];
+  return rows;
+}
+
 function getMoHSACNnrChoices_() {
   var rows = [];
   var lists = {
@@ -2880,6 +3232,81 @@ function getMoHSACExtraSkillYesNoChoices_() {
     "fist_on_anterior_wall",
     "pressure_posterior_wall",
     "pressure_until_hemostasis",
+        "v_drape2",
+    "locate_femoral_pulse",
+    "fist_placement",
+    "apply_down_pressure",
+    "femoral_pulse_check",
+    "adequacy_of_compression",
+    "compression_until_hemostasis",
+    "diagnosis",
+    "management_principles",
+    "explain_to_mother",
+    "handwashing_and_start",
+    "fix_iv_line",
+    "mgso4_preparation",
+    "iv_loading_dose",
+    "duration_mgso4_bolus",
+    "dosage_duration",
+    "maintenance_dose_duration",
+    "dosing_iv_im",
+    "eclampsia_diagnosis",
+    "assess_for_danger",
+    "toxicity_monitoring",
+    "left_lateral_tilt_position",
+    "airway_protection",
+    "convulsions_controlled",
+    "_80mls_hr_infusion",
+    "managing_recurrent_seizures",
+    "monitoring_before_next_dose",
+    "first_signs_mgso4_toxicity",
+    "mgso4_toxicity_checks",
+    "mgso4_antidote",
+    "blood_monitoring_drape",
+    "emergency_team_roles",
+    "rapid_initial_assessment",
+    "ensure_patient_privacy",
+    "explain_procedure_mother1",
+    "obtain_informed_consent1",
+    "assess_blood_loss",
+    "assess_abcs_resuscitate1",
+    "stop_uterotonic_drugs",
+    "insert_iv_cannulae",
+    "collect_blood_samples1",
+    "start_crystalloid_infusion",
+    "insert_urinary_catheter",
+    "administer_analgesics_antibiotics",
+    "hand_hygiene_ppe",
+    "replace_uterine_fundus",
+    "remove_retained_placenta",
+    "start_oxytocin_infusion",
+    "examine_repair_tears",
+    "monitor_vitals_bleeding",
+    "explain_procedure_results",
+    "prepare_operating_theatre",
+    "inform_client_outcomes",
+    "document_blood_loss",
+    "shout_assemble_team",
+    "assign_team_roles",
+    "reassure_explain_mother",
+    "check_bleeding_amount",
+    "assess_abcs_resuscitate",
+    "trigger_first_bundle",
+    "trigger_uterus_massage",
+    "check_bladder_catheter",
+    "insert_iv_cannulas",
+    "collect_blood_samples",
+    "infuse_oxytocin",
+    "administer_misoprostol",
+    "administer_tranexamic_acid",
+    "give_iv_fluids",
+    "recheck_uterus",
+    "check_for_tears",
+    "check_placenta_completeness",
+    "monitor_bleeding_vitals",
+    "provide_respectful_care",
+    "inform_mother_progress",
+    "document_management_chart",
   ]);
 }
 function getMoHSACUbtFreeflowChecklistRows_() {
@@ -3041,6 +3468,30 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "Bimanual_uterine_compression",
       "Bimanual Uterine Compression",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Compression_of_abdominal_aorta",
+      "Compression of Abdominal Aorta",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Preeclampsia_/_Eclampsia",
+      "Preeclampsia / Eclampsia",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "Uterine_inversion",
+      "Uterine Inversion",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "EMOTIVE",
+      "EMOTIVE",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
