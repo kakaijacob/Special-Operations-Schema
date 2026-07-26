@@ -67,7 +67,8 @@ function writeEmONCCTF2026Survey_(sheet, sourceSs) {
     .concat([
       ["end_group", "", "", "", "", "", "", "", "", ""], // close mentee_details
       ["end_group", "", "", "", "", "", "", "", "", ""]  // close demographic_information
-    ]);
+    ])
+    .concat(getEmONCCTF2026Section2Rows_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -335,6 +336,77 @@ function getEmONCCTF2026MenteeSurveyRows_(sourceSs) {
   }
 
   return rows;
+}
+
+// =====================================================
+// SECTION 2: EmONC Training Curriculum
+// =====================================================
+function getEmONCCTF2026Section2Rows_() {
+  // Columns: type, name, label, hint, required, required_message,
+  //          constraint_message, relevant, parameters, calculation
+  return [
+    [
+      "begin_group",
+      "emonc_training_curriculum",
+      "Section 2: EmONC Training Curriculum",
+      "",
+      "FALSE",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "section2_note",
+      "***Section Note:*** *This section captures the EmONC training curriculum activities delivered during mentorship sessions. It documents the participation of mentees across different learning methods, including lecturettes (CMEs), videos, case scenarios, skill demonstrations, return demonstrations, and simulation drills.*",
+      "",
+      "",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ],
+    [
+      "begin_group",
+      "emonc_curriculum_activities",
+      "Section 2a: EmONC Activities",
+      "",
+      "",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "activities_note",
+      "***Enumerator Note:*** *This section captures the EmONC curriculum mentorship activities conducted during the session. The activities include lecturettes, videos, case scenarios and role plays, skill demonstrations by the mentor, return demonstrations by mentees, and simulations and drills. For each session, indicate which activities the selected mentee(s) participated in.*",
+      "",
+      "",
+      "",
+      "",
+      "${next_group_hide1} != ''",
+      "",
+      ""
+    ],
+    [
+      "select_multiple emonc_activities",
+      "emonc_activities",
+      "6. Please select the EmONC curriculum mentorship activities that the selected mentee(s) participated in.",
+      "",
+      "TRUE",
+      "Sorry, this answer is required",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", ""]
+  ];
 }
 
 // =====================================================
