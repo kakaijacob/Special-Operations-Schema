@@ -649,7 +649,8 @@ function getEmONCCTF2026Section2Rows_() {
 // =====================================================
 function writeEmONCCTF2026Choices_(sheet, sourceSs) {
   var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
-    .concat(getEmONCCTF2026CountyChoices_());
+    .concat(getEmONCCTF2026CountyChoices_())
+    .concat(getEmONCCTF2026FacilityChoices_(sourceSs));
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
@@ -674,6 +675,52 @@ function getEmONCCTF2026CountyChoices_() {
     ["county", "Nyeri", "Nyeri"],
     ["county", "Siaya", "Siaya"]
   ];
+}
+
+/**
+ * Facility choices from kobocreator sheet
+ * "EmONC Facilities List (Choices)" → list_name, name, label
+ */
+function getEmONCCTF2026FacilityChoices_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("EmONC Facilities List (Choices)");
+  if (!sourceSheet) {
+    throw new Error(
+      "Sheet 'EmONC Facilities List (Choices)' not found. " +
+      "Run generateEmONCFacilitiesChoicesSheet() or generateAllOutputs() first."
+    );
+  }
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var header = data[0];
+  var listNameIndex = header.indexOf("list_name");
+  var nameIndex = header.indexOf("name");
+  var labelIndex = header.indexOf("label");
+
+  if (listNameIndex === -1 || nameIndex === -1 || labelIndex === -1) {
+    throw new Error(
+      "EmONC Facilities List (Choices) is missing required columns: list_name, name, label"
+    );
+  }
+
+  var rows = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var listName = data[i][listNameIndex];
+    var name = data[i][nameIndex];
+    var label = data[i][labelIndex];
+
+    if (!listName && !name) continue;
+
+    rows.push([
+      listName || "",
+      name || "",
+      label || ""
+    ]);
+  }
+
+  return rows;
 }
 
 // =====================================================
