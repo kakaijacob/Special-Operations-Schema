@@ -133,6 +133,11 @@ function syncMenteeDatabaseFrom2026() {
     throw new Error("Mentee Database 2026 source sheet is empty.");
   }
 
+  // Source Program label changed: EmONC Curriculum → MENTORS Curriculum
+  // so existing kobocreator filters/mappings keep working.
+  var programNormalize = normalizeEmONCCTF2026ProgramValues_(values);
+  values = programNormalize.values;
+
   var localSs = SpreadsheetApp.getActiveSpreadsheet();
   var localSheet = localSs.getSheetByName(EMONC_CTF_2026_LOCAL_MENTEE_SHEET);
   if (!localSheet) {
@@ -163,10 +168,57 @@ function syncMenteeDatabaseFrom2026() {
   Logger.log(
     "Synced " + (values.length - 1) +
     " mentee rows from '" + sourceSheet.getName() + "' into '" +
-    EMONC_CTF_2026_LOCAL_MENTEE_SHEET + "'."
+    EMONC_CTF_2026_LOCAL_MENTEE_SHEET + "'." +
+    " Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
+    programNormalize.converted + " row(s)."
   );
 
   return localSheet;
+}
+
+/**
+ * Map source Program values onto the labels kobocreator expects.
+ * Currently: "EmONC Curriculum" → "MENTORS Curriculum"
+ */
+function normalizeEmONCCTF2026ProgramValues_(values) {
+  var converted = 0;
+  if (!values || values.length < 2) {
+    return { values: values, converted: converted };
+  }
+
+  var header = values[0];
+  var programIndex = -1;
+  for (var c = 0; c < header.length; c++) {
+    if (String(header[c]).trim() === "Program") {
+      programIndex = c;
+      break;
+    }
+  }
+
+  if (programIndex === -1) {
+    throw new Error(
+      "Source Mentee Database is missing a 'Program' column."
+    );
+  }
+
+  for (var i = 1; i < values.length; i++) {
+    var raw = values[i][programIndex];
+    var mapped = mapEmONCCTF2026ProgramValue_(raw);
+    if (mapped !== raw) {
+      values[i][programIndex] = mapped;
+      converted++;
+    }
+  }
+
+  return { values: values, converted: converted };
+}
+
+function mapEmONCCTF2026ProgramValue_(program) {
+  var cleaned = String(program == null ? "" : program).trim();
+  if (cleaned.toLowerCase() === "emonc curriculum") {
+    return "MENTORS Curriculum";
+  }
+  return program;
 }
 
 /**
