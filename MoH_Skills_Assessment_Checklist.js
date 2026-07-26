@@ -936,7 +936,9 @@ function getMoHSACSection2Rows_() {
     .concat(getMoHSACCordProlapseRows_())
     .concat(getMoHSACAssistedBreechRows_())
     .concat(getMoHSACAvdRows_())
-    .concat(getMoHSACShoulderDystociaRows_());
+    .concat(getMoHSACShoulderDystociaRows_())
+    .concat(getMoHSACAmtslRows_())
+    .concat(getMoHSACNasgRows_());
 }
 
 /**
@@ -1753,6 +1755,288 @@ function getMoHSACShoulderDystociaRows_() {
   return rows;
 }
 
+/**
+ * Section 2b: Active Management of Third Stage of Labor checklist + score.
+ */
+function getMoHSACAmtslRows_() {
+  var uterotonicLabel =
+    "6. Give uterotonic within 1 minute of birth of the baby:\n" +
+    "  • Oxytocin 10 IU IM or 10 IU IV over 1 minute OR\n" +
+    "  • Heat-stable carbetocin 100 mcg IV over 1 minute OR\n" +
+    "  • Misoprostol 600 mcg may be given where applicable OR\n" +
+    "  • Ergometrine 0.5 mg (ensure patient is not hypertensive) OR\n" +
+    "  • Oxytocin and ergometrine fixed-dose combination (Syntometrine):\n" +
+    "  ◊ Give 5 IU/500 μg IM";
+
+  var scoreCalc =
+    "round(((" +
+    "(${explain_procedure}='yes')+" +
+    "(${obtain_consent_007}='yes')+" +
+    "(${change_goloves}='yes')+" +
+    "(${check_second_twin}='yes')+" +
+    "(${explain_medication}='yes')+" +
+    "(${administer_uterotonic}='yes')+" +
+    "(${unfold_v_drape}='yes')+" +
+    "(${delayed_cord_clamp}='yes')+" +
+    "(${cord_cut}='yes')+" +
+    "(${cct_001}='yes')+" +
+    "(${recieve_placenta}='yes')+" +
+    "(${assess_fundal_tone}='yes')+" +
+    "(${genital_trauma_assessment}='yes')+" +
+    "(${assess_blood_loss1}='yes')+" +
+    "(${_15min_uterine_massage}='yes')+" +
+    "(${vital_signs_002}='yes')+" +
+    "(${message_to_mother_005}='yes')+" +
+    "(${health_messages}='yes')+" +
+    "(${document_procedure1}='yes')" +
+    ")*100 div 19,0)";
+
+  var items = [
+    ["explain_procedure", "explain_procedure", "1. Explain the procedure and blood collection drape to the mother and birth companion."],
+    ["obtain_consent", "obtain_consent_007", "2. Obtain consent."],
+    ["change_goloves", "change_goloves", "3. Change gloves."],
+    ["check_second_twin", "check_second_twin", "4. Check for a second twin."],
+    ["explain_medication", "explain_medication", "5. Explain to the mother the medication she will receive and the rationale."],
+    ["administer_uterotonic", "administer_uterotonic", uterotonicLabel],
+    ["unfold_v_drape", "unfold_v_drape", "7. Unfold the blood collection drape or place the blood collection device."],
+    ["delayed_cord_clamp", "delayed_cord_clamp", "8. Perform delayed cord clamping and cutting after giving uterotonics (1–3 minutes)."],
+    ["cord_cut", "cord_cut", "9. Change gloves before cutting the cord."],
+    ["cct", "cct_001", "10. Deliver the placenta by controlled cord traction (CCT) while applying counter-traction during a contraction."],
+    ["recieve_placenta", "recieve_placenta", "11. Use both hands to receive the placenta."],
+    ["assess_fundal_tone", "assess_fundal_tone", "12. Assess fundal tone immediately after delivery of placenta."],
+    ["genital_trauma_assessment", "genital_trauma_assessment", "13. Examine the perineum for tears and lacerations."],
+    ["assess_blood_loss1", "assess_blood_loss1", "14. Assess the amount of blood loss – check the amount of blood collected in the drape or blood collection device and vaginal blood flow."],
+    ["_15min_uterine_massage", "_15min_uterine_massage", "15. Demonstrate to the patient and birth companion self-uterine massage every 15 minutes for 2 hours."],
+    ["vital_signs", "vital_signs_002", "16. Assess vitals (BP, pulse, respiration, temperature and tone) every 15 minutes for the first 2 hours and every 30 minutes for 6 hours postpartum. Check the baby’s colour, temperature, and breathing. Initiate breastfeeding within 1 hour and encourage skin-to-skin contact."],
+    ["message_to_mother", "message_to_mother_005", "17. Explain to the mother the results of the procedure, encourage breastfeeding within 1 hour of birth, and frequent emptying of the bladder."],
+    ["health_messages", "health_messages", "18. Give health message to the mother."],
+    ["document_procedure1", "document_procedure1", "19. Documentation."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_amtsl",
+      "Section 2b: Active Management of Third Stage of Labor",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'AMTSL'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_mstl",
+      "***Case scenario:*** *Natalie was admitted to the labor ward in the second stage of labor and has had a normal vaginal delivery. Manage the third stage of labor.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "amtsl_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "amtsl_pass",
+      "*Congratulations! Your score is **[${amtsl_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${amtsl_score} >= 84.5 and ${document_procedure1}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "amtsl_fail",
+      "*Sorry! Your score is **[${amtsl_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${amtsl_score} < 84.5 and ${document_procedure1}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
+/**
+ * Section 2b: Non Pneumatic Antishock Garment checklist + score.
+ */
+function getMoHSACNasgRows_() {
+  var removeNasgLabel =
+    "13. Remove NASG when, for at least 2 hours:\n" +
+    "  • Pulse is 100 beats per minute or less \n" +
+    "  • Systolic BP is 100 mmHg or higher \n" +
+    "  • Bleeding is ≤50 mL/hr \n" +
+    "  • The patient is hemodynamically stable and conscious/aware";
+
+  var scoreCalc =
+    "round(((" +
+    "(${obtain_consent_008}='yes')+" +
+    "(${ipc_precautions}='yes')+" +
+    "(${placing_woman_on_nasg}='yes')+" +
+    "(${segment1_2_application}='yes')+" +
+    "(${nasg_snapping_test}='yes')+" +
+    "(${segment2_3_application}='yes')+" +
+    "(${segment4_application}='yes')+" +
+    "(${segment5_placement}='yes')+" +
+    "(${segment_6_placement_001}='yes')+" +
+    "(${woman_can_breathe_normally}='yes')+" +
+    "(${other_pph_management}='yes')+" +
+    "(${monitor_sob_oliguria}='yes')+" +
+    "(${message_to_mother_006}='yes')+" +
+    "(${vital_signs_before_removal}='yes')+" +
+    "(${open_segment_pair_1_or_2}='yes')+" +
+    "(${when_to_remove_next_segment}='yes')+" +
+    "(${when_reclose_segments}='yes')+" +
+    "(${message_to_mother_007}='yes')+" +
+    "(${document_results}='yes')" +
+    ")*100 div 19,0)";
+
+  var items = [
+    ["obtain_consent", "obtain_consent_008", "1. Briefly explain the procedure to the mother and obtain consent."],
+    ["ipc_precautions", "ipc_precautions", "2. Ensure infection prevention precautions."],
+    ["placing_woman_on_nasg", "placing_woman_on_nasg", "3. Place the woman correctly on open NASG. The top edge of the NASG is at the lowest rib, the pressure ball is over the umbilicus, and the dotted line between segment 5 and 6 is in line with the spine."],
+    ["segment1_2_application", "segment1_2_application", "4. Start application from segment pair 1 and snap test. Fold segment 1 into 2 and start application from segment 2."],
+    ["nasg_snapping_test", "nasg_snapping_test", "5. Do a snap test – check if the NASG is tight enough by placing 1–2 fingers under the top of NASG segment, pulling back the fabric and letting it go. When the segment is tight enough, it sounds like snapping fingers."],
+    ["segment2_3_application", "segment2_3_application", "6. Continue to close segment pairs from segment 2 to 3 over the umbilicus, with the pressure ball over the umbilicus."],
+    ["segment4_application", "segment4_application", "7. Move the legs together and apply segment 4 around the woman’s pelvis (do not snap)."],
+    ["segment5_placement", "segment5_placement", "8. Place segment 5 with pressure ball over the umbilicus."],
+    ["segment_6_placement_001", "segment_6_placement_001", "9. Place segment 6 over segment 5 to close."],
+    ["woman_can_breathe_normally", "woman_can_breathe_normally", "10. Ensure the woman can breathe normally by observing her breaths. Slightly loosen NASG at the 5th and 6th segments as you support the pressure ball."],
+    ["other_pph_management", "other_pph_management", "11. Continue with other relevant management for PPH."],
+    ["monitor_sob_oliguria", "monitor_sob_oliguria", "12. Monitor for shortness of breath and decreased urine output."],
+    ["message_to_mother", "message_to_mother_006", removeNasgLabel],
+    ["vital_signs_before_removal", "vital_signs_before_removal", "14. Take the pulse rate and blood pressure as baseline just before opening the first segment and document."],
+    ["open_segment_pair_1_or_2", "open_segment_pair_1_or_2", "15. Open segment pair 1 for short women."],
+    ["when_to_remove_next_segment", "when_to_remove_next_segment", "16. After removing a segment pair, wait for 15 minutes and retake pulse and BP. If pulse does not increase by 20 beats per minute and BP does not drop by more than 20 mmHg, continue opening the next segment pair."],
+    ["when_reclose_segments", "when_reclose_segments", "17. In case of any change in vitals, reclose all the segments and look for the source of bleeding."],
+    ["message_to_mother", "message_to_mother_007", "18. Explain to the mother the results of the procedure."],
+    ["document_results", "document_results", "19. Document the results and blood loss monitoring chart."]
+  ];
+
+  var rows = [
+    [
+      "begin_group",
+      "group_nasg",
+      "Section 2b: Non Pneumatic Antishock Garment-Checklist",
+      "",
+      "true",
+      "",
+      "",
+      "${skill_evaluation} = 'NASG'",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "case_scenario_nasg",
+      "***Case Scenario:*** *Madam Alwala, a 35-year-old, para 5+0, gravida 6, was admitted at 6 a.m. in labour at a health centre and delivered at 2 p.m. a healthy baby boy who scored well, with a birth weight of 4.5 kg. Thirty minutes after childbirth, during the handover shift, the nurses discover she is in a pool of blood, confused, and agitated. With the aid of a non-pneumatic anti-shock garment (NASG), demonstrate the management of the patient.*",
+      "",
+      "false",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ];
+
+  for (var i = 0; i < items.length; i++) {
+    rows.push(mohSacYesNoSelectRow_(items[i][0], items[i][1], items[i][2]));
+  }
+
+  rows.push(
+    [
+      "calculate",
+      "nasg_score",
+      "Score",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      scoreCalc,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "nasg_pass",
+      "*Congratulations! Your score is **[${nasg_score}%]**. You have fulfilled the requirements for this skill!*",
+      "",
+      "",
+      "",
+      "",
+      "${nasg_score} >= 84.5 and ${document_results}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "note",
+      "nasg_fail",
+      "*Sorry! Your score is **[${nasg_score}%]**. Please review the relevant material or content, then try again.*",
+      "",
+      "",
+      "",
+      "",
+      "${nasg_score} < 84.5 and ${document_results}!=''",
+      "",
+      "",
+      "",
+      ""
+    ],
+    ["end_group", "", "", "", "", "", "", "", "", "", "", ""]
+  );
+
+  return rows;
+}
+
 function getMoHSACUbtFreeflowChecklistRows_() {
   var items = [
     ["obtain_consent", "obtain_consent", "1. Briefly explain the procedure to the mother depending on the client's condition and obtain consent."],
@@ -1858,6 +2142,18 @@ function getMoHSACSkillEvaluationChoices_() {
       "skill_evaluation",
       "Shoulder_dystocia",
       "Shoulder Dystocia",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "AMTSL",
+      "Active Management of Third Stage of Labor",
+      "mentors_curriculum,ifm_assessment,tot"
+    ],
+    [
+      "skill_evaluation",
+      "NASG",
+      "Non Pneumatic Antishock Garment",
       "mentors_curriculum,ifm_assessment,tot"
     ]
   ];
@@ -2019,6 +2315,47 @@ function getMoHSACShoulderDystociaYesNoChoices_() {
   ]);
 }
 
+function getMoHSACAmtslYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "explain_procedure",
+    "change_goloves",
+    "check_second_twin",
+    "explain_medication",
+    "administer_uterotonic",
+    "unfold_v_drape",
+    "delayed_cord_clamp",
+    "cord_cut",
+    "recieve_placenta",
+    "assess_fundal_tone",
+    "genital_trauma_assessment",
+    "assess_blood_loss1",
+    "_15min_uterine_massage",
+    "health_messages",
+    "document_procedure1"
+  ]);
+}
+
+function getMoHSACNasgYesNoChoices_() {
+  return getMoHSACYesNoChoicesForLists_([
+    "ipc_precautions",
+    "placing_woman_on_nasg",
+    "segment1_2_application",
+    "nasg_snapping_test",
+    "segment2_3_application",
+    "segment4_application",
+    "segment5_placement",
+    "segment_6_placement_001",
+    "woman_can_breathe_normally",
+    "other_pph_management",
+    "monitor_sob_oliguria",
+    "vital_signs_before_removal",
+    "open_segment_pair_1_or_2",
+    "when_to_remove_next_segment",
+    "when_reclose_segments",
+    "document_results"
+  ]);
+}
+
 function getMoHSACYesNoChoicesForLists_(listNames) {
   var rows = [];
   for (var i = 0; i < listNames.length; i++) {
@@ -2050,7 +2387,9 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACCordProlapseYesNoChoices_())
     .concat(getMoHSACAssistedBreechYesNoChoices_())
     .concat(getMoHSACAvdYesNoChoices_())
-    .concat(getMoHSACShoulderDystociaYesNoChoices_());
+    .concat(getMoHSACShoulderDystociaYesNoChoices_())
+    .concat(getMoHSACAmtslYesNoChoices_())
+    .concat(getMoHSACNasgYesNoChoices_());
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
