@@ -102,10 +102,12 @@ function getKoboDeployToolsRegistry_() {
  */
 function setupKoboDeployConfig() {
   // >>> EDIT THESE BEFORE RUNNING <<<
+  // Paste your Kobo API token here (do not commit real tokens to git).
   var apiToken = "PASTE_YOUR_KOBO_API_TOKEN_HERE";
-  var kpiBaseUrl = KOBO_DEPLOY_DEFAULT_KPI_BASE;
+  var kpiBaseUrl = "https://kf.humanitarianresponse.info";
 
-  // Optional: seed known asset UIDs for tools that already exist in Kobo
+  // Optional: seed known asset UIDs for tools that already exist in Kobo.
+  // Leave blank / commented to create NEW Kobo projects on first deploy.
   // Example:
   //   var initialAssetUids = { emonc_ctf: "aXXXXXXXXXXXXXXXXXXXXX" };
   var initialAssetUids = {
@@ -115,6 +117,9 @@ function setupKoboDeployConfig() {
     // newborn_ka: "",
     // emonc_ka: ""
   };
+
+  // formIdProp values stay as Script Property name placeholders in the registry.
+  // Real Google Sheet IDs are written automatically when each create* builder runs.
 
   if (!apiToken || apiToken.indexOf("PASTE_") === 0) {
     throw new Error(
