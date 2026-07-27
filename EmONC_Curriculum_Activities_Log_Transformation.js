@@ -184,17 +184,18 @@ function fetchKoboData_All() {
     menteeSuffixes.map(suffix => root + suffix)
   );
 
-  // ================= TOPIC FIELDS =================
-  const topicFields = [
-    "emonc_training_curriculum/group_cmes/cmes",
-    "emonc_training_curriculum/group_videos/videos",
-    "emonc_training_curriculum/group_case_scenarios/case_scenarios",
-    "emonc_training_curriculum/group_mentor_demo/mentor_skills_demo",
-    "emonc_training_curriculum/group_return_demo/mentee_skills_return_demo",
-    "emonc_training_curriculum/group_drills/drills"
-  ];
+  // ================= ACTIVITY → TOPIC FIELD =================
+  // Only topics from the field that belongs to a selected activity are emitted.
+  const activityTopicFields = {
+    cmes: "emonc_training_curriculum/group_cmes/cmes",
+    videos: "emonc_training_curriculum/group_videos/videos",
+    case_scenarios: "emonc_training_curriculum/group_case_scenarios/case_scenarios",
+    skill_demos_mentor: "emonc_training_curriculum/group_mentor_demo/mentor_skills_demo",
+    skills_demos_mentee: "emonc_training_curriculum/group_return_demo/mentee_skills_return_demo",
+    drills: "emonc_training_curriculum/group_drills/drills"
+  };
 
-const dataByMonth = {};
+  const dataByMonth = {};
 
   // ================= PROCESS DATA =================
   results.forEach(r => {
@@ -269,48 +270,39 @@ const dataByMonth = {};
       .split(" ")
       .filter(Boolean);
 
-    let topics = [];
+    // Pair each selected activity only with topics from its own field
+    const activityTopicPairs = [];
 
-    topicFields.forEach(t => {
+    activities.forEach(a => {
+      const topicField = activityTopicFields[a];
+      if (!topicField || !r[topicField]) return;
 
-      if (r[t]) {
+      const activityLabel = toTitleCase(a.replace(/_/g, " "));
 
-        r[t].split(" ").forEach(topic => {
-
-          topics.push(formatTopic(topic));
-
+      r[topicField].split(" ").filter(Boolean).forEach(topic => {
+        activityTopicPairs.push({
+          activity: activityLabel,
+          topic: formatTopic(topic)
         });
-
-      }
-
+      });
     });
 
     mentees.forEach(m => {
-
-      activities.forEach(a => {
-
-        topics.forEach(t => {
-
-     const row = [
-  submissionId,
-  submissionDate,
-  sessionDate,
-  mentorName,
-  county,
-  facilityCode,
-  facilityName,
-  m.id,
-  m.name,
-  toTitleCase(a.replace(/_/g, " ")),
-  t
-];
-
-   dataByMonth[monthKey].push(row);
-
-        });
-
+      activityTopicPairs.forEach(pair => {
+        dataByMonth[monthKey].push([
+          submissionId,
+          submissionDate,
+          sessionDate,
+          mentorName,
+          county,
+          facilityCode,
+          facilityName,
+          m.id,
+          m.name,
+          pair.activity,
+          pair.topic
+        ]);
       });
-
     });
 
   });
@@ -352,7 +344,7 @@ const dataByMonth = {};
 
       const existingData =
         sheet
-          .getRange(2, 1, lastRow - 1, 1)
+          .getRange(2, 1, lastRow, 1)
           .getValues();
 
       existingData.forEach(r =>
