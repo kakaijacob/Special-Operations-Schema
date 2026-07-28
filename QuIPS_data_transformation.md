@@ -82,7 +82,7 @@ function fetchKoboData_GenericLocked_() {
 };
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = 'QuIPS Cleaned Data';
+  const sheetName = 'QuIPS Transformed Data ';
   const sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
 
   // ================= HELPERS =================
@@ -201,7 +201,9 @@ function formatCellValue(value) {
     "unable to observe",
     "unable_to_observe",
     "not applicable",
-    "not_applicable"
+    "not_applicable",
+    "resuscitation required",
+    "not taken"
   ].includes(v);
 }
 
@@ -1442,14 +1444,15 @@ kindly_none_of_above:
 }
 
 /**
- * One-time cleanup: remove duplicate rows in "QuIPS Cleaned Data" by _uuid,
+ * One-time cleanup: remove duplicate rows in "QuIPS Transformed Data " by _uuid,
  * keeping the first occurrence of each UUID. Run manually from the Apps Script editor.
  */
 function dedupeQuipsSheetByUuid() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("QuIPS Cleaned Data");
+  const sheetName = "QuIPS Transformed Data ";
+  const sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
-    Logger.log('Sheet "QuIPS Cleaned Data" not found.');
+    Logger.log('Sheet "' + sheetName + '" not found.');
     return;
   }
 
