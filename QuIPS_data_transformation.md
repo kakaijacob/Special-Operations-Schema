@@ -3,6 +3,22 @@
 ```javascript
 function fetchKoboData_Generic() {
 
+  // Prevent overlapping runs from inserting the same _uuid twice
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    Logger.log("Could not obtain script lock; another run is in progress.");
+    return;
+  }
+
+  try {
+    fetchKoboData_GenericLocked_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function fetchKoboData_GenericLocked_() {
+
   // ================= CONFIGURATION =================
   const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
   const formUid = 'aSwMMq2L7UbfpRAvLFkL6d';
@@ -594,14 +610,26 @@ function calculateSectionScores(t) {
   if (allResults.length === 0) return;
 
   // ================= DEDUPE =================
+  // Load existing _uuid values from the sheet (by header name, not assumed column A).
+  // Also track IDs accepted in THIS run so pagination / API overlap cannot
+  // insert the same submission twice in one execution.
 
   const existingIds = new Set();
   const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
 
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, 1)
+  if (lastRow > 1 && lastCol > 0) {
+    const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    let uuidCol = headerRow.indexOf("_uuid") + 1; // 1-based
+    if (uuidCol < 1) uuidCol = 1; // fallback if header missing
+
+    // getRange(row, column, numRows, numColumns): numDataRows covers rows 2..lastRow
+    const numDataRows = lastRow - 1;
+    sheet.getRange(2, uuidCol, numDataRows, 1)
       .getValues()
-      .forEach(r => existingIds.add(r[0]));
+      .forEach(r => {
+        if (r[0]) existingIds.add(String(r[0]));
+      });
   }
 
   // ================= FLATTEN =================
@@ -628,7 +656,10 @@ function calculateSectionScores(t) {
 
   allResults.forEach(record => {
 
-    if (existingIds.has(record._uuid)) return;
+    const uuid = record._uuid ? String(record._uuid) : "";
+    if (!uuid || existingIds.has(uuid)) return;
+    // Reserve immediately so duplicate pages / repeated API rows are skipped
+    existingIds.add(uuid);
 
     const flat = flatten(record);
 
@@ -1408,5 +1439,56 @@ kindly_none_of_above:
     .setValues(rows);
 
   Logger.log(`Inserted ${rows.length} new records.`);
+}
+
+/**
+ * One-time cleanup: remove duplicate rows in "QuIPS Cleaned Data" by _uuid,
+ * keeping the first occurrence of each UUID. Run manually from the Apps Script editor.
+ */
+function dedupeQuipsSheetByUuid() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("QuIPS Cleaned Data");
+  if (!sheet) {
+    Logger.log('Sheet "QuIPS Cleaned Data" not found.');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow <= 1) {
+    Logger.log("No data rows to dedupe.");
+    return;
+  }
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  let uuidCol = headers.indexOf("_uuid");
+  if (uuidCol < 0) uuidCol = 0; // 0-based index into row arrays
+
+  const data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  const seen = new Set();
+  const kept = [];
+  let removed = 0;
+
+  data.forEach(row => {
+    const uuid = row[uuidCol] ? String(row[uuidCol]) : "";
+    if (uuid && seen.has(uuid)) {
+      removed++;
+      return;
+    }
+    if (uuid) seen.add(uuid);
+    kept.push(row);
+  });
+
+  if (removed === 0) {
+    Logger.log("No duplicate _uuid rows found.");
+    return;
+  }
+
+  sheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+  if (kept.length > 0) {
+    sheet.getRange(2, 1, kept.length, lastCol).setValues(kept);
+  }
+
+  Logger.log(`Removed ${removed} duplicate row(s); kept ${kept.length}.`);
 }
 ```
