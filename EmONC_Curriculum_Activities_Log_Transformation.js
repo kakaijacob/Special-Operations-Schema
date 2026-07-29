@@ -199,6 +199,9 @@ function fetchKoboData_All() {
 
   const dataByMonth = {};
 
+  // Guarantees one row per (Submission ID, Mentee ID, Activity, Topic)
+  const seenOutputKeys = new Set();
+
   // ================= PROCESS DATA =================
   results.forEach(r => {
 
@@ -244,8 +247,9 @@ function fetchKoboData_All() {
 
     });
 
+    // One mentee ID per submission (keep first name seen)
     let mentees = [];
-    const seenMentees = new Set();
+    const seenMenteeIds = new Set();
 
     menteeFields.forEach(f => {
 
@@ -254,20 +258,16 @@ function fetchKoboData_All() {
         r[f].split(" ").forEach(m => {
 
           const parts = m.split("_");
-
           const menteeId = parts[0];
-          const menteeName = toTitleCase(
-            parts.slice(1).join(" ").replace(/_/g, " ")
-          );
-          const menteeKey = `${menteeId}|${menteeName}`;
+          if (!menteeId || seenMenteeIds.has(menteeId)) return;
 
-          if (!seenMentees.has(menteeKey)) {
-            seenMentees.add(menteeKey);
-            mentees.push({
-              id: menteeId,
-              name: menteeName
-            });
-          }
+          seenMenteeIds.add(menteeId);
+          mentees.push({
+            id: menteeId,
+            name: toTitleCase(
+              parts.slice(1).join(" ").replace(/_/g, " ")
+            )
+          });
 
         });
 
@@ -275,10 +275,11 @@ function fetchKoboData_All() {
 
     });
 
-    const activities =
+    const activities = Array.from(new Set(
       (r["emonc_training_curriculum/emonc_curriculum_activities/emonc_activities"] || "")
-      .split(" ")
-      .filter(Boolean);
+        .split(" ")
+        .filter(Boolean)
+    ));
 
     // Pair each selected activity only with topics from its own field
     const activityTopicPairs = [];
@@ -292,7 +293,8 @@ function fetchKoboData_All() {
 
       r[topicField].split(" ").filter(Boolean).forEach(topic => {
         const formattedTopic = formatTopic(topic);
-        const pairKey = `${activityLabel}|${formattedTopic}`;
+        // Key on activity code + topic so label formatting cannot create dupes
+        const pairKey = `${a}|${formattedTopic}`;
 
         if (!seenActivityTopicPairs.has(pairKey)) {
           seenActivityTopicPairs.add(pairKey);
@@ -304,22 +306,19 @@ function fetchKoboData_All() {
       });
     });
 
-    const seenSubmissionRows = new Set();
-
     mentees.forEach(m => {
       activityTopicPairs.forEach(pair => {
-        const submissionRowKey = [
+        const outputKey = [
           submissionId,
           m.id,
-          m.name,
           pair.activity,
           pair.topic
         ].join("|");
 
-        if (seenSubmissionRows.has(submissionRowKey)) {
+        if (seenOutputKeys.has(outputKey)) {
           return;
         }
-        seenSubmissionRows.add(submissionRowKey);
+        seenOutputKeys.add(outputKey);
 
         dataByMonth[monthKey].push([
           submissionId,
