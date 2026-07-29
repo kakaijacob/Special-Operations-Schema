@@ -180,9 +180,11 @@ function fetchKoboData_All() {
     "kibera_community","kibera_mentees_001","st_marys_mentees_001","bahati_mentees_001","naivasha_mentees_001","naivasha_subcounty_mentees"
   ];
     
-  const menteeFields = roots.flatMap(root =>
-    menteeSuffixes.map(suffix => root + suffix)
-  );
+  const menteeFields = Array.from(new Set(
+    roots.flatMap(root =>
+      menteeSuffixes.map(suffix => root + suffix)
+    )
+  ));
 
   // ================= ACTIVITY → TOPIC FIELD =================
   // Only topics from the field that belongs to a selected activity are emitted.
@@ -243,6 +245,7 @@ function fetchKoboData_All() {
     });
 
     let mentees = [];
+    const seenMentees = new Set();
 
     menteeFields.forEach(f => {
 
@@ -252,12 +255,19 @@ function fetchKoboData_All() {
 
           const parts = m.split("_");
 
-          mentees.push({
-            id: parts[0],
-            name: toTitleCase(
-              parts.slice(1).join(" ").replace(/_/g, " ")
-            )
-          });
+          const menteeId = parts[0];
+          const menteeName = toTitleCase(
+            parts.slice(1).join(" ").replace(/_/g, " ")
+          );
+          const menteeKey = `${menteeId}|${menteeName}`;
+
+          if (!seenMentees.has(menteeKey)) {
+            seenMentees.add(menteeKey);
+            mentees.push({
+              id: menteeId,
+              name: menteeName
+            });
+          }
 
         });
 
@@ -272,6 +282,7 @@ function fetchKoboData_All() {
 
     // Pair each selected activity only with topics from its own field
     const activityTopicPairs = [];
+    const seenActivityTopicPairs = new Set();
 
     activities.forEach(a => {
       const topicField = activityTopicFields[a];
@@ -280,15 +291,36 @@ function fetchKoboData_All() {
       const activityLabel = toTitleCase(a.replace(/_/g, " "));
 
       r[topicField].split(" ").filter(Boolean).forEach(topic => {
-        activityTopicPairs.push({
-          activity: activityLabel,
-          topic: formatTopic(topic)
-        });
+        const formattedTopic = formatTopic(topic);
+        const pairKey = `${activityLabel}|${formattedTopic}`;
+
+        if (!seenActivityTopicPairs.has(pairKey)) {
+          seenActivityTopicPairs.add(pairKey);
+          activityTopicPairs.push({
+            activity: activityLabel,
+            topic: formattedTopic
+          });
+        }
       });
     });
 
+    const seenSubmissionRows = new Set();
+
     mentees.forEach(m => {
       activityTopicPairs.forEach(pair => {
+        const submissionRowKey = [
+          submissionId,
+          m.id,
+          m.name,
+          pair.activity,
+          pair.topic
+        ].join("|");
+
+        if (seenSubmissionRows.has(submissionRowKey)) {
+          return;
+        }
+        seenSubmissionRows.add(submissionRowKey);
+
         dataByMonth[monthKey].push([
           submissionId,
           submissionDate,
