@@ -1,6 +1,3 @@
-# QuIPS Data Transformation
-
-```javascript
 function fetchKoboData_Generic() {
 
   // Prevent overlapping runs from inserting the same _uuid twice
@@ -1494,4 +1491,3 @@ function dedupeQuipsSheetByUuid() {
 
   Logger.log(`Removed ${removed} duplicate row(s); kept ${kept.length}.`);
 }
-```
