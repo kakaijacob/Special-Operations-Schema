@@ -452,10 +452,11 @@ Clarify with Programs which tool is meant (facility supervision checklist, QuIPS
 
 ### 9.1 Minimum viable product (first month)
 
-- SQL/Python job on `mentors.mentee_curriculum_tracking` (+ raw submission metadata if available).  
-- Implement RF-01, RF-02, RF-03, RF-04, RF-06, RF-09, RF-10.  
-- Facility-month league table + flagged submissions extract.  
-- Verification log template for call outcomes.
+- Google Apps Script: `EmONC_Data_Integrity_Score.js`
+  - `scoreEmONCIntegrityFromSheet("April-2026")` after `fetchKoboData_All()`
+  - or `scoreEmONCIntegrityFromKobo()` for scoring with form-fill metadata (RF-07)
+- Implements RF-01–RF-10 and RF-12; writes `Integrity_Submissions`, `Integrity_Facilities`, `Integrity_Mentors`, `Integrity_Call_List`.
+- Verification log / RF-13–15 still manual until wired.
 
 ### 9.2 Next iteration
 

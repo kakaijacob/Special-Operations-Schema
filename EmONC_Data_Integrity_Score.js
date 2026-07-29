@@ -809,11 +809,7 @@ function parseKoboResultsToActivityRows_(results) {
     return acc.concat(facilitySuffixes.map(function (s) { return root + s; }));
   }, []);
 
-  const roots = [
-    "demographic_information/mentee_details/",
-    "demographic_information/mentee_details_001/"
-  ];
-  // Reuse the long mentee suffix list from the activities log by scanning keys on each record.
+  // Discover mentee multi-select fields dynamically from each record's keys.
   const activityTopicFields = {
     cmes: "emonc_training_curriculum/group_cmes/cmes",
     videos: "emonc_training_curriculum/group_videos/videos",
