@@ -94,10 +94,68 @@ function fetchKoboData_Generic() {
       return { mentee_id: value, mentee: "" };
     }
     // e.g. 724504326_Kakai_Jacob -> mentee_id "724504326", mentee "Kakai Jacob"
-    // (spaces for _; Title Case on each name part to match the expected example)
     return {
       mentee_id: value.substring(0, idx).trim(),
       mentee: toTitleCase(value.substring(idx + 1))
+    };
+  }
+
+  // Facility-specific mentee select fields under group_mentorship_details/mentees/
+  const menteeFields = [
+    "chombeli_nbc_mentees",
+    "kuvasali_nbc_mentees",
+    "shivanga_nbc_mentees",
+    "emali_sub_nbc_mentees",
+    "kalawa_nbc_mentees",
+    "kambu_sub_nbc_mentees",
+    "kibwezi_nbc_mentees",
+    "kilungu_nbc_mentees",
+    "kisau_sub_nbc_mentees",
+    "makindu_nbc_mentees",
+    "makueni_nbc_mentees",
+    "matiliku_nbc_mentees",
+    "mbooni_nbc_mentees",
+    "mtito_andei_nbc_mentees",
+    "mukuyuni_nbc_mentees",
+    "nthongoni_nbc_mentees",
+    "sultan_nbc_mentees",
+    "tawa_sub_nbc_mentees",
+    "tulimani_nbc_mentees",
+    "coast_general_nbc_mentees",
+    "likoni_nbc_mentees",
+    "mbuta_health_nbc_mentees",
+    "mlaleo_nbc_mentees",
+    "mrima_maternity_nbc_mentees",
+    "port_reitz_nbc_mentees",
+    "shimo_la_nbc_mentees",
+    "gaichanjiru_nbc_mentees",
+    "ithanga_nbc_mentees",
+    "kamahuha_nbc_mentees",
+    "kandara_nbc_mentees",
+    "kangema_nbc_mentees",
+    "kenol_hospital_nbc_mentees",
+    "kigumo_nbc_mentees",
+    "kiriaini_nbc_mentees",
+    "kirwara_nbc_mentees",
+    "makuyu_nbc_mentees",
+    "maragua_nbc_mentees",
+    "muriranjas_nbc_mentees"
+  ];
+
+  function extractMentees(flat) {
+    const pairs = menteeFields
+      .map(f => flat[`group_mentorship_details/mentees/${f}`])
+      .filter(v => v && v.toString().trim() !== "")
+      .flatMap(v =>
+        // select_multiple values may be space-separated
+        v.toString().trim().split(/\s+/).filter(Boolean)
+      )
+      .map(splitMentee)
+      .filter(m => m.mentee_id || m.mentee);
+
+    return {
+      mentee_id: pairs.map(m => m.mentee_id).filter(Boolean).join(", "),
+      mentee: pairs.map(m => m.mentee).filter(Boolean).join(", ")
     };
   }
 
@@ -179,9 +237,7 @@ function fetchKoboData_Generic() {
     const facilityInfo = splitFacility(
       flat["group_mentorship_details/mentee_details/muranga_facilities"] || ""
     );
-    const menteeInfo = splitMentee(
-      flat["group_mentorship_details/mentee_details/next_group_hide1"] || ""
-    );
+    const menteeInfo = extractMentees(flat);
 
     const row = {
       submission_uuid: uuid,
