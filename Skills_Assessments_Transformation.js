@@ -574,6 +574,35 @@ function fetchKoboData_Generic() {
     };
   }
 
+  // Facility select fields (mentee_details + group_mentorship_facilities variants)
+  const facilityFields = [
+    "group_mentorship_details/mentee_details/muranga_facilities",
+    "group_mentorship_details/mentee_details/makueni_facilities",
+    "group_mentorship_details/mentee_details/kakamega_facilities",
+    "group_mentorship_details/mentee_details/mombasa_facilities",
+    "group_mentorship_details/mentee_details/kiambu_facilities",
+    "group_mentorship_details/mentee_details/nairobi_facilities",
+    "group_mentorship_details/mentee_details/nakuru_facilities",
+    "group_mentorship_details/mentee_details/kisii_facilities",
+    "group_mentorship_details/mentee_details/JHSL_facilities",
+    "group_mentorship_details/group_mentorship_facilities/JHSL_facilities",
+    "group_mentorship_details/group_mentorship_facilities/kiambu_facilities",
+    "group_mentorship_details/group_mentorship_facilities/makueni_facilities",
+    "group_mentorship_details/group_mentorship_facilities/muranga_facilities",
+    "group_mentorship_details/group_mentorship_facilities/nairobi_facilities",
+    "group_mentorship_details/group_mentorship_facilities/nakuru_facilities",
+    "group_mentorship_details/group_mentorship_facilities/kakamega_facilities",
+    "group_mentorship_details/group_mentorship_facilities/kisii_facilities",
+    "group_mentorship_details/group_mentorship_facilities/mombasa_facilities"
+  ];
+
+  function extractFacility(flat) {
+    const raw =
+      facilityFields.map(f => flat[f]).find(v => v && String(v).trim() !== "") ||
+      "";
+    return splitFacility(raw);
+  }
+
   // ================= OUTPUT HEADERS =================
   const headers = [
     "submission_uuid",
@@ -649,13 +678,7 @@ function fetchKoboData_Generic() {
 
     const flat = flatten(r);
 
-    const facilityInfo = splitFacility(
-      flat["group_mentorship_details/mentee_details/muranga_facilities"] ||
-      flat["group_mentorship_details/mentee_details/makueni_facilities"] ||
-      flat["group_mentorship_details/mentee_details/kakamega_facilities"] ||
-      flat["group_mentorship_details/mentee_details/mombasa_facilities"] ||
-      ""
-    );
+    const facilityInfo = extractFacility(flat);
     const menteeInfo = extractMentees(flat);
 
     const row = {
