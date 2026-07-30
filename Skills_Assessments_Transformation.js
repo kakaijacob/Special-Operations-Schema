@@ -235,7 +235,11 @@ function fetchKoboData_Generic() {
     const flat = flatten(r);
 
     const facilityInfo = splitFacility(
-      flat["group_mentorship_details/mentee_details/muranga_facilities"] || ""
+      flat["group_mentorship_details/mentee_details/muranga_facilities"] ||
+      flat["group_mentorship_details/mentee_details/makueni_facilities"] ||
+      flat["group_mentorship_details/mentee_details/kakamega_facilities"] ||
+      flat["group_mentorship_details/mentee_details/mombasa_facilities"] ||
+      ""
     );
     const menteeInfo = extractMentees(flat);
 
