@@ -39,6 +39,7 @@ var EMONC_KA_FACILITY_LISTS = [
   ["kiambu_facilities", "Kiambu"],
   ["kilifi_facilities", "Kilifi"],
   ["kisii_facilities", "Kisii"],
+  ["kwale_facilities", "Kwale"],
   ["kirinyaga_facilities", "Kirinyaga"],
   ["machakos_facilities", "Machakos"],
   ["makueni_facilities", "Makueni"],
@@ -156,6 +157,7 @@ function getEmONCKASurveyStartRows_() {
     "if(${kiambu_facilities} != '', ${kiambu_facilities}, " +
     "if(${kilifi_facilities} != '', ${kilifi_facilities}, " +
     "if(${kisii_facilities} != '', ${kisii_facilities}, " +
+    "if(${kwale_facilities} != '', ${kwale_facilities}, " +
     "if(${kirinyaga_facilities} != '', ${kirinyaga_facilities}, " +
     "if(${machakos_facilities} != '', ${machakos_facilities}, " +
     "if(${makueni_facilities} != '', ${makueni_facilities}, " +
@@ -165,7 +167,7 @@ function getEmONCKASurveyStartRows_() {
     "if(${nairobi_facilities} != '', ${nairobi_facilities}, " +
     "if(${nakuru_facilities} != '', ${nakuru_facilities}, " +
     "if(${siaya_facilities} != '', ${siaya_facilities}, " +
-    "if(${nyeri_facilities} != '', ${nyeri_facilities}, '')))))))))))))))";
+    "if(${nyeri_facilities} != '', ${nyeri_facilities}, ''))))))))))))))))";
 
   var rows = [
     ["start", "start", "", "", "", "", "", "", "", ""],
@@ -722,6 +724,7 @@ function getEmONCKACountyChoices_() {
     ["county", "Kiambu", "Kiambu"],
     ["county", "Kilifi", "Kilifi"],
     ["county", "Kisii", "Kisii"],
+    ["county", "Kwale", "Kwale"],
     ["county", "Kirinyaga", "Kirinyaga"],
     ["county", "Machakos", "Machakos"],
     ["county", "Makueni", "Makueni"],
