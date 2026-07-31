@@ -293,6 +293,7 @@ function getMoHSACSection1bRows_() {
     "if(${kirinyaga_facilities}!='',${kirinyaga_facilities}," +
     "if(${kilifi_facilities}!='',${kilifi_facilities}," +
     "if(${kisii_facilities}!='',${kisii_facilities}," +
+    "if(${kwale_facilities}!='',${kwale_facilities}," +
     "if(${machakos_facilities}!='',${machakos_facilities}," +
     "if(${makueni_facilities}!='',${makueni_facilities}," +
     "if(${meru_facilities}!='',${meru_facilities}," +
@@ -301,7 +302,7 @@ function getMoHSACSection1bRows_() {
     "if(${nairobi_facilities}!='',${nairobi_facilities}," +
     "if(${nakuru_facilities}!='',${nakuru_facilities}," +
     "if(${siaya_facilities}!='',${siaya_facilities}," +
-    "if(${nyeri_facilities}!='',${nyeri_facilities},''))))))))))))))))";
+    "if(${nyeri_facilities}!='',${nyeri_facilities},'')))))))))))))))))";
 
   return [
     [
@@ -338,6 +339,7 @@ function getMoHSACSection1bRows_() {
     mohSacFacilitySelectRow_("kiambu_facilities", "kiambu_facilities", "Kiambu"),
     mohSacFacilitySelectRow_("kilifi_facilities", "kilifi_facilities", "Kilifi"),
     mohSacFacilitySelectRow_("kisii_facilities", "kisii_facilities", "Kisii"),
+    mohSacFacilitySelectRow_("kwale_facilities", "kwale_facilities", "Kwale"),
     mohSacFacilitySelectRow_("kirinyaga_facilities", "kirinyaga_facilities", "Kirinyaga"),
     mohSacFacilitySelectRow_("machakos_facilities", "machakos_facilities", "Machakos"),
     mohSacFacilitySelectRow_("makueni_facilities", "makueni_facilities", "Makueni"),
@@ -4192,6 +4194,7 @@ function getMoHSACCountyChoices_() {
     ["county", "Kiambu", "Kiambu", "mentors_curriculum"],
     ["county", "Kilifi", "Kilifi", "mentors_curriculum"],
     ["county", "Kisii", "Kisii", "mentors_curriculum"],
+    ["county", "Kwale", "Kwale", "mentors_curriculum"],
     ["county", "Machakos", "Machakos", "mentors_curriculum"],
     ["county", "Makueni", "Makueni", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
     ["county", "Meru", "Meru", "mentors_curriculum"],
