@@ -26,9 +26,41 @@ var KOBO_DEPLOY_PROP_API_TOKEN = "KOBO_KPI_API_TOKEN";
 var KOBO_DEPLOY_PROP_KPI_BASE = "KOBO_KPI_BASE_URL";
 
 // Defaults — override via setupKoboDeployConfig()
-// Humanitarian / UN: https://kf.humanitarianresponse.info
-// Public kobotoolbox: https://kf.kobotoolbox.org
-var KOBO_DEPLOY_DEFAULT_KPI_BASE = "https://kf.humanitarianresponse.info";
+// European Union server (former OCHA / humanitarianresponse): https://eu.kobotoolbox.org
+// Global server: https://kf.kobotoolbox.org
+var KOBO_DEPLOY_DEFAULT_KPI_BASE = "https://eu.kobotoolbox.org";
+
+// humanitarianresponse.info addresses were retired on 1 March 2024; Apps Script
+// reports them as "Address unavailable".
+var KOBO_DEPLOY_LEGACY_HOST_MAP = {
+  "kf.humanitarianresponse.info": "eu.kobotoolbox.org",
+  "kobo.humanitarianresponse.info": "eu.kobotoolbox.org",
+  "kc.humanitarianresponse.info": "kc-eu.kobotoolbox.org"
+};
+
+function normalizeKoboBaseUrl_(baseUrl) {
+  var base = String(baseUrl || KOBO_DEPLOY_DEFAULT_KPI_BASE).trim();
+  base = base.replace(/\/+$/, "");
+  if (base.indexOf("http") !== 0) {
+    base = "https://" + base;
+  }
+
+  for (var legacyHost in KOBO_DEPLOY_LEGACY_HOST_MAP) {
+    if (base.indexOf(legacyHost) !== -1) {
+      var replacement = base.replace(
+        legacyHost,
+        KOBO_DEPLOY_LEGACY_HOST_MAP[legacyHost]
+      );
+      Logger.log(
+        "Kobo server " + legacyHost + " was retired on 1 March 2024 — using " +
+        replacement + " instead."
+      );
+      return replacement;
+    }
+  }
+
+  return base;
+}
 
 /**
  * Register each deployable form tool here.
@@ -104,7 +136,8 @@ function setupKoboDeployConfig() {
   // >>> EDIT THESE BEFORE RUNNING <<<
   // Paste your Kobo API token here (do not commit real tokens to git).
   var apiToken = "PASTE_YOUR_KOBO_API_TOKEN_HERE";
-  var kpiBaseUrl = "https://kf.humanitarianresponse.info";
+  // EU server (former humanitarianresponse.info). Global server: https://kf.kobotoolbox.org
+  var kpiBaseUrl = "https://eu.kobotoolbox.org";
 
   // Optional: seed known asset UIDs for tools that already exist in Kobo.
   // Leave blank / commented to create NEW Kobo projects on first deploy.
@@ -129,10 +162,7 @@ function setupKoboDeployConfig() {
 
   var props = PropertiesService.getScriptProperties();
   props.setProperty(KOBO_DEPLOY_PROP_API_TOKEN, String(apiToken).trim());
-  props.setProperty(
-    KOBO_DEPLOY_PROP_KPI_BASE,
-    String(kpiBaseUrl || KOBO_DEPLOY_DEFAULT_KPI_BASE).replace(/\/$/, "")
-  );
+  props.setProperty(KOBO_DEPLOY_PROP_KPI_BASE, normalizeKoboBaseUrl_(kpiBaseUrl));
 
   var registry = getKoboDeployToolsRegistry_();
   for (var i = 0; i < registry.length; i++) {
@@ -146,6 +176,38 @@ function setupKoboDeployConfig() {
   Logger.log("Saved shared Kobo deploy config.");
   Logger.log("KPI base: " + props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE));
   listKoboDeployTools();
+}
+
+/**
+ * Verify the saved server URL + token before attempting a deploy.
+ * Logs the authenticated Kobo username on success.
+ */
+function testKoboConnection() {
+  var cfg = getKoboDeploySharedConfig_();
+  Logger.log("Testing Kobo server: " + cfg.base);
+
+  var response = UrlFetchApp.fetch(cfg.base + "/me/?format=json", {
+    method: "get",
+    headers: koboAuthHeaders_(cfg.token),
+    muteHttpExceptions: true
+  });
+
+  var code = response.getResponseCode();
+  var body = response.getContentText();
+
+  if (code === 401 || code === 403) {
+    throw new Error(
+      "Kobo rejected the API token (" + code + "). Confirm the token belongs " +
+      "to an account on " + cfg.base + "."
+    );
+  }
+  if (code >= 300) {
+    throw new Error("Kobo connection test failed (" + code + "): " + body);
+  }
+
+  var me = JSON.parse(body);
+  Logger.log("Connected to " + cfg.base + " as " + (me.username || "(unknown)"));
+  return me;
 }
 
 /**
@@ -329,9 +391,9 @@ function getKoboDeployToolById_(toolId) {
 function getKoboDeploySharedConfig_() {
   var props = PropertiesService.getScriptProperties();
   var token = props.getProperty(KOBO_DEPLOY_PROP_API_TOKEN);
-  var base =
-    props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE) || KOBO_DEPLOY_DEFAULT_KPI_BASE;
-  base = String(base).replace(/\/$/, "");
+  var base = normalizeKoboBaseUrl_(
+    props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE) || KOBO_DEPLOY_DEFAULT_KPI_BASE
+  );
 
   if (!token) {
     throw new Error(
