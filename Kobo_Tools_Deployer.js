@@ -122,15 +122,12 @@ function getKoboDeployToolsRegistry_() {
 }
 
 /**
- * ONE-TIME SETUP (shared token + server for all tools)
+ * AUTOMATIC SETUP (called by refreshAllKoboTools)
  *
  * WHAT YOU NEED:
  * 1) Kobo API token — Account Settings → API Key
  * 2) KPI base URL — must match your Kobo server
- * 3) Per-tool asset UID (optional) — set with setKoboToolAssetUid(toolId, uid)
- *    Leave unset to create a NEW Kobo project on first deploy of that tool
- * 4) Each tool's Google Sheet must already exist (run its create* function
- *    or refreshAllKoboTools first)
+ * 3) Per-tool Google Sheet IDs and Kobo asset UIDs below
  */
 function setupKoboDeployConfig() {
   // >>> EDIT THESE BEFORE RUNNING <<<
@@ -139,20 +136,23 @@ function setupKoboDeployConfig() {
   // EU server (former humanitarianresponse.info). Global server: https://kf.kobotoolbox.org
   var kpiBaseUrl = "https://eu.kobotoolbox.org";
 
-  // Optional: seed known asset UIDs for tools that already exist in Kobo.
-  // Leave blank / commented to create NEW Kobo projects on first deploy.
-  // Example:
-  //   var initialAssetUids = { emonc_ctf: "aXXXXXXXXXXXXXXXXXXXXX" };
-  var initialAssetUids = {
-    // emonc_ctf: "",
-    // newborn_ctf: "",
-    // moh_sac: "",
-    // newborn_ka: "",
-    // emonc_ka: ""
+  // Generated xlsform Google Sheets.
+  var initialFormIds = {
+    emonc_ctf: "16bPRvqnjJg24I5uVZGSflL9LQaM5VaIUiima-JDFx0k",
+    newborn_ctf: "1_ROloM3Cn_z6ryYj-CMkxrKctgbbgqfW-__FvqPmmqA",
+    moh_sac: "1PKnhwD0sApSZ7lFYLrDH6pIZGMpGBXjckhm36-m8M1o",
+    newborn_ka: "1D439jz5Nc_PBZCHGHm3ZFwGz6c-2Y35-bfmOvf_P4u0",
+    emonc_ka: "1JOw1iNTLh-Yb4d9FyIujrSxRgL2tJr7xpwdA0cRIjBM"
   };
 
-  // formIdProp values stay as Script Property name placeholders in the registry.
-  // Real Google Sheet IDs are written automatically when each create* builder runs.
+  // Existing Kobo projects to update/redeploy.
+  var initialAssetUids = {
+    emonc_ctf: "aJaBJKDs7pCRMi8zm3BXze",
+    newborn_ctf: "a488FNw8rSGKWdJqpYfpny",
+    moh_sac: "aR4bTSJFw3Tnev6o77S3Sg",
+    newborn_ka: "aFRcSLKi7wUvdrQ7js5Vbd",
+    emonc_ka: "auZqsTBpQMBnoDbMshmnrH"
+  };
 
   if (!apiToken || apiToken.indexOf("PASTE_") === 0) {
     throw new Error(
@@ -167,6 +167,12 @@ function setupKoboDeployConfig() {
   var registry = getKoboDeployToolsRegistry_();
   for (var i = 0; i < registry.length; i++) {
     var tool = registry[i];
+
+    var formId = initialFormIds[tool.id];
+    if (formId) {
+      props.setProperty(tool.formIdProp, String(formId).trim());
+    }
+
     var uid = initialAssetUids[tool.id];
     if (uid) {
       props.setProperty(tool.assetUidProp, String(uid).trim());
