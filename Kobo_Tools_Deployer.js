@@ -280,6 +280,12 @@ function deployKoboTool(toolId, rebuildFirst) {
     buildFn();
   }
 
+  // Captured before import so the deploy step can tell the new version apart
+  // from the version that was already on the asset.
+  var priorUid =
+    PropertiesService.getScriptProperties().getProperty(tool.assetUidProp) || "";
+  var priorVersionId = priorUid ? getKoboAssetVersionId_(priorUid) : "";
+
   var formSs = openKoboToolFormSpreadsheet_(tool);
   Logger.log("Exporting: " + tool.label + " → " + formSs.getUrl());
 
@@ -305,7 +311,10 @@ function deployKoboTool(toolId, rebuildFirst) {
     assetUid
   );
 
-  var deployResult = deployKoboAsset_(assetUid);
+  var deployResult = deployKoboAsset_(
+    assetUid,
+    assetUid === priorUid ? priorVersionId : ""
+  );
   Logger.log("Deploy finished: " + JSON.stringify(deployResult));
   Logger.log("Done: " + tool.label + " → asset UID " + assetUid);
 
@@ -535,6 +544,12 @@ function importXlsformToKobo_(xlsxBlob, tool) {
 
     if (last.status === "complete") {
       assetUid = extractAssetUidFromImport_(last) || assetUid;
+      if (!assetUid) {
+        Logger.log(
+          "Import completed without a recognizable asset UID [" + tool.id +
+          "]: " + JSON.stringify(last.messages || last)
+        );
+      }
       break;
     }
     if (last.status === "error") {
@@ -558,12 +573,13 @@ function importXlsformToKobo_(xlsxBlob, tool) {
 function extractAssetUidFromImport_(importJson) {
   if (!importJson) return "";
 
-  if (importJson.messages && importJson.messages.created) {
-    var created = importJson.messages.created;
-    if (created && created.length) {
-      var m = String(created[0]).match(/\/assets\/([^/]+)/);
-      if (m) return m[1];
-    }
+  // KPI reports created/updated assets as objects ({uid, kind, summary, ...}),
+  // so a plain string match on the entry never finds the UID.
+  var messages = importJson.messages || {};
+  var buckets = [messages.created, messages.updated];
+  for (var b = 0; b < buckets.length; b++) {
+    var uid = extractAssetUidFromImportMessages_(buckets[b]);
+    if (uid) return uid;
   }
 
   if (importJson.summary && importJson.summary.uid) {
@@ -578,29 +594,119 @@ function extractAssetUidFromImport_(importJson) {
   return "";
 }
 
+function extractAssetUidFromImportMessages_(entries) {
+  if (!entries || !entries.length) return "";
+
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    if (!entry) continue;
+
+    if (typeof entry === "object") {
+      if (entry.uid) return String(entry.uid);
+      var fromUrl = String(entry.url || "").match(/\/assets\/([^/]+)/);
+      if (fromUrl) return fromUrl[1];
+      continue;
+    }
+
+    var fromString = String(entry).match(/\/assets\/([^/]+)/);
+    if (fromString) return fromString[1];
+  }
+
+  return "";
+}
+
+function getKoboAssetVersionId_(assetUid) {
+  if (!assetUid) return "";
+  var asset = fetchKoboAsset_(assetUid, true);
+  return asset && asset.version_id ? String(asset.version_id) : "";
+}
+
+function fetchKoboAsset_(assetUid, tolerateMissing) {
+  var cfg = getKoboDeploySharedConfig_();
+  var response = UrlFetchApp.fetch(
+    cfg.base + "/api/v2/assets/" + assetUid + "/?format=json",
+    {
+      method: "get",
+      headers: koboAuthHeaders_(cfg.token),
+      muteHttpExceptions: true
+    }
+  );
+
+  var code = response.getResponseCode();
+  if (code >= 300) {
+    if (tolerateMissing) return null;
+    throw new Error(
+      "Failed to read asset " + assetUid + " (" + code + "): " +
+      response.getContentText()
+    );
+  }
+
+  return JSON.parse(response.getContentText());
+}
+
+function countKoboAssetContent_(asset) {
+  var content = (asset && asset.content) || {};
+  return {
+    survey: content.survey ? content.survey.length : 0,
+    choices: content.choices ? content.choices.length : 0
+  };
+}
+
+/**
+ * Kobo marks the import complete before the new asset content is always
+ * readable, and deploying the pre-import version fails with pyxform errors
+ * such as "There should be a choices sheet in this xlsform".
+ * Wait until the asset carries a new version with survey + choices content.
+ */
+function waitForKoboDeployableAsset_(assetUid, previousVersionId) {
+  var asset = null;
+
+  for (var attempt = 0; attempt < 12; attempt++) {
+    asset = fetchKoboAsset_(assetUid, false);
+    var counts = countKoboAssetContent_(asset);
+    var versionId = String(asset.version_id || "");
+    var isNewVersion = !previousVersionId || versionId !== previousVersionId;
+
+    if (isNewVersion && counts.survey > 0 && counts.choices > 0) {
+      Logger.log(
+        "Asset " + assetUid + " ready — version_id=" + versionId +
+        ", survey rows=" + counts.survey + ", choices rows=" + counts.choices
+      );
+      return asset;
+    }
+
+    Logger.log(
+      "Waiting for imported content on " + assetUid + " — version_id=" +
+      versionId + ", survey rows=" + counts.survey + ", choices rows=" +
+      counts.choices
+    );
+    Utilities.sleep(2500);
+  }
+
+  var finalCounts = countKoboAssetContent_(asset);
+  if (finalCounts.choices === 0) {
+    throw new Error(
+      "Asset " + assetUid + " has no choices content after import. Confirm the " +
+      "form spreadsheet has a 'choices' tab with list_name, name and label " +
+      "columns, then rebuild before deploying."
+    );
+  }
+
+  throw new Error(
+    "Asset " + assetUid + " did not report a new version after import " +
+    "(version_id still " + previousVersionId + ")."
+  );
+}
+
 /**
  * Deploy (or redeploy) an asset.
  */
-function deployKoboAsset_(assetUid) {
+function deployKoboAsset_(assetUid, previousVersionId) {
   var cfg = getKoboDeploySharedConfig_();
   var assetUrl = cfg.base + "/api/v2/assets/" + assetUid + "/";
   var deployUrl = assetUrl + "deployment/";
 
-  var assetResp = UrlFetchApp.fetch(assetUrl + "?format=json", {
-    method: "get",
-    headers: koboAuthHeaders_(cfg.token),
-    muteHttpExceptions: true
-  });
-  if (assetResp.getResponseCode() >= 300) {
-    throw new Error(
-      "Failed to read asset (" +
-      assetResp.getResponseCode() +
-      "): " +
-      assetResp.getContentText()
-    );
-  }
-
-  var asset = JSON.parse(assetResp.getContentText());
+  var asset = waitForKoboDeployableAsset_(assetUid, previousVersionId || "");
   var versionId = asset.version_id;
   var hasDeployment = !!(
     asset.deployment__active || asset.deployment__identifier
