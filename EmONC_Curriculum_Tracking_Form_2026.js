@@ -140,6 +140,7 @@ function getEmONCCTF2026SurveyRows_() {
     "if(${kiambu_facilities} != '', ${kiambu_facilities}, " +
     "if(${kilifi_facilities} != '', ${kilifi_facilities}, " +
     "if(${kisii_facilities} != '', ${kisii_facilities}, " +
+    "if(${kwale_facilities} != '', ${kwale_facilities}, " +
     "if(${kirinyaga_facilities} != '', ${kirinyaga_facilities}, " +
     "if(${machakos_facilities} != '', ${machakos_facilities}, " +
     "if(${makueni_facilities} != '', ${makueni_facilities}, " +
@@ -149,7 +150,7 @@ function getEmONCCTF2026SurveyRows_() {
     "if(${nairobi_facilities} != '', ${nairobi_facilities}, " +
     "if(${nakuru_facilities} != '', ${nakuru_facilities}, " +
     "if(${siaya_facilities} != '', ${siaya_facilities}, " +
-    "if(${nyeri_facilities} != '', ${nyeri_facilities}, '')))))))))))))))";
+    "if(${nyeri_facilities} != '', ${nyeri_facilities}, ''))))))))))))))))";
 
   // Columns: type, name, label, hint, required, required_message,
   //          constraint_message, relevant, parameters, calculation
@@ -269,6 +270,7 @@ function getEmONCCTF2026SurveyRows_() {
     facilitySelectRow_("kiambu_facilities", "Kiambu"),
     facilitySelectRow_("kilifi_facilities", "Kilifi"),
     facilitySelectRow_("kisii_facilities", "Kisii"),
+    facilitySelectRow_("kwale_facilities", "Kwale"),
     facilitySelectRow_("kirinyaga_facilities", "Kirinyaga"),
     facilitySelectRow_("machakos_facilities", "Machakos"),
     facilitySelectRow_("makueni_facilities", "Makueni"),
@@ -727,6 +729,7 @@ function getEmONCCTF2026CountyChoices_() {
     ["county", "Kiambu", "Kiambu"],
     ["county", "Kilifi", "Kilifi"],
     ["county", "Kisii", "Kisii"],
+    ["county", "Kwale", "Kwale"],
     ["county", "Kirinyaga", "Kirinyaga"],
     ["county", "Machakos", "Machakos"],
     ["county", "Makueni", "Makueni"],
