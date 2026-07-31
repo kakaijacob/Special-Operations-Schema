@@ -14,13 +14,12 @@
 //
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
-//   0) Apply source + Kobo deploy config (no separate setup run needed)
+//   0) Acquire a lock; initialize missing config; validate every dependency
 //   1) Sync external Mentee Database 2026 → local "Mentee Database"
 //   2) Sync external Mentor (IFM) Database 2026 → local "IFM List"
 //   3) Run kobocreator.js generateAllOutputs()
 //   4) Create/update every registered Kobo form tool
-//   5) Upload / deploy each built form to Kobo (Kobo_Tools_Deployer.js)
-//      Skipped automatically if deployer file or API token is missing.
+//   5) Upload / deploy only forms successfully built in this run
 // =====================================================
 
 // Script Properties — Mentee Database 2026
@@ -90,8 +89,7 @@ function getKoboToolsRegistry_() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Kobo Tools")
-    .addItem("Refresh All Forms (+ Deploy)", "refreshAllKoboTools")
-    .addItem("Deploy All to Kobo", "deployAllKoboToolsFromMenu_")
+    .addItem("Run Full Pipeline", "refreshAllKoboTools")
     .addSeparator()
     .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
     .addItem("Install Daily Auto-Refresh", "installKoboToolsDailyTrigger")
@@ -186,118 +184,217 @@ function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
  * or the Kobo deployer.
  */
 function refreshAllKoboTools() {
-  Logger.log("=== Kobo Tools refresh started ===");
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) {
+    Logger.log("Kobo Tools pipeline skipped — another run is already active.");
+    return { status: "skipped_concurrent_run" };
+  }
 
-  // 0) Apply source + deploy config so no separate setup run is needed
-  ensureKoboToolsConfigured_();
+  try {
+    Logger.log("=== Kobo Tools full pipeline started ===");
 
-  // 1) Sync mentee database first
-  syncMenteeDatabaseFromSource();
+    // 0) Initialize missing config and fail early on missing code/token access
+    ensureKoboToolsConfigured_();
+    validateKoboPipelineDependencies_();
 
-  // 2) Sync IFM mentor database → local IFM List
-  syncIFMListFromSource();
+    // 1) Sync mentee database first
+    syncMenteeDatabaseFromSource();
 
-  // 3) Run kobocreator generators (shared intermediate sheets)
-  Logger.log("Running kobocreator generateAllOutputs()...");
-  generateAllOutputs();
-  Logger.log("kobocreator complete.");
+    // 2) Sync IFM mentor database → local IFM List
+    syncIFMListFromSource();
 
-  // 4) Build / update every registered form
-  var buildResults = buildRegisteredKoboTools_();
+    // 3) Run kobocreator generators (shared intermediate sheets)
+    Logger.log("Running kobocreator generateAllOutputs()...");
+    generateAllOutputs();
+    Logger.log("kobocreator complete.");
 
-  // 5) Upload / deploy built forms to Kobo (if deployer + token configured)
-  var deployResults = deployRegisteredKoboTools_();
+    // 4) Build / update every registered form
+    var buildResults = buildRegisteredKoboTools_();
 
-  var summary = {
-    build: buildResults,
-    deploy: deployResults
-  };
+    // 5) Deploy only forms that were successfully built in this run
+    var deployResults = deployRegisteredKoboTools_(buildResults);
 
-  Logger.log("=== Kobo Tools refresh finished ===");
-  Logger.log(JSON.stringify(summary));
-  return summary;
+    var summary = {
+      status: hasKoboPipelineErrors_(buildResults, deployResults)
+        ? "completed_with_errors"
+        : "ok",
+      build: buildResults,
+      deploy: deployResults
+    };
+
+    Logger.log("=== Kobo Tools full pipeline finished: " + summary.status + " ===");
+    Logger.log(JSON.stringify(summary));
+    return summary;
+  } catch (err) {
+    Logger.log("=== Kobo Tools full pipeline FAILED ===");
+    Logger.log(String(err && err.stack ? err.stack : err));
+    throw err;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
- * Step 0: make refreshAllKoboTools() self-sufficient.
- * Applies the mentee/IFM source config and, when Kobo_Tools_Deployer.js is
- * present, the Kobo token + server config. Config problems are logged rather
- * than thrown so the sync/build stages still run.
+ * Step 0a: initialize configuration without overwriting existing custom source
+ * settings. The deployer setup is invoked on every run so its embedded token,
+ * server, initial form IDs and initial asset UIDs are applied automatically.
  */
 function ensureKoboToolsConfigured_() {
-  try {
-    setupKoboToolsSource();
-  } catch (err) {
-    Logger.log("Source config warning: " + err.message);
+  var props = PropertiesService.getScriptProperties();
+
+  if (!props.getProperty(KOBO_TOOLS_PROP_SOURCE_ID)) {
+    props.setProperty(KOBO_TOOLS_PROP_SOURCE_ID, KOBO_TOOLS_DEFAULT_SOURCE_ID);
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_SOURCE_SHEET)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_SOURCE_SHEET,
+      KOBO_TOOLS_DEFAULT_SOURCE_SHEET
+    );
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_ID)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_ID,
+      KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID
+    );
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_SHEET,
+      KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET
+    );
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID)
+    );
   }
 
   var setupDeployFn = resolveGlobalFunction_("setupKoboDeployConfig");
   if (!setupDeployFn) {
-    Logger.log(
-      "Kobo deploy config skipped — Kobo_Tools_Deployer.js not in this project."
+    throw new Error(
+      "Kobo_Tools_Deployer.js is missing: setupKoboDeployConfig() not found."
     );
-    return;
   }
 
   try {
     setupDeployFn();
   } catch (err) {
-    Logger.log("Kobo deploy config warning: " + err.message);
-  }
-}
-
-/**
- * Menu helper — deploy only (no sync / rebuild).
- */
-function deployAllKoboToolsFromMenu_() {
-  ensureKoboToolsConfigured_();
-  var results = deployRegisteredKoboTools_();
-  Logger.log(JSON.stringify(results));
-  return results;
-}
-
-/**
- * Step 5: deploy every enabled tool via Kobo_Tools_Deployer.js.
- * Forms were just rebuilt, so rebuildFirst is always false here.
- * Gracefully skips when deployer or API token is not configured.
- */
-function deployRegisteredKoboTools_() {
-  var deployFn = resolveGlobalFunction_("deployAllKoboTools");
-  if (!deployFn) {
+    var tokenProp =
+      typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
+        ? KOBO_DEPLOY_PROP_API_TOKEN
+        : "KOBO_KPI_API_TOKEN";
+    if (!props.getProperty(tokenProp)) {
+      throw err;
+    }
     Logger.log(
-      "Skipping Kobo deploy — deployAllKoboTools() not found. " +
-      "Add Kobo_Tools_Deployer.js to this project to enable upload/deploy."
+      "Kobo setup warning (using already-saved deployment config): " +
+      err.message
     );
-    return [{ status: "skipped_missing_deployer" }];
+  }
+  Logger.log("Source and Kobo deployment configuration ready.");
+}
+
+/**
+ * Step 0b: verify all code and deploy credentials before touching source data.
+ * This prevents a long sync/build run that can never deploy.
+ */
+function validateKoboPipelineDependencies_() {
+  var requiredFunctions = [
+    "generateAllOutputs",
+    "deployKoboTool",
+    "testKoboConnection"
+  ];
+  var registry = getKoboToolsRegistry_();
+  var i;
+
+  for (i = 0; i < registry.length; i++) {
+    if (registry[i].enabled) {
+      requiredFunctions.push(registry[i].buildFnName);
+    }
+  }
+
+  var missing = [];
+  for (i = 0; i < requiredFunctions.length; i++) {
+    if (!resolveGlobalFunction_(requiredFunctions[i])) {
+      missing.push(requiredFunctions[i] + "()");
+    }
+  }
+  if (missing.length) {
+    throw new Error(
+      "Kobo pipeline cannot start. Missing function(s): " + missing.join(", ")
+    );
   }
 
   var tokenProp =
     typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
       ? KOBO_DEPLOY_PROP_API_TOKEN
       : "KOBO_KPI_API_TOKEN";
-  var token = PropertiesService.getScriptProperties().getProperty(tokenProp);
-  if (!token) {
-    Logger.log(
-      "Skipping Kobo deploy — API token not configured. " +
-      "Paste your token into setupKoboDeployConfig() in Kobo_Tools_Deployer.js."
+  if (!PropertiesService.getScriptProperties().getProperty(tokenProp)) {
+    throw new Error(
+      "Kobo API token is missing after setup. Put the token in " +
+      "setupKoboDeployConfig() in Kobo_Tools_Deployer.js."
     );
-    return [{ status: "skipped_missing_token" }];
   }
 
-  Logger.log("Deploying registered tools to Kobo...");
-  try {
-    var results = deployFn(false);
-    Logger.log("Kobo deploy complete.");
-    return results;
-  } catch (err) {
-    Logger.log("Kobo deploy failed: " + err.message);
-    return [
-      {
+  resolveGlobalFunction_("testKoboConnection")();
+  Logger.log("Pipeline preflight complete: code, server and token verified.");
+}
+
+/**
+ * Step 5: deploy only tools whose builder returned status "ok" in this run.
+ * This prevents a failed builder from redeploying a stale spreadsheet.
+ */
+function deployRegisteredKoboTools_(buildResults) {
+  var deployFn = resolveGlobalFunction_("deployKoboTool");
+  var results = [];
+
+  for (var i = 0; i < buildResults.length; i++) {
+    var build = buildResults[i];
+    if (build.status !== "ok") {
+      results.push({
+        toolId: build.id,
+        label: build.label,
+        status: "skipped_build_failed"
+      });
+      continue;
+    }
+
+    try {
+      Logger.log("Deploying: " + build.label + "...");
+      var out = deployFn(build.id, false);
+      results.push({
+        toolId: build.id,
+        label: build.label,
+        status: "ok",
+        assetUid: out.assetUid
+      });
+    } catch (err) {
+      Logger.log("DEPLOY FAILED: " + build.label + " — " + err.message);
+      results.push({
+        toolId: build.id,
+        label: build.label,
         status: "error",
         error: String(err.message || err)
-      }
-    ];
+      });
+    }
   }
+
+  return results;
+}
+
+function hasKoboPipelineErrors_(buildResults, deployResults) {
+  var all = buildResults.concat(deployResults);
+  for (var i = 0; i < all.length; i++) {
+    if (
+      all[i].status === "error" ||
+      all[i].status === "skipped_missing_function" ||
+      all[i].status === "skipped_build_failed"
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -838,13 +935,32 @@ function installKoboToolsHourlyTrigger() {
 function removeKoboToolsTriggers() {
   var triggers = ScriptApp.getProjectTriggers();
   var removed = 0;
+  var pipelineHandlers = {
+    refreshAllKoboTools: true,
+    syncMenteeDatabaseFromSource: true,
+    syncIFMListFromSource: true,
+    generateAllOutputs: true,
+    buildRegisteredKoboTools_: true,
+    deployRegisteredKoboTools_: true,
+    deployAllKoboTools: true,
+    deployEmONCCurriculumTrackingFormToKobo: true,
+    createEmONCCurriculumTrackingForm2026: true,
+    createNewbornCurriculumTrackingForm: true,
+    createMoHSkillsAssessmentChecklist: true,
+    createNewbornKnowledgeAssessment: true,
+    createEmONCKnowledgeAssessment: true
+  };
 
   for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "refreshAllKoboTools") {
+    var handler = triggers[i].getHandlerFunction();
+    if (pipelineHandlers[handler]) {
       ScriptApp.deleteTrigger(triggers[i]);
       removed++;
     }
   }
 
-  Logger.log("Removed " + removed + " Kobo Tools auto-refresh trigger(s).");
+  Logger.log(
+    "Removed " + removed +
+    " Kobo pipeline trigger(s). Only refreshAllKoboTools may be installed."
+  );
 }
