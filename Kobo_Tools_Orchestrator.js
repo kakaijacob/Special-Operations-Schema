@@ -14,6 +14,7 @@
 //
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
+//   0) Apply source + Kobo deploy config (no separate setup run needed)
 //   1) Sync external Mentee Database 2026 → local "Mentee Database"
 //   2) Sync external Mentor (IFM) Database 2026 → local "IFM List"
 //   3) Run kobocreator.js generateAllOutputs()
@@ -91,7 +92,6 @@ function onOpen() {
     .createMenu("Kobo Tools")
     .addItem("Refresh All Forms (+ Deploy)", "refreshAllKoboTools")
     .addItem("Deploy All to Kobo", "deployAllKoboToolsFromMenu_")
-    .addItem("Setup Source Database", "setupKoboToolsSource")
     .addSeparator()
     .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
     .addItem("Install Daily Auto-Refresh", "installKoboToolsDailyTrigger")
@@ -188,6 +188,9 @@ function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
 function refreshAllKoboTools() {
   Logger.log("=== Kobo Tools refresh started ===");
 
+  // 0) Apply source + deploy config so no separate setup run is needed
+  ensureKoboToolsConfigured_();
+
   // 1) Sync mentee database first
   syncMenteeDatabaseFromSource();
 
@@ -216,10 +219,38 @@ function refreshAllKoboTools() {
 }
 
 /**
+ * Step 0: make refreshAllKoboTools() self-sufficient.
+ * Applies the mentee/IFM source config and, when Kobo_Tools_Deployer.js is
+ * present, the Kobo token + server config. Config problems are logged rather
+ * than thrown so the sync/build stages still run.
+ */
+function ensureKoboToolsConfigured_() {
+  try {
+    setupKoboToolsSource();
+  } catch (err) {
+    Logger.log("Source config warning: " + err.message);
+  }
+
+  var setupDeployFn = resolveGlobalFunction_("setupKoboDeployConfig");
+  if (!setupDeployFn) {
+    Logger.log(
+      "Kobo deploy config skipped — Kobo_Tools_Deployer.js not in this project."
+    );
+    return;
+  }
+
+  try {
+    setupDeployFn();
+  } catch (err) {
+    Logger.log("Kobo deploy config warning: " + err.message);
+  }
+}
+
+/**
  * Menu helper — deploy only (no sync / rebuild).
- * Requires Kobo_Tools_Deployer.js + setupKoboDeployConfig().
  */
 function deployAllKoboToolsFromMenu_() {
+  ensureKoboToolsConfigured_();
   var results = deployRegisteredKoboTools_();
   Logger.log(JSON.stringify(results));
   return results;
@@ -248,7 +279,7 @@ function deployRegisteredKoboTools_() {
   if (!token) {
     Logger.log(
       "Skipping Kobo deploy — API token not configured. " +
-      "Run setupKoboDeployConfig() once, then re-run refreshAllKoboTools()."
+      "Paste your token into setupKoboDeployConfig() in Kobo_Tools_Deployer.js."
     );
     return [{ status: "skipped_missing_token" }];
   }
