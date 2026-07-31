@@ -154,16 +154,11 @@ function setupKoboDeployConfig() {
     emonc_ka: "auZqsTBpQMBnoDbMshmnrH"
   };
 
-  if (!apiToken || apiToken.indexOf("PASTE_") === 0) {
-    throw new Error(
-      "Set apiToken in setupKoboDeployConfig() to your real Kobo API token."
-    );
-  }
-
   var props = PropertiesService.getScriptProperties();
-  props.setProperty(KOBO_DEPLOY_PROP_API_TOKEN, String(apiToken).trim());
   props.setProperty(KOBO_DEPLOY_PROP_KPI_BASE, normalizeKoboBaseUrl_(kpiBaseUrl));
 
+  // Seed sheet IDs and asset UIDs before validating the token, so an unedited
+  // token placeholder cannot silently skip this mapping.
   var registry = getKoboDeployToolsRegistry_();
   for (var i = 0; i < registry.length; i++) {
     var tool = registry[i];
@@ -178,6 +173,14 @@ function setupKoboDeployConfig() {
       props.setProperty(tool.assetUidProp, String(uid).trim());
     }
   }
+
+  if (!apiToken || apiToken.indexOf("PASTE_") === 0) {
+    throw new Error(
+      "Set apiToken in setupKoboDeployConfig() to your real Kobo API token."
+    );
+  }
+
+  props.setProperty(KOBO_DEPLOY_PROP_API_TOKEN, String(apiToken).trim());
 
   Logger.log("Saved shared Kobo deploy config.");
   Logger.log("KPI base: " + props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE));

@@ -314,15 +314,30 @@ function validateKoboPipelineDependencies_() {
     }
   }
 
+  var sourceFiles = {
+    generateAllOutputs: "kobocreator.js",
+    deployKoboTool: "Kobo_Tools_Deployer.js",
+    testKoboConnection: "Kobo_Tools_Deployer.js",
+    createEmONCCurriculumTrackingForm2026:
+      "EmONC_Curriculum_Tracking_Form_2026.js",
+    createNewbornCurriculumTrackingForm: "Newborn_Curriculum_Tracking_Form.js",
+    createMoHSkillsAssessmentChecklist: "MoH_Skills_Assessment_Checklist.js",
+    createNewbornKnowledgeAssessment: "Newborn_Knowledge_Assessment.js",
+    createEmONCKnowledgeAssessment: "EmONC_Knowledge_Assessment.js"
+  };
+
   var missing = [];
   for (i = 0; i < requiredFunctions.length; i++) {
-    if (!resolveGlobalFunction_(requiredFunctions[i])) {
-      missing.push(requiredFunctions[i] + "()");
+    var fnName = requiredFunctions[i];
+    if (!resolveGlobalFunction_(fnName)) {
+      var file = sourceFiles[fnName];
+      missing.push(fnName + "()" + (file ? " from " + file : ""));
     }
   }
   if (missing.length) {
     throw new Error(
-      "Kobo pipeline cannot start. Missing function(s): " + missing.join(", ")
+      "Kobo pipeline cannot start. Add the missing file(s) to this Apps Script " +
+      "project: " + missing.join("; ")
     );
   }
 
