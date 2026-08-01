@@ -42,6 +42,26 @@ var KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET = "Mentor (IFM) Database 2026";
 var KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID = 586824847;
 var KOBO_TOOLS_LOCAL_IFM_SHEET = "IFM List";
 
+// Only these counties are imported from Mentor (IFM) Database 2026.
+// The values written to the local IFM List use these canonical spellings.
+var KOBO_TOOLS_ALLOWED_IFM_COUNTIES = [
+  "Busia",
+  "Kakamega",
+  "Kiambu",
+  "Kilifi",
+  "Kisii",
+  "Kwale",
+  "Machakos",
+  "Makueni",
+  "Meru",
+  "Mombasa",
+  "Muranga",
+  "Nairobi",
+  "Nakuru",
+  "Nyeri",
+  "Siaya"
+];
+
 /**
  * Register each form builder here as you add tools.
  * buildFnName must match a global function in another Apps Script file.
@@ -643,7 +663,8 @@ function findCaseInsensitiveHeaderIndex_(header, name) {
 
 /**
  * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
- * Excludes every posting whose Status is Inactive.
+ * Excludes every posting whose Status is Inactive or whose County is outside
+ * KOBO_TOOLS_ALLOWED_IFM_COUNTIES.
  * Chooses the source tab with real mentor rows (gid preferred, then best match).
  *
  * Downstream consumers (kobocreator) — ALL read local IFM List only:
@@ -699,6 +720,8 @@ function syncIFMListFromSource() {
     "Mentor (IFM) Database 2026"
   );
   values = statusFilter.values;
+  var countyFilter = filterIFMRowsToAllowedCounties_(values);
+  values = countyFilter.values;
   var usableRows = countIFMUsableRows_(values);
   var header = values[0];
 
@@ -739,13 +762,86 @@ function syncIFMListFromSource() {
     usableRows +
     " with County/Facility/Facility Code. Excluded " +
     statusFilter.removed +
-    " Status=Inactive posting(s). " +
+    " Status=Inactive posting(s) and " +
+    countyFilter.removed +
+    " posting(s) outside the allowed counties. Allowed counties: [" +
+    KOBO_TOOLS_ALLOWED_IFM_COUNTIES.join(" | ") +
+    "]. " +
     "Normalized headers: [" +
     header.join(" | ") +
     "]"
   );
 
   return localSheet;
+}
+
+/**
+ * Keep the header and IFM rows from the configured counties only.
+ *
+ * County comparison is case-insensitive and ignores spaces, punctuation,
+ * apostrophes and accents. Accepted rows are rewritten to the canonical
+ * allowlist spelling, so Muranga, Murang'a, Murang’a and Murangá all become
+ * "Muranga" in the local IFM List.
+ */
+function filterIFMRowsToAllowedCounties_(values) {
+  if (!values || !values.length) {
+    return { values: values, removed: 0 };
+  }
+
+  var countyIndex = findCaseInsensitiveHeaderIndex_(values[0], "County");
+  if (countyIndex === -1) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 is missing the 'County' column required " +
+      "for the IFM county allowlist."
+    );
+  }
+
+  var allowedByKey = {};
+  for (var a = 0; a < KOBO_TOOLS_ALLOWED_IFM_COUNTIES.length; a++) {
+    var canonical = KOBO_TOOLS_ALLOWED_IFM_COUNTIES[a];
+    allowedByKey[normalizeIFMCountyKey_(canonical)] = canonical;
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var key = normalizeIFMCountyKey_(values[i][countyIndex]);
+    var allowedCounty = allowedByKey[key];
+
+    if (!allowedCounty) {
+      removed++;
+      continue;
+    }
+
+    var row = values[i].slice();
+    row[countyIndex] = allowedCounty;
+    output.push(row);
+  }
+
+  return { values: output, removed: removed };
+}
+
+/** Plain comparison key for an IFM county name. */
+function normalizeIFMCountyKey_(county) {
+  var value = String(county == null ? "" : county).trim();
+
+  // Remove a mis-decoded curly apostrophe before folding accents.
+  value = value.replace(/\u00E2\u20AC\u2122/g, "");
+  value = value.replace(/['\u2018\u2019\u02BC\u0060\u00B4]/g, "");
+
+  if (typeof value.normalize === "function") {
+    value = value.normalize("NFD").replace(/[\u0300-\u036F]/g, "");
+  } else {
+    value = value
+      .replace(/[àáâãäåāăą]/gi, "a")
+      .replace(/[èéêëēĕėęě]/gi, "e")
+      .replace(/[ìíîïĩīĭįı]/gi, "i")
+      .replace(/[òóôõöøōŏő]/gi, "o")
+      .replace(/[ùúûüũūŭůűų]/gi, "u");
+  }
+
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /**
