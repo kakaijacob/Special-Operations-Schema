@@ -533,6 +533,13 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     );
   }
 
+  // "Survey Sheet (IFM)" only needs County/Facility/Facility Code, while
+  // "IFM List (Choices)" also needs an IFM Name and IFM ID. A facility missing
+  // those produces a select_one with no choices, which Kobo rejects at deploy
+  // with "List name not in choices sheet".
+  var availableLists = getMoHSACIfmChoiceListNames_(sourceSs);
+  var skippedLists = {};
+
   var rows = [];
   var nameCounts = {};
 
@@ -543,6 +550,12 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     var relevant = normalizeMoHSACIfmRelevant_(data[i][relevantIndex]);
 
     if (!type && !baseName) continue;
+
+    var listName = extractMoHSACSelectListName_(type);
+    if (listName && !availableLists[listName]) {
+      skippedLists[listName] = true;
+      continue;
+    }
 
     var name = String(baseName || "");
     if (name) {
@@ -574,7 +587,55 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     ]);
   }
 
+  var skippedNames = [];
+  for (var skipped in skippedLists) {
+    skippedNames.push(skipped);
+  }
+  if (skippedNames.length) {
+    Logger.log(
+      "MoH SAC: skipped " + skippedNames.length + " IFM question(s) with no " +
+      "choices in 'IFM List (Choices)': " + skippedNames.sort().join(", ") +
+      ". Add an IFM Name and IFM ID for those Active facilities in the " +
+      "Mentor (IFM) Database to include them."
+    );
+  }
+
   return rows;
+}
+
+/**
+ * list_name values that actually have at least one choice row.
+ */
+function getMoHSACIfmChoiceListNames_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("IFM List (Choices)");
+  if (!sourceSheet) return {};
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return {};
+
+  var listNameIndex = data[0].indexOf("list_name");
+  var nameIndex = data[0].indexOf("name");
+  if (listNameIndex === -1 || nameIndex === -1) return {};
+
+  var lists = {};
+  for (var i = 1; i < data.length; i++) {
+    var listName = String(data[i][listNameIndex] || "").trim();
+    var choiceName = String(data[i][nameIndex] || "").trim();
+    if (listName && choiceName) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/**
+ * "select_one busia_ifms" → "busia_ifms" ("" for non-select types).
+ */
+function extractMoHSACSelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)\s+(\S+)/);
+  return match ? match[1] : "";
 }
 
 function normalizeMoHSACRequired_(value) {
