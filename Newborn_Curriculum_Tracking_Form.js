@@ -74,8 +74,12 @@ function upsertNewbornCurriculumTrackingForm_(sourceSs) {
 
   removeExtraNewbornCTFSheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeNewbornCTFSurvey_(surveySheet, sourceSs);
-  writeNewbornCTFChoices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // lists that ship with the form.
+  var choiceRows = getNewbornCTFChoiceRows_(sourceSs);
+
+  writeNewbornCTFSurvey_(surveySheet, sourceSs, choiceRows);
+  writeNewbornCTFChoices_(choicesSheet, choiceRows);
   writeNewbornCTFSettings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -112,17 +116,25 @@ function removeExtraNewbornCTFSheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeNewbornCTFSurvey_(sheet, sourceSs) {
-  var menteeRows = getNewbornCTFMenteeSurveyRows_(sourceSs);
+function writeNewbornCTFSurvey_(sheet, sourceSs, choiceRows) {
+  var availableLists = collectNewbornCTFChoiceListNames_(choiceRows);
+  var menteeRows = dropNewbornCTFRowsWithMissingChoices_(
+    getNewbornCTFMenteeSurveyRows_(sourceSs),
+    availableLists
+  );
 
-  var rows = [NEWBORN_CTF_SURVEY_HEADERS]
-    .concat(getNewbornCTFSurveyRows_())
+  var bodyRows = getNewbornCTFSurveyRows_()
     .concat(getNewbornCTFSection1bRows_())
     .concat(menteeRows)
     .concat(getNewbornCTFCloseSection1Rows_(menteeRows))
     .concat(getNewbornCTFSection2Rows_());
 
+  var rows = [NEWBORN_CTF_SURVEY_HEADERS].concat(
+    dropNewbornCTFRowsWithMissingChoices_(bodyRows, availableLists)
+  );
+
   sheet.clear();
+  ensureNewbornCTFSheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -828,15 +840,131 @@ function getNewbornCTFSection2Rows_() {
 // =====================================================
 // CHOICES
 // =====================================================
-function writeNewbornCTFChoices_(sheet, sourceSs) {
-  var rows = [NEWBORN_CTF_CHOICES_HEADERS]
-    .concat(getNewbornCTFCountyChoices_())
+function getNewbornCTFChoiceRows_(sourceSs) {
+  return getNewbornCTFCountyChoices_()
     .concat(getNewbornCTFFacilityChoices_(sourceSs))
     .concat(getNewbornCTFMenteeChoices_(sourceSs))
     .concat(getNewbornCTFCurriculumChoices_());
+}
+
+function writeNewbornCTFChoices_(sheet, choiceRows) {
+  var rows = [NEWBORN_CTF_CHOICES_HEADERS].concat(choiceRows);
 
   sheet.clear();
+  ensureNewbornCTFSheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureNewbornCTFSheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectNewbornCTFChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/** "select_one x" / "select_multiple x" → "x", anything else → "". */
+function extractNewbornCTFSelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)(?:_from_file)?\s+(\S+)/);
+  return match ? match[1] : "";
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x").
+ * Drop those questions, but keep any that another row references through
+ * ${name}, since removing those would only trade one deploy error for another.
+ */
+function dropNewbornCTFRowsWithMissingChoices_(rows, availableChoiceLists) {
+  var orphanIndexes = [];
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractNewbornCTFSelectListName_(rows[i][0]);
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (!availableChoiceLists[listName]) {
+      orphanIndexes.push(i);
+    }
+  }
+
+  if (!orphanIndexes.length) return rows;
+
+  // relevant, choice_filter and calculation can reference another field.
+  var expressionColumns = [6, 7, 8];
+  var expressions = [];
+  for (i = 0; i < rows.length; i++) {
+    for (var c = 0; c < expressionColumns.length; c++) {
+      var value = rows[i][expressionColumns[c]];
+      if (value) expressions.push(String(value));
+    }
+  }
+  var expressionText = expressions.join(" ");
+
+  var dropped = {};
+  var keptNames = [];
+  var droppedNames = [];
+
+  for (i = 0; i < orphanIndexes.length; i++) {
+    var index = orphanIndexes[i];
+    var fieldName = String(rows[index][1] == null ? "" : rows[index][1]).trim();
+    var list = extractNewbornCTFSelectListName_(rows[index][0]);
+
+    if (fieldName && expressionText.indexOf("${" + fieldName + "}") !== -1) {
+      keptNames.push(fieldName + " (" + list + ")");
+      continue;
+    }
+
+    dropped[index] = true;
+    droppedNames.push(list);
+  }
+
+  if (droppedNames.length) {
+    Logger.log(
+      "Newborn CTF: removed " + droppedNames.length + " question(s) whose " +
+      "choice list is not in the generated choices sheet: " +
+      droppedNames.sort().join(", ")
+    );
+  }
+  if (keptNames.length) {
+    Logger.log(
+      "Newborn CTF WARNING: kept " + keptNames.length + " question(s) with a " +
+      "missing choice list because other rows reference them: " +
+      keptNames.sort().join(", ") + ". Kobo will reject this deployment."
+    );
+  }
+
+  var filtered = [];
+  for (i = 0; i < rows.length; i++) {
+    if (!dropped[i]) filtered.push(rows[i]);
+  }
+  return filtered;
 }
 
 /**

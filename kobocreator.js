@@ -82,6 +82,11 @@ function generateVariableNames() {
   // =====================================================
   var processed = {};
 
+  // Facilities that have at least one selectable mentee, so a question is
+  // never written for a list that the choices sheet will leave empty.
+  var selectable = getSelectableMenteeFacilities_(data, header);
+  var excludedFacilities = {};
+
   for (var i = 1; i < data.length; i++) {
 
     var county = data[i][countyIndex];
@@ -121,6 +126,22 @@ function generateVariableNames() {
     for (var p = 0; p < programList.length; p++) {
 
       var logicProgram = programList[p];
+
+      // =====================================================
+      // Skip facilities with no mentee behind the question
+      // The mentors questions built from this sheet select from
+      // "<facility>_mentees"; without an Active mentee carrying an ID and a
+      // name that list is empty and Kobo rejects the deployment with
+      // "List name not in choices sheet".
+      // =====================================================
+      if (
+        logicProgram === "mentors_curriculum" &&
+        cleanedStatus === "active" &&
+        !selectable.emoncCodes[String(code).trim()]
+      ) {
+        excludedFacilities[facility + " (" + koboVariable + ")"] = true;
+        continue;
+      }
 
       // =====================================================
       // Unique key now includes status
@@ -201,6 +222,18 @@ function generateVariableNames() {
   variableSheet
     .getRange(1, 1, output.length, output[0].length)
     .setValues(output);
+
+  var excludedList = [];
+  for (var excluded in excludedFacilities) {
+    excludedList.push(excluded);
+  }
+  if (excludedList.length) {
+    Logger.log(
+      "Variable Names: excluded " + excludedList.length + " facility(ies) " +
+      "with no Active MENTORS mentee carrying a Mentee ID and Name: " +
+      excludedList.sort().join(", ")
+    );
+  }
 }
 
 
@@ -436,48 +469,30 @@ function generateChoicesSheet() {
   var data = sheet.getDataRange().getValues();
   var header = data[0];
 
-  var idIndex = header.indexOf("Mentee ID");
-  var nameIndex = header.indexOf("Name");
-  var countyIndex = header.indexOf("County");
-  var facilityIndex = header.indexOf("Facility");
-  var facilityCodeIndex = header.indexOf("Facility Code");
-  var programIndex = header.indexOf("Program");
-  var statusIndex = header.indexOf("Status"); // ✅ NEW
-
   var choicesSheet = getOrCreateSheet("EmONC Mentees List (Choices)");
   var output = [["County","Facility","Facility Code","Program","list_name","name","label"]];
 
-  for (var i = 1; i < data.length; i++) {
-    var rawID = data[i][idIndex];
-    var name = data[i][nameIndex];
+  // One record per Mentee ID + Facility Code, so a mentee who was later
+  // deactivated is not offered as a choice.
+  var records = resolveMenteeRecords_(data, header);
+  var seenChoices = {};
 
-    if (!rawID || !name) continue;
+  for (var i = 0; i < records.length; i++) {
+    var record = records[i];
+    if (!record.isEmONCMentee) continue;
 
-    // ✅ Clean Mentee ID: remove all spaces
-    var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
-
-    var programValue = data[i][programIndex];
-    var statusValue = data[i][statusIndex]; // ✅ NEW
-
-    // ✅ FILTER: Only include specific Program values + Active status
-    if ((programValue !== "MENTORS Curriculum" &&
-         programValue !== "Both") ||
-        statusValue !== "Active") continue;
-
-    var facility = data[i][facilityIndex];
-    var koboVariable = generateKoboVariable(facility);
-
-    // ✅ Generate Kobo name using cleaned ID
-    var menteeKobo = cleanedID + "_" + cleanForKobo(name);
+    var choiceKey = record.emoncListName + "|" + record.choiceName;
+    if (seenChoices[choiceKey]) continue;
+    seenChoices[choiceKey] = true;
 
     output.push([
-      data[i][countyIndex],
-      facility,
-      data[i][facilityCodeIndex],
-      programValue,
-      koboVariable,
-      menteeKobo,
-      name
+      record.county,
+      record.facility,
+      record.code,
+      record.program,
+      record.emoncListName,
+      record.choiceName,
+      record.name
     ]);
   }
 
@@ -958,14 +973,6 @@ function generateNewbornChoicesSheet() {
   var data = sourceSheet.getDataRange().getValues();
   var header = data[0];
 
-  var countyIndex = header.indexOf("County");
-  var facilityIndex = header.indexOf("Facility");
-  var facilityCodeIndex = header.indexOf("Facility Code");
-  var programIndex = header.indexOf("Program");
-  var idIndex = header.indexOf("Mentee ID");
-  var nameIndex = header.indexOf("Name");
-  var statusIndex = header.indexOf("Status");
-
   var sheet = getOrCreateSheet("Newborn Mentees List (Choices)");
 
   var output = [[
@@ -978,39 +985,25 @@ function generateNewbornChoicesSheet() {
     "label"
   ]];
 
-  for (var i = 1; i < data.length; i++) {
+  var records = resolveMenteeRecords_(data, header);
+  var seenChoices = {};
 
-    var county = data[i][countyIndex];
-    var facility = data[i][facilityIndex];
-    var code = data[i][facilityCodeIndex];
-    var program = data[i][programIndex];
-    var rawID = data[i][idIndex];
-    var name = data[i][nameIndex];
-    var status = data[i][statusIndex];
+  for (var i = 0; i < records.length; i++) {
+    var record = records[i];
+    if (!record.isNewbornMentee) continue;
 
-    if (!county || !facility || !code || !program || !rawID || !name) continue;
-
-    // ✅ FILTER: Program + Status
-    if ((program !== "Newborn Curriculum" && program !== "Both") ||
-        status !== "Active") continue;
-
-    // Clean ID
-    var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
-
-    // === NEW: USE HELPER INSTEAD OF FIRST-WORD LOGIC ===
-    var listName = generateKoboVariable(facility, true);
-
-    // Kobo choice value
-    var fullName = cleanedID + "_" + cleanForKobo(name);
+    var choiceKey = record.newbornListName + "|" + record.choiceName;
+    if (seenChoices[choiceKey]) continue;
+    seenChoices[choiceKey] = true;
 
     output.push([
-      county,
-      facility,
-      code,
-      program,
-      listName,
-      fullName,
-      name
+      record.county,
+      record.facility,
+      record.code,
+      record.program,
+      record.newbornListName,
+      record.choiceName,
+      record.name
     ]);
   }
 
@@ -1238,6 +1231,112 @@ function resolveIFMRecords_(data, header) {
   return records;
 }
 
+/**
+ * Facility codes and list names that will actually appear in the mentee
+ * choices sheets. Kept in sync with generateChoicesSheet() (EmONC) and
+ * generateNewbornChoicesSheet() (Newborn).
+ */
+function getSelectableMenteeFacilities_(data, header) {
+  var records = resolveMenteeRecords_(data, header);
+
+  var selectable = {
+    emoncCodes: {},
+    emoncListNames: {},
+    newbornCodes: {},
+    newbornListNames: {}
+  };
+
+  for (var i = 0; i < records.length; i++) {
+    var record = records[i];
+
+    if (record.isEmONCMentee) {
+      selectable.emoncCodes[record.code] = true;
+      selectable.emoncListNames[record.emoncListName] = true;
+    }
+    if (record.isNewbornMentee) {
+      selectable.newbornCodes[record.code] = true;
+      selectable.newbornListNames[record.newbornListName] = true;
+    }
+  }
+
+  return selectable;
+}
+
+/**
+ * One authoritative record per mentee posting.
+ *
+ * A posting is identified by Mentee ID + Facility Code and the last row wins,
+ * so a mentee who was later deactivated or moved does not keep an obsolete
+ * Active state. Program and Status are normalised here because the database is
+ * typed by hand ("Both", "both ", "MENTORS curriculum" all occur): a strict
+ * comparison drops the mentee from the choices while the facility question is
+ * still generated, and Kobo then rejects the whole deployment with
+ * "List name not in choices sheet".
+ */
+function resolveMenteeRecords_(data, header) {
+  var countyIndex = header.indexOf("County");
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  var programIndex = header.indexOf("Program");
+  var idIndex = header.indexOf("Mentee ID");
+  var nameIndex = header.indexOf("Name");
+  var statusIndex = header.indexOf("Status");
+
+  var byPosting = {};
+  var order = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var county = countyIndex === -1 ? "" : data[i][countyIndex];
+    var facility = facilityIndex === -1 ? "" : data[i][facilityIndex];
+    var code = facilityCodeIndex === -1 ? "" : data[i][facilityCodeIndex];
+    var program = programIndex === -1 ? "" : data[i][programIndex];
+    var rawID = idIndex === -1 ? "" : data[i][idIndex];
+    var name = nameIndex === -1 ? "" : data[i][nameIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
+
+    if (!county || !facility || !code || !program || !rawID || !name) continue;
+
+    var cleanedID = String(rawID).replace(/\s+/g, "").trim();
+    var cleanedCode = String(code).trim();
+    var normalizedProgram = String(program)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+    var isActive =
+      String(status == null ? "" : status).trim().toLowerCase() === "active";
+
+    var key = cleanedID + "|" + cleanedCode;
+    if (!byPosting[key]) order.push(key);
+
+    byPosting[key] = {
+      county: county,
+      facility: facility,
+      code: cleanedCode,
+      program: program,
+      name: name,
+      menteeId: cleanedID,
+      isActive: isActive,
+      isEmONCMentee:
+        isActive &&
+        (normalizedProgram === "mentors_curriculum" ||
+          normalizedProgram === "both"),
+      isNewbornMentee:
+        isActive &&
+        (normalizedProgram === "newborn_curriculum" ||
+          normalizedProgram === "both"),
+      emoncListName: generateKoboVariable(facility),
+      newbornListName: generateKoboVariable(facility, true),
+      choiceName: cleanedID + "_" + cleanForKobo(name)
+    };
+  }
+
+  var records = [];
+  for (var o = 0; o < order.length; o++) {
+    records.push(byPosting[order[o]]);
+  }
+  return records;
+}
+
 // =====================================================
 // HELPER: COPY FROM VARIABLE NAMES
 // =====================================================
@@ -1316,6 +1415,10 @@ function generateSurveySheetNewborn() {
 
   var processedFacilities = {};
 
+  // Facilities whose "<facility>_nbc_mentees" list will carry choices.
+  var selectable = getSelectableMenteeFacilities_(data, header);
+  var excludedFacilities = {};
+
   for (var i = 1; i < data.length; i++) {
 
     var county = data[i][countyIndex];
@@ -1328,6 +1431,14 @@ function generateSurveySheetNewborn() {
     // === FILTER PROGRAM ===
     var cleanedProgram = program.toLowerCase().replace(/\s+/g, "_");
     if (cleanedProgram !== "newborn_curriculum" && cleanedProgram !== "both") continue;
+
+    // === Skip facilities with no selectable newborn mentee ===
+    if (!selectable.newbornCodes[String(code).trim()]) {
+      excludedFacilities[
+        facility + " (" + generateKoboVariable(facility, true) + ")"
+      ] = true;
+      continue;
+    }
 
     // === Remove duplicates by facility code ===
     if (processedFacilities[code]) continue;
@@ -1374,6 +1485,18 @@ function generateSurveySheetNewborn() {
 
   sheet.getRange(1, 1, output.length, output[0].length)
        .setValues(output);
+
+  var excludedList = [];
+  for (var excluded in excludedFacilities) {
+    excludedList.push(excluded);
+  }
+  if (excludedList.length) {
+    Logger.log(
+      "Survey Sheet (Newborn): excluded " + excludedList.length +
+      " facility(ies) with no Active Newborn mentee carrying a Mentee ID " +
+      "and Name: " + excludedList.sort().join(", ")
+    );
+  }
 }
 
 

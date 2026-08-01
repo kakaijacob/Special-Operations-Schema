@@ -77,8 +77,12 @@ function upsertEmONCCurriculumTrackingForm2026_(sourceSs) {
   // Keep only the three Kobo tabs
   removeExtraEmONCCTF2026Sheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeEmONCCTF2026Survey_(surveySheet, sourceSs);
-  writeEmONCCTF2026Choices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // lists that ship with the form.
+  var choiceRows = getEmONCCTF2026ChoiceRows_(sourceSs);
+
+  writeEmONCCTF2026Survey_(surveySheet, sourceSs, choiceRows);
+  writeEmONCCTF2026Choices_(choicesSheet, choiceRows);
   writeEmONCCTF2026Settings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -116,9 +120,8 @@ function removeExtraEmONCCTF2026Sheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeEmONCCTF2026Survey_(sheet, sourceSs) {
-  var rows = [EMONC_CTF_2026_SURVEY_HEADERS]
-    .concat(getEmONCCTF2026SurveyRows_())
+function writeEmONCCTF2026Survey_(sheet, sourceSs, choiceRows) {
+  var bodyRows = getEmONCCTF2026SurveyRows_()
     .concat(getEmONCCTF2026MenteeSurveyRows_(sourceSs))
     .concat([
       ["end_group", "", "", "", "", "", "", "", "", ""], // close mentee_details
@@ -126,7 +129,15 @@ function writeEmONCCTF2026Survey_(sheet, sourceSs) {
     ])
     .concat(getEmONCCTF2026Section2Rows_());
 
+  bodyRows = dropEmONCCTF2026RowsWithMissingChoices_(
+    bodyRows,
+    collectEmONCCTF2026ChoiceListNames_(choiceRows)
+  );
+
+  var rows = [EMONC_CTF_2026_SURVEY_HEADERS].concat(bodyRows);
+
   sheet.clear();
+  ensureEmONCCTF2026SheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -710,15 +721,131 @@ function getEmONCCTF2026Section2Rows_() {
 // =====================================================
 // CHOICES
 // =====================================================
-function writeEmONCCTF2026Choices_(sheet, sourceSs) {
-  var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
-    .concat(getEmONCCTF2026CountyChoices_())
+function getEmONCCTF2026ChoiceRows_(sourceSs) {
+  return getEmONCCTF2026CountyChoices_()
     .concat(getEmONCCTF2026FacilityChoices_(sourceSs))
     .concat(getEmONCCTF2026MenteeChoices_(sourceSs))
     .concat(getEmONCCTF2026ActivityChoices_());
+}
+
+function writeEmONCCTF2026Choices_(sheet, choiceRows) {
+  var rows = [EMONC_CTF_2026_CHOICES_HEADERS].concat(choiceRows);
 
   sheet.clear();
+  ensureEmONCCTF2026SheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureEmONCCTF2026SheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectEmONCCTF2026ChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/** "select_one x" / "select_multiple x" → "x", anything else → "". */
+function extractEmONCCTF2026SelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)(?:_from_file)?\s+(\S+)/);
+  return match ? match[1] : "";
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x").
+ * Drop those questions, but keep any that another row references through
+ * ${name}, since removing those would only trade one deploy error for another.
+ */
+function dropEmONCCTF2026RowsWithMissingChoices_(rows, availableChoiceLists) {
+  var orphanIndexes = [];
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractEmONCCTF2026SelectListName_(rows[i][0]);
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (!availableChoiceLists[listName]) {
+      orphanIndexes.push(i);
+    }
+  }
+
+  if (!orphanIndexes.length) return rows;
+
+  // relevant, parameters and calculation can reference another field.
+  var expressionColumns = [7, 8, 9];
+  var expressions = [];
+  for (i = 0; i < rows.length; i++) {
+    for (var c = 0; c < expressionColumns.length; c++) {
+      var value = rows[i][expressionColumns[c]];
+      if (value) expressions.push(String(value));
+    }
+  }
+  var expressionText = expressions.join(" ");
+
+  var dropped = {};
+  var keptNames = [];
+  var droppedNames = [];
+
+  for (i = 0; i < orphanIndexes.length; i++) {
+    var index = orphanIndexes[i];
+    var fieldName = String(rows[index][1] == null ? "" : rows[index][1]).trim();
+    var list = extractEmONCCTF2026SelectListName_(rows[index][0]);
+
+    if (fieldName && expressionText.indexOf("${" + fieldName + "}") !== -1) {
+      keptNames.push(fieldName + " (" + list + ")");
+      continue;
+    }
+
+    dropped[index] = true;
+    droppedNames.push(list);
+  }
+
+  if (droppedNames.length) {
+    Logger.log(
+      "EmONC CTF 2026: removed " + droppedNames.length + " question(s) whose " +
+      "choice list is not in the generated choices sheet: " +
+      droppedNames.sort().join(", ")
+    );
+  }
+  if (keptNames.length) {
+    Logger.log(
+      "EmONC CTF 2026 WARNING: kept " + keptNames.length + " question(s) with " +
+      "a missing choice list because other rows reference them: " +
+      keptNames.sort().join(", ") + ". Kobo will reject this deployment."
+    );
+  }
+
+  var filtered = [];
+  for (i = 0; i < rows.length; i++) {
+    if (!dropped[i]) filtered.push(rows[i]);
+  }
+  return filtered;
 }
 
 function getEmONCCTF2026CountyChoices_() {
