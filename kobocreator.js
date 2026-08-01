@@ -1076,6 +1076,13 @@ function generateSurveySheetIFM() {
     "relevant"
   ]];
 
+  // A facility only earns a question when it still has a selectable IFM, i.e.
+  // an Active row carrying both a Name and an IFM ID. Facilities whose IFMs are
+  // all Inactive (or lack a Name/ID) produce no choices, and Kobo rejects the
+  // whole form with "List name not in choices sheet".
+  var eligible = getSelectableIFMFacilities_(ifmData, ifmHeader);
+  var excludedCodes = {};
+
   var processed = {}; // ensure facility appears once
 
   for (var i = 1; i < ifmData.length; i++) {
@@ -1092,6 +1099,11 @@ function generateSurveySheetIFM() {
       continue;
     }
 
+    if (!eligible.codes[String(code).trim()]) {
+      excludedCodes[String(code).trim()] = facility;
+      continue;
+    }
+
     if (processed[code]) continue;
     processed[code] = true;
 
@@ -1100,6 +1112,14 @@ function generateSurveySheetIFM() {
     var firstWord = cleanedFacility.split("_")[0];
 
     var listName = firstWord + "_ifms";
+
+    // Facilities sharing a first word share a list; skip if no eligible row
+    // actually produced that list.
+    if (!eligible.listNames[listName]) {
+      excludedCodes[String(code).trim()] = facility;
+      continue;
+    }
+
     var type = "select_one " + listName;
 
     // Proper Label
@@ -1144,6 +1164,55 @@ function generateSurveySheetIFM() {
 
   sheet.getRange(1,1,output.length,output[0].length)
        .setValues(output);
+
+  var excludedList = [];
+  for (var excludedCode in excludedCodes) {
+    excludedList.push(excludedCodes[excludedCode] + " (" + excludedCode + ")");
+  }
+  if (excludedList.length) {
+    Logger.log(
+      "Survey Sheet (IFM): excluded " + excludedList.length + " facility(ies) " +
+      "with no Active IFM having both a Name and an IFM ID: " +
+      excludedList.sort().join(", ")
+    );
+  }
+}
+
+/**
+ * Facility codes and list names that will actually appear in
+ * "IFM List (Choices)" — Active rows that carry a Name and an IFM ID.
+ * Kept in sync with generateIFMChoicesSheet().
+ */
+function getSelectableIFMFacilities_(data, header) {
+  var countyIndex = header.indexOf("County");
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  var nameIndex = header.indexOf("Name");
+  var idIndex = header.indexOf("IFM ID");
+  var statusIndex = header.indexOf("Status");
+
+  var codes = {};
+  var listNames = {};
+
+  for (var i = 1; i < data.length; i++) {
+    var county = data[i][countyIndex];
+    var facility = data[i][facilityIndex];
+    var code = data[i][facilityCodeIndex];
+    var name = nameIndex === -1 ? "" : data[i][nameIndex];
+    var rawID = idIndex === -1 ? "" : data[i][idIndex];
+    var status = statusIndex === -1 ? "" : data[i][statusIndex];
+
+    if (!county || !facility || !code || !name || !rawID) continue;
+
+    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
+      continue;
+    }
+
+    codes[String(code).trim()] = true;
+    listNames[cleanForKobo(facility).split("_")[0] + "_ifms"] = true;
+  }
+
+  return { codes: codes, listNames: listNames };
 }
 
 // =====================================================
