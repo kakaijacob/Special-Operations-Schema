@@ -803,42 +803,26 @@ function generateIFMChoicesSheet() {
   var sheet = getOrCreateSheet("IFM List (Choices)");
   var output = [["County","Facility","Facility Code","list_name","name","label"]];
 
-  for (var i = 1; i < data.length; i++) {
-    var county = data[i][countyIndex];
-    var facility = data[i][facilityIndex];
-    var code = data[i][facilityCodeIndex];
-    var name = data[i][nameIndex];
-    var rawID = data[i][idIndex];
-    var status = statusIndex === -1 ? "" : data[i][statusIndex];
+  // One record per IFM ID + Facility Code, so a mentor who was later
+  // deactivated is not offered as a choice.
+  var records = resolveIFMRecords_(data, header);
+  var seenChoices = {};
 
-    if (!county || !facility || !code || !name || !rawID) continue;
+  for (var i = 0; i < records.length; i++) {
+    var record = records[i];
+    if (!record.isActive) continue;
 
-    // Status filter: Active only
-    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
-      continue;
-    }
-
-    // ✅ Clean IFM ID: remove all spaces
-    var cleanedID = rawID.toString().replace(/\s+/g, "").trim();
-
-    // Clean facility
-    var cleanedFacility = cleanForKobo(facility);
-
-    // Take FIRST word only
-    var firstWord = cleanedFacility.split("_")[0];
-
-    var listName = firstWord + "_ifms";
-
-    // ✅ Use cleaned ID for Kobo name
-    var fullName = cleanedID + "_" + cleanForKobo(name);
+    var choiceKey = record.listName + "|" + record.choiceName;
+    if (seenChoices[choiceKey]) continue;
+    seenChoices[choiceKey] = true;
 
     output.push([
-      county,
-      facility,
-      code,
-      listName,
-      fullName,
-      name
+      record.county,
+      record.facility,
+      record.code,
+      record.listName,
+      record.choiceName,
+      record.name
     ]);
   }
 
@@ -1184,6 +1168,29 @@ function generateSurveySheetIFM() {
  * Kept in sync with generateIFMChoicesSheet().
  */
 function getSelectableIFMFacilities_(data, header) {
+  var records = resolveIFMRecords_(data, header);
+  var codes = {};
+  var listNames = {};
+
+  for (var i = 0; i < records.length; i++) {
+    if (!records[i].isActive) continue;
+    codes[records[i].code] = true;
+    listNames[records[i].listName] = true;
+  }
+
+  return { codes: codes, listNames: listNames };
+}
+
+/**
+ * One authoritative record per mentor posting.
+ *
+ * A mentor posting is identified by IFM ID + Facility Code; Status is that
+ * posting's current state. The same posting can appear on several rows (for
+ * example an activation row and a later deactivation row), so the last row
+ * wins — otherwise a mentor who has since been deactivated would still count
+ * as Active and produce a facility question with no choices.
+ */
+function resolveIFMRecords_(data, header) {
   var countyIndex = header.indexOf("County");
   var facilityIndex = header.indexOf("Facility");
   var facilityCodeIndex = header.indexOf("Facility Code");
@@ -1191,8 +1198,8 @@ function getSelectableIFMFacilities_(data, header) {
   var idIndex = header.indexOf("IFM ID");
   var statusIndex = header.indexOf("Status");
 
-  var codes = {};
-  var listNames = {};
+  var byPosting = {};
+  var order = [];
 
   for (var i = 1; i < data.length; i++) {
     var county = data[i][countyIndex];
@@ -1204,15 +1211,31 @@ function getSelectableIFMFacilities_(data, header) {
 
     if (!county || !facility || !code || !name || !rawID) continue;
 
-    if (String(status == null ? "" : status).trim().toLowerCase() !== "active") {
-      continue;
-    }
+    var cleanedID = String(rawID).replace(/\s+/g, "").trim();
+    var cleanedCode = String(code).trim();
+    var cleanedFacility = cleanForKobo(facility);
+    var key = cleanedID + "|" + cleanedCode;
 
-    codes[String(code).trim()] = true;
-    listNames[cleanForKobo(facility).split("_")[0] + "_ifms"] = true;
+    if (!byPosting[key]) order.push(key);
+
+    byPosting[key] = {
+      county: county,
+      facility: facility,
+      code: cleanedCode,
+      name: name,
+      ifmId: cleanedID,
+      isActive:
+        String(status == null ? "" : status).trim().toLowerCase() === "active",
+      listName: cleanedFacility.split("_")[0] + "_ifms",
+      choiceName: cleanedID + "_" + cleanForKobo(name)
+    };
   }
 
-  return { codes: codes, listNames: listNames };
+  var records = [];
+  for (var o = 0; o < order.length; o++) {
+    records.push(byPosting[order[o]]);
+  }
+  return records;
 }
 
 // =====================================================
