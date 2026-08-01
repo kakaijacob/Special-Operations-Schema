@@ -78,8 +78,12 @@ function upsertMoHSkillsAssessmentChecklist_(sourceSs) {
 
   removeExtraMoHSACSheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeMoHSACSurvey_(surveySheet, sourceSs);
-  writeMoHSACChoices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // choice lists this form ships with.
+  var choiceRows = getMoHSACChoiceRows_(sourceSs);
+
+  writeMoHSACSurvey_(surveySheet, sourceSs, collectMoHSACChoiceListNames_(choiceRows));
+  writeMoHSACChoiceRows_(choicesSheet, choiceRows);
   writeMoHSACSettings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -116,12 +120,17 @@ function removeExtraMoHSACSheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeMoHSACSurvey_(sheet, sourceSs) {
-  var rows = [MOH_SAC_SURVEY_HEADERS]
-    .concat(getMoHSACSurveyRows_())
+function writeMoHSACSurvey_(sheet, sourceSs, availableChoiceLists) {
+  var bodyRows = getMoHSACSurveyRows_()
     .concat(getMoHSACSection1bRows_())
     .concat(getMoHSACSection1cRows_(sourceSs))
     .concat(getMoHSACSection2Rows_());
+
+  if (availableChoiceLists) {
+    bodyRows = dropMoHSACRowsWithMissingChoices_(bodyRows, availableChoiceLists);
+  }
+
+  var rows = [MOH_SAC_SURVEY_HEADERS].concat(bodyRows);
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -4069,12 +4078,15 @@ function getMoHSACYesNoChoicesForLists_(listNames) {
 // CHOICES
 // =====================================================
 function writeMoHSACChoices_(sheet, sourceSs) {
-  var facilityRows = getMoHSACFacilityChoices_(sourceSs);
-  var rows = [MOH_SAC_CHOICES_HEADERS]
-    .concat(getMoHSACProgramChoices_())
+  writeMoHSACChoiceRows_(sheet, getMoHSACChoiceRows_(sourceSs));
+}
+
+/** Every choice row this form ships with (no header). */
+function getMoHSACChoiceRows_(sourceSs) {
+  return getMoHSACProgramChoices_()
     .concat(getMoHSACCountyChoices_())
     .concat(getMoHSACJhslChoices_())
-    .concat(facilityRows)
+    .concat(getMoHSACFacilityChoices_(sourceSs))
     .concat(getMoHSACLmPoChoices_())
     .concat(getMoHSACIfmChoices_(sourceSs))
     .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
@@ -4082,9 +4094,95 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACSkillEvaluationChoices_())
     .concat(getMoHSACAuthoredSkillChoices_())
     .concat(getMoHSACRemainingYesNoChoices_());
+}
 
+function writeMoHSACChoiceRows_(sheet, choiceRows) {
+  var rows = [MOH_SAC_CHOICES_HEADERS].concat(choiceRows);
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectMoHSACChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x").
+ * Drop those questions, but keep any that another row references through
+ * ${name}, since removing those would only trade one deploy error for another.
+ */
+function dropMoHSACRowsWithMissingChoices_(rows, availableChoiceLists) {
+  var orphanIndexes = [];
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractMoHSACSelectListName_(rows[i][0]);
+    if (listName && !availableChoiceLists[listName]) {
+      orphanIndexes.push(i);
+    }
+  }
+
+  if (!orphanIndexes.length) return rows;
+
+  // relevant, choice_filter, calculation and constraint can reference a field.
+  var expressionColumns = [7, 8, 9, 10];
+  var expressions = [];
+  for (i = 0; i < rows.length; i++) {
+    for (var c = 0; c < expressionColumns.length; c++) {
+      var value = rows[i][expressionColumns[c]];
+      if (value) expressions.push(String(value));
+    }
+  }
+  var expressionText = expressions.join(" ");
+
+  var dropped = {};
+  var keptNames = [];
+  var droppedNames = [];
+
+  for (i = 0; i < orphanIndexes.length; i++) {
+    var index = orphanIndexes[i];
+    var fieldName = String(rows[index][1] == null ? "" : rows[index][1]).trim();
+    var list = extractMoHSACSelectListName_(rows[index][0]);
+
+    if (fieldName && expressionText.indexOf("${" + fieldName + "}") !== -1) {
+      keptNames.push(fieldName + " (" + list + ")");
+      continue;
+    }
+
+    dropped[index] = true;
+    droppedNames.push(list);
+  }
+
+  if (droppedNames.length) {
+    Logger.log(
+      "MoH SAC: removed " + droppedNames.length + " question(s) whose choice " +
+      "list is not in the generated choices sheet: " +
+      droppedNames.sort().join(", ")
+    );
+  }
+  if (keptNames.length) {
+    Logger.log(
+      "MoH SAC WARNING: kept " + keptNames.length + " question(s) with a " +
+      "missing choice list because other rows reference them: " +
+      keptNames.sort().join(", ") + ". Kobo will reject this deployment."
+    );
+  }
+
+  var filtered = [];
+  for (i = 0; i < rows.length; i++) {
+    if (!dropped[i]) filtered.push(rows[i]);
+  }
+  return filtered;
 }
 
 /**
