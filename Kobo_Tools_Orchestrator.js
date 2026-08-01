@@ -341,6 +341,8 @@ function validateKoboPipelineDependencies_() {
     );
   }
 
+  validateKoboPipelineFileRevisions_();
+
   var tokenProp =
     typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
       ? KOBO_DEPLOY_PROP_API_TOKEN
@@ -354,6 +356,68 @@ function validateKoboPipelineDependencies_() {
 
   resolveGlobalFunction_("testKoboConnection")();
   Logger.log("Pipeline preflight complete: code, server and token verified.");
+}
+
+/**
+ * Each file is copied into this project by hand, so one of them is easily left
+ * on an older revision — and a stale builder quietly reintroduces deploy
+ * errors that were already fixed. Every entry below is an internal function
+ * added by a fix, so its absence dates the file it belongs to.
+ */
+function validateKoboPipelineFileRevisions_() {
+  var expectedFunctions = [
+    {
+      name: "resolveMenteeRecords_",
+      file: "kobocreator.js",
+      fix: "mentee questions restricted to facilities with selectable mentees"
+    },
+    {
+      name: "resolveIFMRecords_",
+      file: "kobocreator.js",
+      fix: "IFM questions restricted to Active mentor postings"
+    },
+    {
+      name: "dropMoHSACRowsWithMissingChoices_",
+      file: "MoH_Skills_Assessment_Checklist.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "clearMoHSACFieldReferences_",
+      file: "MoH_Skills_Assessment_Checklist.js",
+      fix: "clears ${references} to dropped questions"
+    },
+    {
+      name: "dropEmONCCTF2026RowsWithMissingChoices_",
+      file: "EmONC_Curriculum_Tracking_Form_2026.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "dropNewbornCTFRowsWithMissingChoices_",
+      file: "Newborn_Curriculum_Tracking_Form.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "findKoboFormProblems_",
+      file: "Kobo_Tools_Deployer.js",
+      fix: "pre-deploy check for empty choice lists"
+    }
+  ];
+
+  var stale = [];
+  for (var i = 0; i < expectedFunctions.length; i++) {
+    var expected = expectedFunctions[i];
+    if (!resolveGlobalFunction_(expected.name)) {
+      stale.push(expected.file + " (missing " + expected.fix + ")");
+    }
+  }
+
+  if (stale.length) {
+    throw new Error(
+      "These Apps Script files are older than the pipeline expects — copy the " +
+      "current version of each one in before running again: " +
+      stale.sort().join("; ")
+    );
+  }
 }
 
 /**

@@ -4151,12 +4151,18 @@ function collectMoHSACChoiceListNames_(choiceRows) {
 
 /**
  * Kobo refuses to deploy the whole form when any select references a list that
- * is absent from the choices sheet ("List name not in choices sheet: x").
- * Drop those questions, but keep any that another row references through
- * ${name}, since removing those would only trade one deploy error for another.
+ * is absent from the choices sheet ("List name not in choices sheet: x"), so
+ * every one of those questions has to go. Other rows may still reference the
+ * dropped question through ${name}; those references are replaced with an
+ * empty string, which keeps the surrounding expression valid and simply never
+ * matches.
  */
 function dropMoHSACRowsWithMissingChoices_(rows, availableChoiceLists) {
-  var orphanIndexes = [];
+  // relevant, choice_filter, calculation and constraint can reference a field.
+  var expressionColumns = [7, 8, 9, 10];
+  var droppedNames = [];
+  var droppedLists = [];
+  var dropped = {};
   var i;
 
   for (i = 0; i < rows.length; i++) {
@@ -4166,62 +4172,57 @@ function dropMoHSACRowsWithMissingChoices_(rows, availableChoiceLists) {
     // Collapse stray whitespace so the type matches the trimmed choices.
     rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
 
-    if (!availableChoiceLists[listName]) {
-      orphanIndexes.push(i);
-    }
+    if (availableChoiceLists[listName]) continue;
+
+    dropped[i] = true;
+    droppedLists.push(listName);
+
+    var fieldName = String(rows[i][1] == null ? "" : rows[i][1]).trim();
+    if (fieldName) droppedNames.push(fieldName);
   }
 
-  if (!orphanIndexes.length) return rows;
+  if (!droppedLists.length) return rows;
 
-  // relevant, choice_filter, calculation and constraint can reference a field.
-  var expressionColumns = [7, 8, 9, 10];
-  var expressions = [];
+  var kept = [];
   for (i = 0; i < rows.length; i++) {
-    for (var c = 0; c < expressionColumns.length; c++) {
-      var value = rows[i][expressionColumns[c]];
-      if (value) expressions.push(String(value));
-    }
-  }
-  var expressionText = expressions.join(" ");
-
-  var dropped = {};
-  var keptNames = [];
-  var droppedNames = [];
-
-  for (i = 0; i < orphanIndexes.length; i++) {
-    var index = orphanIndexes[i];
-    var fieldName = String(rows[index][1] == null ? "" : rows[index][1]).trim();
-    var list = extractMoHSACSelectListName_(rows[index][0]);
-
-    if (fieldName && expressionText.indexOf("${" + fieldName + "}") !== -1) {
-      keptNames.push(fieldName + " (" + list + ")");
-      continue;
-    }
-
-    dropped[index] = true;
-    droppedNames.push(list);
-  }
-
-  if (droppedNames.length) {
-    Logger.log(
-      "MoH SAC: removed " + droppedNames.length + " question(s) whose choice " +
-      "list is not in the generated choices sheet: " +
-      droppedNames.sort().join(", ")
-    );
-  }
-  if (keptNames.length) {
-    Logger.log(
-      "MoH SAC WARNING: kept " + keptNames.length + " question(s) with a " +
-      "missing choice list because other rows reference them: " +
-      keptNames.sort().join(", ") + ". Kobo will reject this deployment."
+    if (dropped[i]) continue;
+    kept.push(
+      clearMoHSACFieldReferences_(rows[i], droppedNames, expressionColumns)
     );
   }
 
-  var filtered = [];
-  for (i = 0; i < rows.length; i++) {
-    if (!dropped[i]) filtered.push(rows[i]);
+  Logger.log(
+    "MoH SAC: removed " + droppedLists.length + " question(s) whose choice " +
+    "list is not in the generated choices sheet: " +
+    droppedLists.sort().join(", ")
+  );
+
+  return kept;
+}
+
+/**
+ * Replace ${name} with '' for every dropped question, so expressions left
+ * behind stay valid XPath instead of pointing at a field that no longer exists.
+ */
+function clearMoHSACFieldReferences_(row, droppedNames, expressionColumns) {
+  if (!droppedNames.length) return row;
+
+  for (var c = 0; c < expressionColumns.length; c++) {
+    var column = expressionColumns[c];
+    var value = row[column];
+    if (!value) continue;
+
+    var text = String(value);
+    for (var n = 0; n < droppedNames.length; n++) {
+      var reference = "${" + droppedNames[n] + "}";
+      while (text.indexOf(reference) !== -1) {
+        text = text.replace(reference, "''");
+      }
+    }
+    row[column] = text;
   }
-  return filtered;
+
+  return row;
 }
 
 /**

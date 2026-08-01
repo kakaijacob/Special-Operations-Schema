@@ -296,6 +296,13 @@ function deployKoboTool(toolId, rebuildFirst) {
   var priorVersionId = priorUid ? getKoboAssetVersionId_(priorUid) : "";
 
   var formSs = openKoboToolFormSpreadsheet_(tool);
+
+  // The Drive export reads the saved file, so the build that just ran has to
+  // be written out before the export or a stale form is what reaches Kobo.
+  SpreadsheetApp.flush();
+
+  assertKoboFormIsDeployable_(formSs, tool);
+
   Logger.log("Exporting: " + tool.label + " → " + formSs.getUrl());
 
   var xlsxBlob = exportSpreadsheetAsXlsxBlob_(
@@ -464,6 +471,151 @@ function resolveKoboDeployFunction_(fnName) {
     if (typeof fn === "function") return fn;
   } catch (e3) {}
   return null;
+}
+
+// =====================================================
+// PRE-DEPLOY VALIDATION
+// Kobo reports these as "[row : N] List name not in choices sheet: x" and
+// rejects the whole form, so catch them here where the row can be named.
+// =====================================================
+
+/**
+ * Report what Kobo would reject, for every registered tool, without deploying.
+ * Run this from the Apps Script editor when a deployment fails.
+ */
+function checkAllKoboFormsForDeployProblems() {
+  var registry = getKoboDeployToolsRegistry_();
+  var report = [];
+
+  for (var i = 0; i < registry.length; i++) {
+    var tool = registry[i];
+    var entry = { toolId: tool.id, label: tool.label };
+
+    try {
+      var formSs = openKoboToolFormSpreadsheet_(tool);
+      entry.problems = findKoboFormProblems_(formSs);
+      entry.url = formSs.getUrl();
+    } catch (err) {
+      entry.error = String(err.message || err);
+    }
+
+    report.push(entry);
+    Logger.log(
+      tool.label + ": " +
+      (entry.error
+        ? "could not check — " + entry.error
+        : entry.problems.length
+          ? entry.problems.length + " problem(s)\n  " + entry.problems.join("\n  ")
+          : "ready to deploy")
+    );
+  }
+
+  return report;
+}
+
+function assertKoboFormIsDeployable_(formSs, tool) {
+  var problems = findKoboFormProblems_(formSs);
+  if (!problems.length) return;
+
+  throw new Error(
+    tool.label + " would be rejected by Kobo:\n  " +
+    problems.join("\n  ") +
+    "\nThe survey and choices tabs come from " + tool.buildFnName +
+    "(); rebuild the form (refreshAllKoboTools) and check that the Apps " +
+    "Script copy of that builder is up to date."
+  );
+}
+
+/**
+ * Selects pointing at an empty choice list, and duplicate question names.
+ * Row numbers count the header, matching Kobo's "[row : N]".
+ */
+function findKoboFormProblems_(formSs) {
+  var surveySheet = formSs.getSheetByName("survey");
+  var choicesSheet = formSs.getSheetByName("choices");
+  var problems = [];
+
+  if (!surveySheet) return ["no 'survey' tab in " + formSs.getName()];
+  if (!choicesSheet) return ["no 'choices' tab in " + formSs.getName()];
+
+  var survey = surveySheet.getDataRange().getValues();
+  var choices = choicesSheet.getDataRange().getValues();
+  if (survey.length < 2) return ["'survey' tab is empty"];
+
+  var availableLists = collectKoboChoiceListNames_(choices);
+
+  var surveyHeader = survey[0];
+  var typeIndex = indexOfKoboColumn_(surveyHeader, "type");
+  var nameIndex = indexOfKoboColumn_(surveyHeader, "name");
+  if (typeIndex === -1 || nameIndex === -1) {
+    return ["'survey' tab is missing a type or name column"];
+  }
+
+  var seenNames = {};
+
+  for (var i = 1; i < survey.length; i++) {
+    var type = String(survey[i][typeIndex] == null ? "" : survey[i][typeIndex]).trim();
+    var name = String(survey[i][nameIndex] == null ? "" : survey[i][nameIndex]).trim();
+    var row = i + 1;
+
+    var listName = extractKoboSelectListName_(type);
+    if (listName && !availableLists[listName]) {
+      problems.push(
+        "[row : " + row + "] List name not in choices sheet: " + listName
+      );
+    }
+
+    if (name && type !== "end_group" && type !== "end_repeat") {
+      if (seenNames[name]) {
+        problems.push(
+          "[row : " + row + "] Duplicate question name: " + name +
+          " (first used on row " + seenNames[name] + ")"
+        );
+      } else {
+        seenNames[name] = row;
+      }
+    }
+  }
+
+  return problems;
+}
+
+function collectKoboChoiceListNames_(choices) {
+  var lists = {};
+  if (!choices || choices.length < 2) return lists;
+
+  var header = choices[0];
+  var listNameIndex = indexOfKoboColumn_(header, "list_name");
+  var nameIndex = indexOfKoboColumn_(header, "name");
+  if (listNameIndex === -1 || nameIndex === -1) return lists;
+
+  for (var i = 1; i < choices.length; i++) {
+    var listName = String(
+      choices[i][listNameIndex] == null ? "" : choices[i][listNameIndex]
+    ).trim();
+    var choiceName = String(
+      choices[i][nameIndex] == null ? "" : choices[i][nameIndex]
+    ).trim();
+    if (listName && choiceName) lists[listName] = true;
+  }
+
+  return lists;
+}
+
+function indexOfKoboColumn_(header, columnName) {
+  for (var i = 0; i < header.length; i++) {
+    if (String(header[i] == null ? "" : header[i]).trim().toLowerCase() === columnName) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function extractKoboSelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)\s+(\S+)/);
+  return match ? match[1] : "";
 }
 
 /**
