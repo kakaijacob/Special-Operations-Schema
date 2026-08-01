@@ -131,8 +131,7 @@ function getKoboDeployToolsRegistry_() {
  */
 function setupKoboDeployConfig() {
   // >>> EDIT THESE BEFORE RUNNING <<<
-  // Paste your Kobo API token here (do not commit real tokens to git).
-  var apiToken = "PASTE_YOUR_KOBO_API_TOKEN_HERE";
+  var apiToken = "1faf1291cb5e472b7f5a253f3888380d28e7900b";
   // EU server (former humanitarianresponse.info). Global server: https://kf.kobotoolbox.org
   var kpiBaseUrl = "https://eu.kobotoolbox.org";
 
