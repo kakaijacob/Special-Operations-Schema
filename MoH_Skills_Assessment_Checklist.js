@@ -831,7 +831,7 @@ function getMoHSACSection2Rows_() {
     "${next_group_hide1} != '' or (${next_group_hide1} != '' and ${ifm_id_2}!='') or (${next_group_hide1} != '' and ${lm_po}!='')";
 
   var freeflowScoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent}='yes')+" +
     "(${sterile_gloves}='yes')+" +
     "(${assemble_ubt}='yes')+" +
@@ -1034,7 +1034,7 @@ function getMoHSACManualPlacentaRows_() {
     "  • Give 2 g Ampicillin IV or 1 g Cefazolin IV or IV Ceftriaxone 2 g plus IV Metronidazole 500 mg";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help1}='yes')+" +
     "(${obtain_consent_001}='yes')+" +
     "(${v_drape}='yes')+" +
@@ -1173,7 +1173,7 @@ function getMoHSACManualPlacentaRows_() {
  */
 function getMoHSACUbtRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_002}='yes')+" +
     "(${sterile_gloves_001}='yes')+" +
     "(${balloon_over_catheter}='yes')+" +
@@ -1317,7 +1317,7 @@ function getMoHSACCordProlapseRows_() {
     "  • If the baby is breech, perform breech extraction.";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help_001}='yes')+" +
     "(${obtain_consent_003}='yes')+" +
     "(${vaginal_exam}='yes')+" +
@@ -1456,7 +1456,7 @@ function getMoHSACCordProlapseRows_() {
  */
 function getMoHSACAssistedBreechRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${confirm_diagnosis_001}='yes')+" +
     "(${obtain_consent_004}='yes')+" +
     "(${call_for_help}='yes')+" +
@@ -1583,7 +1583,7 @@ function getMoHSACAvdRows_() {
     "  • The fetus is not delivered after 20 minutes";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_005}='yes')+" +
     "(${ask_for_help}='yes')+" +
     "(${avd_contraindication}='yes')+" +
@@ -1718,7 +1718,7 @@ function getMoHSACAvdRows_() {
  */
 function getMoHSACShoulderDystociaRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help_002}='yes')+" +
     "(${obtain_consent_006}='yes')+" +
     "(${aim_to_deliver_within_5_min}='yes')+" +
@@ -1852,7 +1852,7 @@ function getMoHSACAmtslRows_() {
     "  ◊ Give 5 IU/500 μg IM";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${explain_procedure}='yes')+" +
     "(${obtain_consent_007}='yes')+" +
     "(${change_goloves}='yes')+" +
@@ -1992,7 +1992,7 @@ function getMoHSACNasgRows_() {
     "  • The patient is hemodynamically stable and conscious/aware";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_008}='yes')+" +
     "(${ipc_precautions}='yes')+" +
     "(${placing_woman_on_nasg}='yes')+" +

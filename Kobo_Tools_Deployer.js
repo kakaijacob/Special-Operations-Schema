@@ -551,12 +551,37 @@ function findKoboFormProblems_(formSs) {
     return ["'survey' tab is missing a type or name column"];
   }
 
+  var expressionColumns = [];
+  var expressionNames = [
+    "relevant", "choice_filter", "calculation", "constraint", "parameters"
+  ];
+  for (var e = 0; e < expressionNames.length; e++) {
+    var expressionIndex = indexOfKoboColumn_(surveyHeader, expressionNames[e]);
+    if (expressionIndex !== -1) {
+      expressionColumns.push({ name: expressionNames[e], index: expressionIndex });
+    }
+  }
+
   var seenNames = {};
 
   for (var i = 1; i < survey.length; i++) {
     var type = String(survey[i][typeIndex] == null ? "" : survey[i][typeIndex]).trim();
     var name = String(survey[i][nameIndex] == null ? "" : survey[i][nameIndex]).trim();
     var row = i + 1;
+
+    for (var x = 0; x < expressionColumns.length; x++) {
+      var column = expressionColumns[x];
+      var expression = survey[i][column.index];
+      if (!expression) continue;
+
+      var fault = describeKoboExpressionFault_(String(expression));
+      if (fault) {
+        problems.push(
+          "[row : " + row + "] " + fault + " in " + column.name +
+          (name ? " for " + name : "")
+        );
+      }
+    }
 
     var listName = extractKoboSelectListName_(type);
     if (listName && !availableLists[listName]) {
@@ -578,6 +603,42 @@ function findKoboFormProblems_(formSs) {
   }
 
   return problems;
+}
+
+/**
+ * ODK Validate rejects the form for "Mismatched brackets or parentheses in
+ * expression", which only shows up once the xlsform reaches Kobo. Report it
+ * here instead, against the row it came from.
+ * Returns "" when the expression is well formed.
+ */
+function describeKoboExpressionFault_(expression) {
+  var depth = 0;
+  var quote = "";
+
+  for (var i = 0; i < expression.length; i++) {
+    var ch = expression.charAt(i);
+
+    if (quote) {
+      if (ch === quote) quote = "";
+      continue;
+    }
+
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+    } else if (ch === "(") {
+      depth++;
+    } else if (ch === ")") {
+      depth--;
+      if (depth < 0) return "Unmatched closing parenthesis";
+    }
+  }
+
+  if (quote) return "Unterminated quote";
+  if (depth > 0) {
+    return "Mismatched parentheses: " + depth + " unclosed";
+  }
+
+  return "";
 }
 
 function collectKoboChoiceListNames_(choices) {
