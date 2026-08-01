@@ -377,6 +377,11 @@ function validateKoboPipelineFileRevisions_() {
       fix: "IFM questions restricted to Active mentor postings"
     },
     {
+      name: "padKoboFacilityRank_",
+      file: "kobocreator.js",
+      fix: "ranks duplicate facility field names as _02, _03, etc."
+    },
+    {
       name: "dropMoHSACRowsWithMissingChoices_",
       file: "MoH_Skills_Assessment_Checklist.js",
       fix: "drops questions whose choice list is empty"

@@ -1662,15 +1662,16 @@ function getFacilityVariableBase_(facility) {
  * Two facilities that shorten to the same base would otherwise produce two
  * questions with the same name, and Kobo rejects the form with "Duplicate
  * question name". The first facility to claim a base keeps it, so established
- * question names stay put; a later facility lengthens its name one word at a
- * time and falls back to its facility code when the words run out.
+ * question names stay put. Later facilities with that base receive a ranking
+ * suffix after the complete field name: sagana_mentees_02,
+ * sagana_mentees_03, and so on.
  *
  * entries: [{ code: "16002", facility: "Kanyakine Sub County Hospital" }, ...]
  * Returns { code: listName }.
  */
 function assignFacilityListNames_(entries, suffix, baseOf) {
   var namesByCode = {};
-  var claimedBy = {};
+  var rankByBase = {};
 
   for (var i = 0; i < entries.length; i++) {
     var code = String(entries[i].code == null ? "" : entries[i].code).trim();
@@ -1678,51 +1679,23 @@ function assignFacilityListNames_(entries, suffix, baseOf) {
     if (!code || !facility || namesByCode[code]) continue;
 
     var base = baseOf ? baseOf(facility) : getFacilityVariableBase_(facility);
-    var candidates = facilityBaseCandidates_(facility, code, base);
-    var chosen = "";
+    var rank = (rankByBase[base] || 0) + 1;
+    rankByBase[base] = rank;
 
-    for (var c = 0; c < candidates.length; c++) {
-      if (!claimedBy[candidates[c]]) {
-        chosen = candidates[c];
-        break;
-      }
+    var listName = base + suffix;
+    if (rank > 1) {
+      listName += "_" + padKoboFacilityRank_(rank);
     }
 
-    // Same facility name on two codes: keep going until something is free.
-    if (!chosen) {
-      var attempt = 2;
-      chosen = base + "_" + cleanForKobo(code);
-      while (claimedBy[chosen]) {
-        chosen = base + "_" + cleanForKobo(code) + "_" + attempt;
-        attempt++;
-      }
-    }
-
-    claimedBy[chosen] = code;
-    namesByCode[code] = chosen + suffix;
+    namesByCode[code] = listName;
   }
 
   return namesByCode;
 }
 
-/** Base name, then progressively longer versions, then the facility code. */
-function facilityBaseCandidates_(facility, code, base) {
-  var candidates = [base];
-  var cleaned = cleanForKobo(facility);
-
-  // Special-cased bases (for example "cgtrh_vikwatani") are not prefixes of
-  // the facility name, so lengthening them word by word would be meaningless.
-  if (cleaned.indexOf(base) === 0) {
-    var words = cleaned.split("_");
-    var candidate = base;
-    for (var i = base.split("_").length; i < words.length; i++) {
-      candidate = candidate + "_" + words[i];
-      candidates.push(candidate);
-    }
-  }
-
-  candidates.push(base + "_" + cleanForKobo(code));
-  return candidates;
+/** At least two digits: 2 → "02", 10 → "10", 100 → "100". */
+function padKoboFacilityRank_(rank) {
+  return rank < 10 ? "0" + rank : String(rank);
 }
 
 
