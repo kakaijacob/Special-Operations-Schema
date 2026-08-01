@@ -241,46 +241,8 @@ function generateVariableNames() {
 }
 
 
-// =====================================================
-// Helper: get or create sheet
-// =====================================================
-function getOrCreateSheet(name) {
-
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(name);
-
-  if (!sh) {
-    sh = ss.insertSheet(name);
-  }
-
-  sh.clear();
-
-  return sh;
-}
-
-
-// =====================================================
-// Helper: Clean for Kobo variable naming
-// =====================================================
-function cleanForKobo(str) {
-
-  if (!str) return "";
-
-  return str
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-
-// =====================================================
-// Helper: Generate Kobo Variable
-// =====================================================
-function generateKoboVariable(str) {
-  return cleanForKobo(str);
-}
+// getOrCreateSheet(), cleanForKobo() and generateKoboVariable() are defined
+// once, near the bottom of this file.
 
 // =====================================================
 // 3️⃣ MOH SKILLS ASSESSMENT CHECKLIST – FILTER PROGRAM FOR KOBO
@@ -1110,8 +1072,10 @@ function generateSurveySheetIFM() {
     // ===== NEW RELEVANT LOGIC =====
     var facilityValue = code + "_" + cleanedFacility;
 
-    // County variable for ${county_facilities} format
-    var countyVar = county.toLowerCase().replace(/\s+/g, "_");
+    // County variable for ${county_facilities} format. Cleaned the same way as
+    // the facility choices sheets, so "Murang'a" cannot become a name no
+    // survey element has.
+    var countyVar = cleanForKobo(county);
 
     // Relevant string
     var relevant = `\${${countyVar}_facilities} = '${facilityValue}' and (\${program} = 'ifm_assessment' or \${program} = 'tot')`;
@@ -1577,12 +1541,80 @@ function cleanMenteeID(idValue) {
 // HELPER: CLEAN FOR KOBO
 // =====================================================
 function cleanForKobo(text) {
-  return text.toString().toLowerCase()
+  return foldKoboText_(text).toLowerCase()
     .replace(/[^a-z0-9 ]/g,"")
     .trim()
     .replace(/\s+/g,"_")
     .replace(/_+/g,"_")
     .replace(/^_+|_+$/g,"");
+}
+
+/**
+ * Names are typed by hand, so one county arrives as "Murang'a", "Murangá" and
+ * "Muranga". Kobo field names hold plain ASCII only, and every generator has
+ * to land on the same spelling, so drop apostrophes and fold accented letters
+ * onto their base letter before the rest of the cleaning: all three become
+ * "muranga", never "murang_a" or "murang".
+ */
+function foldKoboText_(text) {
+  var value = text == null ? "" : String(text);
+
+  // A curly apostrophe that lost its encoding on the way out of Sheets arrives
+  // as three characters; drop it before the accented letters are folded, or
+  // "Murangâ€™a" would keep the stray "a" from "â".
+  value = value.replace(/\u00E2\u20AC\u2122/g, "");
+
+  // Straight, curly and modifier apostrophes, plus the acute accent when it is
+  // typed as a standalone character.
+  value = value.replace(/['\u2018\u2019\u02BC\u0060\u00B4]/g, "");
+
+  if (typeof value.normalize === "function") {
+    value = value.normalize("NFD").replace(/[\u0300-\u036F]/g, "");
+  }
+
+  return foldKoboLatinLetters_(value);
+}
+
+/**
+ * Accent folding for runtimes without String.prototype.normalize.
+ * Grouped by the base letter so the two halves of the mapping cannot drift
+ * out of alignment.
+ */
+var KOBO_LATIN_FOLD_GROUPS = {
+  a: "àáâãäåāăą",
+  c: "çćĉċč",
+  e: "èéêëēĕėęě",
+  i: "ìíîïĩīĭįı",
+  n: "ñńņň",
+  o: "òóôõöøōŏő",
+  r: "ŕř",
+  s: "śŝşš",
+  u: "ùúûüũūŭůűų",
+  y: "ýÿŷ",
+  z: "źżž"
+};
+
+function foldKoboLatinLetters_(value) {
+  var out = "";
+
+  for (var i = 0; i < value.length; i++) {
+    var ch = value.charAt(i);
+    var lower = ch.toLowerCase();
+    var plain = "";
+
+    for (var base in KOBO_LATIN_FOLD_GROUPS) {
+      if (KOBO_LATIN_FOLD_GROUPS[base].indexOf(lower) !== -1) {
+        plain = base;
+        break;
+      }
+    }
+
+    if (!plain) out += ch;
+    else if (ch === lower) out += plain;
+    else out += plain.toUpperCase();
+  }
+
+  return out;
 }
 
 // =====================================================

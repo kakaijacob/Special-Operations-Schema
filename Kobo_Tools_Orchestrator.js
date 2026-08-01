@@ -382,6 +382,11 @@ function validateKoboPipelineFileRevisions_() {
       fix: "ranks duplicate facility field names as _02, _03, etc."
     },
     {
+      name: "foldKoboText_",
+      file: "kobocreator.js",
+      fix: "folds apostrophes and accents, so Murang'a gives muranga"
+    },
+    {
       name: "dropMoHSACRowsWithMissingChoices_",
       file: "MoH_Skills_Assessment_Checklist.js",
       fix: "drops questions whose choice list is empty"
