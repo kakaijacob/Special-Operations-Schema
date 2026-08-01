@@ -104,7 +104,11 @@ function generateVariableNames() {
       .trim()
       .toLowerCase();
 
-    var koboVariable = generateKoboVariable(facility);
+    // Allocated per facility code so two similarly named facilities cannot
+    // produce two questions with the same name.
+    var koboVariable =
+      selectable.emoncListNameByCode[String(code).trim()] ||
+      generateKoboVariable(facility);
     var cleanedFacility = cleanForKobo(facility);
     var facilityKobo = code + "_" + cleanedFacility;
     var logicCounty = cleanForKobo(county);
@@ -1086,13 +1090,11 @@ function generateSurveySheetIFM() {
 
     // Clean facility
     var cleanedFacility = cleanForKobo(facility);
-    var firstWord = cleanedFacility.split("_")[0];
 
-    var listName = firstWord + "_ifms";
-
-    // Facilities sharing a first word share a list; skip if no eligible row
-    // actually produced that list.
-    if (!eligible.listNames[listName]) {
+    // Allocated per facility code, so facilities sharing a first word still
+    // get one question each instead of two questions with the same name.
+    var listName = eligible.listNameByCode[String(code).trim()];
+    if (!listName) {
       excludedCodes[String(code).trim()] = facility;
       continue;
     }
@@ -1164,14 +1166,16 @@ function getSelectableIFMFacilities_(data, header) {
   var records = resolveIFMRecords_(data, header);
   var codes = {};
   var listNames = {};
+  var listNameByCode = {};
 
   for (var i = 0; i < records.length; i++) {
     if (!records[i].isActive) continue;
     codes[records[i].code] = true;
     listNames[records[i].listName] = true;
+    listNameByCode[records[i].code] = records[i].listName;
   }
 
-  return { codes: codes, listNames: listNames };
+  return { codes: codes, listNames: listNames, listNameByCode: listNameByCode };
 }
 
 /**
@@ -1219,7 +1223,6 @@ function resolveIFMRecords_(data, header) {
       ifmId: cleanedID,
       isActive:
         String(status == null ? "" : status).trim().toLowerCase() === "active",
-      listName: cleanedFacility.split("_")[0] + "_ifms",
       choiceName: cleanedID + "_" + cleanForKobo(name)
     };
   }
@@ -1228,7 +1231,35 @@ function resolveIFMRecords_(data, header) {
   for (var o = 0; o < order.length; o++) {
     records.push(byPosting[order[o]]);
   }
+
+  applyIFMListNames_(records);
   return records;
+}
+
+/**
+ * IFM list names come from the first word of the facility, which two
+ * facilities can share, so allocate one name per facility code over the
+ * postings that actually reach a form.
+ */
+function applyIFMListNames_(records) {
+  var entries = [];
+  var i;
+
+  for (i = 0; i < records.length; i++) {
+    if (records[i].isActive) {
+      entries.push({ code: records[i].code, facility: records[i].facility });
+    }
+  }
+
+  var names = assignFacilityListNames_(entries, "_ifms", function (facility) {
+    return cleanForKobo(facility).split("_")[0];
+  });
+
+  for (i = 0; i < records.length; i++) {
+    var record = records[i];
+    record.listName =
+      names[record.code] || cleanForKobo(record.facility).split("_")[0] + "_ifms";
+  }
 }
 
 /**
@@ -1242,8 +1273,10 @@ function getSelectableMenteeFacilities_(data, header) {
   var selectable = {
     emoncCodes: {},
     emoncListNames: {},
+    emoncListNameByCode: {},
     newbornCodes: {},
-    newbornListNames: {}
+    newbornListNames: {},
+    newbornListNameByCode: {}
   };
 
   for (var i = 0; i < records.length; i++) {
@@ -1252,10 +1285,12 @@ function getSelectableMenteeFacilities_(data, header) {
     if (record.isEmONCMentee) {
       selectable.emoncCodes[record.code] = true;
       selectable.emoncListNames[record.emoncListName] = true;
+      selectable.emoncListNameByCode[record.code] = record.emoncListName;
     }
     if (record.isNewbornMentee) {
       selectable.newbornCodes[record.code] = true;
       selectable.newbornListNames[record.newbornListName] = true;
+      selectable.newbornListNameByCode[record.code] = record.newbornListName;
     }
   }
 
@@ -1324,8 +1359,6 @@ function resolveMenteeRecords_(data, header) {
         isActive &&
         (normalizedProgram === "newborn_curriculum" ||
           normalizedProgram === "both"),
-      emoncListName: generateKoboVariable(facility),
-      newbornListName: generateKoboVariable(facility, true),
       choiceName: cleanedID + "_" + cleanForKobo(name)
     };
   }
@@ -1334,7 +1367,39 @@ function resolveMenteeRecords_(data, header) {
   for (var o = 0; o < order.length; o++) {
     records.push(byPosting[order[o]]);
   }
+
+  applyMenteeListNames_(records);
   return records;
+}
+
+/**
+ * Give every facility its own mentee list names, allocated over the facilities
+ * that actually reach a form so the survey and the choices sheets agree.
+ */
+function applyMenteeListNames_(records) {
+  var emoncEntries = [];
+  var newbornEntries = [];
+  var i;
+
+  for (i = 0; i < records.length; i++) {
+    if (records[i].isEmONCMentee) {
+      emoncEntries.push({ code: records[i].code, facility: records[i].facility });
+    }
+    if (records[i].isNewbornMentee) {
+      newbornEntries.push({ code: records[i].code, facility: records[i].facility });
+    }
+  }
+
+  var emoncNames = assignFacilityListNames_(emoncEntries, "_mentees");
+  var newbornNames = assignFacilityListNames_(newbornEntries, "_nbc_mentees");
+
+  for (i = 0; i < records.length; i++) {
+    var record = records[i];
+    record.emoncListName =
+      emoncNames[record.code] || generateKoboVariable(record.facility);
+    record.newbornListName =
+      newbornNames[record.code] || generateKoboVariable(record.facility, true);
+  }
 }
 
 // =====================================================
@@ -1448,7 +1513,7 @@ function generateSurveySheetNewborn() {
       cleanedProgram = "newborn_curriculum";
 
     // === KOBO VARIABLE (NBC CONTEXT) ===
-    var listName = generateKoboVariable(facility, true);
+    var listName = selectable.newbornListNameByCode[String(code).trim()];
     var type = "select_one " + listName;
 
     var label = listName
@@ -1524,6 +1589,20 @@ function cleanForKobo(text) {
 // 🔧 HELPER: KOBO VARIABLE GENERATOR (CONTEXT-AWARE)
 // =====================================================
 function generateKoboVariable(facility, isNewbornSheet) {
+  // ✅ Context-based suffix
+  var suffix = isNewbornSheet ? "_nbc_mentees" : "_mentees";
+  return getFacilityVariableBase_(facility) + suffix;
+}
+
+/**
+ * Shortened facility name used to build a Kobo variable.
+ *
+ * Several facilities can share one base ("Mary Immaculate Mission Hospital"
+ * and "Mary Immaculate Hospital" both give "mary_immaculate"), so callers must
+ * pass the result through assignFacilityListNames_() to keep one name per
+ * facility code.
+ */
+function getFacilityVariableBase_(facility) {
   var cleaned = cleanForKobo(facility);
   var words = cleaned.split("_");
 
@@ -1574,10 +1653,76 @@ function generateKoboVariable(facility, isNewbornSheet) {
   else 
     base = words[0];
 
-  // ✅ Context-based suffix
-  var suffix = isNewbornSheet ? "_nbc_mentees" : "_mentees";
+  return base;
+}
 
-  return base + suffix;
+/**
+ * One list name per facility code.
+ *
+ * Two facilities that shorten to the same base would otherwise produce two
+ * questions with the same name, and Kobo rejects the form with "Duplicate
+ * question name". The first facility to claim a base keeps it, so established
+ * question names stay put; a later facility lengthens its name one word at a
+ * time and falls back to its facility code when the words run out.
+ *
+ * entries: [{ code: "16002", facility: "Kanyakine Sub County Hospital" }, ...]
+ * Returns { code: listName }.
+ */
+function assignFacilityListNames_(entries, suffix, baseOf) {
+  var namesByCode = {};
+  var claimedBy = {};
+
+  for (var i = 0; i < entries.length; i++) {
+    var code = String(entries[i].code == null ? "" : entries[i].code).trim();
+    var facility = entries[i].facility;
+    if (!code || !facility || namesByCode[code]) continue;
+
+    var base = baseOf ? baseOf(facility) : getFacilityVariableBase_(facility);
+    var candidates = facilityBaseCandidates_(facility, code, base);
+    var chosen = "";
+
+    for (var c = 0; c < candidates.length; c++) {
+      if (!claimedBy[candidates[c]]) {
+        chosen = candidates[c];
+        break;
+      }
+    }
+
+    // Same facility name on two codes: keep going until something is free.
+    if (!chosen) {
+      var attempt = 2;
+      chosen = base + "_" + cleanForKobo(code);
+      while (claimedBy[chosen]) {
+        chosen = base + "_" + cleanForKobo(code) + "_" + attempt;
+        attempt++;
+      }
+    }
+
+    claimedBy[chosen] = code;
+    namesByCode[code] = chosen + suffix;
+  }
+
+  return namesByCode;
+}
+
+/** Base name, then progressively longer versions, then the facility code. */
+function facilityBaseCandidates_(facility, code, base) {
+  var candidates = [base];
+  var cleaned = cleanForKobo(facility);
+
+  // Special-cased bases (for example "cgtrh_vikwatani") are not prefixes of
+  // the facility name, so lengthening them word by word would be meaningless.
+  if (cleaned.indexOf(base) === 0) {
+    var words = cleaned.split("_");
+    var candidate = base;
+    for (var i = base.split("_").length; i < words.length; i++) {
+      candidate = candidate + "_" + words[i];
+      candidates.push(candidate);
+    }
+  }
+
+  candidates.push(base + "_" + cleanForKobo(code));
+  return candidates;
 }
 
 
