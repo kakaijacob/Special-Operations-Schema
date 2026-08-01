@@ -133,6 +133,7 @@ function writeMoHSACSurvey_(sheet, sourceSs, availableChoiceLists) {
   var rows = [MOH_SAC_SURVEY_HEADERS].concat(bodyRows);
 
   sheet.clear();
+  ensureMoHSACSheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -4081,8 +4082,24 @@ function writeMoHSACChoices_(sheet, sourceSs) {
   writeMoHSACChoiceRows_(sheet, getMoHSACChoiceRows_(sourceSs));
 }
 
-/** Every choice row this form ships with (no header). */
+/**
+ * Every choice row this form ships with (no header).
+ * list_name and name are trimmed because pyxform matches them literally
+ * against the survey's "select_one <list>".
+ */
 function getMoHSACChoiceRows_(sourceSs) {
+  return normalizeMoHSACChoiceRows_(getMoHSACChoiceRowsRaw_(sourceSs));
+}
+
+function normalizeMoHSACChoiceRows_(choiceRows) {
+  for (var i = 0; i < choiceRows.length; i++) {
+    choiceRows[i][0] = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    choiceRows[i][1] = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+  }
+  return choiceRows;
+}
+
+function getMoHSACChoiceRowsRaw_(sourceSs) {
   return getMoHSACProgramChoices_()
     .concat(getMoHSACCountyChoices_())
     .concat(getMoHSACJhslChoices_())
@@ -4099,7 +4116,24 @@ function getMoHSACChoiceRows_(sourceSs) {
 function writeMoHSACChoiceRows_(sheet, choiceRows) {
   var rows = [MOH_SAC_CHOICES_HEADERS].concat(choiceRows);
   sheet.clear();
+  ensureMoHSACSheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written choices tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureMoHSACSheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
 }
 
 /** list_name values that ship with at least one usable choice. */
@@ -4127,7 +4161,12 @@ function dropMoHSACRowsWithMissingChoices_(rows, availableChoiceLists) {
 
   for (i = 0; i < rows.length; i++) {
     var listName = extractMoHSACSelectListName_(rows[i][0]);
-    if (listName && !availableChoiceLists[listName]) {
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (!availableChoiceLists[listName]) {
       orphanIndexes.push(i);
     }
   }
