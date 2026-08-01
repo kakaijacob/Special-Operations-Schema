@@ -414,7 +414,8 @@ function hasKoboPipelineErrors_(buildResults, deployResults) {
 
 /**
  * Step 1: Copy external Mentee Database 2026 → local "Mentee Database".
- * Also normalizes Program "EmONC Curriculum" → "MENTORS Curriculum".
+ * Excludes Status=Inactive and normalizes Program
+ * "EmONC Curriculum" → "MENTORS Curriculum".
  */
 function syncMenteeDatabaseFromSource() {
   var props = PropertiesService.getScriptProperties();
@@ -447,6 +448,8 @@ function syncMenteeDatabaseFromSource() {
     throw new Error("Mentee Database 2026 source sheet is empty.");
   }
 
+  var statusFilter = filterInactiveRows_(values, "Mentee Database 2026");
+  values = statusFilter.values;
   var programNormalize = normalizeSourceProgramValues_(values);
   values = programNormalize.values;
 
@@ -479,6 +482,7 @@ function syncMenteeDatabaseFromSource() {
     "Synced " + (values.length - 1) +
     " mentee rows from '" + sourceSheet.getName() + "' into '" +
     KOBO_TOOLS_LOCAL_MENTEE_SHEET + "'. " +
+    "Excluded " + statusFilter.removed + " Status=Inactive row(s). " +
     "Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
     programNormalize.converted + " row(s)."
   );
@@ -518,7 +522,54 @@ function normalizeSourceProgramValues_(values) {
 }
 
 /**
+ * Keep the header and every record except Status=Inactive.
+ * Status comparison is trimmed and case-insensitive; blank/other statuses stay.
+ */
+function filterInactiveRows_(values, sourceLabel) {
+  if (!values || !values.length) {
+    return { values: values, removed: 0 };
+  }
+
+  var statusIndex = findCaseInsensitiveHeaderIndex_(values[0], "Status");
+  if (statusIndex === -1) {
+    throw new Error(
+      sourceLabel + " is missing the 'Status' column required for syncing."
+    );
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var status = String(
+      values[i][statusIndex] == null ? "" : values[i][statusIndex]
+    ).trim().toLowerCase();
+
+    if (status === "inactive") {
+      removed++;
+      continue;
+    }
+    output.push(values[i]);
+  }
+
+  return { values: output, removed: removed };
+}
+
+function findCaseInsensitiveHeaderIndex_(header, name) {
+  var wanted = String(name).trim().toLowerCase();
+  for (var i = 0; i < header.length; i++) {
+    if (
+      String(header[i] == null ? "" : header[i]).trim().toLowerCase() === wanted
+    ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
  * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
+ * Excludes every posting whose Status is Inactive.
  * Chooses the source tab with real mentor rows (gid preferred, then best match).
  *
  * Downstream consumers (kobocreator) — ALL read local IFM List only:
@@ -553,9 +604,9 @@ function syncIFMListFromSource() {
   }
 
   var values = selected.values;
-  var usableRows = countIFMUsableRows_(values);
+  var sourceUsableRows = countIFMUsableRows_(values);
 
-  if (usableRows < 1) {
+  if (sourceUsableRows < 1) {
     throw new Error(
       "Selected IFM source sheet '" +
       selected.sheetName +
@@ -569,6 +620,12 @@ function syncIFMListFromSource() {
   // Map Mentor (IFM) Database headers → original kobocreator IFM List names
   // so generateIFM* can keep using County / IFM ID / Status / etc.
   values = normalizeIFMListHeadersForKobocreator_(values);
+  var statusFilter = filterInactiveRows_(
+    values,
+    "Mentor (IFM) Database 2026"
+  );
+  values = statusFilter.values;
+  var usableRows = countIFMUsableRows_(values);
   var header = values[0];
 
   var localSs = SpreadsheetApp.getActiveSpreadsheet();
@@ -606,7 +663,9 @@ function syncIFMListFromSource() {
     (values.length - 1) +
     " row(s), " +
     usableRows +
-    " with County/Facility/Facility Code. " +
+    " with County/Facility/Facility Code. Excluded " +
+    statusFilter.removed +
+    " Status=Inactive posting(s). " +
     "Normalized headers: [" +
     header.join(" | ") +
     "]"
