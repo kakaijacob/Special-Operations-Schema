@@ -10,6 +10,10 @@ var EMONC_KA_TITLE = "MoH Mentee EmONC Knowledge Assessment";
 // Script Properties keys
 var EMONC_KA_PROP_FORM_ID = "EMONC_KA_SPREADSHEET_ID";
 
+// Fill this sheet in to replace the questions written below.
+// See Kobo_Question_Bank.js and KOBO_FORM_BUILDING_GUIDE.md.
+var EMONC_KA_QUESTION_BANK_SHEET = "EmONC Question Bank";
+
 var EMONC_KA_SURVEY_HEADERS = [
   "type",
   "name",
@@ -95,7 +99,7 @@ function upsertEmONCKnowledgeAssessment_(sourceSs) {
 
   removeExtraEmONCKASheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeEmONCKASurvey_(surveySheet);
+  writeEmONCKASurvey_(surveySheet, sourceSs);
   writeEmONCKAChoices_(choicesSheet, sourceSs);
   writeEmONCKASettings_(settingsSheet);
 
@@ -133,10 +137,10 @@ function removeExtraEmONCKASheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeEmONCKASurvey_(sheet) {
+function writeEmONCKASurvey_(sheet, sourceSs) {
   var rows = [EMONC_KA_SURVEY_HEADERS]
     .concat(getEmONCKASurveyStartRows_())
-    .concat(getEmONCKAAssessmentRows_());
+    .concat(getEmONCKAAssessmentRows_(sourceSs));
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -329,8 +333,14 @@ function emoncKAFacilitySelectRow_(listName, countyLabel) {
  * Columns: type, name, label, hint, required, constraint_message,
  *          constraint, relevant, required_message, calculation
  */
-function getEmONCKAAssessmentRows_() {
+function getEmONCKAAssessmentRows_(sourceSs) {
   var sectionRelevant = "${next_group_hide1}!=''";
+
+  // This year's questions, when the question bank has been filled in.
+  var bank = getEmONCKAQuestionBank_(sourceSs);
+  if (bank.length) {
+    return getEmONCKAAssessmentRowsFromBank_(bank, sectionRelevant);
+  }
 
   var scoreCalc =
     "round(((" +
@@ -701,14 +711,98 @@ function getEmONCKAAssessmentRows_() {
   ];
 }
 
+/** This year's questions, or [] while the sheet is missing or empty. */
+function getEmONCKAQuestionBank_(sourceSs) {
+  var ss = sourceSs || SpreadsheetApp.getActiveSpreadsheet();
+  if (typeof readKoboQuestionBank_ !== "function") return [];
+  return readKoboQuestionBank_(ss, EMONC_KA_QUESTION_BANK_SHEET);
+}
+
+/**
+ * Section 2 built from the question bank: the questions, a score over exactly
+ * the questions that carry a correct answer, and the closing note keyed to the
+ * last question.
+ */
+function getEmONCKAAssessmentRowsFromBank_(questions, sectionRelevant) {
+  var layout = { columns: EMONC_KA_SURVEY_HEADERS, relevant: sectionRelevant };
+  var lastQuestion = questions[questions.length - 1].name;
+
+  Logger.log(
+    "EmONC KA: built " + questions.length + " question(s) from '" +
+    EMONC_KA_QUESTION_BANK_SHEET + "', " +
+    countKoboScoredQuestions_(questions) + " of them scored."
+  );
+
+  return [
+    [
+      "begin_group",
+      "introduction_001",
+      "Section 2: EmONC Knowledge Assessment",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      ""
+    ],
+    [
+      "note",
+      "introduction_note",
+      "***Section Note:*** *This section assesses your knowledge of critical areas in Emergency Obstetric and Newborn Care (EmONC). Please read each question carefully and provide the most appropriate answer before submitting.*",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      "",
+      ""
+    ]
+  ]
+    .concat(buildKoboQuestionSurveyRows_(questions, layout))
+    .concat([
+      [
+        "calculate",
+        "score",
+        "Score",
+        "",
+        "false",
+        "",
+        "",
+        "",
+        "",
+        buildKoboQuestionScoreCalc_(questions, 3)
+      ],
+      ["end_group", "", "", "", "", "", "", "", "", ""],
+      [
+        "note",
+        "thank_you",
+        "*Thank you for participating in this survey! Your responses will be analized and used to strengthen the MENTORS program and improve the quality of maternal and newborn care.*",
+        "",
+        "false",
+        "",
+        "",
+        "${" + lastQuestion + "}!=''",
+        "",
+        ""
+      ]
+    ]);
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
 function writeEmONCKAChoices_(sheet, sourceSs) {
+  var bank = getEmONCKAQuestionBank_(sourceSs);
+
   var rows = [EMONC_KA_CHOICES_HEADERS]
     .concat(getEmONCKACountyChoices_())
     .concat(getEmONCKAFacilityChoices_(sourceSs))
-    .concat(getEmONCKAQuestionChoices_());
+    .concat(
+      bank.length
+        ? buildKoboQuestionChoiceRows_(bank)
+        : getEmONCKAQuestionChoices_()
+    );
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);

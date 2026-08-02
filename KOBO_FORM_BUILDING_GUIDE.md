@@ -91,6 +91,56 @@ also the source of Rule 5 below.
    reports empty choice lists, duplicate names and unbalanced expressions for
    every tool, with the row numbers Kobo would use, without uploading anything.
 
+## Changing the knowledge tests each year
+
+Knowledge assessment questions are edited in a spreadsheet, not in code. Each
+question used to live in three places that had to agree — the survey row, the
+choices block, and the score formula with its item count — which is how a score
+ends up dividing by the wrong number. The question bank generates all three
+from one sheet.
+
+1. Create the sheet once, from the Apps Script editor:
+
+   ```javascript
+   createKoboQuestionBankTemplate("EmONC Question Bank");    // EmONC assessment
+   createKoboQuestionBankTemplate("Newborn Question Bank");  // Newborn assessment
+   ```
+
+2. Fill it in. One row per question:
+
+   | Question ID | Question | Type | Option A | Option B | Option C | Option D | Correct | Required | Hint |
+   | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+   | `amtsl_uterotonic_drug` | 1. Which uterotonic during AMTSL? | select_one | IM Carboprost | Oxytocin 10 IU IM | Misoprostol | Carbetocin | B | true | |
+   | `pph_causes` | 2. Which two are causes of PPH? | select_multiple | Uterine atony | Retained placenta | Anaemia | Hypertension | A,B | true | Pick two |
+   | `comments` | 3. Any comments? | text | | | | | | false | |
+
+3. Run `refreshAllKoboTools()`. The form is rebuilt and deployed.
+
+What the bank does for you:
+- **Score.** Built from the questions that carry a `Correct` answer, so the
+  divisor always equals the number of scored questions and a perfect paper is
+  exactly 100. Questions with no `Correct` (free text, or a question you want
+  asked but not marked) are excluded and logged.
+- **Choices.** A single right answer is stored as `Correct`, matching what the
+  assessments already collect, so this year's exports line up with previous
+  years. A `select_multiple` with several right answers stores option letters
+  instead, because two options both named `Correct` would be a duplicate
+  choice. Scoring then requires exactly the right set to be ticked.
+- **Checks.** A duplicate Question ID, a `Correct` letter with no matching
+  option, a `select_one` with two right answers, or a select with fewer than
+  two options all stop the build with the sheet row named.
+
+Keep a Question ID unchanged between years to keep that question comparable
+over time; changing it starts a new column in your exports. Option letters are
+positional, so reordering options changes what `Correct` refers to — move the
+letter too.
+
+While a question bank sheet is missing or empty, the assessment keeps using the
+questions written in its builder, so nothing changes until you fill one in.
+Question IDs keep underscores and capitalisation exactly as typed; note that
+`cleanForKobo()` is for place names and strips underscores, so it is the wrong
+tool for a field name.
+
 ## The rules
 
 Each rule exists because ignoring it broke a live deployment.

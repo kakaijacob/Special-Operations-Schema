@@ -9,6 +9,10 @@ var NEWBORN_KA_TITLE = "Newborn Knowledge Assessment";
 // Script Properties keys
 var NEWBORN_KA_PROP_FORM_ID = "NEWBORN_KA_SPREADSHEET_ID";
 
+// Fill this sheet in to replace the questions written below.
+// See Kobo_Question_Bank.js and KOBO_FORM_BUILDING_GUIDE.md.
+var NEWBORN_KA_QUESTION_BANK_SHEET = "Newborn Question Bank";
+
 var NEWBORN_KA_SURVEY_HEADERS = [
   "type",
   "name",
@@ -74,7 +78,7 @@ function upsertNewbornKnowledgeAssessment_(sourceSs) {
 
   removeExtraNewbornKASheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeNewbornKASurvey_(surveySheet);
+  writeNewbornKASurvey_(surveySheet, sourceSs);
   writeNewbornKAChoices_(choicesSheet, sourceSs);
   writeNewbornKASettings_(settingsSheet);
 
@@ -112,10 +116,10 @@ function removeExtraNewbornKASheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeNewbornKASurvey_(sheet) {
+function writeNewbornKASurvey_(sheet, sourceSs) {
   var rows = [NEWBORN_KA_SURVEY_HEADERS]
     .concat(getNewbornKASurveyStartRows_())
-    .concat(getNewbornKAAssessmentRows_());
+    .concat(getNewbornKAAssessmentRows_(sourceSs));
 
   sheet.clear();
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
@@ -277,8 +281,14 @@ function newbornKAFacilitySelectRow_(listName, countyLabel) {
  * Columns: type, name, label, hint, required, constraint_message,
  *          constraint, relevant, calculation
  */
-function getNewbornKAAssessmentRows_() {
+function getNewbornKAAssessmentRows_(sourceSs) {
   var sectionRelevant = "${next_group_hide1}!=''";
+
+  // This year's questions, when the question bank has been filled in.
+  var bank = getNewbornKAQuestionBank_(sourceSs);
+  if (bank.length) {
+    return getNewbornKAAssessmentRowsFromBank_(bank, sectionRelevant);
+  }
 
   return [
     [
@@ -338,14 +348,90 @@ function getNewbornKAAssessmentRows_() {
   ];
 }
 
+/** This year's questions, or [] while the sheet is missing or empty. */
+function getNewbornKAQuestionBank_(sourceSs) {
+  var ss = sourceSs || SpreadsheetApp.getActiveSpreadsheet();
+  if (typeof readKoboQuestionBank_ !== "function") return [];
+  return readKoboQuestionBank_(ss, NEWBORN_KA_QUESTION_BANK_SHEET);
+}
+
+/**
+ * The assessment section built from the question bank. A score row is added
+ * only when the bank marks correct answers, so filling in questions alone
+ * keeps the form as it is today.
+ */
+function getNewbornKAAssessmentRowsFromBank_(questions, sectionRelevant) {
+  var layout = { columns: NEWBORN_KA_SURVEY_HEADERS, relevant: sectionRelevant };
+  var lastQuestion = questions[questions.length - 1].name;
+  var scoreCalc = buildKoboQuestionScoreCalc_(questions, 3);
+
+  Logger.log(
+    "Newborn KA: built " + questions.length + " question(s) from '" +
+    NEWBORN_KA_QUESTION_BANK_SHEET + "', " +
+    countKoboScoredQuestions_(questions) + " of them scored."
+  );
+
+  var rows = [
+    [
+      "begin_group",
+      "newborn_assessment",
+      "Newborn Knowledge Assessment",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      ""
+    ],
+    [
+      "note",
+      "note",
+      "*This section tests your understanding of key newborn care practices. Choose the most appropriate response before submitting.*",
+      "",
+      "false",
+      "",
+      "",
+      sectionRelevant,
+      ""
+    ]
+  ].concat(buildKoboQuestionSurveyRows_(questions, layout));
+
+  if (scoreCalc) {
+    rows.push(
+      ["calculate", "score", "Score", "", "false", "", "", "", scoreCalc]
+    );
+  }
+
+  return rows.concat([
+    ["end_group", "", "", "", "", "", "", "", ""],
+    [
+      "note",
+      "thank_you",
+      "*Thank you for completing this knowledge assessment! Your feedback will help us tailor support and training to improve maternal and newborn health outcomes. Please click Submit to complete.*",
+      "",
+      "false",
+      "",
+      "",
+      "${" + lastQuestion + "}!=''",
+      ""
+    ]
+  ]);
+}
+
 // =====================================================
 // CHOICES
 // =====================================================
 function writeNewbornKAChoices_(sheet, sourceSs) {
+  var bank = getNewbornKAQuestionBank_(sourceSs);
+
   var rows = [NEWBORN_KA_CHOICES_HEADERS]
     .concat(getNewbornKACountyChoices_())
     .concat(getNewbornKAFacilityChoices_(sourceSs))
-    .concat(getNewbornKAQuestionChoices_());
+    .concat(
+      bank.length
+        ? buildKoboQuestionChoiceRows_(bank)
+        : getNewbornKAQuestionChoices_()
+    );
 
   sheet.clear();
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
