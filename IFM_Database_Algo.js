@@ -1,5 +1,8 @@
 function updateAllStatusesByName() {
 
+  const MASTER_FACILITIES_SHEET_ID =
+    "1EEZJU-DNERkydsMIDtCu-19hzopurtAR7cN5cZ6bvFI";
+
   const sheet = SpreadsheetApp
     .getActiveSpreadsheet()
     .getSheetByName("Mentors (IFMs)");
@@ -51,11 +54,82 @@ function updateAllStatusesByName() {
       .trim();
   }
 
+  function normalizeCode(code) {
+    return String(code || "")
+      .replace(/\.0$/, "")
+      .trim();
+  }
+
+  function findHeaderIndex(headerValues, label) {
+    const target = String(label || "")
+      .toLowerCase()
+      .trim();
+
+    return headerValues.findIndex(
+      header => String(header || "").toLowerCase().trim() === target
+    );
+  }
+
   // ----------------------------
-  // FACILITY MAPS
+  // MASTER FACILITY LIST
+  // ----------------------------
+  const masterByCode = {};
+  const masterByNormName = {};
+
+  const masterSheet = SpreadsheetApp
+    .openById(MASTER_FACILITIES_SHEET_ID)
+    .getSheets()[0];
+
+  const masterLastRow = masterSheet.getLastRow();
+  const masterLastColumn = masterSheet.getLastColumn();
+
+  if (masterLastRow <= 1 || masterLastColumn === 0) {
+    throw new Error(
+      "The master facilities sheet contains no facility data."
+    );
+  }
+
+  const masterValues = masterSheet
+    .getRange(1, 1, masterLastRow, masterLastColumn)
+    .getValues();
+
+  const masterHeaders = masterValues[0];
+  const idxMasterCode = findHeaderIndex(masterHeaders, "dhis code");
+  const idxMasterFacility = findHeaderIndex(masterHeaders, "facility");
+
+  if (idxMasterCode === -1 || idxMasterFacility === -1) {
+    throw new Error(
+      "Master facilities sheet must include 'dhis code' and 'facility' columns."
+    );
+  }
+
+  for (let rowIndex = 1; rowIndex < masterValues.length; rowIndex++) {
+    const masterRow = masterValues[rowIndex];
+    const code = normalizeCode(masterRow[idxMasterCode]);
+    const facilityName = String(
+      masterRow[idxMasterFacility] || ""
+    ).trim();
+
+    if (!code || !facilityName) continue;
+
+    masterByCode[code] = facilityName;
+
+    const normalizedName = normalizeFacility(facilityName);
+
+    if (!masterByNormName[normalizedName]) {
+      masterByNormName[normalizedName] = [];
+    }
+
+    masterByNormName[normalizedName].push({
+      code: code,
+      facility: facilityName
+    });
+  }
+
+  // ----------------------------
+  // INTRA-SHEET FACILITY MAP
   // ----------------------------
   const facilityToCodes = {};
-  const facilityVariants = {};
 
   data.forEach(row => {
 
@@ -65,17 +139,12 @@ function updateAllStatusesByName() {
     if (!facility || !code) return;
 
     const norm = normalizeFacility(facility);
-    const codeStr = String(code);
+    const codeStr = normalizeCode(code);
 
     if (!facilityToCodes[norm]) {
       facilityToCodes[norm] = new Set();
     }
     facilityToCodes[norm].add(codeStr);
-
-    if (!facilityVariants[codeStr]) {
-      facilityVariants[codeStr] = new Set();
-    }
-    facilityVariants[codeStr].add(String(facility).trim());
   });
 
   // ----------------------------
@@ -170,8 +239,9 @@ function updateAllStatusesByName() {
     // FACILITY CODE VALIDATION
     // ----------------------------
     const facilityCode = row[colFacilityCode - 1];
+    const codeStr = normalizeCode(facilityCode);
 
-    if (facilityCode && !/^\d{1,5}$/.test(String(facilityCode))) {
+    if (facilityCode && !/^\d{1,5}$/.test(codeStr)) {
       addError(colFacilityCode, "Must be up to 5 digits.");
     }
 
@@ -185,32 +255,77 @@ function updateAllStatusesByName() {
     }
 
     // ----------------------------
-    // FACILITY CONSISTENCY
+    // FACILITY MASTER + CONSISTENCY
     // ----------------------------
     const facility = row[colFacility - 1];
+    const facilityName = String(facility || "").trim();
+    const normalizedFacility = normalizeFacility(facilityName);
 
-    if (facility) {
-
-      const norm = normalizeFacility(facility);
-
-      if (facilityToCodes[norm] && facilityToCodes[norm].size > 1) {
+    if (facilityName) {
+      if (
+        facilityToCodes[normalizedFacility] &&
+        facilityToCodes[normalizedFacility].size > 1
+      ) {
         addError(colFacility, "Facility maps to multiple codes.");
       }
+    }
 
-      if (facilityCode) {
-        const codeStr = String(facilityCode);
-        const variants = facilityVariants[codeStr];
+    if (codeStr && /^\d{1,5}$/.test(codeStr)) {
+      const masterFacility = masterByCode[codeStr];
 
-        if (variants && variants.size > 1) {
+      if (!masterFacility) {
+        addError(
+          colFacilityCode,
+          "Facility Code not found in master facilities list."
+        );
+      } else if (facilityName) {
+        const normalizedMasterFacility =
+          normalizeFacility(masterFacility);
 
-          const normalizedVariants = new Set(
-            [...variants].map(v => normalizeFacility(v))
-          );
+        if (normalizedFacility !== normalizedMasterFacility) {
+          const matchesByName =
+            masterByNormName[normalizedFacility] || [];
 
-          if (normalizedVariants.size === 1) {
-            addError(colFacility, "Facility name has likely been misspelt!");
+          if (matchesByName.length > 0) {
+            const possibleMatches = matchesByName
+              .map(match => `${match.facility} (${match.code})`)
+              .join("; ");
+
+            addError(
+              colFacility,
+              `Facility name does not match code ${codeStr}. Expected "${masterFacility}". Entered name matches: ${possibleMatches}.`
+            );
+
+            addError(
+              colFacilityCode,
+              `Code/name mismatch. Code ${codeStr} belongs to "${masterFacility}".`
+            );
+          } else {
+            addError(
+              colFacility,
+              `Facility name has likely been misspelt! Expected "${masterFacility}" for code ${codeStr}.`
+            );
           }
         }
+      }
+    } else if (facilityName) {
+      const matchesByName =
+        masterByNormName[normalizedFacility] || [];
+
+      if (matchesByName.length === 0) {
+        addError(
+          colFacility,
+          "Facility name not found in master facilities list."
+        );
+      } else if (!codeStr) {
+        const possibleMatches = matchesByName
+          .map(match => `${match.facility} (${match.code})`)
+          .join("; ");
+
+        addError(
+          colFacilityCode,
+          `Facility Code is missing. Possible master match: ${possibleMatches}.`
+        );
       }
     }
 
