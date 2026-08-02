@@ -204,9 +204,7 @@ function updateAllStatusesByName() {
       "Cadre",
       "Gender",
       "Program",
-      "Trained After 2024?",
-      "Status",
-      "Reason for Inactivity"
+      "Trained After 2024?"
     ];
 
     const isRowStarted = row.some(v => v !== "" && v !== null);
@@ -334,7 +332,13 @@ function updateAllStatusesByName() {
     // ----------------------------
     const reason = row[colReasonInactivity - 1];
 
-    if (status === "Inactive" && !reason) {
+    if (
+      status === "Inactive" &&
+      (
+        reason === null ||
+        String(reason).trim() === ""
+      )
+    ) {
       addError(colReasonInactivity, "Reason for Inactivity is required when status is Inactive.");
     }
 
