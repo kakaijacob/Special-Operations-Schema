@@ -370,7 +370,7 @@ function getNewbornCTFMenteeSurveyRows_(sourceSs) {
     var name = data[i][nameIndex];
     var label = data[i][labelIndex];
     var required = normalizeNewbornCTFRequired_(data[i][requiredIndex]);
-    var relevant = data[i][relevantIndex];
+    var relevant = normalizeNewbornCTFMenteeRelevant_(data[i][relevantIndex]);
 
     if (!type && !name) continue;
 
@@ -397,6 +397,47 @@ function normalizeNewbornCTFRequired_(value) {
   var cleaned = String(value == null ? "" : value).trim().toLowerCase();
   if (cleaned === "true" || cleaned === "false") return cleaned;
   return cleaned;
+}
+
+/**
+ * Drop the program clause from an imported mentee relevance.
+ *
+ * Survey Sheet (Newborn) is shared with the MoH checklist, where the program
+ * question offers "newborn_curriculum" and the clause is meaningful. Here the
+ * program question offers essential_newborn_care / comprehensive_newborn_care,
+ * so the clause can never be true: the mentee questions would never appear,
+ * next_group_hide1 would stay empty, and Section 2 would never open. Which
+ * mentees attended depends on the facility alone; ENC versus CNC selects the
+ * modules in Section 2, not the people.
+ */
+function normalizeNewbornCTFMenteeRelevant_(relevant) {
+  var cleaned = String(relevant == null ? "" : relevant).trim();
+  if (!cleaned) return "";
+
+  cleaned = cleaned.replace(
+    /\s*and\s*\(?\s*\$\{program\}\s*=\s*'[^']*'\s*\)?/gi,
+    ""
+  );
+
+  return balanceNewbornCTFTrailingParens_(cleaned);
+}
+
+/** Drop trailing ")" left behind when a clause is removed. */
+function balanceNewbornCTFTrailingParens_(expression) {
+  var text = expression;
+
+  while (text.length) {
+    var depth = 0;
+    for (var i = 0; i < text.length; i++) {
+      if (text.charAt(i) === "(") depth++;
+      else if (text.charAt(i) === ")") depth--;
+    }
+
+    if (depth >= 0 || text.charAt(text.length - 1) !== ")") break;
+    text = text.substring(0, text.length - 1).replace(/\s+$/, "");
+  }
+
+  return text;
 }
 
 /**
