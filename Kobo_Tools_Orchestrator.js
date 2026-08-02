@@ -544,6 +544,8 @@ function syncMenteeDatabaseFromSource() {
 
   var statusFilter = filterInactiveRows_(values, "Mentee Database 2026");
   values = statusFilter.values;
+  var menteeIdFilter = normalizeAndFilterMenteeIds_(values);
+  values = menteeIdFilter.values;
   var programNormalize = normalizeSourceProgramValues_(values);
   values = programNormalize.values;
 
@@ -577,11 +579,96 @@ function syncMenteeDatabaseFromSource() {
     " mentee rows from '" + sourceSheet.getName() + "' into '" +
     KOBO_TOOLS_LOCAL_MENTEE_SHEET + "'. " +
     "Excluded " + statusFilter.removed + " Status=Inactive row(s). " +
+    "Excluded " + menteeIdFilter.removed +
+    " row(s) with an invalid Mentee ID. Removed country code 254 from " +
+    menteeIdFilter.countryCodeTrimmed + " Mentee ID(s). " +
     "Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
     programNormalize.converted + " row(s)."
   );
 
   return localSheet;
+}
+
+/**
+ * Normalize Mentee ID and exclude rows whose ID remains invalid.
+ *
+ * Valid local IDs are exactly nine digits and start with 1 or 7. IDs supplied
+ * in Kenyan international form (2541xxxxxxxx or 2547xxxxxxxx) lose the 254
+ * first, then undergo the same validation. A leading + and common visual
+ * separators are accepted and removed; no other digits are invented or
+ * discarded.
+ */
+function normalizeAndFilterMenteeIds_(values) {
+  if (!values || !values.length) {
+    return { values: values, removed: 0, countryCodeTrimmed: 0 };
+  }
+
+  var idIndex = findCaseInsensitiveHeaderIndex_(values[0], "Mentee ID");
+  if (idIndex === -1) {
+    throw new Error(
+      "Mentee Database 2026 is missing the 'Mentee ID' column required for " +
+      "ID validation."
+    );
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+  var countryCodeTrimmed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var result = normalizeMenteeId_(values[i][idIndex]);
+
+    if (!result.valid) {
+      removed++;
+      continue;
+    }
+
+    var row = values[i].slice();
+    row[idIndex] = result.value;
+    output.push(row);
+
+    if (result.countryCodeTrimmed) countryCodeTrimmed++;
+  }
+
+  return {
+    values: output,
+    removed: removed,
+    countryCodeTrimmed: countryCodeTrimmed
+  };
+}
+
+/**
+ * One Mentee ID → { valid, value, countryCodeTrimmed }.
+ *
+ * Examples:
+ *   712345678     → 712345678
+ *   254712345678  → 712345678
+ *   +254 112345678 → 112345678
+ *   0712345678    → invalid (the rule requires nine digits starting 1 or 7)
+ */
+function normalizeMenteeId_(rawValue) {
+  var value = String(rawValue == null ? "" : rawValue).trim();
+
+  // Spaces, hyphens and parentheses are presentation only. A leading + is
+  // allowed for the 254 form; any other non-digit makes the ID invalid.
+  value = value.replace(/[\s\-()]/g, "");
+  if (value.charAt(0) === "+") value = value.substring(1);
+
+  if (!/^\d+$/.test(value)) {
+    return { valid: false, value: "", countryCodeTrimmed: false };
+  }
+
+  var countryCodeTrimmed = false;
+  if (/^254[17]\d{8}$/.test(value)) {
+    value = value.substring(3);
+    countryCodeTrimmed = true;
+  }
+
+  return {
+    valid: /^[17]\d{8}$/.test(value),
+    value: value,
+    countryCodeTrimmed: countryCodeTrimmed
+  };
 }
 
 function normalizeSourceProgramValues_(values) {

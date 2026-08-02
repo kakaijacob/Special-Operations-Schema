@@ -23,6 +23,11 @@ form never blocks the others.
 
 ### Sync rules
 - Rows with `Status = Inactive` are dropped from both local sheets.
+- A Mentee ID is kept only when it is exactly nine digits and starts with `1`
+  or `7`. An ID supplied as `2541xxxxxxxx` or `2547xxxxxxxx` loses the `254`
+  first and the normalized nine-digit value is written locally. A leading `+`
+  and visual spaces, hyphens or parentheses are ignored; a leading zero is not
+  invented or removed.
 - The IFM list is restricted to the counties in
   `KOBO_TOOLS_ALLOWED_IFM_COUNTIES` and rewritten to canonical spellings.
 - Mentee `Program` values of `EmONC Curriculum` become `MENTORS Curriculum`.
