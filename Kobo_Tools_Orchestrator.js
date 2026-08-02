@@ -581,7 +581,9 @@ function syncMenteeDatabaseFromSource() {
     "Excluded " + statusFilter.removed + " Status=Inactive row(s). " +
     "Excluded " + menteeIdFilter.removed +
     " row(s) with an invalid Mentee ID. Removed country code 254 from " +
-    menteeIdFilter.countryCodeTrimmed + " Mentee ID(s). " +
+    menteeIdFilter.countryCodeTrimmed +
+    " Mentee ID(s) and removed a leading zero from " +
+    menteeIdFilter.leadingZeroTrimmed + " Mentee ID(s). " +
     "Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
     programNormalize.converted + " row(s)."
   );
@@ -594,13 +596,19 @@ function syncMenteeDatabaseFromSource() {
  *
  * Valid local IDs are exactly nine digits and start with 1 or 7. IDs supplied
  * in Kenyan international form (2541xxxxxxxx or 2547xxxxxxxx) lose the 254
- * first, then undergo the same validation. A leading + and common visual
- * separators are accepted and removed; no other digits are invented or
- * discarded.
+ * first. IDs supplied in local phone form (01xxxxxxxx or 07xxxxxxxx) lose the
+ * leading zero. A leading + and common visual separators are accepted and
+ * removed. After those transformations, anything that is not exactly nine
+ * digits starting with 1 or 7 is excluded entirely.
  */
 function normalizeAndFilterMenteeIds_(values) {
   if (!values || !values.length) {
-    return { values: values, removed: 0, countryCodeTrimmed: 0 };
+    return {
+      values: values,
+      removed: 0,
+      countryCodeTrimmed: 0,
+      leadingZeroTrimmed: 0
+    };
   }
 
   var idIndex = findCaseInsensitiveHeaderIndex_(values[0], "Mentee ID");
@@ -614,6 +622,7 @@ function normalizeAndFilterMenteeIds_(values) {
   var output = [values[0]];
   var removed = 0;
   var countryCodeTrimmed = 0;
+  var leadingZeroTrimmed = 0;
 
   for (var i = 1; i < values.length; i++) {
     var result = normalizeMenteeId_(values[i][idIndex]);
@@ -628,23 +637,26 @@ function normalizeAndFilterMenteeIds_(values) {
     output.push(row);
 
     if (result.countryCodeTrimmed) countryCodeTrimmed++;
+    if (result.leadingZeroTrimmed) leadingZeroTrimmed++;
   }
 
   return {
     values: output,
     removed: removed,
-    countryCodeTrimmed: countryCodeTrimmed
+    countryCodeTrimmed: countryCodeTrimmed,
+    leadingZeroTrimmed: leadingZeroTrimmed
   };
 }
 
 /**
- * One Mentee ID → { valid, value, countryCodeTrimmed }.
+ * One Mentee ID → { valid, value, countryCodeTrimmed, leadingZeroTrimmed }.
  *
  * Examples:
  *   712345678     → 712345678
  *   254712345678  → 712345678
  *   +254 112345678 → 112345678
- *   0712345678    → invalid (the rule requires nine digits starting 1 or 7)
+ *   0712345678    → 712345678
+ *   0112345678    → 112345678
  */
 function normalizeMenteeId_(rawValue) {
   var value = String(rawValue == null ? "" : rawValue).trim();
@@ -655,7 +667,12 @@ function normalizeMenteeId_(rawValue) {
   if (value.charAt(0) === "+") value = value.substring(1);
 
   if (!/^\d+$/.test(value)) {
-    return { valid: false, value: "", countryCodeTrimmed: false };
+    return {
+      valid: false,
+      value: "",
+      countryCodeTrimmed: false,
+      leadingZeroTrimmed: false
+    };
   }
 
   var countryCodeTrimmed = false;
@@ -664,10 +681,17 @@ function normalizeMenteeId_(rawValue) {
     countryCodeTrimmed = true;
   }
 
+  var leadingZeroTrimmed = false;
+  if (/^0[17]\d{8}$/.test(value)) {
+    value = value.substring(1);
+    leadingZeroTrimmed = true;
+  }
+
   return {
     valid: /^[17]\d{8}$/.test(value),
     value: value,
-    countryCodeTrimmed: countryCodeTrimmed
+    countryCodeTrimmed: countryCodeTrimmed,
+    leadingZeroTrimmed: leadingZeroTrimmed
   };
 }
 
