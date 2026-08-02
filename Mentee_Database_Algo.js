@@ -16,6 +16,7 @@ function updateAllStatusesByName() {
   const colDateReactivated = headers.indexOf("Date Reactivated") + 1;
   const colDateDeactivated = headers.indexOf("Date Deactivated") + 1;
   const colStatus = headers.indexOf("Status") + 1;
+  const colReasonForDeactivation = headers.indexOf("Reason for Deactivation") + 1;
 
   // Validation columns
   const colFacilityCode = headers.indexOf("Facility Code") + 1;
@@ -196,6 +197,23 @@ function updateAllStatusesByName() {
         }
 
       });
+
+      const reasonForDeactivation = row[colReasonForDeactivation - 1];
+
+      if (
+        status === "Inactive" &&
+        (
+          reasonForDeactivation === null ||
+          String(reasonForDeactivation).trim() === ""
+        )
+      ) {
+
+        addError(
+          colReasonForDeactivation,
+          "Required if mentee is mapped as 'Inactive'!"
+        );
+
+      }
 
     }
 
