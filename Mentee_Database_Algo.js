@@ -1,5 +1,8 @@
 function updateAllStatusesByName() {
 
+  const MASTER_FACILITIES_SHEET_ID =
+    "1EEZJU-DNERkydsMIDtCu-19hzopurtAR7cN5cZ6bvFI";
+
   const sheet = SpreadsheetApp
     .getActiveSpreadsheet()
     .getSheetByName("Mentees");
@@ -60,15 +63,91 @@ function updateAllStatusesByName() {
 
   }
 
+  function normalizeCode(code) {
+
+    return String(code || "")
+      .replace(/\.0$/, "")
+      .trim();
+
+  }
+
+  function findHeaderIndex(headerValues, label) {
+
+    const target = String(label || "")
+      .toLowerCase()
+      .trim();
+
+    return headerValues.findIndex(
+      h => String(h || "").toLowerCase().trim() === target
+    );
+
+  }
+
   // ----------------------------
-  // FACILITY MAPS
+  // MASTER FACILITY LIST
+  // ----------------------------
+  // dhis code → canonical facility name
+  const masterByCode = {};
+
+  // normalized facility name → [{ code, facility }]
+  const masterByNormName = {};
+
+  const masterSheet = SpreadsheetApp
+    .openById(MASTER_FACILITIES_SHEET_ID)
+    .getSheets()[0];
+
+  const masterLastRow = masterSheet.getLastRow();
+  const masterLastCol = masterSheet.getLastColumn();
+
+  if (masterLastRow > 1 && masterLastCol > 0) {
+
+    const masterValues = masterSheet
+      .getRange(1, 1, masterLastRow, masterLastCol)
+      .getValues();
+
+    const masterHeaders = masterValues[0];
+    const idxMasterCode = findHeaderIndex(masterHeaders, "dhis code");
+    const idxMasterFacility = findHeaderIndex(masterHeaders, "facility");
+
+    if (idxMasterCode === -1 || idxMasterFacility === -1) {
+      throw new Error(
+        "Master facilities sheet must include 'dhis code' and 'facility' columns."
+      );
+    }
+
+    for (let r = 1; r < masterValues.length; r++) {
+
+      const masterRow = masterValues[r];
+      const codeStr = normalizeCode(masterRow[idxMasterCode]);
+      const facilityName = String(
+        masterRow[idxMasterFacility] || ""
+      ).trim();
+
+      if (!codeStr || !facilityName) continue;
+
+      masterByCode[codeStr] = facilityName;
+
+      const norm = normalizeFacility(facilityName);
+
+      if (!masterByNormName[norm]) {
+        masterByNormName[norm] = [];
+      }
+
+      masterByNormName[norm].push({
+        code: codeStr,
+        facility: facilityName
+      });
+
+    }
+
+  }
+
+  // ----------------------------
+  // INTRA-SHEET FACILITY MAPS
   // ----------------------------
 
   // normalized facility → codes
   const facilityToCodes = {};
-
-  // code → raw names
-  const facilityVariants = {};
 
   data.forEach(row => {
 
@@ -78,7 +157,7 @@ function updateAllStatusesByName() {
     if (!facility || !code) return;
 
     const norm = normalizeFacility(facility);
-    const codeStr = String(code);
+    const codeStr = normalizeCode(code);
 
     // Same facility linked to multiple codes
     if (!facilityToCodes[norm]) {
@@ -87,16 +166,7 @@ function updateAllStatusesByName() {
 
     facilityToCodes[norm].add(codeStr);
 
-    // Raw names per code
-    if (!facilityVariants[codeStr]) {
-      facilityVariants[codeStr] = new Set();
-    }
-
-    facilityVariants[codeStr]
-      .add(String(facility).trim());
-
   });
-
   // ----------------------------
   // CLEAR FORMATTING
   // ----------------------------
@@ -263,12 +333,11 @@ function updateAllStatusesByName() {
     // FACILITY CODE VALIDATION
     // ----------------------------
     const facilityCode = row[colFacilityCode - 1];
+    const codeStr = normalizeCode(facilityCode);
 
     if (
       facilityCode &&
-      !/^\d{1,5}$/.test(
-        String(facilityCode)
-      )
+      !/^\d{1,5}$/.test(codeStr)
     ) {
 
       addError(
@@ -298,16 +367,15 @@ function updateAllStatusesByName() {
     }
 
     // ----------------------------
-    // FACILITY CONSISTENCY
+    // FACILITY MASTER + CONSISTENCY
     // ----------------------------
     const facility = row[colFacility - 1];
+    const facilityName = String(facility || "").trim();
+    const norm = normalizeFacility(facilityName);
 
-    if (facility) {
+    if (facilityName) {
 
-      const norm =
-        normalizeFacility(facility);
-
-      // Same facility linked to multiple codes
+      // Same facility linked to multiple codes in mentee sheet
       if (
         facilityToCodes[norm] &&
         facilityToCodes[norm].size > 1
@@ -320,39 +388,83 @@ function updateAllStatusesByName() {
 
       }
 
-      // Same code but spelling variation
-      if (facilityCode) {
+    }
 
-        const codeStr =
-          String(facilityCode);
+    // Master list: code + spelling checks
+    if (codeStr && /^\d{1,5}$/.test(codeStr)) {
 
-        const variants =
-          facilityVariants[codeStr];
+      const masterFacility = masterByCode[codeStr];
 
-        if (
-          variants &&
-          variants.size > 1
-        ) {
+      if (!masterFacility) {
 
-          const normalizedVariants =
-            new Set(
-              [...variants].map(v =>
-                normalizeFacility(v)
-              )
-            );
+        addError(
+          colFacilityCode,
+          "Facility Code not found in master facilities list."
+        );
 
-          if (
-            normalizedVariants.size === 1
-          ) {
+      } else if (facilityName) {
+
+        const masterNorm =
+          normalizeFacility(masterFacility);
+
+        if (norm !== masterNorm) {
+
+          // Name may belong to a different master facility
+          const matchesByName =
+            masterByNormName[norm] || [];
+
+          if (matchesByName.length > 0) {
+
+            const suggested = matchesByName
+              .map(m => `${m.facility} (${m.code})`)
+              .join("; ");
 
             addError(
               colFacility,
-              "Facility name has likely been misspelt!"
+              `Facility name does not match this code. Master name for code ${codeStr} is "${masterFacility}". Name matches: ${suggested}.`
+            );
+
+            addError(
+              colFacilityCode,
+              `Code/name mismatch. Expected facility "${masterFacility}" for this code.`
+            );
+
+          } else {
+
+            addError(
+              colFacility,
+              `Facility name has likely been misspelt! Expected "${masterFacility}" for code ${codeStr}.`
             );
 
           }
 
         }
+
+      }
+
+    } else if (facilityName) {
+
+      // No usable code: still check if facility name exists in master
+      const matchesByName =
+        masterByNormName[norm] || [];
+
+      if (matchesByName.length === 0) {
+
+        addError(
+          colFacility,
+          "Facility name not found in master facilities list."
+        );
+
+      } else if (!codeStr) {
+
+        const suggested = matchesByName
+          .map(m => `${m.facility} (${m.code})`)
+          .join("; ");
+
+        addError(
+          colFacilityCode,
+          `Facility Code is missing. Possible master match: ${suggested}.`
+        );
 
       }
 
