@@ -4388,21 +4388,20 @@ function getMoHSACChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
  */
 function getMoHSACCountyChoices_() {
   return [
-    ["county", "Busia", "Busia", "mentors_curriculum"],
-    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum"],
-    ["county", "Kiambu", "Kiambu", "mentors_curriculum"],
-    ["county", "Kilifi", "Kilifi", "mentors_curriculum"],
-    ["county", "Kisii", "Kisii", "mentors_curriculum"],
-    ["county", "Kwale", "Kwale", "mentors_curriculum"],
-    ["county", "Machakos", "Machakos", "mentors_curriculum"],
+    ["county", "Busia", "Busia", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
+    ["county", "Kiambu", "Kiambu", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kilifi", "Kilifi", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kisii", "Kisii", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Machakos", "Machakos", "mentors_curriculum, ifm_assessment, tot"],
     ["county", "Makueni", "Makueni", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Meru", "Meru", "mentors_curriculum"],
-    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, tot"],
+    ["county", "Meru", "Meru", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
     ["county", "Muranga", "Muranga", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Nairobi", "Nairobi", "mentors_curriculum"],
-    ["county", "Nakuru", "Nakuru", "mentors_curriculum"],
-    ["county", "Nyeri", "Nyeri", "mentors_curriculum"],
-    ["county", "Siaya", "Siaya", "mentors_curriculum"],
+    ["county", "Nairobi", "Nairobi", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Nakuru", "Nakuru", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Nyeri", "Nyeri", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Siaya", "Siaya", "mentors_curriculum, ifm_assessment, tot"],
     ["county", "JHSL", "JHSL", "po_assessment"]
   ];
 }
