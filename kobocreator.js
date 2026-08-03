@@ -554,7 +554,12 @@ function generateFacilitiesChoicesSheet() {
   "allowed"
 ]];
 
-  var processed = {};
+  // One facility can appear on many mentee rows and those rows can carry
+  // different Program values. Aggregate every program by Facility Code before
+  // writing one choice; first-row-wins would drop newborn_curriculum whenever
+  // a MENTORS row happened to appear first.
+  var facilitiesByCode = {};
+  var facilityOrder = [];
 
   for (var i = 1; i < data.length; i++) {
     var county = data[i][countyIndex];
@@ -564,41 +569,59 @@ function generateFacilitiesChoicesSheet() {
 
     if (!county || !facility || !code) continue;
 
-    // ✅ FILTER: Only include specific Program values
-    if (
-      program !== "MENTORS Curriculum" &&
-      program !== "Newborn Curriculum" &&
-      program !== "Both"
-    ) continue;
+    var normalizedProgram = String(program).trim().toLowerCase();
+    var isMentors = normalizedProgram === "mentors curriculum";
+    var isNewborn = normalizedProgram === "newborn curriculum";
+    var isBoth = normalizedProgram === "both";
+    if (!isMentors && !isNewborn && !isBoth) continue;
 
-    // ✅ Map Program → allowed
-    var allowed = "";
-    
-    if (program === "MENTORS Curriculum") {
-      allowed = "mentors_curriculum,ifm_assessment,tot";
-    } 
-    else if (program === "Newborn Curriculum") {
-      allowed = "newborn_curriculum,ifm_assessment,tot";
-    } 
-    else if (program === "Both") {
-      allowed = "mentors_curriculum,newborn_curriculum,ifm_assessment,tot";
+    var codeKey = String(code).trim();
+    if (!facilitiesByCode[codeKey]) {
+      facilitiesByCode[codeKey] = {
+        county: county,
+        facility: facility,
+        code: code,
+        hasMentors: false,
+        hasNewborn: false
+      };
+      facilityOrder.push(codeKey);
     }
 
-    var listName = cleanForKobo(county) + "_facilities";
-    var combinedName = code + "_" + cleanForKobo(facility);
+    if (isMentors || isBoth) facilitiesByCode[codeKey].hasMentors = true;
+    if (isNewborn || isBoth) facilitiesByCode[codeKey].hasNewborn = true;
+  }
 
-    if (processed[combinedName]) continue;
-    processed[combinedName] = true;
+  for (var f = 0; f < facilityOrder.length; f++) {
+    var record = facilitiesByCode[facilityOrder[f]];
+    var aggregateProgram;
+
+    if (record.hasMentors && record.hasNewborn) {
+      aggregateProgram = "Both";
+    } else if (record.hasNewborn) {
+      aggregateProgram = "Newborn Curriculum";
+    } else {
+      aggregateProgram = "MENTORS Curriculum";
+    }
+
+    var allowedParts = [];
+    if (record.hasMentors) allowedParts.push("mentors_curriculum");
+    if (record.hasNewborn) allowedParts.push("newborn_curriculum");
+    allowedParts.push("ifm_assessment");
+    allowedParts.push("tot");
+
+    var listName = cleanForKobo(record.county) + "_facilities";
+    var combinedName =
+      record.code + "_" + cleanForKobo(record.facility);
 
     output.push([
-    county,
-    facility,
-    code,
-    program,
-    listName,
-    combinedName,
-    facility,
-    allowed
+      record.county,
+      record.facility,
+      record.code,
+      aggregateProgram,
+      listName,
+      combinedName,
+      record.facility,
+      allowedParts.join(",")
     ]);
   }
 

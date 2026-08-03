@@ -238,6 +238,18 @@ form (`getMoHSAC…`, `getNewbornCTF…`) or use the shared `koboKit…` helpers
 `kobocreator.js` once defined `cleanForKobo()` twice with different behaviour,
 which made it easy to fix the copy that never ran.
 
+### 11. Aggregate facility eligibility across every source row
+**Symptom:** a facility with MENTORS and Newborn mentees appears in
+`All Facilities List (Choices)` with only
+`mentors_curriculum,ifm_assessment,tot`.
+
+A facility appears once per mentee in the source, so the first source row is
+not the facility's complete programme eligibility. Group rows by Facility Code
+first, union every supported `Program`, and only then write the one facility
+choice. If both programmes occur — whether on separate rows or as `Both` — the
+output `Program` is `Both` and `allowed` includes both curricula. Never mark a
+facility as processed before its programme rows have been aggregated.
+
 ## Testing without Apps Script
 
 Every fix in this pipeline was verified offline first. Run a builder under
