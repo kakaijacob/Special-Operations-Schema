@@ -497,10 +497,15 @@ function generateEmONCFacilitiesChoicesSheet() {
 
     if (!county || !facility || !code) continue;
 
-    // ✅ FILTER: Only include specific Program values
+    // FILTER: EmONC facilities are those with a MENTORS or Both mentee.
+    // Program is typed by hand ("Both", "both ", "MENTORS Curriculum "), so a
+    // strict comparison silently drops facilities and they never appear under
+    // their county in Kobo — normalize before comparing.
+    var normalizedProgram = String(program).trim().toLowerCase();
     if (
-    program !== "MENTORS Curriculum" &&
-    program !== "Both") continue;
+      normalizedProgram !== "mentors curriculum" &&
+      normalizedProgram !== "both"
+    ) continue;
 
     var listName = cleanForKobo(county) + "_facilities";
     var combinedName = code + "_" + cleanForKobo(facility);
@@ -884,10 +889,12 @@ function generateNewbornAssessmentSheet() {
 
     if (!county || !facility || !code) continue;
 
-    // ✅ FILTER
+    // FILTER: Program is typed by hand, so normalize before comparing or
+    // "both"/"Newborn Curriculum " variants drop the facility silently.
+    var normalizedProgram = String(program).trim().toLowerCase();
     if (
-      program !== "Newborn Curriculum" &&
-      program !== "Both"
+      normalizedProgram !== "newborn curriculum" &&
+      normalizedProgram !== "both"
     ) continue;
 
     // ✅ INITIALIZE FACILITY

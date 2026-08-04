@@ -238,6 +238,20 @@ form (`getMoHSAC…`, `getNewbornCTF…`) or use the shared `koboKit…` helpers
 `kobocreator.js` once defined `cleanForKobo()` twice with different behaviour,
 which made it easy to fix the copy that never ran.
 
+### 12. Normalize Program before filtering facilities into a county list
+**Symptom:** a county select is missing facilities that are correctly mapped to
+that county in the database.
+
+`Program` is typed by hand, so `MENTORS Curriculum`, `Mentors Curriculum`,
+`MENTORS Curriculum ` and `both` all occur. A strict `program === "MENTORS
+Curriculum"` filter drops every variant, and those facilities never appear
+under their county in Kobo even though the sheet maps them correctly. Compare
+`String(program).trim().toLowerCase()` against `"mentors curriculum"` /
+`"newborn curriculum"` / `"both"`, the same way the mentee resolver does. This
+is Rule 7 applied to facilities. (A facility whose only program is the *other*
+curriculum is still correctly excluded — an EmONC form does not list a
+newborn-only facility.)
+
 ### 11. Aggregate facility eligibility across every source row
 **Symptom:** a facility with MENTORS and Newborn mentees appears in
 `All Facilities List (Choices)` with only
