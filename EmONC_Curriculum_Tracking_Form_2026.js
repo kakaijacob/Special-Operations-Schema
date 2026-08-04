@@ -77,8 +77,12 @@ function upsertEmONCCurriculumTrackingForm2026_(sourceSs) {
   // Keep only the three Kobo tabs
   removeExtraEmONCCTF2026Sheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeEmONCCTF2026Survey_(surveySheet, sourceSs);
-  writeEmONCCTF2026Choices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // lists that ship with the form.
+  var choiceRows = getEmONCCTF2026ChoiceRows_(sourceSs);
+
+  writeEmONCCTF2026Survey_(surveySheet, sourceSs, choiceRows);
+  writeEmONCCTF2026Choices_(choicesSheet, choiceRows);
   writeEmONCCTF2026Settings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -116,9 +120,8 @@ function removeExtraEmONCCTF2026Sheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeEmONCCTF2026Survey_(sheet, sourceSs) {
-  var rows = [EMONC_CTF_2026_SURVEY_HEADERS]
-    .concat(getEmONCCTF2026SurveyRows_())
+function writeEmONCCTF2026Survey_(sheet, sourceSs, choiceRows) {
+  var bodyRows = getEmONCCTF2026SurveyRows_()
     .concat(getEmONCCTF2026MenteeSurveyRows_(sourceSs))
     .concat([
       ["end_group", "", "", "", "", "", "", "", "", ""], // close mentee_details
@@ -126,7 +129,15 @@ function writeEmONCCTF2026Survey_(sheet, sourceSs) {
     ])
     .concat(getEmONCCTF2026Section2Rows_());
 
+  bodyRows = dropEmONCCTF2026RowsWithMissingChoices_(
+    bodyRows,
+    collectEmONCCTF2026ChoiceListNames_(choiceRows)
+  );
+
+  var rows = [EMONC_CTF_2026_SURVEY_HEADERS].concat(bodyRows);
+
   sheet.clear();
+  ensureEmONCCTF2026SheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -140,6 +151,7 @@ function getEmONCCTF2026SurveyRows_() {
     "if(${kiambu_facilities} != '', ${kiambu_facilities}, " +
     "if(${kilifi_facilities} != '', ${kilifi_facilities}, " +
     "if(${kisii_facilities} != '', ${kisii_facilities}, " +
+    "if(${kwale_facilities} != '', ${kwale_facilities}, " +
     "if(${kirinyaga_facilities} != '', ${kirinyaga_facilities}, " +
     "if(${machakos_facilities} != '', ${machakos_facilities}, " +
     "if(${makueni_facilities} != '', ${makueni_facilities}, " +
@@ -149,7 +161,7 @@ function getEmONCCTF2026SurveyRows_() {
     "if(${nairobi_facilities} != '', ${nairobi_facilities}, " +
     "if(${nakuru_facilities} != '', ${nakuru_facilities}, " +
     "if(${siaya_facilities} != '', ${siaya_facilities}, " +
-    "if(${nyeri_facilities} != '', ${nyeri_facilities}, '')))))))))))))))";
+    "if(${nyeri_facilities} != '', ${nyeri_facilities}, ''))))))))))))))))";
 
   // Columns: type, name, label, hint, required, required_message,
   //          constraint_message, relevant, parameters, calculation
@@ -269,6 +281,7 @@ function getEmONCCTF2026SurveyRows_() {
     facilitySelectRow_("kiambu_facilities", "Kiambu"),
     facilitySelectRow_("kilifi_facilities", "Kilifi"),
     facilitySelectRow_("kisii_facilities", "Kisii"),
+    facilitySelectRow_("kwale_facilities", "Kwale"),
     facilitySelectRow_("kirinyaga_facilities", "Kirinyaga"),
     facilitySelectRow_("machakos_facilities", "Machakos"),
     facilitySelectRow_("makueni_facilities", "Makueni"),
@@ -708,15 +721,132 @@ function getEmONCCTF2026Section2Rows_() {
 // =====================================================
 // CHOICES
 // =====================================================
-function writeEmONCCTF2026Choices_(sheet, sourceSs) {
-  var rows = [EMONC_CTF_2026_CHOICES_HEADERS]
-    .concat(getEmONCCTF2026CountyChoices_())
+function getEmONCCTF2026ChoiceRows_(sourceSs) {
+  return getEmONCCTF2026CountyChoices_()
     .concat(getEmONCCTF2026FacilityChoices_(sourceSs))
     .concat(getEmONCCTF2026MenteeChoices_(sourceSs))
     .concat(getEmONCCTF2026ActivityChoices_());
+}
+
+function writeEmONCCTF2026Choices_(sheet, choiceRows) {
+  var rows = [EMONC_CTF_2026_CHOICES_HEADERS].concat(choiceRows);
 
   sheet.clear();
+  ensureEmONCCTF2026SheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureEmONCCTF2026SheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectEmONCCTF2026ChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/** "select_one x" / "select_multiple x" → "x", anything else → "". */
+function extractEmONCCTF2026SelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)\s+(\S+)/);
+  return match ? match[1] : "";
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x"), so
+ * every one of those questions has to go. Other rows may still reference the
+ * dropped question through ${name}; those references are replaced with an
+ * empty string, which keeps the surrounding expression valid and simply never
+ * matches.
+ */
+function dropEmONCCTF2026RowsWithMissingChoices_(rows, availableChoiceLists) {
+  // relevant, parameters and calculation can reference another field.
+  var expressionColumns = [7, 8, 9];
+  var droppedNames = [];
+  var droppedLists = [];
+  var dropped = {};
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractEmONCCTF2026SelectListName_(rows[i][0]);
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (availableChoiceLists[listName]) continue;
+
+    dropped[i] = true;
+    droppedLists.push(listName);
+
+    var fieldName = String(rows[i][1] == null ? "" : rows[i][1]).trim();
+    if (fieldName) droppedNames.push(fieldName);
+  }
+
+  if (!droppedLists.length) return rows;
+
+  var kept = [];
+  for (i = 0; i < rows.length; i++) {
+    if (dropped[i]) continue;
+    kept.push(
+      clearEmONCCTF2026FieldReferences_(rows[i], droppedNames, expressionColumns)
+    );
+  }
+
+  Logger.log(
+    "EmONC CTF 2026: removed " + droppedLists.length + " question(s) whose " +
+    "choice list is not in the generated choices sheet: " +
+    droppedLists.sort().join(", ")
+  );
+
+  return kept;
+}
+
+/**
+ * Replace ${name} with '' for every dropped question, so expressions left
+ * behind stay valid XPath instead of pointing at a field that no longer exists.
+ */
+function clearEmONCCTF2026FieldReferences_(row, droppedNames, expressionColumns) {
+  if (!droppedNames.length) return row;
+
+  for (var c = 0; c < expressionColumns.length; c++) {
+    var column = expressionColumns[c];
+    var value = row[column];
+    if (!value) continue;
+
+    var text = String(value);
+    for (var n = 0; n < droppedNames.length; n++) {
+      var reference = "${" + droppedNames[n] + "}";
+      while (text.indexOf(reference) !== -1) {
+        text = text.replace(reference, "''");
+      }
+    }
+    row[column] = text;
+  }
+
+  return row;
 }
 
 function getEmONCCTF2026CountyChoices_() {
@@ -727,6 +857,7 @@ function getEmONCCTF2026CountyChoices_() {
     ["county", "Kiambu", "Kiambu"],
     ["county", "Kilifi", "Kilifi"],
     ["county", "Kisii", "Kisii"],
+    ["county", "Kwale", "Kwale"],
     ["county", "Kirinyaga", "Kirinyaga"],
     ["county", "Machakos", "Machakos"],
     ["county", "Makueni", "Makueni"],
@@ -794,17 +925,17 @@ function getEmONCCTF2026ActivityChoices_() {
     ["videos", "AMTSL", "1. Active Management of third stage"],
     ["videos", "Bimanual_compression", "2. Bimanual Compression of the Uterus"],
     ["videos", "Compression_of_Abdominal_Aorta", "3. Compression of Abdominal Aorta"],
-    ["videos", "Cord_Prolapse", "4. First response bundle for PPH treatment"],
-    ["videos", "Cervical_Tear_Repair", "5. Immediate newborn resuscitation"],
-    ["videos", "Newborn_Resuscitation", "6. Management of Cord prolapse"],
-    ["videos", "NASG_placement", "7. Placement of Blynch Suture"],
-    ["videos", "NASG_placement", "8. Placement of Non Pneumatic garment"],
-    ["videos", "Perineal_Tear_Repair", "9. Placement of Uterine Ballon Tamponade"],
-    ["videos", "Postpartum_haemorrhage_(PPH)", "10. Placement of Uterine Balloon Tamponade - Free Flow System"],
-    ["videos", "Retained_Placenta_Removal", "11. Repair of Cervical tear"],
-    ["videos", "Shoulder_Dystocia", "12. Repair of perineal tear repair"],
-    ["videos", "UBT", "13. Removal of retained Placenta"],
-    ["videos", "UBT_Freeflow", "14. Shoulder dystocia delivery"],
+    ["videos", "Postpartum_haemorrhage_(PPH)", "4. First response bundle for PPH treatment"],
+    ["videos", "Newborn_Resuscitation", "5. Immediate newborn resuscitation"],
+    ["videos", "Cord_Prolapse", "6. Management of Cord prolapse"],
+    ["videos", "Cervical_Tear_Repair", "7. Repair of Cervical tear"],
+    ["videos", "Shoulder_Dystocia", "8. Shoulder dystocia delivery"],
+    ["videos", "B-lynch_suture", "9. Placement of Blynch Suture"],
+    ["videos", "NASG_placement", "10. Placement of Non Pneumatic garment"],
+    ["videos", "UBT", "11. Placement of Uterine Ballon Tamponade"],
+    ["videos", "UBT_Freeflow", "12. Placement of Uterine Balloon Tamponade - Free Flow System"],
+    ["videos", "Retained_Placenta_Removal", "13. Removal of retained Placenta"],
+    ["videos", "Perineal_Tear_Repair", "14. Repair of perineal tear repair"],
     ["videos", "Uterine_Inversion", "15. Uterine Inversion"],
     ["videos", "Vaginal_Breech_Delivery", "16. Vaginal breech delivery"],
     ["videos", "Vacuum_Assisted_Delivery", "17. Vaginal vacuum assisted delivery"],

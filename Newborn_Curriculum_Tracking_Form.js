@@ -74,8 +74,12 @@ function upsertNewbornCurriculumTrackingForm_(sourceSs) {
 
   removeExtraNewbornCTFSheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeNewbornCTFSurvey_(surveySheet, sourceSs);
-  writeNewbornCTFChoices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // lists that ship with the form.
+  var choiceRows = getNewbornCTFChoiceRows_(sourceSs);
+
+  writeNewbornCTFSurvey_(surveySheet, sourceSs, choiceRows);
+  writeNewbornCTFChoices_(choicesSheet, choiceRows);
   writeNewbornCTFSettings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -112,17 +116,25 @@ function removeExtraNewbornCTFSheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeNewbornCTFSurvey_(sheet, sourceSs) {
-  var menteeRows = getNewbornCTFMenteeSurveyRows_(sourceSs);
+function writeNewbornCTFSurvey_(sheet, sourceSs, choiceRows) {
+  var availableLists = collectNewbornCTFChoiceListNames_(choiceRows);
+  var menteeRows = dropNewbornCTFRowsWithMissingChoices_(
+    getNewbornCTFMenteeSurveyRows_(sourceSs),
+    availableLists
+  );
 
-  var rows = [NEWBORN_CTF_SURVEY_HEADERS]
-    .concat(getNewbornCTFSurveyRows_())
+  var bodyRows = getNewbornCTFSurveyRows_()
     .concat(getNewbornCTFSection1bRows_())
     .concat(menteeRows)
     .concat(getNewbornCTFCloseSection1Rows_(menteeRows))
     .concat(getNewbornCTFSection2Rows_());
 
+  var rows = [NEWBORN_CTF_SURVEY_HEADERS].concat(
+    dropNewbornCTFRowsWithMissingChoices_(bodyRows, availableLists)
+  );
+
   sheet.clear();
+  ensureNewbornCTFSheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -358,7 +370,7 @@ function getNewbornCTFMenteeSurveyRows_(sourceSs) {
     var name = data[i][nameIndex];
     var label = data[i][labelIndex];
     var required = normalizeNewbornCTFRequired_(data[i][requiredIndex]);
-    var relevant = data[i][relevantIndex];
+    var relevant = normalizeNewbornCTFMenteeRelevant_(data[i][relevantIndex]);
 
     if (!type && !name) continue;
 
@@ -385,6 +397,47 @@ function normalizeNewbornCTFRequired_(value) {
   var cleaned = String(value == null ? "" : value).trim().toLowerCase();
   if (cleaned === "true" || cleaned === "false") return cleaned;
   return cleaned;
+}
+
+/**
+ * Drop the program clause from an imported mentee relevance.
+ *
+ * Survey Sheet (Newborn) is shared with the MoH checklist, where the program
+ * question offers "newborn_curriculum" and the clause is meaningful. Here the
+ * program question offers essential_newborn_care / comprehensive_newborn_care,
+ * so the clause can never be true: the mentee questions would never appear,
+ * next_group_hide1 would stay empty, and Section 2 would never open. Which
+ * mentees attended depends on the facility alone; ENC versus CNC selects the
+ * modules in Section 2, not the people.
+ */
+function normalizeNewbornCTFMenteeRelevant_(relevant) {
+  var cleaned = String(relevant == null ? "" : relevant).trim();
+  if (!cleaned) return "";
+
+  cleaned = cleaned.replace(
+    /\s*and\s*\(?\s*\$\{program\}\s*=\s*'[^']*'\s*\)?/gi,
+    ""
+  );
+
+  return balanceNewbornCTFTrailingParens_(cleaned);
+}
+
+/** Drop trailing ")" left behind when a clause is removed. */
+function balanceNewbornCTFTrailingParens_(expression) {
+  var text = expression;
+
+  while (text.length) {
+    var depth = 0;
+    for (var i = 0; i < text.length; i++) {
+      if (text.charAt(i) === "(") depth++;
+      else if (text.charAt(i) === ")") depth--;
+    }
+
+    if (depth >= 0 || text.charAt(text.length - 1) !== ")") break;
+    text = text.substring(0, text.length - 1).replace(/\s+$/, "");
+  }
+
+  return text;
 }
 
 /**
@@ -828,15 +881,132 @@ function getNewbornCTFSection2Rows_() {
 // =====================================================
 // CHOICES
 // =====================================================
-function writeNewbornCTFChoices_(sheet, sourceSs) {
-  var rows = [NEWBORN_CTF_CHOICES_HEADERS]
-    .concat(getNewbornCTFCountyChoices_())
+function getNewbornCTFChoiceRows_(sourceSs) {
+  return getNewbornCTFCountyChoices_()
     .concat(getNewbornCTFFacilityChoices_(sourceSs))
     .concat(getNewbornCTFMenteeChoices_(sourceSs))
     .concat(getNewbornCTFCurriculumChoices_());
+}
+
+function writeNewbornCTFChoices_(sheet, choiceRows) {
+  var rows = [NEWBORN_CTF_CHOICES_HEADERS].concat(choiceRows);
 
   sheet.clear();
+  ensureNewbornCTFSheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureNewbornCTFSheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectNewbornCTFChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/** "select_one x" / "select_multiple x" → "x", anything else → "". */
+function extractNewbornCTFSelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)\s+(\S+)/);
+  return match ? match[1] : "";
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x"), so
+ * every one of those questions has to go. Other rows may still reference the
+ * dropped question through ${name}; those references are replaced with an
+ * empty string, which keeps the surrounding expression valid and simply never
+ * matches.
+ */
+function dropNewbornCTFRowsWithMissingChoices_(rows, availableChoiceLists) {
+  // relevant, choice_filter and calculation can reference another field.
+  var expressionColumns = [6, 7, 8];
+  var droppedNames = [];
+  var droppedLists = [];
+  var dropped = {};
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractNewbornCTFSelectListName_(rows[i][0]);
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (availableChoiceLists[listName]) continue;
+
+    dropped[i] = true;
+    droppedLists.push(listName);
+
+    var fieldName = String(rows[i][1] == null ? "" : rows[i][1]).trim();
+    if (fieldName) droppedNames.push(fieldName);
+  }
+
+  if (!droppedLists.length) return rows;
+
+  var kept = [];
+  for (i = 0; i < rows.length; i++) {
+    if (dropped[i]) continue;
+    kept.push(
+      clearNewbornCTFFieldReferences_(rows[i], droppedNames, expressionColumns)
+    );
+  }
+
+  Logger.log(
+    "Newborn CTF: removed " + droppedLists.length + " question(s) whose " +
+    "choice list is not in the generated choices sheet: " +
+    droppedLists.sort().join(", ")
+  );
+
+  return kept;
+}
+
+/**
+ * Replace ${name} with '' for every dropped question, so expressions left
+ * behind stay valid XPath instead of pointing at a field that no longer exists.
+ */
+function clearNewbornCTFFieldReferences_(row, droppedNames, expressionColumns) {
+  if (!droppedNames.length) return row;
+
+  for (var c = 0; c < expressionColumns.length; c++) {
+    var column = expressionColumns[c];
+    var value = row[column];
+    if (!value) continue;
+
+    var text = String(value);
+    for (var n = 0; n < droppedNames.length; n++) {
+      var reference = "${" + droppedNames[n] + "}";
+      while (text.indexOf(reference) !== -1) {
+        text = text.replace(reference, "''");
+      }
+    }
+    row[column] = text;
+  }
+
+  return row;
 }
 
 /**

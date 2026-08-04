@@ -78,8 +78,12 @@ function upsertMoHSkillsAssessmentChecklist_(sourceSs) {
 
   removeExtraMoHSACSheets_(formSs, ["survey", "choices", "settings"]);
 
-  writeMoHSACSurvey_(surveySheet, sourceSs);
-  writeMoHSACChoices_(choicesSheet, sourceSs);
+  // Build choices first so the survey can be validated against the exact
+  // choice lists this form ships with.
+  var choiceRows = getMoHSACChoiceRows_(sourceSs);
+
+  writeMoHSACSurvey_(surveySheet, sourceSs, collectMoHSACChoiceListNames_(choiceRows));
+  writeMoHSACChoiceRows_(choicesSheet, choiceRows);
   writeMoHSACSettings_(settingsSheet);
 
   formSs.setActiveSheet(surveySheet);
@@ -116,14 +120,20 @@ function removeExtraMoHSACSheets_(ss, keepNames) {
 // =====================================================
 // SURVEY
 // =====================================================
-function writeMoHSACSurvey_(sheet, sourceSs) {
-  var rows = [MOH_SAC_SURVEY_HEADERS]
-    .concat(getMoHSACSurveyRows_())
+function writeMoHSACSurvey_(sheet, sourceSs, availableChoiceLists) {
+  var bodyRows = getMoHSACSurveyRows_()
     .concat(getMoHSACSection1bRows_())
     .concat(getMoHSACSection1cRows_(sourceSs))
     .concat(getMoHSACSection2Rows_());
 
+  if (availableChoiceLists) {
+    bodyRows = dropMoHSACRowsWithMissingChoices_(bodyRows, availableChoiceLists);
+  }
+
+  var rows = [MOH_SAC_SURVEY_HEADERS].concat(bodyRows);
+
   sheet.clear();
+  ensureMoHSACSheetCapacity_(sheet, rows.length, rows[0].length);
   var range = sheet.getRange(1, 1, rows.length, rows[0].length);
   // Keep required as text "true"/"false" (Kobo), not Sheets boolean TRUE/FALSE
   range.setNumberFormat("@");
@@ -293,6 +303,7 @@ function getMoHSACSection1bRows_() {
     "if(${kirinyaga_facilities}!='',${kirinyaga_facilities}," +
     "if(${kilifi_facilities}!='',${kilifi_facilities}," +
     "if(${kisii_facilities}!='',${kisii_facilities}," +
+    "if(${kwale_facilities}!='',${kwale_facilities}," +
     "if(${machakos_facilities}!='',${machakos_facilities}," +
     "if(${makueni_facilities}!='',${makueni_facilities}," +
     "if(${meru_facilities}!='',${meru_facilities}," +
@@ -301,7 +312,7 @@ function getMoHSACSection1bRows_() {
     "if(${nairobi_facilities}!='',${nairobi_facilities}," +
     "if(${nakuru_facilities}!='',${nakuru_facilities}," +
     "if(${siaya_facilities}!='',${siaya_facilities}," +
-    "if(${nyeri_facilities}!='',${nyeri_facilities},''))))))))))))))))";
+    "if(${nyeri_facilities}!='',${nyeri_facilities},'')))))))))))))))))";
 
   return [
     [
@@ -338,6 +349,7 @@ function getMoHSACSection1bRows_() {
     mohSacFacilitySelectRow_("kiambu_facilities", "kiambu_facilities", "Kiambu"),
     mohSacFacilitySelectRow_("kilifi_facilities", "kilifi_facilities", "Kilifi"),
     mohSacFacilitySelectRow_("kisii_facilities", "kisii_facilities", "Kisii"),
+    mohSacFacilitySelectRow_("kwale_facilities", "kwale_facilities", "Kwale"),
     mohSacFacilitySelectRow_("kirinyaga_facilities", "kirinyaga_facilities", "Kirinyaga"),
     mohSacFacilitySelectRow_("machakos_facilities", "machakos_facilities", "Machakos"),
     mohSacFacilitySelectRow_("makueni_facilities", "makueni_facilities", "Makueni"),
@@ -531,6 +543,13 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     );
   }
 
+  // "Survey Sheet (IFM)" only needs County/Facility/Facility Code, while
+  // "IFM List (Choices)" also needs an IFM Name and IFM ID. A facility missing
+  // those produces a select_one with no choices, which Kobo rejects at deploy
+  // with "List name not in choices sheet".
+  var availableLists = getMoHSACIfmChoiceListNames_(sourceSs);
+  var skippedLists = {};
+
   var rows = [];
   var nameCounts = {};
 
@@ -541,6 +560,12 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     var relevant = normalizeMoHSACIfmRelevant_(data[i][relevantIndex]);
 
     if (!type && !baseName) continue;
+
+    var listName = extractMoHSACSelectListName_(type);
+    if (listName && !availableLists[listName]) {
+      skippedLists[listName] = true;
+      continue;
+    }
 
     var name = String(baseName || "");
     if (name) {
@@ -572,7 +597,55 @@ function getMoHSACIfmSurveyRows_(sourceSs) {
     ]);
   }
 
+  var skippedNames = [];
+  for (var skipped in skippedLists) {
+    skippedNames.push(skipped);
+  }
+  if (skippedNames.length) {
+    Logger.log(
+      "MoH SAC: skipped " + skippedNames.length + " IFM question(s) with no " +
+      "choices in 'IFM List (Choices)': " + skippedNames.sort().join(", ") +
+      ". Add an IFM Name and IFM ID for those Active facilities in the " +
+      "Mentor (IFM) Database to include them."
+    );
+  }
+
   return rows;
+}
+
+/**
+ * list_name values that actually have at least one choice row.
+ */
+function getMoHSACIfmChoiceListNames_(sourceSs) {
+  var sourceSheet = sourceSs.getSheetByName("IFM List (Choices)");
+  if (!sourceSheet) return {};
+
+  var data = sourceSheet.getDataRange().getValues();
+  if (!data || data.length < 2) return {};
+
+  var listNameIndex = data[0].indexOf("list_name");
+  var nameIndex = data[0].indexOf("name");
+  if (listNameIndex === -1 || nameIndex === -1) return {};
+
+  var lists = {};
+  for (var i = 1; i < data.length; i++) {
+    var listName = String(data[i][listNameIndex] || "").trim();
+    var choiceName = String(data[i][nameIndex] || "").trim();
+    if (listName && choiceName) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/**
+ * "select_one busia_ifms" → "busia_ifms" ("" for non-select types).
+ */
+function extractMoHSACSelectListName_(type) {
+  var match = String(type == null ? "" : type)
+    .trim()
+    .match(/^select_(?:one|multiple)\s+(\S+)/);
+  return match ? match[1] : "";
 }
 
 function normalizeMoHSACRequired_(value) {
@@ -758,7 +831,7 @@ function getMoHSACSection2Rows_() {
     "${next_group_hide1} != '' or (${next_group_hide1} != '' and ${ifm_id_2}!='') or (${next_group_hide1} != '' and ${lm_po}!='')";
 
   var freeflowScoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent}='yes')+" +
     "(${sterile_gloves}='yes')+" +
     "(${assemble_ubt}='yes')+" +
@@ -961,7 +1034,7 @@ function getMoHSACManualPlacentaRows_() {
     "  • Give 2 g Ampicillin IV or 1 g Cefazolin IV or IV Ceftriaxone 2 g plus IV Metronidazole 500 mg";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help1}='yes')+" +
     "(${obtain_consent_001}='yes')+" +
     "(${v_drape}='yes')+" +
@@ -1100,7 +1173,7 @@ function getMoHSACManualPlacentaRows_() {
  */
 function getMoHSACUbtRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_002}='yes')+" +
     "(${sterile_gloves_001}='yes')+" +
     "(${balloon_over_catheter}='yes')+" +
@@ -1244,7 +1317,7 @@ function getMoHSACCordProlapseRows_() {
     "  • If the baby is breech, perform breech extraction.";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help_001}='yes')+" +
     "(${obtain_consent_003}='yes')+" +
     "(${vaginal_exam}='yes')+" +
@@ -1383,7 +1456,7 @@ function getMoHSACCordProlapseRows_() {
  */
 function getMoHSACAssistedBreechRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${confirm_diagnosis_001}='yes')+" +
     "(${obtain_consent_004}='yes')+" +
     "(${call_for_help}='yes')+" +
@@ -1510,7 +1583,7 @@ function getMoHSACAvdRows_() {
     "  • The fetus is not delivered after 20 minutes";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_005}='yes')+" +
     "(${ask_for_help}='yes')+" +
     "(${avd_contraindication}='yes')+" +
@@ -1645,7 +1718,7 @@ function getMoHSACAvdRows_() {
  */
 function getMoHSACShoulderDystociaRows_() {
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${shout_for_help_002}='yes')+" +
     "(${obtain_consent_006}='yes')+" +
     "(${aim_to_deliver_within_5_min}='yes')+" +
@@ -1779,7 +1852,7 @@ function getMoHSACAmtslRows_() {
     "  ◊ Give 5 IU/500 μg IM";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${explain_procedure}='yes')+" +
     "(${obtain_consent_007}='yes')+" +
     "(${change_goloves}='yes')+" +
@@ -1919,7 +1992,7 @@ function getMoHSACNasgRows_() {
     "  • The patient is hemodynamically stable and conscious/aware";
 
   var scoreCalc =
-    "round(((" +
+    "round((" +
     "(${obtain_consent_008}='yes')+" +
     "(${ipc_precautions}='yes')+" +
     "(${placing_woman_on_nasg}='yes')+" +
@@ -4006,12 +4079,31 @@ function getMoHSACYesNoChoicesForLists_(listNames) {
 // CHOICES
 // =====================================================
 function writeMoHSACChoices_(sheet, sourceSs) {
-  var facilityRows = getMoHSACFacilityChoices_(sourceSs);
-  var rows = [MOH_SAC_CHOICES_HEADERS]
-    .concat(getMoHSACProgramChoices_())
+  writeMoHSACChoiceRows_(sheet, getMoHSACChoiceRows_(sourceSs));
+}
+
+/**
+ * Every choice row this form ships with (no header).
+ * list_name and name are trimmed because pyxform matches them literally
+ * against the survey's "select_one <list>".
+ */
+function getMoHSACChoiceRows_(sourceSs) {
+  return normalizeMoHSACChoiceRows_(getMoHSACChoiceRowsRaw_(sourceSs));
+}
+
+function normalizeMoHSACChoiceRows_(choiceRows) {
+  for (var i = 0; i < choiceRows.length; i++) {
+    choiceRows[i][0] = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    choiceRows[i][1] = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+  }
+  return choiceRows;
+}
+
+function getMoHSACChoiceRowsRaw_(sourceSs) {
+  return getMoHSACProgramChoices_()
     .concat(getMoHSACCountyChoices_())
     .concat(getMoHSACJhslChoices_())
-    .concat(facilityRows)
+    .concat(getMoHSACFacilityChoices_(sourceSs))
     .concat(getMoHSACLmPoChoices_())
     .concat(getMoHSACIfmChoices_(sourceSs))
     .concat(getMoHSACNewbornMenteeChoices_(sourceSs))
@@ -4019,9 +4111,118 @@ function writeMoHSACChoices_(sheet, sourceSs) {
     .concat(getMoHSACSkillEvaluationChoices_())
     .concat(getMoHSACAuthoredSkillChoices_())
     .concat(getMoHSACRemainingYesNoChoices_());
+}
 
+function writeMoHSACChoiceRows_(sheet, choiceRows) {
+  var rows = [MOH_SAC_CHOICES_HEADERS].concat(choiceRows);
   sheet.clear();
+  ensureMoHSACSheetCapacity_(sheet, rows.length, rows[0].length);
   sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/**
+ * A partially written choices tab makes Kobo reject the deployment with
+ * "List name not in choices sheet", so grow the grid before writing.
+ */
+function ensureMoHSACSheetCapacity_(sheet, rowCount, columnCount) {
+  var maxRows = sheet.getMaxRows();
+  if (maxRows < rowCount) {
+    sheet.insertRowsAfter(maxRows, rowCount - maxRows);
+  }
+
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < columnCount) {
+    sheet.insertColumnsAfter(maxColumns, columnCount - maxColumns);
+  }
+}
+
+/** list_name values that ship with at least one usable choice. */
+function collectMoHSACChoiceListNames_(choiceRows) {
+  var lists = {};
+  for (var i = 0; i < choiceRows.length; i++) {
+    var listName = String(choiceRows[i][0] == null ? "" : choiceRows[i][0]).trim();
+    var name = String(choiceRows[i][1] == null ? "" : choiceRows[i][1]).trim();
+    if (listName && name) {
+      lists[listName] = true;
+    }
+  }
+  return lists;
+}
+
+/**
+ * Kobo refuses to deploy the whole form when any select references a list that
+ * is absent from the choices sheet ("List name not in choices sheet: x"), so
+ * every one of those questions has to go. Other rows may still reference the
+ * dropped question through ${name}; those references are replaced with an
+ * empty string, which keeps the surrounding expression valid and simply never
+ * matches.
+ */
+function dropMoHSACRowsWithMissingChoices_(rows, availableChoiceLists) {
+  // relevant, choice_filter, calculation and constraint can reference a field.
+  var expressionColumns = [7, 8, 9, 10];
+  var droppedNames = [];
+  var droppedLists = [];
+  var dropped = {};
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var listName = extractMoHSACSelectListName_(rows[i][0]);
+    if (!listName) continue;
+
+    // Collapse stray whitespace so the type matches the trimmed choices.
+    rows[i][0] = String(rows[i][0]).trim().replace(/\s+/g, " ");
+
+    if (availableChoiceLists[listName]) continue;
+
+    dropped[i] = true;
+    droppedLists.push(listName);
+
+    var fieldName = String(rows[i][1] == null ? "" : rows[i][1]).trim();
+    if (fieldName) droppedNames.push(fieldName);
+  }
+
+  if (!droppedLists.length) return rows;
+
+  var kept = [];
+  for (i = 0; i < rows.length; i++) {
+    if (dropped[i]) continue;
+    kept.push(
+      clearMoHSACFieldReferences_(rows[i], droppedNames, expressionColumns)
+    );
+  }
+
+  Logger.log(
+    "MoH SAC: removed " + droppedLists.length + " question(s) whose choice " +
+    "list is not in the generated choices sheet: " +
+    droppedLists.sort().join(", ")
+  );
+
+  return kept;
+}
+
+/**
+ * Replace ${name} with '' for every dropped question, so expressions left
+ * behind stay valid XPath instead of pointing at a field that no longer exists.
+ */
+function clearMoHSACFieldReferences_(row, droppedNames, expressionColumns) {
+  if (!droppedNames.length) return row;
+
+  for (var c = 0; c < expressionColumns.length; c++) {
+    var column = expressionColumns[c];
+    var value = row[column];
+    if (!value) continue;
+
+    var text = String(value);
+    for (var n = 0; n < droppedNames.length; n++) {
+      var reference = "${" + droppedNames[n] + "}";
+      while (text.indexOf(reference) !== -1) {
+        text = text.replace(reference, "''");
+      }
+    }
+    row[column] = text;
+  }
+
+  return row;
 }
 
 /**
@@ -4187,20 +4388,20 @@ function getMoHSACChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
  */
 function getMoHSACCountyChoices_() {
   return [
-    ["county", "Busia", "Busia", "mentors_curriculum"],
-    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum"],
-    ["county", "Kiambu", "Kiambu", "mentors_curriculum"],
-    ["county", "Kilifi", "Kilifi", "mentors_curriculum"],
-    ["county", "Kisii", "Kisii", "mentors_curriculum"],
-    ["county", "Machakos", "Machakos", "mentors_curriculum"],
+    ["county", "Busia", "Busia", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
+    ["county", "Kiambu", "Kiambu", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kilifi", "Kilifi", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Kisii", "Kisii", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Machakos", "Machakos", "mentors_curriculum, ifm_assessment, tot"],
     ["county", "Makueni", "Makueni", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Meru", "Meru", "mentors_curriculum"],
-    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, tot"],
+    ["county", "Meru", "Meru", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
     ["county", "Muranga", "Muranga", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Nairobi", "Nairobi", "mentors_curriculum"],
-    ["county", "Nakuru", "Nakuru", "mentors_curriculum"],
-    ["county", "Nyeri", "Nyeri", "mentors_curriculum"],
-    ["county", "Siaya", "Siaya", "mentors_curriculum"],
+    ["county", "Nairobi", "Nairobi", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Nakuru", "Nakuru", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Nyeri", "Nyeri", "mentors_curriculum, ifm_assessment, tot"],
+    ["county", "Siaya", "Siaya", "mentors_curriculum, ifm_assessment, tot"],
     ["county", "JHSL", "JHSL", "po_assessment"]
   ];
 }
