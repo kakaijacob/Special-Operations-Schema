@@ -122,13 +122,15 @@ function removeExtraMoHSACSheets_(ss, keepNames) {
 // =====================================================
 function writeMoHSACSurvey_(sheet, sourceSs, availableChoiceLists) {
   var bodyRows = getMoHSACSurveyRows_()
-    .concat(getMoHSACSection1bRows_())
+    .concat(getMoHSACSection1bRows_(sourceSs))
     .concat(getMoHSACSection1cRows_(sourceSs))
     .concat(getMoHSACSection2Rows_());
 
   if (availableChoiceLists) {
     bodyRows = dropMoHSACRowsWithMissingChoices_(bodyRows, availableChoiceLists);
   }
+
+  bodyRows = clearMoHSACUndefinedFacilityReferences_(bodyRows);
 
   var rows = [MOH_SAC_SURVEY_HEADERS].concat(bodyRows);
 
@@ -290,29 +292,32 @@ function getMoHSACSurveyRows_() {
  * Columns: type, name, label, hint, required, required_message,
  *          constraint_message, relevant, choice_filter, calculation,
  *          constraint, appearance
+ *
+ * The facility selects and next_group_hide1 are built from the same county
+ * records as the county choices, so a county cannot appear in one and be
+ * missing from the other.
  */
-function getMoHSACSection1bRows_() {
+function getMoHSACSection1bRows_(sourceSs) {
   var sectionRelevant =
     "${mentor_name}!='' and ${evaluation_date}!='' and ${program}!=''";
 
-  var nextGroupHideCalc =
-    "if(${JHSL_facilities}!='',${JHSL_facilities}," +
-    "if(${busia_facilities}!='',${busia_facilities}," +
-    "if(${kakamega_facilities}!='',${kakamega_facilities}," +
-    "if(${kiambu_facilities}!='',${kiambu_facilities}," +
-    "if(${kirinyaga_facilities}!='',${kirinyaga_facilities}," +
-    "if(${kilifi_facilities}!='',${kilifi_facilities}," +
-    "if(${kisii_facilities}!='',${kisii_facilities}," +
-    "if(${kwale_facilities}!='',${kwale_facilities}," +
-    "if(${machakos_facilities}!='',${machakos_facilities}," +
-    "if(${makueni_facilities}!='',${makueni_facilities}," +
-    "if(${meru_facilities}!='',${meru_facilities}," +
-    "if(${mombasa_facilities}!='',${mombasa_facilities}," +
-    "if(${muranga_facilities}!='',${muranga_facilities}," +
-    "if(${nairobi_facilities}!='',${nairobi_facilities}," +
-    "if(${nakuru_facilities}!='',${nakuru_facilities}," +
-    "if(${siaya_facilities}!='',${siaya_facilities}," +
-    "if(${nyeri_facilities}!='',${nyeri_facilities},'')))))))))))))))))";
+  var counties = getMoHSACCountyRecords_(sourceSs);
+
+  var facilityRows = [
+    mohSacFacilitySelectRow_("jhsl", "JHSL_facilities", "JHSL")
+  ];
+  var hideFields = ["JHSL_facilities"];
+
+  for (var i = 0; i < counties.length; i++) {
+    facilityRows.push(
+      mohSacFacilitySelectRow_(
+        counties[i].listName,
+        counties[i].listName,
+        counties[i].label
+      )
+    );
+    hideFields.push(counties[i].listName);
+  }
 
   return [
     [
@@ -342,40 +347,43 @@ function getMoHSACSection1bRows_() {
       "",
       "",
       ""
-    ],
-    mohSacFacilitySelectRow_("jhsl", "JHSL_facilities", "JHSL"),
-    mohSacFacilitySelectRow_("busia_facilities", "busia_facilities", "Busia"),
-    mohSacFacilitySelectRow_("kakamega_facilities", "kakamega_facilities", "Kakamega"),
-    mohSacFacilitySelectRow_("kiambu_facilities", "kiambu_facilities", "Kiambu"),
-    mohSacFacilitySelectRow_("kilifi_facilities", "kilifi_facilities", "Kilifi"),
-    mohSacFacilitySelectRow_("kisii_facilities", "kisii_facilities", "Kisii"),
-    mohSacFacilitySelectRow_("kwale_facilities", "kwale_facilities", "Kwale"),
-    mohSacFacilitySelectRow_("kirinyaga_facilities", "kirinyaga_facilities", "Kirinyaga"),
-    mohSacFacilitySelectRow_("machakos_facilities", "machakos_facilities", "Machakos"),
-    mohSacFacilitySelectRow_("makueni_facilities", "makueni_facilities", "Makueni"),
-    mohSacFacilitySelectRow_("meru_facilities", "meru_facilities", "Meru"),
-    mohSacFacilitySelectRow_("mombasa_facilities", "mombasa_facilities", "Mombasa"),
-    mohSacFacilitySelectRow_("muranga_facilities", "muranga_facilities", "Muranga"),
-    mohSacFacilitySelectRow_("nairobi_facilities", "nairobi_facilities", "Nairobi"),
-    mohSacFacilitySelectRow_("nakuru_facilities", "nakuru_facilities", "Nakuru"),
-    mohSacFacilitySelectRow_("nyeri_facilities", "nyeri_facilities", "Nyeri"),
-    mohSacFacilitySelectRow_("siaya_facilities", "siaya_facilities", "Siaya"),
-    [
-      "calculate",
-      "next_group_hide1",
-      "Next Group Hide 1",
-      "",
-      "true",
-      "",
-      "",
-      "",
-      "",
-      nextGroupHideCalc,
-      "",
-      ""
-    ],
-    ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close mentee_details
-  ];
+    ]
+  ]
+    .concat(facilityRows)
+    .concat([
+      [
+        "calculate",
+        "next_group_hide1",
+        "Next Group Hide 1",
+        "",
+        "true",
+        "",
+        "",
+        "",
+        "",
+        mohSacNextGroupHideCalc_(hideFields),
+        "",
+        ""
+      ],
+      ["end_group", "", "", "", "", "", "", "", "", "", "", ""] // close mentee_details
+    ]);
+}
+
+/**
+ * Nested if() over every facility field, returning whichever one was answered.
+ * Built by nesting outward from the '' fallback so the parentheses balance
+ * however many counties the database holds.
+ */
+function mohSacNextGroupHideCalc_(fieldNames) {
+  var expression = "''";
+
+  for (var i = fieldNames.length - 1; i >= 0; i--) {
+    var reference = "${" + fieldNames[i] + "}";
+    expression =
+      "if(" + reference + "!=''," + reference + "," + expression + ")";
+  }
+
+  return expression;
 }
 
 function mohSacFacilitySelectRow_(listName, fieldName, countyLabel) {
@@ -4101,7 +4109,7 @@ function normalizeMoHSACChoiceRows_(choiceRows) {
 
 function getMoHSACChoiceRowsRaw_(sourceSs) {
   return getMoHSACProgramChoices_()
-    .concat(getMoHSACCountyChoices_())
+    .concat(getMoHSACCountyChoices_(sourceSs))
     .concat(getMoHSACJhslChoices_())
     .concat(getMoHSACFacilityChoices_(sourceSs))
     .concat(getMoHSACLmPoChoices_())
@@ -4223,6 +4231,63 @@ function clearMoHSACFieldReferences_(row, droppedNames, expressionColumns) {
   }
 
   return row;
+}
+
+/**
+ * Blank out ${x_facilities} references that no survey question defines.
+ *
+ * The IFM questions carry a relevance imported from "Survey Sheet (IFM)" that
+ * names the county facility field, e.g. ${kirinyaga_facilities}. That field
+ * only exists when the county has facilities in the Mentee Database, and
+ * pyxform refuses the whole form over a single dangling reference
+ * ("There is no survey element with this name"). Replacing the reference with
+ * '' keeps the expression valid XPath; it simply never matches, which is the
+ * right outcome for a county the form cannot reach anyway.
+ */
+function clearMoHSACUndefinedFacilityReferences_(rows) {
+  // relevant, choice_filter, calculation and constraint can reference a field.
+  var expressionColumns = [7, 8, 9, 10];
+  var defined = {};
+  var i;
+
+  for (i = 0; i < rows.length; i++) {
+    var name = String(rows[i][1] == null ? "" : rows[i][1]).trim();
+    if (name) defined[name] = true;
+  }
+
+  var cleared = {};
+
+  for (i = 0; i < rows.length; i++) {
+    for (var c = 0; c < expressionColumns.length; c++) {
+      var column = expressionColumns[c];
+      var value = rows[i][column];
+      if (!value) continue;
+
+      rows[i][column] = String(value).replace(
+        /\$\{([A-Za-z0-9_]+_facilities)\}/g,
+        function (reference, fieldName) {
+          if (defined[fieldName]) return reference;
+          cleared[fieldName] = true;
+          return "''";
+        }
+      );
+    }
+  }
+
+  var clearedNames = [];
+  for (var clearedName in cleared) {
+    clearedNames.push(clearedName);
+  }
+  if (clearedNames.length) {
+    Logger.log(
+      "MoH SAC: blanked " + clearedNames.length + " reference(s) to facility " +
+      "question(s) this form does not contain: " +
+      clearedNames.sort().join(", ") +
+      ". Those counties have no facility in the Mentee Database."
+    );
+  }
+
+  return rows;
 }
 
 /**
@@ -4385,25 +4450,136 @@ function getMoHSACChoicesFromSheet_(sourceSs, sheetName, generatorHint) {
 
 /**
  * County choices with program filters (choice_filter contains(allowed, ${program})).
+ * Derived from the facilities the pipeline generated, plus the static JHSL row.
  */
-function getMoHSACCountyChoices_() {
-  return [
-    ["county", "Busia", "Busia", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Kakamega", "Kakamega", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Kiambu", "Kiambu", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Kilifi", "Kilifi", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Kisii", "Kisii", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Machakos", "Machakos", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Makueni", "Makueni", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Meru", "Meru", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Mombasa", "Mombasa", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Muranga", "Muranga", "mentors_curriculum, newborn_curriculum, ifm_assessment, tot"],
-    ["county", "Nairobi", "Nairobi", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Nakuru", "Nakuru", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Nyeri", "Nyeri", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "Siaya", "Siaya", "mentors_curriculum, ifm_assessment, tot"],
-    ["county", "JHSL", "JHSL", "po_assessment"]
-  ];
+function getMoHSACCountyChoices_(sourceSs) {
+  var counties = getMoHSACCountyRecords_(sourceSs);
+  var rows = [];
+
+  for (var i = 0; i < counties.length; i++) {
+    rows.push([
+      "county",
+      counties[i].label,
+      counties[i].label,
+      counties[i].allowed.join(", ")
+    ]);
+  }
+
+  // JHSL is a head office, not a county in the facilities sheet.
+  rows.push(["county", "JHSL", "JHSL", "po_assessment"]);
+
+  return rows;
+}
+
+/**
+ * One record per county present in "All Facilities List (Choices)".
+ *
+ * The county list used to be typed out by hand. Kirinyaga and Kwale were never
+ * added to it, so their facility questions carried
+ * relevant = ${county} = 'Kirinyaga' against a choice that did not exist and
+ * could never be reached — the counties were simply absent from the form.
+ * Reading the counties back from the facilities the pipeline generated keeps
+ * the two in step whenever a county is added to the Mentee Database.
+ *
+ * Returns [{ listName: "kirinyaga_facilities", label: "Kirinyaga",
+ *            allowed: ["mentors_curriculum", ...] }] sorted by label.
+ */
+function getMoHSACCountyRecords_(sourceSs) {
+  // Already excludes the JHSL rows, which are authored separately.
+  var facilityRows = getMoHSACFacilityChoices_(sourceSs);
+
+  var byListName = {};
+  var listNames = [];
+
+  for (var i = 0; i < facilityRows.length; i++) {
+    var listName = String(facilityRows[i][0] == null ? "" : facilityRows[i][0])
+      .trim();
+    if (!listName) continue;
+
+    if (!byListName[listName]) {
+      byListName[listName] = {
+        listName: listName,
+        label: mohSacCountyLabelFromListName_(listName),
+        allowedSeen: {}
+      };
+      listNames.push(listName);
+    }
+
+    // A county is open to a program when any of its facilities is.
+    var allowed = String(facilityRows[i][3] == null ? "" : facilityRows[i][3])
+      .split(",");
+    for (var a = 0; a < allowed.length; a++) {
+      var token = allowed[a].trim();
+      if (token) byListName[listName].allowedSeen[token] = true;
+    }
+  }
+
+  var records = [];
+  var missingAllowed = [];
+
+  for (var n = 0; n < listNames.length; n++) {
+    var record = byListName[listNames[n]];
+    record.allowed = mohSacSortAllowed_(record.allowedSeen);
+    if (!record.allowed.length) missingAllowed.push(record.label);
+    records.push(record);
+  }
+
+  records.sort(function (a, b) {
+    return a.label.localeCompare(b.label);
+  });
+
+  if (missingAllowed.length) {
+    Logger.log(
+      "MoH SAC: " + missingAllowed.length + " county(ies) have facilities " +
+      "with an empty 'allowed' column and will be filtered out of the county " +
+      "question: " + missingAllowed.sort().join(", ")
+    );
+  }
+
+  return records;
+}
+
+/** "kirinyaga_facilities" → "Kirinyaga". */
+function mohSacCountyLabelFromListName_(listName) {
+  var words = String(listName)
+    .replace(/_facilities$/, "")
+    .split("_");
+
+  var label = [];
+  for (var i = 0; i < words.length; i++) {
+    if (!words[i]) continue;
+    label.push(words[i].charAt(0).toUpperCase() + words[i].slice(1));
+  }
+
+  return label.join(" ");
+}
+
+/** Programs in reading order; anything unrecognised keeps its own order after. */
+var MOH_SAC_ALLOWED_ORDER = [
+  "mentors_curriculum",
+  "newborn_curriculum",
+  "ifm_assessment",
+  "tot",
+  "po_assessment"
+];
+
+function mohSacSortAllowed_(allowedSeen) {
+  var ordered = [];
+  var i;
+
+  for (i = 0; i < MOH_SAC_ALLOWED_ORDER.length; i++) {
+    if (allowedSeen[MOH_SAC_ALLOWED_ORDER[i]]) {
+      ordered.push(MOH_SAC_ALLOWED_ORDER[i]);
+    }
+  }
+
+  var extras = [];
+  for (var token in allowedSeen) {
+    if (MOH_SAC_ALLOWED_ORDER.indexOf(token) === -1) extras.push(token);
+  }
+  extras.sort();
+
+  return ordered.concat(extras);
 }
 
 /**
