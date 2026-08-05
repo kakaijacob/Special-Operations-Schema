@@ -1,62 +1,14 @@
-# SQL Queries Documentation
+-- Skills assessment cycle-aware views
+-- Deployment order: 21 child skill views -> parent view
+-- Generated from skills_assessment_views.md
+--
+-- Each child view declares the cohort windows in its own skills_assessment_cohorts
+-- CTE, so no shared cohorts table or view has to exist first. Changing a window
+-- means editing that CTE in all 21 children.
 
-Use this file to record SQL queries for tasks, projects, or investigations.
-
-## Project / Task
-- Project name: Skills Assessment Views
-- Task description: Cycle-aware child evaluation views with max-in-cycle scores; parent union
-- Date: 2026-06-30
-
-## Queries
-
-### 0. Cohort windows
-
-Every child view declares the cohort windows inline, in its own
-`skills_assessment_cohorts` CTE, so nothing has to be created before the children and
-there is no shared table or view to keep in sync:
-
-```sql
-WITH skills_assessment_cohorts AS (
-    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
-           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
-    UNION ALL
-    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
-           DATE '2026-04-01', DATE '2027-03-31'
-    UNION ALL
-    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
-           DATE '2027-04-01', DATE '2028-03-31'
-),
-```
-
-Windows are inclusive on both ends. The literals are explicitly cast because Redshift
-will not reconcile untyped literals across `UNION ALL` branches.
-
-The trade-off is duplication: moving a cohort boundary means editing the CTE in all 21
-child views. In exchange, each child is self-contained and can be created, replaced, or
-run in isolation.
-
-### Cycle-aware view structure
-
-1. Each `*_evaluation_2026` child view:
-   - scores every attempt for one skill
-   - assigns the attempt to a cycle
-   - keeps only the **maximum** score per mentee × cycle for that skill
-   - retains `attempt_count` and `first_pass_date` from all attempts in the cycle
-2. `process_moh_skills_assessment_2026`: unions the cycle-best child rows.
-
-Every child view and the parent expose the same output contract, so any child can be
-queried directly with the same column names the parent uses:
-
-`submission_id`, `date_started`, `date_ended`, `date_submitted`, `county`, `facility`,
-`facility_code`, `program`, `mentee_name`, `mentee_id`, `skill_evaluation`,
-`average_score`, `cycle_id`, `cycle_label`, `cycle_start`, `cycle_end`,
-`attempt_count`, `first_pass_date`.
-
-Per-item checklist columns stay inside each child's `scored_attempts` CTE and are not
-part of the published contract.
-
-### 1. mentors.amstl_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.amstl_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.amstl_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -130,10 +82,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 2. mentors.avd_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.avd_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.avd_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -207,10 +159,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 3. mentors.b_lynch_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.b_lynch_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.b_lynch_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -284,10 +236,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 4. mentors.bimanual_uterine_compression_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.bimanual_uterine_compression_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.bimanual_uterine_compression_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -361,10 +313,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 5. mentors.breech_delivery_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.breech_delivery_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.breech_delivery_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -438,10 +390,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 6. mentors.cervical_tear_repair_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.cervical_tear_repair_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.cervical_tear_repair_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -515,10 +467,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 7. mentors.compression_abdominal_aorta_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.compression_abdominal_aorta_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.compression_abdominal_aorta_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -592,10 +544,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 8. mentors.cord_prolapse_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.cord_prolapse_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.cord_prolapse_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -674,10 +626,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 9. mentors.emotive_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.emotive_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.emotive_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -748,10 +700,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 10. mentors.manual_placenta_removal_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.manual_placenta_removal_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.manual_placenta_removal_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -846,10 +798,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 11. mentors.maternal_resuscitation_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.maternal_resuscitation_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.maternal_resuscitation_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -923,10 +875,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 12. mentors.nasg_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.nasg_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.nasg_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1000,10 +952,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 13. mentors.partograph_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.partograph_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.partograph_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1074,10 +1026,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 14. mentors.perineal_tear_repair_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.perineal_tear_repair_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.perineal_tear_repair_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1156,10 +1108,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 15. mentors.pih_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.pih_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.pih_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1242,10 +1194,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 16. mentors.shoulder_dystocia_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.shoulder_dystocia_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.shoulder_dystocia_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1316,10 +1268,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 17. mentors.ubt_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.ubt_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.ubt_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1390,10 +1342,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 18. mentors.ubt_free_flow_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.ubt_free_flow_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.ubt_free_flow_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1464,10 +1416,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 19. mentors.uterine_inversion_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.uterine_inversion_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.uterine_inversion_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1538,10 +1490,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 20. mentors.maternal_shock_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.maternal_shock_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.maternal_shock_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1615,10 +1567,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 21. mentors.newborn_resuscitation_evaluation_2026 source
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.newborn_resuscitation_evaluation_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.newborn_resuscitation_evaluation_2026 AS
 WITH skills_assessment_cohorts AS (
     SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -1783,13 +1735,10 @@ SELECT
     first_pass_date
 FROM ranked_attempts
 WHERE score_rank = 1;
-```
 
-### 22. mentors.process_moh_skills_assessment_2026 source
-
-Parent view. Grain: one row per mentee × cycle × skill evaluation. Each child already selected the maximum attempt score in-cycle, so this view is a straight union.
-
-```sql
+-- -----------------------------------------------------------------------------
+-- mentors.process_moh_skills_assessment_2026
+-- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.process_moh_skills_assessment_2026 AS
 SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, average_score, cycle_id, cycle_label, cycle_start, cycle_end, attempt_count, first_pass_date
 FROM mentors.amstl_evaluation_2026
@@ -1893,166 +1842,3 @@ UNION ALL
 
 SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, average_score, cycle_id, cycle_label, cycle_start, cycle_end, attempt_count, first_pass_date
 FROM mentors.newborn_resuscitation_evaluation_2026;
-```
-
-To average skill scores for a mentee in a cycle:
-
-```sql
-SELECT
-    mentee_id,
-    cycle_id,
-    AVG(average_score) AS avg_skill_score
-FROM mentors.process_moh_skills_assessment_2026
-GROUP BY mentee_id, cycle_id;
-```
-
-## Notes
-- Child views score attempts, assign cycles, and keep the max score per mentee × cycle
-- Parent view unions those cycle-best child rows
-- `attempt_count` and `first_pass_date` are retained from all in-cycle attempts
-- First-attempt / attempts-to-competency analytics that previously read the parent attempt grain should now use `moh_skills_checklist` or a dedicated attempts extract
-- Database: mentors
-
-## Review: why `process_moh_skills_assessment_2026` drops rows from `moh_skills_checklist`
-
-`process_moh_skills_assessment_2026` is only a `UNION ALL` of per-skill views. It does not read `moh_skills_checklist` directly. A checklist row appears in the process view only if it passes the filter of one of those child views.
-
-### 1. Hard date cutoff on Shoulder dystocia — fixed
-
-`shoulder_dystocia_evaluation_2026` previously filtered with:
-
-```sql
-AND msc.date_submitted <= '2026-04-01'::date
-```
-
-That excluded every Shoulder dystocia submission after `2026-04-01`. The date filter has been removed from the `WHERE` clause so all Shoulder dystocia rows from `moh_skills_checklist` are included (same pattern as the other skill views).
-
-### 2. Exact `skill_evaluation` whitelist
-
-Each child view keeps only one exact label. Covered labels in this file:
-
-| View | Required `skill_evaluation` |
-| --- | --- |
-| amstl_evaluation_2026 | `AMTSL` |
-| avd_evaluation_2026 | `Assisted vaginal vacuum delivery` |
-| b_lynch_evaluation_2026 | `B-LYNCH` |
-| bimanual_uterine_compression_evaluation_2026 | `Bimanual uterine compression` |
-| breech_delivery_evaluation_2026 | `Assisted breech delivery` |
-| cervical_tear_repair_evaluation_2026 | `Cervical tear repair` |
-| compression_abdominal_aorta_evaluation_2026 | `Compression of abdominal aorta` |
-| cord_prolapse_evaluation_2026 | `Cord prolapse` |
-| emotive_evaluation_2026 | `EMOTIVE` |
-| manual_placenta_removal_evaluation_2026 | `Manual removal of placenta` |
-| maternal_resuscitation_evaluation_2026 | `Maternal resuscitation` |
-| maternal_shock_evaluation_2026 | `Maternal shock` |
-| nasg_evaluation_2026 | `NASG` |
-| newborn_resuscitation_evaluation_2026 | `Newborn resuscitation` |
-| partograph_evaluation_2026 | `Partograph` |
-| perineal_tear_repair_evaluation_2026 | `Perineal repair` |
-| pih_evaluation_2026 | `Preeclampsia / Eclampsia` |
-| shoulder_dystocia_evaluation_2026 | `Shoulder dystocia` |
-| ubt_evaluation_2026 | `UBT` |
-| ubt_free_flow_evaluation_2026 | `UBT (free flow)` |
-| uterine_inversion_evaluation_2026 | `Uterine Inversion` |
-
-Any other value (new skill, renamed label, casing/spacing variant, or `NULL`) never enters the union. Likely mismatches to check in source data:
-
-- `Perineal repair` vs `Perineal Tear Repair` / `Perineal tear repair`
-- `UBT` / `UBT (free flow)` vs placement-style labels
-- `B-LYNCH` casing/punctuation variants
-- `Preeclampsia / Eclampsia` spacing/slash variants
-
-### 3. Maternal shock and Newborn resuscitation — no date exclusion
-
-Both views are now documented in this file. Neither filters by date in `WHERE`:
-
-- `maternal_shock_evaluation_2026` keeps `skill_evaluation = 'Maternal shock'`
-- `newborn_resuscitation_evaluation_2026` keeps `skill_evaluation = 'Newborn resuscitation'`
-
-They use date only inside score `CASE` logic (`date_submitted` for maternal shock; `date_started` for newborn resuscitation).
-
-### 4. Downstream filter (not a process-view drop, but looks like one)
-
-`mentee_curriculum_completion_progress` further filters:
-
-```sql
-FROM mentors.process_moh_skills_assessment_2026
-WHERE skill_evaluation IS NOT NULL
-  AND average_score IS NOT NULL
-```
-
-In the child views, average score is usually a sum of cast checklist items. In PostgreSQL, if any item in that sum is `NULL`, the whole average becomes `NULL`. Those rows can still exist in the process view but disappear from completion metrics.
-
-### Diagnostic queries
-
-```sql
--- A) Labels present in checklist but absent from process view
-SELECT skill_evaluation, COUNT(*) AS checklist_rows
-FROM mentors.moh_skills_checklist
-GROUP BY skill_evaluation
-ORDER BY checklist_rows DESC;
-
-SELECT skill_evaluation, COUNT(*) AS process_rows
-FROM mentors.process_moh_skills_assessment_2026
-GROUP BY skill_evaluation
-ORDER BY process_rows DESC;
-
--- B) Rows in checklist missing from process view
-SELECT msc.skill_evaluation, COUNT(*) AS missing_rows
-FROM mentors.moh_skills_checklist msc
-LEFT JOIN mentors.process_moh_skills_assessment_2026 p
-  ON p.submission_id = msc.submission_id
- AND p.skill_evaluation = msc.skill_evaluation
-WHERE p.submission_id IS NULL
-GROUP BY msc.skill_evaluation
-ORDER BY missing_rows DESC;
-
--- C) Shoulder dystocia specifically (after fix, post-2026-04-01 should appear)
-SELECT
-  CASE
-    WHEN date_submitted <= DATE '2026-04-01' THEN 'on/before 2026-04-01'
-    WHEN date_submitted > DATE '2026-04-01' THEN 'after 2026-04-01'
-    ELSE 'null date_submitted'
-  END AS date_bucket,
-  COUNT(*) AS checklist_rows
-FROM mentors.moh_skills_checklist
-WHERE skill_evaluation = 'Shoulder dystocia'
-GROUP BY 1;
-
-SELECT
-  CASE
-    WHEN date_submitted <= DATE '2026-04-01' THEN 'on/before 2026-04-01'
-    WHEN date_submitted > DATE '2026-04-01' THEN 'after 2026-04-01'
-    ELSE 'null date_submitted'
-  END AS date_bucket,
-  COUNT(*) AS process_rows
-FROM mentors.process_moh_skills_assessment_2026
-WHERE skill_evaluation = 'Shoulder dystocia'
-GROUP BY 1;
-
--- D) Confirm maternal shock / newborn resuscitation are present
-SELECT skill_evaluation, COUNT(*) AS process_rows
-FROM mentors.process_moh_skills_assessment_2026
-WHERE skill_evaluation IN ('Maternal shock', 'Newborn resuscitation')
-GROUP BY skill_evaluation;
-```
-
-### Remaining likely causes (after Shoulder dystocia fix)
-
-Apply the updated `shoulder_dystocia_evaluation_2026` definition in the database, then re-check missing rows. Remaining gaps are expected to be **`skill_evaluation` values that do not exactly match a child-view label**.
-
-### Newborn resuscitation new-form scoring — corrected to match Kobo
-
-`newborn_resuscitation_evaluation_2026` (post-`2026-04-01` / `date_started` branch) was out of sync with the Kobo calculate formula:
-
-| Issue | Before | After (matches Kobo) |
-| --- | --- | --- |
-| Denominator | `/ 49` | `/ 46.5` |
-| Truncation | sum cast to `numeric(18,0)` wiped half-points | keep fractional points |
-| ANC comorbidities | separate `q1a_maternal_comorbidities` + `q1a_complications` (1.0 max) | one combined 0.5 (`OR`) |
-| Ultrasound | scored `q1a_sultrasound_report_if_any` (not in Kobo) | removed |
-| Safety warm room | separate warm room + thermometer (1.0 max) | one combined 0.5 (`OR`) |
-| Breathing monitors | separate pulse ox + cardiorespiratory monitor (1.0 max) | one combined 0.5 (`OR`) |
-| Post-resus O2 | separate give O2 + monitor SpO2/WOB (1.0 max) | one combined 0.5 (`OR`) |
-
-Score is stored as a 0–1 average (`points / 46.5`), consistent with other skill views and the `>= 0.85` completion threshold. Kobo’s on-form display uses `round(points * 100 / 46.5)`.
