@@ -493,6 +493,7 @@ function checkAllKoboFormsForDeployProblems() {
     try {
       var formSs = openKoboToolFormSpreadsheet_(tool);
       entry.problems = findKoboFormProblems_(formSs);
+      entry.warnings = findKoboUnreachableComparisons_(formSs);
       entry.url = formSs.getUrl();
     } catch (err) {
       entry.error = String(err.message || err);
@@ -507,12 +508,116 @@ function checkAllKoboFormsForDeployProblems() {
           ? entry.problems.length + " problem(s)\n  " + entry.problems.join("\n  ")
           : "ready to deploy")
     );
+    if (entry.warnings && entry.warnings.length) {
+      Logger.log(
+        tool.label + ": " + entry.warnings.length +
+        " unreachable comparison(s) — the form deploys but these questions " +
+        "never appear\n  " + entry.warnings.join("\n  ")
+      );
+    }
   }
 
   return report;
 }
 
+/**
+ * Comparisons against a choice value that the form does not contain.
+ *
+ * Kobo accepts these, so they are warnings, not deploy blockers. They are the
+ * silent failure: a relevance such as
+ * ${makueni_facilities} = '12457_makueni_county_referral_hospital' is valid
+ * XPath, but if the choices carry '..._refferal_hospital' the condition can
+ * never be true and the question simply never appears. Nothing in the logs or
+ * the Kobo UI says why.
+ */
+function findKoboUnreachableComparisons_(formSs) {
+  var surveySheet = formSs.getSheetByName("survey");
+  var choicesSheet = formSs.getSheetByName("choices");
+  if (!surveySheet || !choicesSheet) return [];
+
+  var survey = surveySheet.getDataRange().getValues();
+  var choices = choicesSheet.getDataRange().getValues();
+  if (survey.length < 2 || choices.length < 2) return [];
+
+  var surveyHeader = survey[0];
+  var typeIndex = indexOfKoboColumn_(surveyHeader, "type");
+  var nameIndex = indexOfKoboColumn_(surveyHeader, "name");
+  if (typeIndex === -1 || nameIndex === -1) return [];
+
+  var choicesHeader = choices[0];
+  var listNameIndex = indexOfKoboColumn_(choicesHeader, "list_name");
+  var choiceNameIndex = indexOfKoboColumn_(choicesHeader, "name");
+  if (listNameIndex === -1 || choiceNameIndex === -1) return [];
+
+  // list_name -> { choice value: true }
+  var valuesByList = {};
+  for (var c = 1; c < choices.length; c++) {
+    var list = String(choices[c][listNameIndex] || "").trim();
+    var value = String(choices[c][choiceNameIndex] || "").trim();
+    if (!list || !value) continue;
+    if (!valuesByList[list]) valuesByList[list] = {};
+    valuesByList[list][value] = true;
+  }
+
+  // Question name -> the list it selects from.
+  var listByField = {};
+  for (var s = 1; s < survey.length; s++) {
+    var fieldName = String(survey[s][nameIndex] || "").trim();
+    var listName = extractKoboSelectListName_(survey[s][typeIndex]);
+    if (fieldName && listName) listByField[fieldName] = listName;
+  }
+
+  var expressionNames = ["relevant", "choice_filter", "calculation", "constraint"];
+  var expressionColumns = [];
+  for (var e = 0; e < expressionNames.length; e++) {
+    var index = indexOfKoboColumn_(surveyHeader, expressionNames[e]);
+    if (index !== -1) {
+      expressionColumns.push({ name: expressionNames[e], index: index });
+    }
+  }
+
+  var warnings = [];
+  var comparison = /\$\{([A-Za-z0-9_]+)\}\s*=\s*'([^']*)'/g;
+
+  for (var r = 1; r < survey.length; r++) {
+    for (var x = 0; x < expressionColumns.length; x++) {
+      var expression = survey[r][expressionColumns[x].index];
+      if (!expression) continue;
+
+      comparison.lastIndex = 0;
+      var match;
+      while ((match = comparison.exec(String(expression))) !== null) {
+        var field = match[1];
+        var wanted = match[2];
+        var list = listByField[field];
+        if (!list || !wanted) continue;
+        if (!valuesByList[list]) continue;
+        if (valuesByList[list][wanted]) continue;
+
+        warnings.push(
+          "[row : " + (r + 1) + "] " + expressionColumns[x].name +
+          " compares ${" + field + "} with '" + wanted +
+          "', which is not a choice in '" + list + "'" +
+          (survey[r][nameIndex] ? " (question " + survey[r][nameIndex] + ")" : "")
+        );
+      }
+    }
+  }
+
+  return warnings;
+}
+
 function assertKoboFormIsDeployable_(formSs, tool) {
+  // Kobo accepts these, so they must not block the deployment — but they are
+  // the faults nothing else reports, so name them in the log every run.
+  var warnings = findKoboUnreachableComparisons_(formSs);
+  if (warnings.length) {
+    Logger.log(
+      tool.label + ": " + warnings.length + " comparison(s) can never be true, " +
+      "so those questions will never appear:\n  " + warnings.join("\n  ")
+    );
+  }
+
   var problems = findKoboFormProblems_(formSs);
   if (!problems.length) return;
 

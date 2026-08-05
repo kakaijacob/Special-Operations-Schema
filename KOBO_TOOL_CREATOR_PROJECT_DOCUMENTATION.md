@@ -371,6 +371,17 @@ These are enforced in code and checked before upload:
     `String(program).trim().toLowerCase()` against `"mentors curriculum"` /
     `"newborn curriculum"` / `"both"` — a strict `===` drops hand-typed variants
     and silently omits facilities from their county.
+13. **One canonical facility name per Facility Code.** A facility choice value is
+    `"<code>_<cleaned facility>"`, and every question that filters on a facility
+    rebuilds that same string. Because the name is typed by hand, one code can
+    arrive spelled two ways (`Makueni County Referral Hospital` /
+    `Makueni County Refferal Hospital`). If the choices sheet takes one spelling
+    and the question's relevance takes the other, the equality is never true:
+    the question is on the form, the mentees are in the choices, and selecting
+    the facility reveals nothing. **Nothing errors**, so it survives deployment.
+    Always build the value through `facilityChoiceValue_()`, which resolves one
+    spelling per code (most-used wins, ties to the first row) and logs the codes
+    that need correcting at source.
 
 ---
 
@@ -394,6 +405,23 @@ These are enforced in code and checked before upload:
   union across its facilities. A guard also blanks any `${x_facilities}` reference
   for a county that has no facility question, so pyxform never fails on a dangling
   reference.
+- **Canonical facility name per Facility Code** — every generator now builds the
+  facility choice value through one shared registry
+  (`facilityChoiceValue_()` / `canonicalFacilityName_()`) instead of
+  re-deriving `code + "_" + cleanForKobo(facility)` from whichever row it
+  happened to read. This fixed **Makueni County Referral Hospital** under the
+  newborn programme, where the county facility list carried the misspelling
+  `..._refferal_hospital` (taken from the first row for that code, a MENTORS
+  mentee) while the newborn question's relevance was built from the correctly
+  spelled newborn rows — so selecting the facility revealed no mentees, with no
+  error anywhere. Codes with more than one spelling are logged for correction at
+  source (Rule 13).
+- **Unreachable-comparison detector** — `findKoboUnreachableComparisons_()` in
+  the deployer reports any `${field} = 'value'` whose value is not a choice in
+  that field's list, naming the row and question. Reported as a **warning**, not
+  a deploy blocker, because Kobo accepts these happily — they are exactly the
+  faults nothing else surfaces. Shown on every deploy and in
+  `checkAllKoboFormsForDeployProblems()`.
 - **Orphan-choice and duplicate-name protection, accent/apostrophe folding, and
   balanced-expression checking** — implemented across `kobocreator.js` and the
   builders and enforced by the pre-deploy validator.
