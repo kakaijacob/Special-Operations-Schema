@@ -222,71 +222,219 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
   GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.diagnosis, msc.management_principles, msc.explain_to_mother, msc.handwashing_and_start, msc.horwashing_or_start, msc.fix_iv_line, msc.mgso4_preparation, msc.iv_loading_dose, msc.duration_mgso4_bolus, msc.dosage_duration, msc.maintenance_dose_duration, msc.dosing_iv_im, msc.eclampsia_diagnosis, msc.assess_for_danger, msc.toxicity_monitoring, msc.left_lateral_tilt_position, msc.airway_protection, msc.convulsions_controlled, msc._80mls_hr_infusion, msc.managing_recurrent_seizures, msc.monitoring_before_next_dose, msc.first_signs_mgso4_toxicity, msc.mgso4_toxicity_checks, msc.mgso4_antidote;
 ```
 
+### Cycle-aware view structure
+
+The child views remain one row per submitted assessment and are responsible only
+for calculating the score for their skill. Cohort assignment is centralized in
+the parent view so the cycle dates are defined once and cannot drift between
+21 child views.
+
+The resulting layers are:
+
+1. `*_evaluation_2026`: scored child attempts.
+2. `process_moh_skills_assessment_2026`: all attempts with cycle metadata.
+3. `process_moh_skills_assessment_cycle_best_2026`: the maximum attempt for
+   each mentee, cycle, and skill topic.
+4. `mentee_curriculum_completion_progress`: averages those per-skill maxima
+   for each mentee and cycle.
+
 ### 16. mentors.process_moh_skills_assessment_2026 source
+
+Attempt-level parent view. It preserves every assessment attempt and assigns it to the same inclusive cohort windows used by `mentee_curriculum_completion_progress`. Rows outside configured cycles remain available with `NULL` cycle fields.
+
 ```sql
-CREATE OR REPLACE VIEW mentors.process_moh_skills_assessment_2026
-AS ((((((((((((((((((( SELECT amstl_evaluation_2026.submission_id, amstl_evaluation_2026.date_started, amstl_evaluation_2026.date_ended, amstl_evaluation_2026.date_submitted, amstl_evaluation_2026.county, amstl_evaluation_2026.facility, amstl_evaluation_2026.facility_code, amstl_evaluation_2026.program, amstl_evaluation_2026.mentee_name, amstl_evaluation_2026.mentee_id, amstl_evaluation_2026.skill_evaluation, amstl_evaluation_2026."average score" AS average_score
-   FROM mentors.amstl_evaluation_2026
-UNION ALL
- SELECT avd_evaluation_2026.submission_id, avd_evaluation_2026.date_started, avd_evaluation_2026.date_ended, avd_evaluation_2026.date_submitted, avd_evaluation_2026.county, avd_evaluation_2026.facility, avd_evaluation_2026.facility_code, avd_evaluation_2026.program, avd_evaluation_2026.mentee_name, avd_evaluation_2026.mentee_id, avd_evaluation_2026.skill_evaluation, avd_evaluation_2026."average score" AS average_score
-   FROM mentors.avd_evaluation_2026)
-UNION ALL
- SELECT b_lynch_evaluation_2026.submission_id, b_lynch_evaluation_2026.date_started, b_lynch_evaluation_2026.date_ended, b_lynch_evaluation_2026.date_submitted, b_lynch_evaluation_2026.county, b_lynch_evaluation_2026.facility, b_lynch_evaluation_2026.facility_code, b_lynch_evaluation_2026.program, b_lynch_evaluation_2026.mentee_name, b_lynch_evaluation_2026.mentee_id, b_lynch_evaluation_2026.skill_evaluation, b_lynch_evaluation_2026."average score" AS average_score
-   FROM mentors.b_lynch_evaluation_2026)
-UNION ALL
- SELECT bimanual_uterine_compression_evaluation_2026.submission_id, bimanual_uterine_compression_evaluation_2026.date_started, bimanual_uterine_compression_evaluation_2026.date_ended, bimanual_uterine_compression_evaluation_2026.date_submitted, bimanual_uterine_compression_evaluation_2026.county, bimanual_uterine_compression_evaluation_2026.facility, bimanual_uterine_compression_evaluation_2026.facility_code, bimanual_uterine_compression_evaluation_2026.program, bimanual_uterine_compression_evaluation_2026.mentee_name, bimanual_uterine_compression_evaluation_2026.mentee_id, bimanual_uterine_compression_evaluation_2026.skill_evaluation, bimanual_uterine_compression_evaluation_2026."average score" AS average_score
-   FROM mentors.bimanual_uterine_compression_evaluation_2026)
-UNION ALL
- SELECT breech_delivery_evaluation_2026.submission_id, breech_delivery_evaluation_2026.date_started, breech_delivery_evaluation_2026.date_ended, breech_delivery_evaluation_2026.date_submitted, breech_delivery_evaluation_2026.county, breech_delivery_evaluation_2026.facility, breech_delivery_evaluation_2026.facility_code, breech_delivery_evaluation_2026.program, breech_delivery_evaluation_2026.mentee_name, breech_delivery_evaluation_2026.mentee_id, breech_delivery_evaluation_2026.skill_evaluation, breech_delivery_evaluation_2026."average score" AS average_score
-   FROM mentors.breech_delivery_evaluation_2026)
-UNION ALL
- SELECT mre.submission_id, mre.date_started, mre.date_ended, mre.date_submitted, mre.county, mre.facility, mre.facility_code, mre.program, mre.mentee_name, mre.mentee_id, mre.skill_evaluation, mre."average score" AS average_score
-   FROM mentors.maternal_resuscitation_evaluation_2026 mre)
-UNION ALL
- SELECT cervical_tear_repair_evaluation_2026.submission_id, cervical_tear_repair_evaluation_2026.date_started, cervical_tear_repair_evaluation_2026.date_ended, cervical_tear_repair_evaluation_2026.date_submitted, cervical_tear_repair_evaluation_2026.county, cervical_tear_repair_evaluation_2026.facility, cervical_tear_repair_evaluation_2026.facility_code, cervical_tear_repair_evaluation_2026.program, cervical_tear_repair_evaluation_2026.mentee_name, cervical_tear_repair_evaluation_2026.mentee_id, cervical_tear_repair_evaluation_2026.skill_evaluation, cervical_tear_repair_evaluation_2026."average score" AS average_score
-   FROM mentors.cervical_tear_repair_evaluation_2026)
-UNION ALL
- SELECT compression_abdominal_aorta_evaluation_2026.submission_id, compression_abdominal_aorta_evaluation_2026.date_started, compression_abdominal_aorta_evaluation_2026.date_ended, compression_abdominal_aorta_evaluation_2026.date_submitted, compression_abdominal_aorta_evaluation_2026.county, compression_abdominal_aorta_evaluation_2026.facility, compression_abdominal_aorta_evaluation_2026.facility_code, compression_abdominal_aorta_evaluation_2026.program, compression_abdominal_aorta_evaluation_2026.mentee_name, compression_abdominal_aorta_evaluation_2026.mentee_id, compression_abdominal_aorta_evaluation_2026.skill_evaluation, compression_abdominal_aorta_evaluation_2026."average score" AS average_score
-   FROM mentors.compression_abdominal_aorta_evaluation_2026)
-UNION ALL
- SELECT cord_prolapse_evaluation_2026.submission_id, cord_prolapse_evaluation_2026.date_started, cord_prolapse_evaluation_2026.date_ended, cord_prolapse_evaluation_2026.date_submitted, cord_prolapse_evaluation_2026.county, cord_prolapse_evaluation_2026.facility, cord_prolapse_evaluation_2026.facility_code, cord_prolapse_evaluation_2026.program, cord_prolapse_evaluation_2026.mentee_name, cord_prolapse_evaluation_2026.mentee_id, cord_prolapse_evaluation_2026.skill_evaluation, cord_prolapse_evaluation_2026."average score" AS average_score
-   FROM mentors.cord_prolapse_evaluation_2026)
-UNION ALL
- SELECT maternal_shock_evaluation_2026.submission_id, maternal_shock_evaluation_2026.date_started, maternal_shock_evaluation_2026.date_ended, maternal_shock_evaluation_2026.date_submitted, maternal_shock_evaluation_2026.county, maternal_shock_evaluation_2026.facility, maternal_shock_evaluation_2026.facility_code, maternal_shock_evaluation_2026.program, maternal_shock_evaluation_2026.mentee_name, maternal_shock_evaluation_2026.mentee_id, maternal_shock_evaluation_2026.skill_evaluation, maternal_shock_evaluation_2026."average score" AS average_score
-   FROM mentors.maternal_shock_evaluation_2026)
-UNION ALL
- SELECT nasg_evaluation_2026.submission_id, nasg_evaluation_2026.date_started, nasg_evaluation_2026.date_ended, nasg_evaluation_2026.date_submitted, nasg_evaluation_2026.county, nasg_evaluation_2026.facility, nasg_evaluation_2026.facility_code, nasg_evaluation_2026.program, nasg_evaluation_2026.mentee_name, nasg_evaluation_2026.mentee_id, nasg_evaluation_2026.skill_evaluation, nasg_evaluation_2026."average score" AS average_score
-   FROM mentors.nasg_evaluation_2026)
-UNION ALL
- SELECT perineal_tear_repair_evaluation_2026.submission_id, perineal_tear_repair_evaluation_2026.date_started, perineal_tear_repair_evaluation_2026.date_ended, perineal_tear_repair_evaluation_2026.date_submitted, perineal_tear_repair_evaluation_2026.county, perineal_tear_repair_evaluation_2026.facility, perineal_tear_repair_evaluation_2026.facility_code, perineal_tear_repair_evaluation_2026.program, perineal_tear_repair_evaluation_2026.mentee_name, perineal_tear_repair_evaluation_2026.mentee_id, perineal_tear_repair_evaluation_2026.skill_evaluation, perineal_tear_repair_evaluation_2026."average score" AS average_score
-   FROM mentors.perineal_tear_repair_evaluation_2026)
-UNION ALL
- SELECT pih_evaluation_2026.submission_id, pih_evaluation_2026.date_started, pih_evaluation_2026.date_ended, pih_evaluation_2026.date_submitted, pih_evaluation_2026.county, pih_evaluation_2026.facility, pih_evaluation_2026.facility_code, pih_evaluation_2026.program, pih_evaluation_2026.mentee_name, pih_evaluation_2026.mentee_id, pih_evaluation_2026.skill_evaluation, pih_evaluation_2026."average score" AS average_score
-   FROM mentors.pih_evaluation_2026)
-UNION ALL
- SELECT shoulder_dystocia_evaluation_2026.submission_id, shoulder_dystocia_evaluation_2026.date_started, shoulder_dystocia_evaluation_2026.date_ended, shoulder_dystocia_evaluation_2026.date_submitted, shoulder_dystocia_evaluation_2026.county, shoulder_dystocia_evaluation_2026.facility, shoulder_dystocia_evaluation_2026.facility_code, shoulder_dystocia_evaluation_2026.program, shoulder_dystocia_evaluation_2026.mentee_name, shoulder_dystocia_evaluation_2026.mentee_id, shoulder_dystocia_evaluation_2026.skill_evaluation, shoulder_dystocia_evaluation_2026."average score" AS average_score
-   FROM mentors.shoulder_dystocia_evaluation_2026)
-UNION ALL
- SELECT ubt_evaluation_2026.submission_id, ubt_evaluation_2026.date_started, ubt_evaluation_2026.date_ended, ubt_evaluation_2026.date_submitted, ubt_evaluation_2026.county, ubt_evaluation_2026.facility, ubt_evaluation_2026.facility_code, ubt_evaluation_2026.program, ubt_evaluation_2026.mentee_name, ubt_evaluation_2026.mentee_id, ubt_evaluation_2026.skill_evaluation, ubt_evaluation_2026."average score" AS average_score
-   FROM mentors.ubt_evaluation_2026)
-UNION ALL
- SELECT ubt_free_flow_evaluation_2026.submission_id, ubt_free_flow_evaluation_2026.date_started, ubt_free_flow_evaluation_2026.date_ended, ubt_free_flow_evaluation_2026.date_submitted, ubt_free_flow_evaluation_2026.county, ubt_free_flow_evaluation_2026.facility, ubt_free_flow_evaluation_2026.facility_code, ubt_free_flow_evaluation_2026.program, ubt_free_flow_evaluation_2026.mentee_name, ubt_free_flow_evaluation_2026.mentee_id, ubt_free_flow_evaluation_2026.skill_evaluation, ubt_free_flow_evaluation_2026."average score" AS average_score
-   FROM mentors.ubt_free_flow_evaluation_2026)
-UNION ALL
- SELECT manual_placenta_removal_evaluation_2026.submission_id, manual_placenta_removal_evaluation_2026.date_started, manual_placenta_removal_evaluation_2026.date_ended, manual_placenta_removal_evaluation_2026.date_submitted, manual_placenta_removal_evaluation_2026.county, manual_placenta_removal_evaluation_2026.facility, manual_placenta_removal_evaluation_2026.facility_code, manual_placenta_removal_evaluation_2026.program, manual_placenta_removal_evaluation_2026.mentee_name, manual_placenta_removal_evaluation_2026.mentee_id, manual_placenta_removal_evaluation_2026.skill_evaluation, manual_placenta_removal_evaluation_2026."average score" AS average_score
-   FROM mentors.manual_placenta_removal_evaluation_2026)
-UNION ALL
- SELECT uterine_inversion_evaluation_2026.submission_id, uterine_inversion_evaluation_2026.date_started, uterine_inversion_evaluation_2026.date_ended, uterine_inversion_evaluation_2026.date_submitted, uterine_inversion_evaluation_2026.county, uterine_inversion_evaluation_2026.facility, uterine_inversion_evaluation_2026.facility_code, uterine_inversion_evaluation_2026.program, uterine_inversion_evaluation_2026.mentee_name, uterine_inversion_evaluation_2026.mentee_id, uterine_inversion_evaluation_2026.skill_evaluation, uterine_inversion_evaluation_2026."average score" AS average_score
-   FROM mentors.uterine_inversion_evaluation_2026)
-UNION ALL
- SELECT partograph_evaluation_2026.submission_id, partograph_evaluation_2026.date_started, partograph_evaluation_2026.date_ended, partograph_evaluation_2026.date_submitted, partograph_evaluation_2026.county, partograph_evaluation_2026.facility, partograph_evaluation_2026.facility_code, partograph_evaluation_2026.program, partograph_evaluation_2026.mentee_name, partograph_evaluation_2026.mentee_id, partograph_evaluation_2026.skill_evaluation, partograph_evaluation_2026."average score" AS average_score
-   FROM mentors.partograph_evaluation_2026)
-UNION ALL
- SELECT emotive_evaluation_2026.submission_id, emotive_evaluation_2026.date_started, emotive_evaluation_2026.date_ended, emotive_evaluation_2026.date_submitted, emotive_evaluation_2026.county, emotive_evaluation_2026.facility, emotive_evaluation_2026.facility_code, emotive_evaluation_2026.program, emotive_evaluation_2026.mentee_name, emotive_evaluation_2026.mentee_id, emotive_evaluation_2026.skill_evaluation, emotive_evaluation_2026."average score" AS average_score
-   FROM mentors.emotive_evaluation_2026)
-UNION ALL
- SELECT newborn_resuscitation_evaluation_2026.submission_id, newborn_resuscitation_evaluation_2026.date_started, newborn_resuscitation_evaluation_2026.date_ended, newborn_resuscitation_evaluation_2026.date_submitted, newborn_resuscitation_evaluation_2026.county, newborn_resuscitation_evaluation_2026.facility, newborn_resuscitation_evaluation_2026.facility_code, newborn_resuscitation_evaluation_2026.program, newborn_resuscitation_evaluation_2026.mentee_name, newborn_resuscitation_evaluation_2026.mentee_id, newborn_resuscitation_evaluation_2026.skill_evaluation, newborn_resuscitation_evaluation_2026."average score" AS average_score
-   FROM mentors.newborn_resuscitation_evaluation_2026;
+CREATE OR REPLACE VIEW mentors.process_moh_skills_assessment_2026 AS
+WITH cohorts AS (
+    SELECT 1 AS cycle_id, 'Cohort 1' AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, 'Cohort 2', DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, 'Cohort 3', DATE '2027-04-01', DATE '2028-03-31'
+),
+attempts AS (
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.amstl_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.avd_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.b_lynch_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.bimanual_uterine_compression_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.breech_delivery_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.maternal_resuscitation_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.cervical_tear_repair_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.compression_abdominal_aorta_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.cord_prolapse_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.maternal_shock_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.nasg_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.perineal_tear_repair_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.pih_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.shoulder_dystocia_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.ubt_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.ubt_free_flow_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.manual_placenta_removal_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.uterine_inversion_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.partograph_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.emotive_evaluation_2026
+
+    UNION ALL
+
+    SELECT submission_id, date_started, date_ended, date_submitted, county, facility, facility_code, program, mentee_name, mentee_id, skill_evaluation, "average score" AS average_score
+    FROM mentors.newborn_resuscitation_evaluation_2026
+)
+SELECT
+    a.submission_id,
+    a.date_started,
+    a.date_ended,
+    a.date_submitted,
+    a.county,
+    a.facility,
+    a.facility_code,
+    a.program,
+    a.mentee_name,
+    a.mentee_id,
+    a.skill_evaluation,
+    a.average_score,
+    c.cycle_id,
+    c.cycle_label,
+    c.cycle_start,
+    c.cycle_end
+FROM attempts a
+LEFT JOIN cohorts c
+    ON CAST(a.date_submitted AS DATE) >= c.cycle_start
+   AND CAST(a.date_submitted AS DATE) <= c.cycle_end;
+```
+
+### 16a. mentors.process_moh_skills_assessment_cycle_best_2026 source
+
+Cycle-best parent view. Grain: one row per `(mentee_id, cycle_id, skill_evaluation)`. If a mentee submits a skill more than once in a cycle, only the highest score is retained. Ties select the latest submission deterministically. `attempt_count` retains visibility of how many attempts were considered.
+
+```sql
+CREATE OR REPLACE VIEW mentors.process_moh_skills_assessment_cycle_best_2026 AS
+WITH ranked_attempts AS (
+    SELECT
+        p.*,
+        COUNT(*) OVER (
+            PARTITION BY p.mentee_id, p.cycle_id, p.skill_evaluation
+        ) AS attempt_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY p.mentee_id, p.cycle_id, p.skill_evaluation
+            ORDER BY
+                p.average_score DESC,
+                p.date_submitted DESC,
+                p.submission_id DESC
+        ) AS score_rank
+    FROM mentors.process_moh_skills_assessment_2026 p
+    WHERE p.cycle_id IS NOT NULL
+      AND p.mentee_id IS NOT NULL
+      AND p.skill_evaluation IS NOT NULL
+      AND p.average_score IS NOT NULL
+)
+SELECT
+    submission_id,
+    date_started,
+    date_ended,
+    date_submitted,
+    county,
+    facility,
+    facility_code,
+    program,
+    mentee_name,
+    mentee_id,
+    skill_evaluation,
+    average_score,
+    cycle_id,
+    cycle_label,
+    cycle_start,
+    cycle_end,
+    attempt_count
+FROM ranked_attempts
+WHERE score_rank = 1;
+```
+
+To calculate the requested cycle average, average this view directly:
+
+```sql
+SELECT
+    mentee_id,
+    cycle_id,
+    AVG(average_score) AS avg_skill_score
+FROM mentors.process_moh_skills_assessment_cycle_best_2026
+GROUP BY mentee_id, cycle_id;
 ```
 
 ### 17. mentors.shoulder_dystocia_evaluation_2026 source
