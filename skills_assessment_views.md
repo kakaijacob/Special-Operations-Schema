@@ -9,61 +9,40 @@ Use this file to record SQL queries for tasks, projects, or investigations.
 
 ## Queries
 
-### 0. mentors.skills_assessment_cohorts source
+### 0. Cohort windows
 
-Shared cohort windows used by every child evaluation view. Inclusive on both ends.
-
-This must be created **before** any `*_evaluation_2026` child view. Running a child
-first fails with `SQL Error [42P01]: relation "mentors.skills_assessment_cohorts"
-does not exist`.
-
-The literals are explicitly cast because Redshift will not reconcile untyped literals
-across `UNION ALL` branches.
+Every child view declares the cohort windows inline, in its own
+`skills_assessment_cohorts` CTE, so nothing has to be created before the children and
+there is no shared table or view to keep in sync:
 
 ```sql
-CREATE OR REPLACE VIEW mentors.skills_assessment_cohorts AS
-SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
-       DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
-UNION ALL
-SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
-       DATE '2026-04-01', DATE '2027-03-31'
-UNION ALL
-SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
-       DATE '2027-04-01', DATE '2028-03-31';
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
 ```
 
-#### Table alternative
+Windows are inclusive on both ends. The literals are explicitly cast because Redshift
+will not reconcile untyped literals across `UNION ALL` branches.
 
-The children reference `mentors.skills_assessment_cohorts` by name only, so a table can
-be substituted for the view with no change to any child. Use this if Redshift objects to
-joining a `FROM`-less view against `moh_skills_checklist`, or if the windows should be
-editable without a DDL change. Redshift also refuses to replace a view that has
-dependents, so a table avoids having to drop the 21 children whenever a window moves.
-
-```sql
-CREATE TABLE mentors.skills_assessment_cohorts (
-    cycle_id    INTEGER     NOT NULL,
-    cycle_label VARCHAR(50) NOT NULL,
-    cycle_start DATE        NOT NULL,
-    cycle_end   DATE        NOT NULL
-)
-DISTSTYLE ALL;
-
-INSERT INTO mentors.skills_assessment_cohorts VALUES
-    (1, 'Cohort 1', DATE '2024-01-01', DATE '2026-03-31'),
-    (2, 'Cohort 2', DATE '2026-04-01', DATE '2027-03-31'),
-    (3, 'Cohort 3', DATE '2027-04-01', DATE '2028-03-31');
-```
+The trade-off is duplication: moving a cohort boundary means editing the CTE in all 21
+child views. In exchange, each child is self-contained and can be created, replaced, or
+run in isolation.
 
 ### Cycle-aware view structure
 
-1. `skills_assessment_cohorts`: shared cycle windows.
-2. Each `*_evaluation_2026` child view:
+1. Each `*_evaluation_2026` child view:
    - scores every attempt for one skill
    - assigns the attempt to a cycle
    - keeps only the **maximum** score per mentee × cycle for that skill
    - retains `attempt_count` and `first_pass_date` from all attempts in the cycle
-3. `process_moh_skills_assessment_2026`: unions the cycle-best child rows.
+2. `process_moh_skills_assessment_2026`: unions the cycle-best child rows.
 
 Every child view and the parent expose the same output contract, so any child can be
 queried directly with the same column names the parent uses:
@@ -79,7 +58,17 @@ part of the published contract.
 ### 1. mentors.amstl_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.amstl_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.explain_procedure::integer AS "explain procedure", msc.obtain_consent_007::integer AS "obtain consent", msc.change_goloves::integer AS "change gloves", msc.check_second_twin::integer AS "check 2nd twin", msc.explain_medication::integer AS "explain medication", msc.administer_uterotonic::integer AS "administer uterotonic", msc.delayed_cord_clamp::integer AS "delayed cord clamping", msc.cct_001::integer AS cct, msc.recieve_placenta::integer AS "recieve placenta", msc.assess_fundal_tone::integer AS "fundal tone", msc.genital_trauma_assessment::integer AS "trauma assessment", msc.assess_blood_loss::integer AS "assess blood loss", msc._15min_uterine_massage::integer AS "uterine massage", msc.vital_signs_002::integer AS "vital sign", msc.message_to_mother_005::integer AS "message to mother", msc.unfold_v_drape::integer AS "unfold v drape", msc.cord_cut::integer AS "cord cut", msc.assess_blood_loss1::integer AS "assess blood loss v2", msc.health_messages::integer AS "health messages", msc.document_procedure1::integer AS "document procedure",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.explain_procedure::integer + msc.obtain_consent_007::integer + msc.change_goloves::integer + msc.check_second_twin::integer + msc.explain_medication::integer + msc.administer_uterotonic::integer + msc.delayed_cord_clamp::integer + msc.cct_001::integer + msc.recieve_placenta::integer + msc.assess_fundal_tone::integer + msc.genital_trauma_assessment::integer + msc.assess_blood_loss::integer + msc._15min_uterine_massage::integer + msc.vital_signs_002::integer + msc.message_to_mother_005::integer)::numeric::numeric(18,0) / 15.0
@@ -90,7 +79,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'AMTSL'::text
@@ -146,7 +135,17 @@ WHERE score_rank = 1;
 ### 2. mentors.avd_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.avd_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent_005::integer AS "obtain consent", msc.ask_for_help::integer AS "ask for help", msc.avd_contraindication::integer AS "avd contraindication", msc.empty_bladder_002::integer AS "empty bladder", msc.alert_theatre::integer AS "alert theatre", msc.proper_dilatation_descent::integer AS "evaluate descent", msc.adequate_contractions::integer AS "adequate contractions", msc.determine_position::integer AS "determine position", msc.mcroberts_position::integer AS "mcroberts position", msc.equipment_check::integer AS "equipment check", msc.vacuum_placement::integer AS "vacuum placement", msc.evaluates_for_episiotomy::integer AS "evaluate for episiotomy", msc.check_maternal_soft_tissue::integer AS "maternal soft tissue", msc.negative_pressure::integer AS "negative pressure", msc.apply_gentle_traction::integer AS "gentle traction", msc.cup_removal::integer AS "cup removal", msc.proceed_as_normal_delivery::integer AS "normal delivery", msc.when_to_halt::integer AS "when to halt", msc.message_to_mother_003::integer AS "message to mother", msc.fhr_check::integer AS "fhr check",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.obtain_consent_005::integer + msc.ask_for_help::integer + msc.avd_contraindication::integer + msc.empty_bladder_002::integer + msc.alert_theatre::integer + msc.proper_dilatation_descent::integer + msc.adequate_contractions::integer + msc.determine_position::integer + msc.mcroberts_position::integer + msc.equipment_check::integer + msc.vacuum_placement::integer + msc.evaluates_for_episiotomy::integer + msc.check_maternal_soft_tissue::integer + msc.negative_pressure::integer + msc.apply_gentle_traction::integer + msc.cup_removal::integer + msc.proceed_as_normal_delivery::integer + msc.when_to_halt::integer + msc.message_to_mother_003::integer)::numeric::numeric(18,0) / 19.0
@@ -157,7 +156,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Assisted vaginal vacuum delivery'::text
@@ -213,7 +212,17 @@ WHERE score_rank = 1;
 ### 3. mentors.b_lynch_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.b_lynch_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.qualified_medical_officer::integer AS "qualified mo", msc.obtain_consent_009::integer AS "obtain consent", msc.anesthesia::integer AS anesthesia, msc.cleaning_draping_abdomen::integer AS "clean & drape abdomen", msc.vital_signs_003::integer AS "vital signs", msc.open_abdomen_identify_uterus::integer AS "open abdomen & identify uterus", msc.assess_for_atony::integer AS "assess atony", msc.lower_uterine_segment_incision::integer AS "lower uterine segment incision", msc.remove_pcos::integer AS "remove pocs", msc.start_from_right_side::integer AS "where to start", msc.insert_compression_suture::integer AS "insert compression suture", msc.suture_over_funds::integer AS "suture over fundus", msc.loop_the_uterus_horizontally::integer AS "loop uterus horizontally", msc.another_loop::integer AS "another loop", msc.assistant_compress_uterus::integer AS "compress uterus", msc.tie_ends_together::integer AS "tie ends together", msc.vaginal_bleeding_controlled::integer AS "bleeding controlled", msc.close_uterine_incision::integer AS "close uterine incision", msc.hysteroctomy_indication::integer AS "hysterectomy indication", msc.message_to_mother_008::integer AS "message to mother", msc.drape_in_place::integer AS "drape in place", msc.document_results2::integer AS "document results",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.qualified_medical_officer::integer + msc.obtain_consent_009::integer + msc.anesthesia::integer + msc.cleaning_draping_abdomen::integer + msc.vital_signs_003::integer + msc.open_abdomen_identify_uterus::integer + msc.assess_for_atony::integer + msc.lower_uterine_segment_incision::integer + msc.remove_pcos::integer + msc.start_from_right_side::integer + msc.insert_compression_suture::integer + msc.suture_over_funds::integer + msc.loop_the_uterus_horizontally::integer + msc.another_loop::integer + msc.assistant_compress_uterus::integer + msc.tie_ends_together::integer + msc.vaginal_bleeding_controlled::integer + msc.close_uterine_incision::integer + msc.hysteroctomy_indication::integer + msc.message_to_mother_008::integer)::numeric::numeric(18,0) / 20.0
@@ -224,7 +233,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'B-LYNCH'::text
@@ -280,7 +289,17 @@ WHERE score_rank = 1;
 ### 4. mentors.bimanual_uterine_compression_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.bimanual_uterine_compression_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_004::integer AS "shout for help", msc.obtain_consent_012::integer AS "obtain consent", msc.vaginal_exam_002::integer AS "vaginal exam", msc.identify_anterior_fornix::integer AS "identify anterior fornix", msc.fist_thumb_outside::integer AS "fist with thumb outside", msc.fist_on_anterior_wall::integer AS "fist on anterior wall", msc.pressure_posterior_wall::integer AS "pressure posterior wall", msc.pressure_until_hemostasis::integer AS "pressure until hemostasis", msc.message_to_mother_012::integer AS "message to mother", msc.hand_hygiene::integer AS "hand hygiene (old)", msc.hor_hygiene::integer AS "hand hygiene (new)", msc.insert_whole_hand::integer AS "insert hand (old)", msc.insert_whole_hor::integer AS "insert hand (new)",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.shout_for_help_004::integer + msc.obtain_consent_012::integer + msc.hand_hygiene::integer + msc.vaginal_exam_002::integer + msc.insert_whole_hand::integer + msc.identify_anterior_fornix::integer + msc.fist_thumb_outside::integer + msc.fist_on_anterior_wall::integer + msc.pressure_posterior_wall::integer + msc.pressure_until_hemostasis::integer + msc.message_to_mother_012::integer)::numeric::numeric(18,0) / 11.0
@@ -291,7 +310,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Bimanual uterine compression'::text
@@ -347,7 +366,17 @@ WHERE score_rank = 1;
 ### 5. mentors.breech_delivery_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.breech_delivery_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.confirm_diagnosis_001::integer AS "confirm diagnosis", msc.obtain_consent_004::integer AS "obtain consent", msc.call_for_help::integer AS "call for help", msc.empty_bladder_001::integer AS "empty bladder", msc.consider_episiotomy::integer AS "consider episiotomy", msc.hands_off_breech::integer AS "hands off breech", msc.pinard_manuever::integer AS "pinard maneuver", msc.grip_pelvis_bone::integer AS "pelvis grip", msc.lovset_maneuver::integer AS "lovset maneuver", msc.maurecieu_smellie_veit_maneuve::integer AS "maureciue smellie veit", msc.amtsl::integer AS amtsl, msc.message_to_mother_002::integer AS "message to mother", msc.documentation_001::integer AS documentation,
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.confirm_diagnosis_001::integer + msc.obtain_consent_004::integer + msc.call_for_help::integer + msc.empty_bladder_001::integer + msc.consider_episiotomy::integer + msc.hands_off_breech::integer + msc.pinard_manuever::integer + msc.grip_pelvis_bone::integer + msc.lovset_maneuver::integer + msc.maurecieu_smellie_veit_maneuve::integer + msc.amtsl::integer + msc.message_to_mother_002::integer + msc.documentation_001::integer)::numeric::numeric(18,0) / 13.0
@@ -358,7 +387,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Assisted breech delivery'::text
@@ -414,7 +443,17 @@ WHERE score_rank = 1;
 ### 6. mentors.cervical_tear_repair_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.cervical_tear_repair_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent_011::integer AS "obtain consent", msc.analgesics_antibiotics_001::integer AS "analgesic antibiotics", msc.lithotomy_position_002::integer AS "lithotomy position", msc.clean_perinuem_002::integer AS "clean perinuem", msc.empty_bladder_003::integer AS "empty bladder", msc.regional_anesthesia_sedation::integer AS "regional anesthesia & sedation", msc.tear_examination::integer AS "tear examination", msc.apply_local_anesthetic::integer AS "local anesthesia", msc.grasp_cervix_oneside::integer AS "grasp cervix oneside", msc.grasp_otherside_of_cervix::integer AS "grasp cervix opposite side", msc.locate_tip_of_cervix::integer AS "locate cervical tip", msc.place_both_forceps_in_one_hand::integer AS "forceps on one hand", msc.placement_1st_suture::integer AS "1st suture placement", msc.place_continous_suture::integer AS "continous sutures", msc.theatre_if_no_hemostasis::integer AS "theatre if no hemostasis", msc.message_to_mother_011::integer AS "message to mother", msc.drape_in_place3::integer AS "drape in place", msc.document_results3::integer AS "document results", msc.place_both_forceps_in_one_hor::integer AS "forceps on one hand (new)",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.obtain_consent_011::integer + msc.analgesics_antibiotics_001::integer + msc.lithotomy_position_002::integer + msc.clean_perinuem_002::integer + msc.empty_bladder_003::integer + msc.regional_anesthesia_sedation::integer + msc.tear_examination::integer + msc.apply_local_anesthetic::integer + msc.grasp_cervix_oneside::integer + msc.grasp_otherside_of_cervix::integer + msc.locate_tip_of_cervix::integer + msc.place_both_forceps_in_one_hand::integer + msc.placement_1st_suture::integer + msc.place_continous_suture::integer + msc.theatre_if_no_hemostasis::integer + msc.message_to_mother_011::integer)::numeric::numeric(18,0) / 16.0
@@ -425,7 +464,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Cervical tear repair'::text
@@ -481,7 +520,17 @@ WHERE score_rank = 1;
 ### 7. mentors.compression_abdominal_aorta_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.compression_abdominal_aorta_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_005::integer AS "shout for help", msc.obtain_consent_013::integer AS "obtain consent", msc.locate_femoral_pulse::integer AS "locate femoral pulse", msc.fist_placement::integer AS "fist placement", msc.apply_down_pressure::integer AS "apply downward pressure", msc.femoral_pulse_check::integer AS "femoral pulse check", msc.adequacy_of_compression::integer AS "adequacy of compression", msc.compression_until_hemostasis::integer AS "compression to hemostasis", msc.message_to_mother_013::integer AS "message to mother", msc.v_drape2::integer AS "v drape",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.shout_for_help_005::integer + msc.obtain_consent_013::integer + msc.locate_femoral_pulse::integer + msc.fist_placement::integer + msc.apply_down_pressure::integer + msc.femoral_pulse_check::integer + msc.adequacy_of_compression::integer + msc.compression_until_hemostasis::integer + msc.message_to_mother_013::integer)::numeric::numeric(18,0) / 9.0
@@ -492,7 +541,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Compression of abdominal aorta'::text
@@ -548,7 +597,17 @@ WHERE score_rank = 1;
 ### 8. mentors.cord_prolapse_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.cord_prolapse_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_001::integer AS "shout for help", msc.obtain_consent_003::integer AS "obtain consent", msc.vaginal_exam::integer AS "vaginal exam", msc.confirm_diagnosis::integer AS "confirm diagnosis", msc.confirms_cord_pulsation::integer AS "cord pulsation", msc.patient_position::integer AS "patient position", msc.manual_cord_decompression::integer AS "cord decompression", msc.consent_prep_emergency_cs::integer AS "emergency cs prep", msc.patient_transfer_position::integer AS "patient transfer position",
         CASE
             WHEN msc.date_submitted < '2026-04-01'::date THEN msc.hand_removal::integer
@@ -563,7 +622,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Cord prolapse'::text
@@ -620,14 +679,24 @@ WHERE score_rank = 1;
 ### 9. mentors.emotive_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.emotive_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_assemble_team::integer AS "assemble team", msc.assign_team_roles::integer AS "assign roles", msc.reassure_explain_mother::integer AS "reassure mother", msc.check_bleeding_amount::integer AS "check bleeding", msc.assess_abcs_resuscitate::integer AS "abcs resuscitate", msc.trigger_first_bundle::integer AS "first bundle", msc.trigger_uterus_massage::integer AS "uterus massage", msc.check_bladder_catheter::integer AS "bladder catheter", msc.insert_iv_cannulas::integer AS "iv cannulas", msc.collect_blood_samples::integer AS "blood samples", msc.infuse_oxytocin::integer AS "oxytocin infusion", msc.administer_misoprostol::integer AS misoprostol, msc.administer_tranexamic_acid::integer AS "tranexamic acid", msc.give_iv_fluids::integer AS "iv fluids", msc.recheck_uterus::integer AS "recheck uterus", msc.check_for_tears::integer AS "check tears", msc.check_placenta_completeness::integer AS "placenta check", msc.monitor_bleeding_vitals::integer AS "monitor vitals", msc.provide_respectful_care::integer AS "respectful care", msc.inform_mother_progress::integer AS "inform mother", msc.document_management_chart::integer AS documentation, avg((msc.shout_assemble_team::integer + msc.assign_team_roles::integer + msc.reassure_explain_mother::integer + msc.check_bleeding_amount::integer + msc.assess_abcs_resuscitate::integer + msc.trigger_first_bundle::integer + msc.trigger_uterus_massage::integer + msc.check_bladder_catheter::integer + msc.insert_iv_cannulas::integer + msc.collect_blood_samples::integer + msc.infuse_oxytocin::integer + msc.administer_misoprostol::integer + msc.administer_tranexamic_acid::integer + msc.give_iv_fluids::integer + msc.recheck_uterus::integer + msc.check_for_tears::integer + msc.check_placenta_completeness::integer + msc.monitor_bleeding_vitals::integer + msc.provide_respectful_care::integer + msc.inform_mother_progress::integer + msc.document_management_chart::integer)::numeric::numeric(18,0) / 21.0) AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'EMOTIVE'::text
@@ -684,7 +753,17 @@ WHERE score_rank = 1;
 ### 10. mentors.manual_placenta_removal_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.manual_placenta_removal_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
         CASE
             WHEN msc.date_submitted < '2026-04-01'::date THEN msc.shout_for_help::integer
@@ -715,7 +794,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Manual removal of placenta'::text
@@ -772,7 +851,17 @@ WHERE score_rank = 1;
 ### 11. mentors.maternal_resuscitation_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.maternal_resuscitation_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.safety_assessement::integer AS "safety assessment", msc.check_response::integer AS "check response", msc.shout_for_help_003::integer AS "shout for help", msc.initiate_cpr_001::integer AS "initiate cpr", msc.offer_leadership::integer AS "offer leadership", msc.assess::integer AS assess, msc.head_titl_chin_lift::integer AS "head tilt chin lift", msc.jaw_thrust::integer AS "jaw thrust", msc.maintain_airway::integer AS "maintain airway", msc.demo_cpr::integer AS "demo cpr", msc._30_2_cpr::integer AS "cpr ratio", msc.reassess_breathing::integer AS "reassess breathing", msc._2min_exchanges_cpr::integer AS "2 min exchanges", msc.perimotem_cs::integer AS "perimortem cs", msc.assess_circulation_inverted_j::integer AS inverted_j, msc.perform_secondary_survey::integer AS "2ndry survey", msc.recovery_position::integer AS "recovery position", msc.debrief_and_assign_tasks::integer AS "assign tasks (old)", msc.debrief_or_assign_tasks::integer AS "assign tasks (new)", msc.identify_cpr_landmarks::integer AS "cpr landmarks (old)", msc.identify_cpr_lormarks::integer AS "cpr landmarks (new)", msc.o2_recovery_room::integer AS "recovery o2 (old)", msc.o2_recovery_room::integer AS "recovery o2 (new)", msc.iv_fluids::integer AS "iv fluids (old)", msc.iv_fluids::integer AS "iv fluids (new)",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.safety_assessement::integer + msc.check_response::integer + msc.shout_for_help_003::integer + msc.initiate_cpr_001::integer + msc.debrief_and_assign_tasks::integer + msc.offer_leadership::integer + msc.assess::integer + msc.head_titl_chin_lift::integer + msc.jaw_thrust::integer + msc.maintain_airway::integer + msc.identify_cpr_landmarks::integer + msc.demo_cpr::integer + msc._30_2_cpr::integer + msc.reassess_breathing::integer + msc._2min_exchanges_cpr::integer + msc.perimotem_cs::integer + msc.o2_recovery_room::integer + msc.assess_circulation_inverted_j::integer + msc.iv_fluids::integer + msc.perform_secondary_survey::integer + msc.recovery_position::integer)::numeric::numeric(18,0) / 21.0
@@ -783,7 +872,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Maternal resuscitation'::character varying::text
@@ -839,7 +928,17 @@ WHERE score_rank = 1;
 ### 12. mentors.nasg_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.nasg_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent_008::integer AS "obtain consent", msc.ipc_precautions::integer AS ipc, msc.placing_woman_on_nasg::integer AS "nasg placement", msc.segment1_2_application::integer AS "segment 1 & 2", msc.nasg_snapping_test::integer AS "snapping test", msc.segment2_3_application::integer AS "segment 2 & 3", msc.segment4_application::integer AS "segment 4", msc.segment5_placement::integer AS "segment 5", msc.segment_6_placement_001::integer AS "segment 6", msc.woman_can_breathe_normally::integer AS "can breathe normally", msc.other_pph_management::integer AS "other management", msc.monitor_sob_oliguria::integer AS "sob & oliguria monitoring", msc.message_to_mother_006::integer AS "when to remove", msc.vital_signs_before_removal::integer AS "vital signs", msc.open_segment_pair_1_or_2::integer AS "open segment 1/2", msc.when_to_remove_next_segment::integer AS "next segment removal", msc.when_reclose_segments::integer AS "reclose segments", msc.message_to_mother_007::integer AS "message to mother", msc.document_results::integer AS "document results",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.obtain_consent_008::integer + msc.ipc_precautions::integer + msc.placing_woman_on_nasg::integer + msc.segment1_2_application::integer + msc.nasg_snapping_test::integer + msc.segment2_3_application::integer + msc.segment4_application::integer + msc.segment5_placement::integer + msc.segment_6_placement_001::integer + msc.woman_can_breathe_normally::integer + msc.other_pph_management::integer + msc.monitor_sob_oliguria::integer + msc.message_to_mother_006::integer + msc.vital_signs_before_removal::integer + msc.open_segment_pair_1_or_2::integer + msc.when_to_remove_next_segment::integer + msc.when_reclose_segments::integer + msc.message_to_mother_007::integer)::numeric::numeric(18,0) / 18.0
@@ -850,7 +949,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'NASG'::text
@@ -906,14 +1005,24 @@ WHERE score_rank = 1;
 ### 13. mentors.partograph_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.partograph_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.explain_procedure_mother::integer AS explain_procedure_mother, msc.obtain_informed_consent::integer AS obtain_informed_consent, msc.decide_partograph_case::integer AS decide_partograph_case, msc.plot_patient_biodata::integer AS plot_patient_biodata, msc.plot_cervical_dilatation::integer AS plot_cervical_dilatation, msc.plot_descent::integer AS plot_descent, msc.plot_fetal_heart::integer AS plot_fetal_heart, msc.plot_amniotic_fluid::integer AS plot_amniotic_fluid, msc.plot_moulding::integer AS plot_moulding, msc.plot_contractions::integer AS plot_contractions, msc.plot_maternal_vitals::integer AS plot_maternal_vitals, msc.interpret_findings::integer AS interpret_findings, msc.explain_labour_progress::integer AS explain_labour_progress, msc.joint_decision_mother::integer AS joint_decision_mother, msc.document_procedures::integer AS document_procedures, avg((msc.explain_procedure_mother::integer + msc.obtain_informed_consent::integer + msc.decide_partograph_case::integer + msc.plot_patient_biodata::integer + msc.plot_cervical_dilatation::integer + msc.plot_descent::integer + msc.plot_fetal_heart::integer + msc.plot_amniotic_fluid::integer + msc.plot_moulding::integer + msc.plot_contractions::integer + msc.plot_maternal_vitals::integer + msc.interpret_findings::integer + msc.explain_labour_progress::integer + msc.joint_decision_mother::integer + msc.document_procedures::integer)::numeric::numeric(18,0) / 15.0) AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Partograph'::character varying::text
@@ -970,7 +1079,17 @@ WHERE score_rank = 1;
 ### 14. mentors.perineal_tear_repair_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.perineal_tear_repair_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent_010::integer AS "obtain consent",
         CASE
             WHEN msc.date_submitted::date <= '2026-04-01'::date THEN msc.high_lithotomy_position::integer
@@ -985,7 +1104,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Perineal repair'::character varying::text
@@ -1042,7 +1161,17 @@ WHERE score_rank = 1;
 ### 15. mentors.pih_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.pih_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.diagnosis::integer AS diagnosis, msc.management_principles::integer AS "management principles", msc.explain_to_mother::integer AS "explain to mother",
         CASE
             WHEN msc.date_submitted < '2026-04-01'::date THEN msc.handwashing_and_start::integer
@@ -1061,7 +1190,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Preeclampsia / Eclampsia'::text
@@ -1118,14 +1247,24 @@ WHERE score_rank = 1;
 ### 16. mentors.shoulder_dystocia_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.shoulder_dystocia_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help_002::integer AS "shout for help", msc.obtain_consent_006::integer AS "obtain consent", msc.aim_to_deliver_within_5_min::integer AS "aim to deliver < 5", msc.woman_not_to_push::integer AS "woman not to push", msc.evaluates_for_episiotomy_001::integer AS "evaluate episiotomy", msc.mcrobert_position::integer AS "mcroberts position", msc.rubin_1_maneuver::integer AS "rubin 1", msc.rubin_2_maneuver::integer AS "rubin 2", msc.wood_screw_maneuver::integer AS "wood screw maneuver", msc.deliver_posterior_shoulder::integer AS "deliver posterior shoulder", msc.gaskins_maneuver::integer AS "gaskins maneuver", msc._3rd_stage_labor::integer AS "3rd stage labor", msc.prep_for_nnr::integer AS "prepare for nnr", msc.message_to_mother_004::integer AS "message to mother", msc.monitor_the_baby::integer AS "monitor the baby", (msc.shout_for_help_002::integer + msc.obtain_consent_006::integer + msc.aim_to_deliver_within_5_min::integer + msc.woman_not_to_push::integer + msc.evaluates_for_episiotomy_001::integer + msc.mcrobert_position::integer + msc.rubin_1_maneuver::integer + msc.rubin_2_maneuver::integer + msc.wood_screw_maneuver::integer + msc.deliver_posterior_shoulder::integer + msc.gaskins_maneuver::integer + msc._3rd_stage_labor::integer + msc.prep_for_nnr::integer + msc.message_to_mother_004::integer + msc.monitor_the_baby::integer)::numeric::numeric(18,0) / 15.0 AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Shoulder dystocia'::character varying::text
@@ -1182,14 +1321,24 @@ WHERE score_rank = 1;
 ### 17. mentors.ubt_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.ubt_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent_002::integer AS "obtain consent", msc.sterile_gloves_001::integer AS "sterile gloves", msc.balloon_over_catheter::integer AS "balloon over catheter", msc.tie_the_balloon::integer AS "tie balloon", msc.inflate_balloon_with_20cc::integer AS "inflate balloon 20cc", msc.inflate_balloon_with_20cc_001::integer AS "identify cervix", msc.grasp_anterior_cervix::integer AS "grasp anterior cervix", msc.place_balloon_into_uterus::integer AS "balloon into uterus", msc.inflate_balloon_300ml_500ml::integer AS "inflate 300–500ml", msc.clamp_catheter::integer AS "clamp catheter", msc.balloon_insitu_24hrs::integer AS "balloon in situ 24hrs", msc.oxytocin_20iu_in_ns::integer AS "oxytocin 20iu in ns", msc.antibiotics_001::integer AS antibiotics, msc.monitoring::integer AS monitoring, msc.deflate_50mls_q_hr::integer AS "deflate 50ml/hr", msc.reinflate_50mls_bleeding_recur::integer AS "reinflate if bleeding recurs", msc.surgical_intervention_bleeding::integer AS "surgical intervention", msc.transfusion::integer AS transfusion, msc.message_to_mother_001::integer AS "message to mother", msc.documentation::integer AS documentation, (msc.obtain_consent_002::integer + msc.sterile_gloves_001::integer + msc.balloon_over_catheter::integer + msc.tie_the_balloon::integer + msc.inflate_balloon_with_20cc::integer + msc.inflate_balloon_with_20cc_001::integer + msc.grasp_anterior_cervix::integer + msc.place_balloon_into_uterus::integer + msc.inflate_balloon_300ml_500ml::integer + msc.clamp_catheter::integer + msc.balloon_insitu_24hrs::integer + msc.oxytocin_20iu_in_ns::integer + msc.antibiotics_001::integer + msc.monitoring::integer + msc.deflate_50mls_q_hr::integer + msc.reinflate_50mls_bleeding_recur::integer + msc.surgical_intervention_bleeding::integer + msc.transfusion::integer + msc.message_to_mother_001::integer + msc.documentation::integer)::numeric::numeric(18,0) / 20.0 AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'UBT'::character varying::text
@@ -1246,14 +1395,24 @@ WHERE score_rank = 1;
 ### 18. mentors.ubt_free_flow_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.ubt_free_flow_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent::integer AS "obtain consent", msc.sterile_gloves::integer AS "sterile gloves", msc.assemble_ubt::integer AS "assemble utb", msc.hungon_drip_stand_valve_closed::integer AS "close valve", msc.lithotomy_position::integer AS "lithotomy position", msc.clean_perinuem::integer AS "clean perineum", msc.catheterize::integer AS catheterize, msc.drape_patient::integer AS "drape patient", msc.visualize_cervix_sims_speculum::integer AS "visualize cervix", msc.stabilize_uterus::integer AS "stabilize uterus", msc.remove_speculum::integer AS "remove speculum", msc.insert_balloon::integer AS "insert balloon", msc.withdraw_forceps::integer AS "withdraw forceps", msc.prevent_expulsion_when_inflati::integer AS "prevent expulsion", msc.inflate_balloon::integer AS "inflate balloon", msc.inflate_until_equilibrium::integer AS "attain equilibrium", msc.balloon_insitu_check_bleeding::integer AS "check bleeding", msc.determine_approp_bag_height::integer AS "appropriate bag height", msc.not_level_when_bleeding_stops::integer AS "note level bleeding stops", msc.observe_patient::integer AS "observe patient", msc.secure_tubing::integer AS "secure tubing", msc.antibiotics::integer AS antibiotics, msc.documentation_time_level::integer AS "document time & level", msc.continue_iv_fluids::integer AS "continue iv fluids", msc.vital_signs::integer AS "vital signs", msc.when_to_remove::integer AS "when to remove", msc.drain_balloon::integer AS "drain balloon", msc.remove_balloon_gently::integer AS "remove balloon gently", msc.post_removal_monitoring::integer AS "monitoring post removal", msc.activity_resumption::integer AS "activity resumption", msc.what_if_bleeing_resumes::integer AS "if bleeding resumes", msc.referral::integer AS referral, msc.close_valve_in_transfer::integer AS "valve closure & transfer", msc.document::integer AS document, (msc.obtain_consent::integer + msc.sterile_gloves::integer + msc.assemble_ubt::integer + msc.hungon_drip_stand_valve_closed::integer + msc.lithotomy_position::integer + msc.clean_perinuem::integer + msc.catheterize::integer + msc.drape_patient::integer + msc.visualize_cervix_sims_speculum::integer + msc.stabilize_uterus::integer + msc.remove_speculum::integer + msc.insert_balloon::integer + msc.withdraw_forceps::integer + msc.prevent_expulsion_when_inflati::integer + msc.inflate_balloon::integer + msc.inflate_until_equilibrium::integer + msc.balloon_insitu_check_bleeding::integer + msc.determine_approp_bag_height::integer + msc.not_level_when_bleeding_stops::integer + msc.observe_patient::integer + msc.secure_tubing::integer + msc.antibiotics::integer + msc.documentation_time_level::integer + msc.continue_iv_fluids::integer + msc.vital_signs::integer + msc.when_to_remove::integer + msc.drain_balloon::integer + msc.remove_balloon_gently::integer + msc.post_removal_monitoring::integer + msc.activity_resumption::integer + msc.what_if_bleeing_resumes::integer + msc.referral::integer + msc.close_valve_in_transfer::integer + msc.document::integer)::numeric::numeric(18,0) / 34.0 AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'UBT (free flow)'::character varying::text
@@ -1310,14 +1469,24 @@ WHERE score_rank = 1;
 ### 19. mentors.uterine_inversion_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.uterine_inversion_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help::integer AS shout_for_help, msc.blood_monitoring_drape::integer AS blood_monitoring_drape, msc.emergency_team_roles::integer AS emergency_team_roles, msc.rapid_initial_assessment::integer AS rapid_initial_assessment, msc.ensure_patient_privacy::integer AS ensure_patient_privacy, msc.explain_procedure_mother1::integer AS explain_procedure_mother1, msc.obtain_informed_consent1::integer AS obtain_informed_consent1, msc.assess_blood_loss::integer AS assess_blood_loss, msc.assess_abcs_resuscitate1::integer AS assess_abcs_resuscitate1, msc.stop_uterotonic_drugs::integer AS stop_uterotonic_drugs, msc.insert_iv_cannulae::integer AS insert_iv_cannulae, msc.collect_blood_samples1::integer AS collect_blood_samples1, msc.start_crystalloid_infusion::integer AS start_crystalloid_infusion, msc.insert_urinary_catheter::integer AS insert_urinary_catheter, msc.administer_analgesics_antibiotics::integer AS administer_analgesics_antibiotics, msc.hor_hygiene_ppe::integer AS hor_hygiene_ppe, msc.replace_uterine_fundus::integer AS replace_uterine_fundus, msc.remove_retained_placenta::integer AS remove_retained_placenta, msc.start_oxytocin_infusion::integer AS start_oxytocin_infusion, msc.examine_repair_tears::integer AS examine_repair_tears, msc.monitor_vitals_bleeding::integer AS monitor_vitals_bleeding, msc.explain_procedure_results::integer AS explain_procedure_results, msc.prepare_operating_theatre::integer AS prepare_operating_theatre, msc.inform_client_outcomes::integer AS inform_client_outcomes, msc.document_blood_loss::integer AS document_blood_loss, avg((msc.shout_for_help::integer + msc.blood_monitoring_drape::integer + msc.emergency_team_roles::integer + msc.rapid_initial_assessment::integer + msc.ensure_patient_privacy::integer + msc.explain_procedure_mother1::integer + msc.obtain_informed_consent1::integer + msc.assess_blood_loss::integer + msc.assess_abcs_resuscitate1::integer + msc.stop_uterotonic_drugs::integer + msc.insert_iv_cannulae::integer + msc.collect_blood_samples1::integer + msc.start_crystalloid_infusion::integer + msc.insert_urinary_catheter::integer + msc.administer_analgesics_antibiotics::integer + msc.hor_hygiene_ppe::integer + msc.replace_uterine_fundus::integer + msc.remove_retained_placenta::integer + msc.start_oxytocin_infusion::integer + msc.examine_repair_tears::integer + msc.monitor_vitals_bleeding::integer + msc.explain_procedure_results::integer + msc.prepare_operating_theatre::integer + msc.inform_client_outcomes::integer + msc.document_blood_loss::integer)::numeric::numeric(18,0) / 24.0) AS "average score",
     c.cycle_id,
     c.cycle_label,
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Uterine Inversion'::character varying::text
@@ -1374,7 +1543,17 @@ WHERE score_rank = 1;
 ### 20. mentors.maternal_shock_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.maternal_shock_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.check_for_safety::integer AS "safety check", msc.check_for_response::integer AS "response check", msc.call_for_help_002::integer AS "call for help", msc.initiate_cpr::integer AS "initiate cpr", msc.assign_team_tasks::integer AS "assign tasks", msc.offer_leadership::integer AS "offer leader", msc.assess_airway::integer AS "assess airway", msc.oropharyngeal_airway::integer AS "oropharyngeal airway", msc.assess_breathing::integer AS "assess breathing", msc.assess_carotid_pulse::integer AS "carotid pulse", msc.cpr_30_2::integer AS "cpr ratio", msc.breathing_assessment::integer AS "breathing assessment", msc.give_oxygen::integer AS "give oxygen", msc.manage_circulation::integer AS "manage circulation", msc.check_pulse_bp::integer AS "check bp & pulse", msc.iv_fluids::integer AS "iv fluids", msc.transfuse_in_anemia::integer AS transfusion, msc.palpate_the_uterus::integer AS "uterine palpation", msc.inspect_external_genitalia::integer AS "inspect genitalia", msc.vaginal_exam_001::integer AS "vaginal exam", msc.repeat_vital_signs::integer AS "repeat vital signs", msc.input_output_monitoring::integer AS "i/o monitoring", msc.iv_antibiotics::integer AS "iv antibiotics", msc.offer_leadership::integer AS "offer leadership (standard)", msc.offer_leadership::integer AS "offer leadership (alt casing)",
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.check_for_safety::integer + msc.check_for_response::integer + msc.call_for_help_002::integer + msc.initiate_cpr::integer + msc.assign_team_tasks::integer + msc.offer_leadership::integer + msc.assess_airway::integer + msc.oropharyngeal_airway::integer + msc.assess_breathing::integer + msc.assess_carotid_pulse::integer + msc.cpr_30_2::integer + msc.breathing_assessment::integer + msc.give_oxygen::integer + msc.manage_circulation::integer + msc.check_pulse_bp::integer + msc.iv_fluids::integer + msc.transfuse_in_anemia::integer + msc.palpate_the_uterus::integer + msc.inspect_external_genitalia::integer + msc.vaginal_exam_001::integer + msc.repeat_vital_signs::integer + msc.input_output_monitoring::integer + msc.iv_antibiotics::integer)::numeric::numeric(18,0) / 23.0
@@ -1385,7 +1564,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Maternal shock'::text
@@ -1441,7 +1620,17 @@ WHERE score_rank = 1;
 ### 21. mentors.newborn_resuscitation_evaluation_2026 source
 ```sql
 CREATE OR REPLACE VIEW mentors.newborn_resuscitation_evaluation_2026 AS
-WITH scored_attempts AS (
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
         CASE
             WHEN msc.date_started <= '2026-04-01'::date THEN (msc.delivery_of_the_baby::integer + msc.apgar_score::integer + msc.call_for_help_001::integer + msc.abc_assessement::integer + msc._40_60_ventilation_breathes::integer + msc.reasess_abc::integer + msc.when_to_start_cpr::integer + msc.ventilation_compression_ratio::integer + msc.right_mask_size::integer + msc.position_mask_correctly::integer + msc._2_hand_technique_cpr::integer + msc.depth_of_compression::integer + msc.warm_chain::integer + msc.subsequent_abc_reassessement::integer + msc.bvm_1_min_hr_60::integer + msc.another_abc_reassesment::integer + msc.put_on_oxygen::integer + msc.arrangement_for_transfer::integer)::numeric / 18.0
@@ -1543,7 +1732,7 @@ WITH scored_attempts AS (
     c.cycle_start,
     c.cycle_end
   FROM mentors.moh_skills_checklist msc
-  INNER JOIN mentors.skills_assessment_cohorts c
+  INNER JOIN skills_assessment_cohorts c
       ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
      AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
   WHERE msc.skill_evaluation::text = 'Newborn resuscitation'::text
