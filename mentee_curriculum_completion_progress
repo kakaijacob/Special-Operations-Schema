@@ -3,7 +3,7 @@
 -- Mentee spine: mentors.mentee_database (program IN EmONC curriculum / both),
 -- plus any mentee_id only present in fact tables
 -- Skill avg: AVG of cycle-best per-skill scores from
--- mentors.process_moh_skills_assessment_cycle_best_2026
+-- mentors.process_moh_skills_assessment_2026 (children already keep max score in-cycle)
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
@@ -265,41 +265,23 @@ labor_monitoring AS (
 ),
 
 -- Skill evaluations:
--- 1) cycle-best view provides highest score per skill, per mentee, per cycle
+-- 1) process_moh_skills_assessment_2026 already has max score per skill × mentee × cycle
 -- 2) avg_skill_score = average of those per-skill maxima
 -- 3) a skill counts as complete only when its max score is >= 0.85
--- 4) first pass date still comes from all attempts, not only the best attempt
-skill_eval_first_pass AS (
-    SELECT
-        cycle_id,
-        CAST(mentee_id AS VARCHAR(100)) AS mentee_id,
-        skill_evaluation,
-        MIN(CAST(date_submitted AS DATE)) AS first_pass_date
-    FROM mentors.process_moh_skills_assessment_2026
-    WHERE cycle_id IS NOT NULL
-      AND skill_evaluation IS NOT NULL
-      AND average_score >= 0.85
-    GROUP BY
-        cycle_id,
-        CAST(mentee_id AS VARCHAR(100)),
-        skill_evaluation
-),
-
+-- 4) first_pass_date is carried from child views across all in-cycle attempts
 skill_eval_by_skill AS (
     SELECT
-        b.cycle_id,
+        s.cycle_id,
         c.req_skill_eval,
-        CAST(b.mentee_id AS VARCHAR(100)) AS mentee_id,
-        b.skill_evaluation,
-        b.average_score AS max_score,
-        fp.first_pass_date
-    FROM mentors.process_moh_skills_assessment_cycle_best_2026 b
+        CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
+        s.skill_evaluation,
+        s.average_score AS max_score,
+        s.first_pass_date
+    FROM mentors.process_moh_skills_assessment_2026 s
     INNER JOIN cohorts c
-        ON b.cycle_id = c.cycle_id
-    LEFT JOIN skill_eval_first_pass fp
-        ON b.cycle_id = fp.cycle_id
-       AND CAST(b.mentee_id AS VARCHAR(100)) = fp.mentee_id
-       AND b.skill_evaluation = fp.skill_evaluation
+        ON s.cycle_id = c.cycle_id
+    WHERE s.skill_evaluation IS NOT NULL
+      AND s.average_score IS NOT NULL
 ),
 
 skill_eval_passed AS (
