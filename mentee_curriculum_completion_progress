@@ -2,8 +2,7 @@
 -- Grain: one row per (mentee_id, cycle), including empty mentee×cycle rows
 -- Mentee spine: mentors.mentee_database (program IN EmONC curriculum / both),
 -- plus any mentee_id only present in fact tables
--- Skill avg: AVG of cycle-best per-skill scores from
--- mentors.process_moh_skills_assessment_2026 (children already keep max score in-cycle)
+-- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
@@ -265,23 +264,33 @@ labor_monitoring AS (
 ),
 
 -- Skill evaluations:
--- 1) process_moh_skills_assessment_2026 already has max score per skill × mentee × cycle
+-- 1) highest score per skill, per mentee, per cycle
 -- 2) avg_skill_score = average of those per-skill maxima
 -- 3) a skill counts as complete only when its max score is >= 0.85
--- 4) first_pass_date is carried from child views across all in-cycle attempts
 skill_eval_by_skill AS (
     SELECT
-        s.cycle_id,
+        c.cycle_id,
         c.req_skill_eval,
         CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
         s.skill_evaluation,
-        s.average_score AS max_score,
-        s.first_pass_date
+        MAX(s.average_score) AS max_score,
+        MIN(
+            CASE
+                WHEN s.average_score >= 0.85
+                THEN CAST(s.date_submitted AS DATE)
+            END
+        ) AS first_pass_date
     FROM mentors.process_moh_skills_assessment_2026 s
     INNER JOIN cohorts c
-        ON s.cycle_id = c.cycle_id
+        ON CAST(s.date_submitted AS DATE) >= c.cycle_start
+       AND CAST(s.date_submitted AS DATE) <= c.cycle_end
     WHERE s.skill_evaluation IS NOT NULL
       AND s.average_score IS NOT NULL
+    GROUP BY
+        c.cycle_id,
+        c.req_skill_eval,
+        CAST(s.mentee_id AS VARCHAR(100)),
+        s.skill_evaluation
 ),
 
 skill_eval_passed AS (
