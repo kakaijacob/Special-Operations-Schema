@@ -47,12 +47,32 @@ function fetchKoboData_Generic() {
   }
 
   // ================= DEDUPLICATION =================
+  // Keep one row per _uuid: remove sheet duplicates, then skip
+  // any UUID already on the sheet or seen earlier in this fetch.
   const existingIds = new Set();
   const lastRow = sheet.getLastRow();
 
   if (lastRow > 1) {
     const existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    existing.forEach(r => r[0] && existingIds.add(r[0]));
+    const duplicateSheetRows = [];
+
+    existing.forEach((r, i) => {
+      const id = r[0];
+      if (!id) return;
+      if (existingIds.has(id)) {
+        duplicateSheetRows.push(i + 2); // 1-based sheet row
+      } else {
+        existingIds.add(id);
+      }
+    });
+
+    for (let i = duplicateSheetRows.length - 1; i >= 0; i--) {
+      sheet.deleteRow(duplicateSheetRows[i]);
+    }
+
+    if (duplicateSheetRows.length) {
+      Logger.log(`Removed ${duplicateSheetRows.length} duplicate row(s) from sheet.`);
+    }
   }
 
   // ================= FACILITY COLUMNS (CLEANED) =================
@@ -143,7 +163,9 @@ function fetchKoboData_Generic() {
 
   allResults.reverse().forEach(sub => {
 
-    if (existingIds.has(sub._uuid)) return;
+    const uuid = sub._uuid;
+    if (!uuid || existingIds.has(uuid)) return;
+    existingIds.add(uuid);
 
     const evaluationDate = formatDateKobo(sub.end || sub._submission_time);
 
@@ -186,7 +208,7 @@ function fetchKoboData_Generic() {
       : "";
 
     rows.push([
-      sub._uuid,
+      uuid,
       evaluationDate,
       menteeName,
       menteeId,
