@@ -13,6 +13,13 @@ Use this file to record SQL queries for tasks, projects, or investigations.
 
 Shared cohort windows used by every child evaluation view. Inclusive on both ends.
 
+This must be created **before** any `*_evaluation_2026` child view. Running a child
+first fails with `SQL Error [42P01]: relation "mentors.skills_assessment_cohorts"
+does not exist`.
+
+The literals are explicitly cast because Redshift will not reconcile untyped literals
+across `UNION ALL` branches.
+
 ```sql
 CREATE OR REPLACE VIEW mentors.skills_assessment_cohorts AS
 SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
@@ -23,6 +30,29 @@ SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
 UNION ALL
 SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
        DATE '2027-04-01', DATE '2028-03-31';
+```
+
+#### Table alternative
+
+The children reference `mentors.skills_assessment_cohorts` by name only, so a table can
+be substituted for the view with no change to any child. Use this if Redshift objects to
+joining a `FROM`-less view against `moh_skills_checklist`, or if the windows should be
+editable without a DDL change. Redshift also refuses to replace a view that has
+dependents, so a table avoids having to drop the 21 children whenever a window moves.
+
+```sql
+CREATE TABLE mentors.skills_assessment_cohorts (
+    cycle_id    INTEGER     NOT NULL,
+    cycle_label VARCHAR(50) NOT NULL,
+    cycle_start DATE        NOT NULL,
+    cycle_end   DATE        NOT NULL
+)
+DISTSTYLE ALL;
+
+INSERT INTO mentors.skills_assessment_cohorts VALUES
+    (1, 'Cohort 1', DATE '2024-01-01', DATE '2026-03-31'),
+    (2, 'Cohort 2', DATE '2026-04-01', DATE '2027-03-31'),
+    (3, 'Cohort 3', DATE '2027-04-01', DATE '2028-03-31');
 ```
 
 ### Cycle-aware view structure

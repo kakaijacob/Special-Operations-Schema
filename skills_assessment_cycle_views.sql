@@ -4,6 +4,8 @@
 
 -- -----------------------------------------------------------------------------
 -- mentors.skills_assessment_cohorts
+-- Must exist before any child view. Running a child first fails with
+-- SQL Error [42P01]: relation "mentors.skills_assessment_cohorts" does not exist
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW mentors.skills_assessment_cohorts AS
 SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
