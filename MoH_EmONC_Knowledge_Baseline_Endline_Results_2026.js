@@ -143,6 +143,7 @@ function fetchKoboData_Generic() {
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   }
+  sheet.setFrozenRows(1);
 
   // ================= HELPERS =================
   function formatDateKobo(dateStr) {
@@ -223,8 +224,10 @@ function fetchKoboData_Generic() {
 
   // ================= WRITE DATA =================
   if (rows.length > 0) {
+    // Append new submissions after all existing rows, leaving headers in row 1.
+    const appendRow = sheet.getLastRow() + 1;
     sheet.getRange(
-      sheet.getLastRow() + 1,
+      appendRow,
       1,
       rows.length,
       headers.length
