@@ -83,6 +83,7 @@ function fetchKoboData_Generic() {
     "mentors_facilities/kilifi_facilities",
     "mentors_facilities/kisii_facilities",
     "mentors_facilities/kirinyaga_facilities",
+    "mentors_facilities/kwale_facilities",
     "mentors_facilities/machakos_facilities",
     "mentors_facilities/makueni_facilities",
     "mentors_facilities/meru_facilities",
@@ -90,6 +91,7 @@ function fetchKoboData_Generic() {
     "mentors_facilities/muranga_facilities",
     "mentors_facilities/nairobi_facilities",
     "mentors_facilities/nakuru_facilities",
+    "mentors_facilities/nyeri_facilities",
     "mentors_facilities/siaya_facilities"
   ];
 
