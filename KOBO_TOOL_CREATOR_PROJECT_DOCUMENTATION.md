@@ -7,11 +7,16 @@ Newborn curriculum tracking, skills assessments, and knowledge assessments.
 > "how to add a form" checklist, see
 > [KOBO_FORM_BUILDING_GUIDE.md](KOBO_FORM_BUILDING_GUIDE.md).
 >
-> **Want to see it rather than read it?** Open
-> [`Kobo_Pipeline_Simulator.html`](Kobo_Pipeline_Simulator.html) in any browser —
-> an animated simulator that follows one mentee record through every stage of
-> the pipeline. Press `F` for fullscreen, `Space` to play/pause, arrow keys to
-> step. Add `?step=12&autoplay=0` to freeze any moment (useful for printing).
+> **Want to see it rather than read it?**
+>
+> - [`Kobo_EmONC_CTF_Simulator.html`](Kobo_EmONC_CTF_Simulator.html) — **one tool,
+>   start to finish**: EmONC Curriculum Tracking, following one MENTORS mentee
+>   from the weekly trigger to the live form on Kobo.
+> - [`Kobo_Pipeline_Simulator.html`](Kobo_Pipeline_Simulator.html) — the shared
+>   pipeline overview (sync → generate → build → validate → deploy).
+>
+> Open either file in a browser. Press `F` for fullscreen, `Space` to play/pause,
+> arrow keys to step. Add `?step=12&autoplay=0` to freeze any moment.
 
 ---
 
