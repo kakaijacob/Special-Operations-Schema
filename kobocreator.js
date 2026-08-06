@@ -2,6 +2,7 @@
 // FULLY INTEGRATED WORKFLOW (11 SHEETS)
 // =====================================================
 function generateAllOutputs() {
+  resetFacilityNameRegistry_();
   generateMenteeList();
   generateVariableNames();
   generateMenteeFacilityLogic();
@@ -110,7 +111,9 @@ function generateVariableNames() {
       selectable.emoncListNameByCode[String(code).trim()] ||
       generateKoboVariable(facility);
     var cleanedFacility = cleanForKobo(facility);
-    var facilityKobo = code + "_" + cleanedFacility;
+    // Must be the canonical spelling: this is compared against the facility
+    // choices, which are written from one spelling per code.
+    var facilityKobo = facilityChoiceValue_(code, facility);
     var logicCounty = cleanForKobo(county);
 
     // =====================================================
@@ -508,19 +511,20 @@ function generateEmONCFacilitiesChoicesSheet() {
     ) continue;
 
     var listName = cleanForKobo(county) + "_facilities";
-    var combinedName = code + "_" + cleanForKobo(facility);
+    var canonicalFacility = canonicalFacilityName_(code, facility);
+    var combinedName = facilityChoiceValue_(code, facility);
 
     if (processed[combinedName]) continue;
     processed[combinedName] = true;
 
     output.push([
       county,
-      facility,
+      canonicalFacility,
       code,
       program,
       listName,
       combinedName,
-      facility
+      canonicalFacility
     ]);
   }
 
@@ -615,17 +619,18 @@ function generateFacilitiesChoicesSheet() {
     allowedParts.push("tot");
 
     var listName = cleanForKobo(record.county) + "_facilities";
-    var combinedName =
-      record.code + "_" + cleanForKobo(record.facility);
+    var canonicalFacility =
+      canonicalFacilityName_(record.code, record.facility);
+    var combinedName = facilityChoiceValue_(record.code, record.facility);
 
     output.push([
       record.county,
-      record.facility,
+      canonicalFacility,
       record.code,
       aggregateProgram,
       listName,
       combinedName,
-      record.facility,
+      canonicalFacility,
       allowedParts.join(",")
     ]);
   }
@@ -933,16 +938,17 @@ function generateNewbornAssessmentSheet() {
     }
 
     var listName = cleanForKobo(f.county) + "_facilities";
-    var combinedName = code + "_" + cleanForKobo(f.facility);
+    var canonicalFacility = canonicalFacilityName_(code, f.facility);
+    var combinedName = facilityChoiceValue_(code, f.facility);
 
     output.push([
       f.county,
-      f.facility,
+      canonicalFacility,
       code,
       f.program,
       listName,
       combinedName,
-      f.facility,
+      canonicalFacility,
       allowed
     ]);
   }
@@ -1100,7 +1106,10 @@ function generateSurveySheetIFM() {
       .replace("Ifms","IFMs");
 
     // ===== NEW RELEVANT LOGIC =====
-    var facilityValue = code + "_" + cleanedFacility;
+    // Compared against "<county>_facilities", which is written from the Mentee
+    // Database, so the name has to come from there too — the IFM sheet spells
+    // some facilities differently.
+    var facilityValue = facilityChoiceValue_(code, facility);
 
     // County variable for ${county_facilities} format. Cleaned the same way as
     // the facility choices sheets, so "Murang'a" cannot become a name no
@@ -1565,6 +1574,151 @@ function generateSurveySheetNewborn() {
 function cleanMenteeID(idValue) {
   if (!idValue) return "";
   return idValue.toString().replace(/\s+/g, "").trim();
+}
+
+// =====================================================
+// HELPER: CANONICAL FACILITY NAME PER FACILITY CODE
+//
+// A facility choice is identified by "<code>_<cleaned facility>", and every
+// question that filters on a facility rebuilds that same string. The facility
+// name is typed by hand, so one code can arrive spelled two ways — 12457 came
+// through as both "Makueni County Referral Hospital" and "Makueni County
+// Refferal Hospital". The choices sheet takes one spelling and the question's
+// relevance takes the other, so the equality is never true: the question is on
+// the form, the mentees are in the choices, and selecting the facility reveals
+// nothing. Nothing errors, which is why it survives deployment.
+//
+// Resolving one canonical spelling per code, from a single place all the
+// generators call, keeps the question and the choice on the same string.
+// =====================================================
+
+var KOBO_FACILITY_NAME_REGISTRY_ = null;
+
+/** Call once per pipeline run, before the generators. */
+function resetFacilityNameRegistry_() {
+  KOBO_FACILITY_NAME_REGISTRY_ = null;
+}
+
+/**
+ * Canonical facility name per Facility Code, anchored on the Mentee Database
+ * because that is the sheet the "<county>_facilities" choices are built from.
+ */
+function getFacilityNameRegistry_() {
+  if (KOBO_FACILITY_NAME_REGISTRY_) return KOBO_FACILITY_NAME_REGISTRY_;
+
+  var registry = {};
+  var sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName("Mentee Database");
+
+  if (sheet) {
+    var data = sheet.getDataRange().getValues();
+    if (data && data.length > 1) {
+      registry = resolveCanonicalFacilityNames_(data, data[0]);
+    }
+  }
+
+  KOBO_FACILITY_NAME_REGISTRY_ = registry;
+  return registry;
+}
+
+/**
+ * The spelling every generator should use for this facility code. Falls back to
+ * the row's own name when the code is not in the Mentee Database, so the IFM
+ * sheets still produce something sensible for a facility with no mentees.
+ */
+function canonicalFacilityName_(code, facility) {
+  var key = String(code == null ? "" : code).trim();
+  return getFacilityNameRegistry_()[key] || facility;
+}
+
+/** The facility choice value, "<code>_<cleaned canonical facility>". */
+function facilityChoiceValue_(code, facility) {
+  var key = String(code == null ? "" : code).trim();
+  return key + "_" + cleanForKobo(canonicalFacilityName_(key, facility));
+}
+
+/**
+ * One name per facility code. The spelling used by the most rows wins, so a
+ * single mistyped row cannot rename a facility; ties go to the row that appears
+ * first, which keeps the choice value stable between runs. Codes carrying more
+ * than one spelling are logged so the source rows can be corrected.
+ */
+function resolveCanonicalFacilityNames_(data, header) {
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  if (facilityIndex === -1 || facilityCodeIndex === -1) return {};
+
+  var variantsByCode = {};
+  var codeOrder = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var facility = data[i][facilityIndex];
+    var code = data[i][facilityCodeIndex];
+    if (!facility || !code) continue;
+
+    // Grouped by the cleaned form, because only a difference there can put the
+    // question and the choice on different strings.
+    var cleaned = cleanForKobo(facility);
+    if (!cleaned) continue;
+
+    var key = String(code).trim();
+    if (!variantsByCode[key]) {
+      variantsByCode[key] = {};
+      codeOrder.push(key);
+    }
+
+    if (!variantsByCode[key][cleaned]) {
+      variantsByCode[key][cleaned] = {
+        count: 0,
+        display: String(facility).trim(),
+        firstRow: i
+      };
+    }
+    variantsByCode[key][cleaned].count++;
+  }
+
+  var names = {};
+  var conflicts = [];
+
+  for (var c = 0; c < codeOrder.length; c++) {
+    var codeKey = codeOrder[c];
+    var variants = variantsByCode[codeKey];
+    var best = null;
+    var spellings = [];
+
+    for (var cleanedName in variants) {
+      spellings.push(cleanedName);
+      var variant = variants[cleanedName];
+      if (
+        !best ||
+        variant.count > best.count ||
+        (variant.count === best.count && variant.firstRow < best.firstRow)
+      ) {
+        best = variant;
+      }
+    }
+
+    names[codeKey] = best.display;
+
+    if (spellings.length > 1) {
+      conflicts.push(
+        codeKey + ' kept "' + best.display + '" over ' +
+        (spellings.length - 1) + " other spelling(s) [" +
+        spellings.sort().join(", ") + "]"
+      );
+    }
+  }
+
+  if (conflicts.length) {
+    Logger.log(
+      "kobocreator: " + conflicts.length + " facility code(s) are spelled more " +
+      "than one way in the Mentee Database. One spelling was used everywhere so " +
+      "the questions and the choices agree, but the source rows should be " +
+      "corrected: " + conflicts.join(" | ")
+    );
+  }
+
+  return names;
 }
 
 // =====================================================
