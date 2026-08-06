@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EmONC Curriculum Tracking — Start-to-Finish Simulator</title>
+<title>EmONC Curriculum Tracking — Watching the Tool Build</title>
 <style>
   :root{
     --navy:#0d1f39; --panel:#142c4d; --panel2:#1b3760; --edge:#27507f;
-    --blue:#2b6cb2; --accent:#57a8e8; --green:#2fa36b;
-    --red:#e0605f; --amber:#e0a63a; --ink:#eaf1fa; --muted:#93abc9;
+    --blue:#2b6cb2; --accent:#57a8e8; --green:#2fa36b; --amber:#e0a63a;
+    --ink:#eaf1fa; --muted:#93abc9;
     --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -28,24 +28,24 @@
     display:flex; flex-direction:column;
   }
 
-  header{padding:16px 28px 0;flex:0 0 auto}
+  header{padding:14px 26px 0;flex:0 0 auto}
   .title-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  h1{font-size:20px;letter-spacing:.2px}
+  h1{font-size:19px}
   h1 span{color:var(--accent)}
   .badge{
-    font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
     background:rgba(87,168,232,.15);border:1px solid rgba(87,168,232,.45);
-    color:var(--accent);padding:3px 9px;border-radius:99px;
+    color:var(--accent);padding:3px 8px;border-radius:99px;
   }
   .subtitle{font-size:12px;color:var(--muted);width:100%;margin-top:2px}
 
-  .tracker{display:flex;align-items:center;gap:5px;margin-top:12px}
+  .tracker{display:flex;align-items:center;gap:5px;margin-top:10px}
   .stg{
     flex:1; padding:6px 4px 7px; border-radius:8px;
     background:rgba(255,255,255,.04); border:1px solid transparent;
-    text-align:center; transition:all .45s cubic-bezier(.4,0,.2,1);
+    text-align:center; transition:all .4s cubic-bezier(.4,0,.2,1);
   }
-  .stg .n{font-size:9px;letter-spacing:1.2px;color:var(--muted);font-weight:700}
+  .stg .n{font-size:9px;letter-spacing:1.1px;color:var(--muted);font-weight:700}
   .stg .l{font-size:11.5px;font-weight:600;color:#b9cbe2;margin-top:1px}
   .stg.done{background:rgba(47,163,107,.12);border-color:rgba(47,163,107,.35)}
   .stg.done .l{color:#8fd9b4}
@@ -56,114 +56,137 @@
   }
   .stg.active .n{color:#cfe6ff}
   .stg.active .l{color:#fff}
-  .stg-sep{width:10px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;flex:0 0 auto}
+  .stg-sep{width:8px;height:2px;background:rgba(255,255,255,.12);flex:0 0 auto}
 
-  main{flex:1 1 auto;position:relative;padding:8px 28px 0}
+  main{flex:1 1 auto;position:relative;padding:6px 26px 0}
   .scene{
-    position:absolute; inset:8px 28px 4px; display:none;
-    animation:sceneIn .4s ease both;
+    position:absolute; inset:6px 26px 2px; display:none;
+    animation:sceneIn .35s ease both;
   }
   .scene.on{display:flex;flex-direction:column;justify-content:center}
-  @keyframes sceneIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes sceneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-  .scene-head{font-size:13.5px;color:var(--muted);margin-bottom:14px;line-height:1.45}
-  .scene-head b{color:var(--ink);font-weight:600}
-  .scene-head code{font-family:var(--mono);font-size:12px;color:var(--accent)}
+  .scene-head{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.4}
+  .scene-head b{color:var(--ink)}
+  .scene-head code{font-family:var(--mono);font-size:11.5px;color:var(--accent)}
 
-  [data-step]{opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+  [data-step]{opacity:0;transform:translateY(7px);transition:opacity .35s ease,transform .35s ease}
   [data-step].show{opacity:1;transform:none}
   body.noanim [data-step]{transition:none!important}
-  body.noanim .scene,body.noanim .opt.hit{animation:none!important;opacity:1}
+  body.noanim .scene,body.noanim .row-in,body.noanim .opt.hit,body.noanim .barfill{
+    animation:none!important;opacity:1;transition:none!important;
+  }
+  body.noanim .barfill{width:var(--w)!important}
   body.noanim .prog i,body.noanim .stg{transition:none!important}
 
-  .card{background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:16px 18px}
-  .card h3{font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;font-weight:700}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px}
+  .card h3{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid21{display:grid;grid-template-columns:1.35fr .95fr;gap:14px}
 
-  .row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13.5px}
-  .row .k{width:118px;color:var(--muted);font-size:12px;flex:0 0 auto}
-  .row .v{font-family:var(--mono);font-size:13px;color:#fff}
-  .bad{color:#ffc9c9;background:rgba(224,96,95,.16);border-radius:4px;padding:1px 6px;border:1px solid rgba(224,96,95,.4)}
-  .good{color:#b7f0d3;background:rgba(47,163,107,.16);border-radius:4px;padding:1px 6px;border:1px solid rgba(47,163,107,.45)}
-  .strike{text-decoration:line-through;opacity:.45}
-
-  .chip{display:inline-block;font-size:11px;padding:3px 9px;border-radius:99px;margin:3px 4px 3px 0}
-  .chip.ok{background:rgba(47,163,107,.14);border:1px solid rgba(47,163,107,.45);color:#9fe3c1}
-  .chip.info{background:rgba(87,168,232,.12);border:1px solid rgba(87,168,232,.4);color:#a8d4f5}
-
-  .xform{display:flex;align-items:center;gap:10px;margin:8px 0;font-family:var(--mono);font-size:12.5px}
-  .xform .from{color:#ffc9c9}
-  .xform .arw{color:var(--accent);font-size:14px}
-  .xform .to{color:#b7f0d3;font-weight:600}
-  .xform .lbl{font-family:'Segoe UI',sans-serif;font-size:11.5px;color:var(--muted);width:120px;flex:0 0 auto}
-
-  .code{background:#0a1830;border:1px solid var(--edge);border-radius:8px;padding:10px 12px;
-        font-family:var(--mono);font-size:12px;line-height:1.85;color:#cfe0f5}
-  .code .cm{color:#6f8bad}
-  .hl{background:rgba(47,163,107,.22);border-bottom:2px solid var(--green);border-radius:3px;padding:0 3px}
-
-  .pipe{display:flex;align-items:stretch;gap:0;margin:4px 0 2px}
-  .pnode{
-    flex:1; background:var(--panel2); border:1px solid var(--edge); padding:10px 8px;
-    text-align:center; font-size:11.5px; color:#dbe7f6; position:relative;
+  /* Google Sheet mock */
+  .sheet{
+    background:#0a1830;border:1px solid var(--edge);border-radius:10px;overflow:hidden;
+    font-family:var(--mono);font-size:11px;
   }
-  .pnode:first-child{border-radius:8px 0 0 8px}
-  .pnode:last-child{border-radius:0 8px 8px 0}
-  .pnode b{display:block;font-size:10.5px;color:var(--accent);letter-spacing:.4px;margin-bottom:3px}
-  .pnode.on{background:rgba(43,108,178,.35);border-color:var(--accent)}
-  .pnode.done{background:rgba(47,163,107,.14);border-color:rgba(47,163,107,.4)}
-
-  .check{display:flex;align-items:flex-start;gap:10px;padding:7px 0;font-size:13px}
-  .tick{
-    width:19px;height:19px;border-radius:50%;flex:0 0 auto;margin-top:1px;
-    background:rgba(47,163,107,.18);border:1.5px solid var(--green);
-    display:flex;align-items:center;justify-content:center;color:#8fe6b8;font-size:11px;font-weight:800;
+  .sheet-tabs{display:flex;gap:0;background:#0d1f38;border-bottom:1px solid var(--edge)}
+  .stab{
+    padding:7px 14px;font-size:11px;color:var(--muted);border-right:1px solid var(--edge);
+    font-family:'Segoe UI',sans-serif;
   }
-  .check .ct{color:#dfe9f6}
-  .check .cs{color:var(--muted);font-size:11.5px;display:block;margin-top:1px}
+  .stab.on{background:var(--panel);color:#fff;font-weight:600;border-bottom:2px solid var(--accent)}
+  .stab.done{color:#8fd9b4}
+  .sheet-body{padding:0;max-height:340px;overflow:hidden}
+  table.grid{width:100%;border-collapse:collapse}
+  table.grid th,table.grid td{
+    border:1px solid rgba(39,80,127,.55);padding:5px 8px;text-align:left;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;
+  }
+  table.grid th{background:#12294a;color:var(--accent);font-weight:600;font-size:10.5px;position:sticky;top:0}
+  table.grid td{color:#d6e4f5}
+  table.grid tr.row-in{animation:rowIn .4s ease both}
+  @keyframes rowIn{from{opacity:0;background:rgba(87,168,232,.25)}to{opacity:1;background:transparent}}
+  table.grid tr.hl td{background:rgba(47,163,107,.15)}
+  .col-type{color:#9fe3c1}
+  .col-name{color:#a8d4f5}
+  .muted-cell{color:#6f8bad}
+
+  .stat{
+    display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;
+  }
+  .pill{
+    font-size:11px;padding:3px 9px;border-radius:99px;
+    background:rgba(47,163,107,.14);border:1px solid rgba(47,163,107,.45);color:#9fe3c1;
+  }
+  .pill.blue{background:rgba(87,168,232,.12);border-color:rgba(87,168,232,.4);color:#a8d4f5}
+  .pill.amber{background:rgba(224,166,58,.12);border-color:rgba(224,166,58,.4);color:#f0dcb2}
+
+  /* Upload / deploy progress */
+  .job{margin:8px 0}
+  .job-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+  .job-label span:last-child{font-family:var(--mono);color:var(--accent)}
+  .bar{
+    height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;
+  }
+  .barfill{
+    height:100%;width:0;border-radius:6px;
+    background:linear-gradient(90deg,var(--blue),var(--accent));
+    transition:width .8s cubic-bezier(.4,0,.2,1);
+  }
+  .barfill.green{background:linear-gradient(90deg,#1d6f49,var(--green))}
+  .barfill.go{width:var(--w)}
+  .logline{
+    font-family:var(--mono);font-size:11.5px;color:#9fb6d0;padding:3px 0;
+    border-left:2px solid transparent;padding-left:8px;
+  }
+  .logline.ok{color:#9fe3c1;border-left-color:var(--green)}
+  .logline.info{color:#a8d4f5;border-left-color:var(--accent)}
 
   .phone{
-    width:248px;height:420px;border-radius:22px;background:#0a1830;
-    border:7px solid #24405f;box-shadow:0 14px 40px rgba(0,0,0,.5);
-    padding:11px 10px;position:relative;overflow:hidden;flex:0 0 auto;
+    width:240px;height:400px;border-radius:20px;background:#0a1830;
+    border:6px solid #24405f;box-shadow:0 12px 36px rgba(0,0,0,.5);
+    padding:10px 9px;overflow:hidden;flex:0 0 auto;
   }
-  .phone .bar{height:5px;width:68px;background:#24405f;border-radius:9px;margin:0 auto 10px}
-  .pq{font-size:11px;color:var(--muted);margin:9px 0 4px}
+  .phone .bar{height:4px;width:60px;background:#24405f;border-radius:8px;margin:0 auto 8px}
+  .pq{font-size:10.5px;color:var(--muted);margin:7px 0 3px}
   .opt{
-    background:#12294a;border:1px solid var(--edge);border-radius:7px;
-    padding:7px 9px;font-size:12px;margin-bottom:5px;color:#dbe7f6;
+    background:#12294a;border:1px solid var(--edge);border-radius:6px;
+    padding:6px 8px;font-size:11.5px;margin-bottom:4px;color:#dbe7f6;
   }
   .opt.sel{background:rgba(43,108,178,.35);border-color:var(--accent);color:#fff;font-weight:600}
   .opt.hit{background:rgba(47,163,107,.22);border-color:var(--green);color:#c9f4de;font-weight:600;
-           animation:pop .45s ease both}
+           animation:pop .4s ease both}
   @keyframes pop{0%{transform:scale(.94);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
 
   .callout{
     border-left:3px solid var(--amber);background:rgba(224,166,58,.09);
-    padding:9px 12px;border-radius:0 8px 8px 0;font-size:12.5px;color:#f0dcb2;
+    padding:8px 11px;border-radius:0 8px 8px 0;font-size:12px;color:#f0dcb2;
   }
   .callout.g{border-left-color:var(--green);background:rgba(47,163,107,.1);color:#bfeed8}
   .callout b{color:#fff}
 
-  .sheet-tag{
-    display:inline-block;font-family:var(--mono);font-size:11px;
-    background:#0a1830;border:1px solid var(--edge);border-radius:5px;
-    padding:3px 7px;color:#cfe0f5;margin:2px 3px 2px 0;
+  .flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .fnode{
+    background:var(--panel2);border:1px solid var(--edge);border-radius:7px;
+    padding:7px 10px;font-size:11px;text-align:center;color:#dbe7f6;
   }
+  .fnode b{display:block;font-size:10px;color:var(--accent);letter-spacing:.4px}
+  .fnode.on{background:rgba(43,108,178,.35);border-color:var(--accent)}
+  .fnode.done{background:rgba(47,163,107,.15);border-color:rgba(47,163,107,.45)}
+  .farw{color:var(--accent)}
 
   footer{
-    flex:0 0 auto;padding:10px 28px 14px;display:flex;align-items:center;gap:12px;
+    flex:0 0 auto;padding:8px 26px 12px;display:flex;align-items:center;gap:10px;
   }
   .prog{flex:1;height:4px;background:rgba(255,255,255,.09);border-radius:3px;overflow:hidden}
   .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--accent));
-          border-radius:3px;transition:width .35s ease}
+          border-radius:3px;transition:width .3s ease}
   button{
     background:var(--panel2);color:var(--ink);border:1px solid var(--edge);
-    border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;
+    border-radius:7px;padding:6px 11px;font-size:12px;cursor:pointer;font-family:inherit;
   }
   button:hover{background:var(--blue);border-color:var(--accent)}
-  .hint{font-size:11px;color:var(--muted);white-space:nowrap}
+  .hint{font-size:10.5px;color:var(--muted);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -171,251 +194,224 @@
 
   <header>
     <div class="title-row">
-      <h1>One tool, start to finish — <span>EmONC Curriculum Tracking</span></h1>
-      <span class="badge">tool id · emonc_ctf</span>
-      <div class="subtitle">From the weekly trigger to a live form on eu.kobotoolbox.org — following one MENTORS mentee</div>
+      <h1>Watching the tool get built — <span>EmONC Curriculum Tracking</span></h1>
+      <span class="badge">emonc_ctf</span>
+      <div class="subtitle">See the form spreadsheet assemble, the finished outcome, then upload and deploy to Kobo</div>
     </div>
     <div class="tracker" id="tracker"></div>
   </header>
 
   <main>
 
-    <!-- SCENE 0: THE TOOL + THE RECORD -->
+    <!-- SCENE 0: START BUILD -->
     <section class="scene" id="sc0">
-      <div class="scene-head">We follow <b>one tool only</b>: the EmONC Curriculum Tracking Form. A weekly trigger fires
-        <code>refreshAllKoboTools()</code>. Five tools will be built, but this simulator stays on the EmONC CTF path.</div>
+      <div class="scene-head"><code>createEmONCCurriculumTrackingForm2026()</code> opens (or creates) the form spreadsheet and prepares three empty tabs.</div>
       <div class="grid2">
         <div class="card" data-step="1">
-          <h3>The tool we are building</h3>
-          <div class="row"><span class="k">Tool ID</span><span class="v">emonc_ctf</span></div>
-          <div class="row"><span class="k">Builder</span><span class="v" style="font-size:11.5px">createEmONCCurriculumTrackingForm2026()</span></div>
-          <div class="row"><span class="k">Form title</span><span class="v" style="font-size:12px">EmONC Curriculum Tracking Form</span></div>
-          <div class="row"><span class="k">Kobo asset</span><span class="v">aJaBJKDs7pCRMi8zm3BXze</span></div>
-          <div class="row"><span class="k">Purpose</span><span class="v" style="font-family:'Segoe UI',sans-serif;font-size:12.5px;color:#dbe7f6">Track MENTORS session attendance &amp; activities</span></div>
+          <h3>Form spreadsheet</h3>
+          <div style="font-size:13px;margin-bottom:8px"><b>EmONC Curriculum Tracking Form</b></div>
+          <div class="sheet">
+            <div class="sheet-tabs">
+              <div class="stab on">survey</div>
+              <div class="stab">choices</div>
+              <div class="stab">settings</div>
+            </div>
+            <div class="sheet-body" style="padding:28px;text-align:center;color:var(--muted);font-family:'Segoe UI',sans-serif;font-size:13px">
+              Tabs created · waiting for content
+            </div>
+          </div>
+          <div class="stat" data-step="2">
+            <span class="pill blue">Script Property set</span>
+            <span class="pill blue">EMONC_CTF_2026_SPREADSHEET_ID</span>
+          </div>
         </div>
         <div class="card" data-step="2">
-          <h3>The mentee we will carry through</h3>
-          <div class="row"><span class="k">Name</span><span class="v">Jane Wanjiku</span></div>
-          <div class="row"><span class="k">Mentee ID</span><span class="v bad">07 123 456 78</span></div>
-          <div class="row"><span class="k">County</span><span class="v">Kirinyaga</span></div>
-          <div class="row"><span class="k">Facility</span><span class="v" style="font-size:12px">Kerugoya County Referral Hospital</span></div>
-          <div class="row"><span class="k">Facility Code</span><span class="v">16002</span></div>
-          <div class="row"><span class="k">Program</span><span class="v bad">Mentors Curriculum </span></div>
-          <div class="row"><span class="k">Status</span><span class="v good">Active</span></div>
+          <h3>Inputs the builder will pull</h3>
+          <div class="flow" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div class="fnode" style="text-align:left"><b>FROM KOBOCREATOR</b>
+              EmONC Facilities List (Choices) · EmONC Mentees List (Choices) · Curriculum Tracking Form</div>
+            <div class="fnode" style="text-align:left"><b>AUTHORED IN BUILDER</b>
+              16 counties · activity lists (Lecturettes, Videos, Case scenarios…)</div>
+          </div>
+          <div style="margin-top:12px" data-step="3" class="callout">
+            Choices are built <b>first</b>, then the survey is written against those exact lists — so every select already has choices.
+          </div>
         </div>
-      </div>
-      <div style="margin-top:12px" data-step="3">
-        <div class="callout">Hand-typed Programme and padded ID would once have dropped Kirinyaga facilities from this form.
-          Watch them get cleaned, then appear in the EmONC choices and the live tool.</div>
       </div>
     </section>
 
-    <!-- SCENE 1: SYNC -->
+    <!-- SCENE 1: CHOICES BEING WRITTEN -->
     <section class="scene" id="sc1">
-      <div class="scene-head"><b>Steps 1–2 · Sync.</b> Mentee Database 2026 → local <code>Mentee Database</code>.
-        EmONC CTF only cares about <b>Active MENTORS / Both</b> mentees.</div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Cleaning Jane’s row</h3>
-          <div class="xform" data-step="1"><span class="lbl">Mentee ID</span>
-            <span class="from">07 123 456 78</span><span class="arw">→</span><span class="to">712345678</span></div>
-          <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 8px 132px" data-step="1">
-            Strip leading 0 and spaces · 9 digits starting with 7 · kept.</div>
-
-          <div class="xform" data-step="2"><span class="lbl">Programme</span>
-            <span class="from">“Mentors Curriculum ”</span><span class="arw">→</span><span class="to">mentors curriculum</span></div>
-          <div style="font-size:11.5px;color:var(--muted);margin:-2px 0 8px 132px" data-step="2">
-            Trim + lowercase — this is what puts her facility into the EmONC list.</div>
-
-          <div class="xform" data-step="3"><span class="lbl">Status filter</span>
-            <span class="from strike">Inactive rows</span><span class="arw">→</span><span class="to">dropped</span></div>
-          <div class="xform" data-step="3"><span class="lbl">Newborn-only</span>
-            <span class="from strike">newborn curriculum</span><span class="arw">→</span><span class="to">ignored by EmONC</span></div>
+      <div class="scene-head"><b>Writing the <code>choices</code> tab</b> — counties, facilities, mentees and activities land row by row.</div>
+      <div class="sheet" data-step="1">
+        <div class="sheet-tabs">
+          <div class="stab">survey</div>
+          <div class="stab on done">choices</div>
+          <div class="stab">settings</div>
         </div>
-        <div class="card" data-step="4">
-          <h3>What EmONC CTF will later read</h3>
-          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
-            After sync, Jane is an Active MENTORS mentee at facility code <b style="color:#fff">16002</b>.
-            That single fact feeds three intermediate sheets:
-          </div>
-          <div style="margin-bottom:8px">
-            <span class="sheet-tag">EmONC Facilities List (Choices)</span>
-            <span class="sheet-tag">EmONC Mentees List (Choices)</span>
-            <span class="sheet-tag">Curriculum Tracking Form</span>
-          </div>
-          <div data-step="5" class="callout g" style="margin-top:12px">
-            Programmes are normalised before the EmONC facility filter — so
-            “Mentors Curriculum ” still counts. That is what restored Kirinyaga.
-          </div>
+        <div class="sheet-body">
+          <table class="grid">
+            <thead>
+              <tr><th style="width:28%">list_name</th><th style="width:36%">name</th><th style="width:36%">label</th></tr>
+            </thead>
+            <tbody id="choicesBody">
+              <!-- filled by JS on reveal -->
+            </tbody>
+          </table>
         </div>
+      </div>
+      <div class="stat" data-step="6" style="margin-top:10px">
+        <span class="pill">16 counties</span>
+        <span class="pill">Kirinyaga facilities</span>
+        <span class="pill">Jane Wanjiku (mentee)</span>
+        <span class="pill">6 activity types</span>
+        <span class="pill blue">choices tab complete</span>
       </div>
     </section>
 
-    <!-- SCENE 2: GENERATE for THIS tool -->
+    <!-- SCENE 2: SURVEY BEING WRITTEN -->
     <section class="scene" id="sc2">
-      <div class="scene-head"><b>Step 3 · Generate.</b> <code>generateAllOutputs()</code> runs every sheet, but EmONC CTF only consumes three of them.</div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Intermediate sheets EmONC CTF uses</h3>
-          <div class="code" data-step="1">
-<span class="cm">// EmONC Facilities List (Choices)</span><br/>
-list_name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name<br/>
-kirinyaga_facilities&nbsp; <span class="hl">16002_kerugoya_county_referral_hospital</span>
-          </div>
-          <div class="code" style="margin-top:10px" data-step="2">
-<span class="cm">// EmONC Mentees List (Choices)</span><br/>
-list_name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name<br/>
-kerugoya_mentees&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="hl">712345678_jane_wanjiku</span>
-          </div>
-          <div class="code" style="margin-top:10px" data-step="3">
-<span class="cm">// Curriculum Tracking Form (mentee question)</span><br/>
-type&nbsp;&nbsp; select_multiple kerugoya_mentees<br/>
-name&nbsp;&nbsp; kerugoya_mentees<br/>
-relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</span>'
-          </div>
+      <div class="scene-head"><b>Writing the <code>survey</code> tab</b> — questions, relevance and calculations appear as the form structure builds.</div>
+      <div class="sheet" data-step="1">
+        <div class="sheet-tabs">
+          <div class="stab on done">survey</div>
+          <div class="stab done">choices</div>
+          <div class="stab">settings</div>
         </div>
-        <div class="card">
-          <h3>Why the strings must match</h3>
-          <div data-step="4" style="font-size:13px;color:#dbe7f6;line-height:1.5;margin-bottom:12px">
-            The facility choice value and the mentee question’s relevance are built from
-            <b>one canonical facility name per code</b>. If they drifted, Jane would be in the
-            choices but selecting Kerugoya would reveal no one.
-          </div>
-          <div data-step="5" class="callout g">
-            <b>Both greens are identical.</b> Selecting Kerugoya will open Jane’s mentee list.
-          </div>
-          <div style="margin-top:12px" data-step="5">
-            <span class="chip ok">Active MENTORS only</span>
-            <span class="chip ok">one name per facility code</span>
-            <span class="chip ok">empty lists never asked</span>
-          </div>
+        <div class="sheet-body">
+          <table class="grid">
+            <thead>
+              <tr>
+                <th style="width:22%">type</th>
+                <th style="width:22%">name</th>
+                <th style="width:28%">label</th>
+                <th style="width:28%">relevant</th>
+              </tr>
+            </thead>
+            <tbody id="surveyBody"></tbody>
+          </table>
         </div>
+      </div>
+      <div class="stat" data-step="7" style="margin-top:10px">
+        <span class="pill">intro + mentor details</span>
+        <span class="pill">county → facility cascade</span>
+        <span class="pill">kerugoya_mentees question</span>
+        <span class="pill">activity section</span>
+        <span class="pill blue">survey tab complete</span>
       </div>
     </section>
 
-    <!-- SCENE 3: BUILD THIS TOOL -->
+    <!-- SCENE 3: RESULTANT OUTCOME -->
     <section class="scene" id="sc3">
-      <div class="scene-head"><b>Step 4 · Build.</b> Only the EmONC CTF builder runs for this path:
-        <code>createEmONCCurriculumTrackingForm2026()</code>.</div>
-      <div class="grid2">
-        <div class="card">
-          <h3>What the builder does</h3>
-          <div class="pipe" data-step="1">
-            <div class="pnode on"><b>1 · OPEN</b>form spreadsheet<br/>(or create)</div>
-            <div class="pnode"><b>2 · CHOICES</b>counties + EmONC<br/>facilities + mentees<br/>+ activities</div>
-            <div class="pnode"><b>3 · SURVEY</b>intro + mentor + county<br/>facility + mentees<br/>+ activities</div>
-            <div class="pnode"><b>4 · SETTINGS</b>allow_choice<br/>_duplicates</div>
+      <div class="scene-head"><b>Resultant outcome</b> — the finished Google Sheet form, ready for Kobo. Settings written; counts locked in.</div>
+      <div class="grid21">
+        <div class="card" data-step="1">
+          <h3>Finished form spreadsheet</h3>
+          <div class="sheet">
+            <div class="sheet-tabs">
+              <div class="stab done">survey</div>
+              <div class="stab done">choices</div>
+              <div class="stab on done">settings</div>
+            </div>
+            <div class="sheet-body" style="padding:10px 12px;font-family:var(--mono);font-size:12px">
+              <div style="color:var(--accent);margin-bottom:6px">settings</div>
+              <div>allow_choice_duplicates &nbsp;=&nbsp; <span style="color:#9fe3c1">yes</span></div>
+            </div>
           </div>
-          <div style="margin-top:14px" data-step="2">
-            <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Pulled from kobocreator sheets:</div>
-            <span class="sheet-tag">EmONC Facilities List (Choices)</span>
-            <span class="sheet-tag">EmONC Mentees List (Choices)</span>
-            <span class="sheet-tag">Curriculum Tracking Form</span>
-            <div style="margin-top:8px;font-size:12.5px;color:var(--muted)">Authored in the builder:</div>
-            <span class="sheet-tag">county list (16)</span>
-            <span class="sheet-tag">emonc_activities</span>
-            <span class="sheet-tag">cmes / videos / …</span>
-          </div>
-        </div>
-        <div class="card" data-step="3">
-          <h3>Form tabs written</h3>
-          <div class="check"><div class="tick">✓</div><div class="ct">survey
-            <span class="cs">mentor name · session date · county · facility · mentees · activities</span></div></div>
-          <div class="check"><div class="tick">✓</div><div class="ct">choices
-            <span class="cs">Kirinyaga · Kerugoya · Jane Wanjiku · Lecturettes / Videos / …</span></div></div>
-          <div class="check"><div class="tick">✓</div><div class="ct">settings
-            <span class="cs">allow_choice_duplicates = yes</span></div></div>
-          <div style="margin-top:10px" data-step="4" class="callout">
-            Form ID saved in Script Property <b>EMONC_CTF_2026_SPREADSHEET_ID</b>
-            so the next run updates the same sheet.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCENE 4: VALIDATE + DEPLOY -->
-    <section class="scene" id="sc4">
-      <div class="scene-head"><b>Step 5 · Validate, then deploy</b> only this tool —
-        <code>deployKoboTool("emonc_ctf")</code>.</div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Pre-deploy checks</h3>
-          <div class="check" data-step="1"><div class="tick">✓</div><div class="ct">Every select has choices
-            <span class="cs">kerugoya_mentees · kirinyaga_facilities · emonc_activities</span></div></div>
-          <div class="check" data-step="2"><div class="tick">✓</div><div class="ct">No duplicate question names</div></div>
-          <div class="check" data-step="3"><div class="tick">✓</div><div class="ct">Expressions balanced</div></div>
-          <div class="check" data-step="4"><div class="tick">✓</div><div class="ct">No unreachable comparisons
-            <span class="cs">facility value in relevance = choice value</span></div></div>
-          <div style="margin-top:10px" data-step="5">
-            <div class="callout g"><b>Passed.</b> A failing form would be skipped — the other four tools would still deploy.</div>
-          </div>
-        </div>
-        <div class="card" data-step="6">
-          <h3>Publish EmONC CTF</h3>
-          <div class="pipe">
-            <div class="pnode done"><b>FLUSH</b>write to disk</div>
-            <div class="pnode done"><b>EXPORT</b>.xlsx</div>
-            <div class="pnode done"><b>IMPORT</b>KPI API v2</div>
-            <div class="pnode on"><b>DEPLOY</b>new version</div>
-          </div>
-          <div style="margin-top:14px;font-size:13px;color:#dbe7f6">
-            Destination asset<br/>
-            <span style="font-family:var(--mono);color:var(--accent)">aJaBJKDs7pCRMi8zm3BXze</span>
-          </div>
-          <div style="margin-top:8px;font-size:12px;color:var(--muted)">
-            Existing project updated in place · eu.kobotoolbox.org
-          </div>
-          <div style="margin-top:12px">
-            <span class="chip ok">emonc_ctf deployed</span>
-            <span class="chip info">other tools continue</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCENE 5: LIVE FORM RESULT -->
-    <section class="scene" id="sc5">
-      <div class="scene-head"><b>Live on Kobo.</b> An IFM opens EmONC Curriculum Tracking and records a Kirinyaga session — Jane is selectable.</div>
-      <div style="display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:center">
-        <div>
-          <div class="card" data-step="1">
-            <h3>What the enumerator does</h3>
-            <div class="check"><div class="tick">1</div><div class="ct">Enter mentor name &amp; today’s session date</div></div>
-            <div class="check" data-step="2"><div class="tick">2</div><div class="ct">Select county <b>Kirinyaga</b></div></div>
-            <div class="check" data-step="3"><div class="tick">3</div><div class="ct">Select facility <b>Kerugoya County Referral Hospital</b></div></div>
-            <div class="check" data-step="4"><div class="tick">4</div><div class="ct">Tick mentees who attended — <b>Jane Wanjiku</b> appears</div></div>
-            <div class="check" data-step="5"><div class="tick">5</div><div class="ct">Record activity (e.g. Lecturettes → AMTSL)</div></div>
-          </div>
-          <div style="margin-top:12px" data-step="6">
-            <div class="callout g"><b>End to end for one tool:</b> messy source row → cleaned → EmONC sheets → form built →
-              validated → deployed → Jane selectable in the live EmONC Curriculum Tracking Form.</div>
-          </div>
-          <div style="margin-top:10px" data-step="6">
-            <div class="grid3">
-              <div class="card" style="padding:10px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">ONE TOOL PATH</div>
-                <div style="font-size:11.5px;color:var(--muted);margin-top:3px">emonc_ctf only</div></div>
-              <div class="card" style="padding:10px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">SHARED PIPELINE</div>
-                <div style="font-size:11.5px;color:var(--muted);margin-top:3px">same sync &amp; generate</div></div>
-              <div class="card" style="padding:10px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">FAIL-SAFE</div>
-                <div style="font-size:11.5px;color:var(--muted);margin-top:3px">others still deploy</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px" data-step="2">
+            <div class="card" style="padding:10px;text-align:center">
+              <div style="font-size:22px;font-weight:700;color:#fff" id="cntSurvey">—</div>
+              <div style="font-size:11px;color:var(--muted)">survey rows</div>
+            </div>
+            <div class="card" style="padding:10px;text-align:center">
+              <div style="font-size:22px;font-weight:700;color:#fff" id="cntChoices">—</div>
+              <div style="font-size:11px;color:var(--muted)">choice rows</div>
+            </div>
+            <div class="card" style="padding:10px;text-align:center">
+              <div style="font-size:22px;font-weight:700;color:#9fe3c1">✓</div>
+              <div style="font-size:11px;color:var(--muted)">3 tabs ready</div>
             </div>
           </div>
         </div>
-        <div class="phone" data-step="1">
+        <div class="card" data-step="3">
+          <h3>What this form now contains</h3>
+          <div style="font-size:12.5px;line-height:1.55;color:#dbe7f6">
+            <div style="margin-bottom:8px">• Mentor name + session date</div>
+            <div style="margin-bottom:8px">• County select (incl. <b>Kirinyaga</b>)</div>
+            <div style="margin-bottom:8px">• Facility select → <b>Kerugoya County Referral Hospital</b></div>
+            <div style="margin-bottom:8px">• Mentee multi-select → <b>Jane Wanjiku</b></div>
+            <div style="margin-bottom:8px">• Activity types + modules (AMTSL, PPH…)</div>
+          </div>
+          <div style="margin-top:10px" data-step="4" class="callout g">
+            <b>Build complete.</b> Next: validate, export as .xlsx, upload and deploy.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 4: VALIDATE + UPLOAD -->
+    <section class="scene" id="sc4">
+      <div class="scene-head"><b>Validate → Export → Upload.</b> <code>deployKoboTool("emonc_ctf")</code> checks the form, then POSTs the xlsx to Kobo.</div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Pre-deploy validation</h3>
+          <div class="logline ok" data-step="1">✓ every select has choices</div>
+          <div class="logline ok" data-step="2">✓ no duplicate question names</div>
+          <div class="logline ok" data-step="3">✓ expressions balanced</div>
+          <div class="logline ok" data-step="4">✓ no unreachable comparisons</div>
+          <div class="logline info" data-step="5">SpreadsheetApp.flush() — writes committed</div>
+          <div class="logline info" data-step="5">Exporting EmONC_Curriculum_Tracking_Form.xlsx</div>
+        </div>
+        <div class="card" data-step="6">
+          <h3>Upload to Kobo (KPI API v2)</h3>
+          <div class="job">
+            <div class="job-label"><span>POST /api/v2/imports/</span><span id="upPct">0%</span></div>
+            <div class="bar"><div class="barfill" id="upBar" style="--w:100%"></div></div>
+          </div>
+          <div class="logline info" data-step="7">destination = asset aJaBJKDs7pCRMi8zm3BXze</div>
+          <div class="logline" data-step="7">polling import status…</div>
+          <div class="logline ok" data-step="8">import status = complete</div>
+          <div class="logline ok" data-step="8">new form version on asset</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 5: DEPLOY + LIVE -->
+    <section class="scene" id="sc5">
+      <div class="scene-head"><b>Deploy</b> the new version, then the live form on Kobo — Jane is selectable.</div>
+      <div style="display:grid;grid-template-columns:1fr 248px;gap:16px;align-items:center">
+        <div>
+          <div class="card" data-step="1">
+            <h3>Deploy new version</h3>
+            <div class="job">
+              <div class="job-label"><span>PATCH …/assets/…/deployment/</span><span id="depPct">0%</span></div>
+              <div class="bar"><div class="barfill green" id="depBar" style="--w:100%"></div></div>
+            </div>
+            <div class="logline info" data-step="2">version_id received</div>
+            <div class="logline ok" data-step="3">deployment active = true</div>
+            <div class="logline ok" data-step="3">EmONC Curriculum Tracking is LIVE</div>
+            <div class="stat" data-step="3" style="margin-top:8px">
+              <span class="pill">asset aJaBJKDs7pCRMi8zm3BXze</span>
+              <span class="pill blue">eu.kobotoolbox.org</span>
+            </div>
+          </div>
+          <div style="margin-top:10px" data-step="6" class="callout g">
+            <b>Done.</b> Built → validated → uploaded → deployed. Selecting Kerugoya opens Jane Wanjiku in the live EmONC Curriculum Tracking Form.
+          </div>
+        </div>
+        <div class="phone" data-step="4">
           <div class="bar"></div>
-          <div style="font-size:10.5px;color:var(--accent);font-weight:700;letter-spacing:.5px">EmONC CURRICULUM TRACKING</div>
+          <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.5px">EmONC CURRICULUM TRACKING</div>
           <div class="pq">Mentor name</div>
           <div class="opt sel">Julius Caesar</div>
           <div class="pq">Session date</div>
           <div class="opt sel">2026-08-06</div>
-          <div class="pq" data-step="2">Select your county</div>
-          <div class="opt sel" data-step="2">Kirinyaga</div>
-          <div class="pq" data-step="3">Which facility?</div>
-          <div class="opt sel" data-step="3" style="font-size:11px">Kerugoya County Referral Hospital</div>
-          <div class="pq" data-step="4">Mentees who attended</div>
-          <div class="opt hit" data-step="4">Jane Wanjiku</div>
-          <div class="pq" data-step="5">Activity</div>
-          <div class="opt sel" data-step="5" style="font-size:11px">Lecturettes → AMTSL</div>
+          <div class="pq" data-step="5">County</div>
+          <div class="opt sel" data-step="5">Kirinyaga</div>
+          <div class="pq" data-step="5">Facility</div>
+          <div class="opt sel" data-step="5" style="font-size:10.5px">Kerugoya County Referral Hospital</div>
+          <div class="pq" data-step="6">Mentees who attended</div>
+          <div class="opt hit" data-step="6">Jane Wanjiku</div>
         </div>
       </div>
     </section>
@@ -438,30 +434,56 @@ relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</sp
   "use strict";
 
   var STAGES = [
-    {n:"STEP 0", l:"Trigger"},
-    {n:"STEP 1–2", l:"Sync"},
-    {n:"STEP 3", l:"Generate"},
-    {n:"STEP 4", l:"Build"},
-    {n:"STEP 5", l:"Validate"},
-    {n:"STEP 5", l:"Deploy"},
-    {n:"LIVE", l:"On Kobo"}
+    {n:"1", l:"Open form"},
+    {n:"2", l:"Write choices"},
+    {n:"3", l:"Write survey"},
+    {n:"4", l:"Outcome"},
+    {n:"5", l:"Upload"},
+    {n:"6", l:"Deploy"}
   ];
 
+  // Scene step counts — must match max data-step in each scene
   var SCENES = [
     {el:"sc0", steps:3, stage:0},
-    {el:"sc1", steps:5, stage:1},
-    {el:"sc2", steps:5, stage:2},
+    {el:"sc1", steps:6, stage:1},
+    {el:"sc2", steps:7, stage:2},
     {el:"sc3", steps:4, stage:3},
-    {el:"sc4", steps:6, stage:4, stageAt:{6:5}},
-    {el:"sc5", steps:6, stage:6}
+    {el:"sc4", steps:8, stage:4},
+    {el:"sc5", steps:6, stage:5}
   ];
 
+  // Progressive rows for the choices sheet mock
+  var CHOICE_ROWS = [
+    {at:2, cells:["county","Kirinyaga","Kirinyaga"], hl:false},
+    {at:2, cells:["county","Makueni","Makueni"], hl:false},
+    {at:2, cells:["county","…","14 more counties"], muted:true},
+    {at:3, cells:["kirinyaga_facilities","16002_kerugoya_county_referral_hospital","Kerugoya County Referral Hospital"], hl:true},
+    {at:4, cells:["kerugoya_mentees","712345678_jane_wanjiku","Jane Wanjiku"], hl:true},
+    {at:5, cells:["emonc_activities","cmes","Activity 1: Lecturettes"], hl:false},
+    {at:5, cells:["emonc_activities","videos","Activity 2: Videos"], hl:false},
+    {at:5, cells:["cmes","AMTSL","Active management of third stage…"], hl:false},
+    {at:6, cells:["…","…","+ curriculum modules"], muted:true}
+  ];
+
+  var SURVEY_ROWS = [
+    {at:2, cells:["begin_group","introduction","Introduction",""]},
+    {at:2, cells:["note","introduction_note","EmONC Curriculum Tracking…",""], muted:true},
+    {at:3, cells:["text","mentor_name","1. Please enter your name",""]},
+    {at:3, cells:["date","session_date","2. Session date",""]},
+    {at:4, cells:["select_one county","county","3. Select your county","${session_date}!=''"]},
+    {at:5, cells:["select_one kirinyaga_facilities","kirinyaga_facilities","4. Which facility?","${county}='Kirinyaga'"], hl:true},
+    {at:6, cells:["select_multiple kerugoya_mentees","kerugoya_mentees","5. Mentees who attended","${kirinyaga_facilities}='16002_…'"], hl:true},
+    {at:7, cells:["select_one emonc_activities","emonc_activities","6. Activity type",""]},
+    {at:7, cells:["select_multiple cmes","cmes","Lecturette topics","${emonc_activities}='cmes'"]}
+  ];
+
+  // Build tracker
   var tracker = document.getElementById("tracker");
   STAGES.forEach(function(s,i){
     if(i){ var sep=document.createElement("div"); sep.className="stg-sep"; tracker.appendChild(sep); }
     var d=document.createElement("div");
     d.className="stg"; d.id="stg"+i;
-    d.innerHTML='<div class="n">'+s.n+'</div><div class="l">'+s.l+'</div>';
+    d.innerHTML='<div class="n">STEP '+s.n+'</div><div class="l">'+s.l+'</div>';
     tracker.appendChild(d);
   });
 
@@ -471,21 +493,57 @@ relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</sp
   });
 
   var idx=0, playing=true, timer=null;
-  var STEP_MS=1550, SCENE_PAUSE=2200;
+  var STEP_MS=1400, SCENE_PAUSE=2000;
 
   var params=new URLSearchParams(location.search);
   if(params.has("step")) idx=parseInt(params.get("step"),10)||0;
   if(params.get("autoplay")==="0"){ playing=false; document.body.classList.add("noanim"); }
 
-  function currentStage(f){
-    var sc=SCENES[f.scene];
-    var stage=sc.stage;
-    if(sc.stageAt){
-      Object.keys(sc.stageAt).forEach(function(t){
-        if(f.local>=Number(t)) stage=sc.stageAt[t];
+  function renderChoices(local){
+    var tb=document.getElementById("choicesBody");
+    var html="";
+    CHOICE_ROWS.forEach(function(r){
+      if(r.at>local) return;
+      var cls="row-in"+(r.hl?" hl":"");
+      html+='<tr class="'+cls+'">';
+      r.cells.forEach(function(c,i){
+        var extra=r.muted?" muted-cell":(i===0?" col-type":i===1?" col-name":"");
+        html+='<td class="'+extra+'">'+c+'</td>';
       });
+      html+='</tr>';
+    });
+    tb.innerHTML=html;
+  }
+
+  function renderSurvey(local){
+    var tb=document.getElementById("surveyBody");
+    var html="";
+    SURVEY_ROWS.forEach(function(r){
+      if(r.at>local) return;
+      var cls="row-in"+(r.hl?" hl":"");
+      html+='<tr class="'+cls+'">';
+      r.cells.forEach(function(c,i){
+        var extra=r.muted?" muted-cell":(i===0?" col-type":i===1?" col-name":"");
+        html+='<td class="'+extra+'">'+c+'</td>';
+      });
+      html+='</tr>';
+    });
+    tb.innerHTML=html;
+  }
+
+  function setBar(id, pctId, pct, go){
+    var el=document.getElementById(id);
+    var lab=document.getElementById(pctId);
+    if(!el) return;
+    if(go){
+      el.style.setProperty("--w", pct+"%");
+      el.classList.add("go");
+      if(lab) lab.textContent=pct+"%";
+    } else {
+      el.classList.remove("go");
+      el.style.width="0";
+      if(lab) lab.textContent="0%";
     }
-    return stage;
   }
 
   function render(){
@@ -497,12 +555,31 @@ relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</sp
     active.querySelectorAll("[data-step]").forEach(function(node){
       node.classList.toggle("show", Number(node.getAttribute("data-step"))<=f.local);
     });
-    var stage=currentStage(f);
+
+    // Stage tracker
+    var stage=SCENES[f.scene].stage;
     for(var i=0;i<STAGES.length;i++){
       var d=document.getElementById("stg"+i);
       d.classList.toggle("active", i===stage);
       d.classList.toggle("done", i<stage);
     }
+
+    // Scene-specific progressive content
+    if(f.scene===1) renderChoices(f.local);
+    if(f.scene===2) renderSurvey(f.local);
+    if(f.scene===3 && f.local>=2){
+      document.getElementById("cntSurvey").textContent="148";
+      document.getElementById("cntChoices").textContent="312";
+    }
+    // Upload bar fills at step 6+
+    if(f.scene===4){
+      setBar("upBar","upPct", f.local>=6 ? (f.local>=8?100:70) : 0, f.local>=6);
+    }
+    // Deploy bar
+    if(f.scene===5){
+      setBar("depBar","depPct", f.local>=1 ? (f.local>=3?100:55) : 0, f.local>=1);
+    }
+
     document.getElementById("progBar").style.width=
       (((idx+1)/FLAT.length)*100).toFixed(1)+"%";
   }
@@ -512,12 +589,15 @@ relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</sp
     if(!playing) return;
     if(idx===FLAT.length-1){ playing=false; syncBtn(); return; }
     var next=FLAT[idx+1];
-    var wait = (next.scene!==FLAT[idx].scene) ? SCENE_PAUSE : STEP_MS;
+    var wait=(next.scene!==FLAT[idx].scene)?SCENE_PAUSE:STEP_MS;
+    // Slow slightly on upload/deploy bars so the fill is visible
+    if(FLAT[idx].scene===4 && FLAT[idx].local===6) wait=1800;
+    if(FLAT[idx].scene===5 && FLAT[idx].local===1) wait=1600;
     timer=setTimeout(function(){ idx++; render(); schedule(); }, wait);
   }
 
   function syncBtn(){
-    document.getElementById("btnPlay").textContent = playing ? "⏸ Pause" : "▶ Play";
+    document.getElementById("btnPlay").textContent=playing?"⏸ Pause":"▶ Play";
   }
   function go(n){
     idx=Math.max(0,Math.min(FLAT.length-1,n));
@@ -547,8 +627,7 @@ relevant&nbsp; ${kirinyaga_facilities} = '<span class="hl">16002_kerugoya…</sp
 
   function fit(){
     var s=Math.min(window.innerWidth/1280, window.innerHeight/720);
-    document.getElementById("stage").style.transform=
-      "translate(-50%,-50%) scale("+s+")";
+    document.getElementById("stage").style.transform="translate(-50%,-50%) scale("+s+")";
   }
   window.addEventListener("resize",fit);
   fit(); render(); schedule(); syncBtn();
