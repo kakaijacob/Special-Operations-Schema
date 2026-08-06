@@ -147,7 +147,7 @@
     border:6px solid #24405f;box-shadow:0 12px 36px rgba(0,0,0,.5);
     padding:10px 9px;overflow:hidden;flex:0 0 auto;
   }
-  .phone .bar{height:4px;width:60px;background:#24405f;border-radius:8px;margin:0 auto 8px}
+  .phone .notch{height:4px;width:60px;background:#24405f;border-radius:8px;margin:0 auto 8px}
   .pq{font-size:10.5px;color:var(--muted);margin:7px 0 3px}
   .opt{
     background:#12294a;border:1px solid var(--edge);border-radius:6px;
@@ -366,8 +366,9 @@
           <h3>Upload to Kobo (KPI API v2)</h3>
           <div class="job">
             <div class="job-label"><span>POST /api/v2/imports/</span><span id="upPct">0%</span></div>
-            <div class="bar"><div class="barfill" id="upBar" style="--w:100%"></div></div>
+            <div class="bar"><div class="barfill" id="upBar" style="--w:0%"></div></div>
           </div>
+          <div class="logline info" id="upPhase">packaging EmONC_Curriculum_Tracking_Form.xlsx…</div>
           <div class="logline info" data-step="7">destination = asset aJaBJKDs7pCRMi8zm3BXze</div>
           <div class="logline" data-step="7">polling import status…</div>
           <div class="logline ok" data-step="8">import status = complete</div>
@@ -385,8 +386,9 @@
             <h3>Deploy new version</h3>
             <div class="job">
               <div class="job-label"><span>PATCH …/assets/…/deployment/</span><span id="depPct">0%</span></div>
-              <div class="bar"><div class="barfill green" id="depBar" style="--w:100%"></div></div>
+              <div class="bar"><div class="barfill green" id="depBar" style="--w:0%"></div></div>
             </div>
+            <div class="logline info" id="depPhase">sending deployment request…</div>
             <div class="logline info" data-step="2">version_id received</div>
             <div class="logline ok" data-step="3">deployment active = true</div>
             <div class="logline ok" data-step="3">EmONC Curriculum Tracking is LIVE</div>
@@ -400,7 +402,7 @@
           </div>
         </div>
         <div class="phone" data-step="4">
-          <div class="bar"></div>
+          <div class="notch"></div>
           <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.5px">EmONC CURRICULUM TRACKING</div>
           <div class="pq">Mentor name</div>
           <div class="opt sel">Julius Caesar</div>
@@ -531,19 +533,14 @@
     tb.innerHTML=html;
   }
 
-  function setBar(id, pctId, pct, go){
+  function setBar(id, pctId, pct){
     var el=document.getElementById(id);
     var lab=document.getElementById(pctId);
     if(!el) return;
-    if(go){
-      el.style.setProperty("--w", pct+"%");
-      el.classList.add("go");
-      if(lab) lab.textContent=pct+"%";
-    } else {
-      el.classList.remove("go");
-      el.style.width="0";
-      if(lab) lab.textContent="0%";
-    }
+    el.style.setProperty("--w", pct+"%");
+    el.classList.add("go");
+    el.style.width=pct+"%";
+    if(lab) lab.textContent=pct+"%";
   }
 
   function render(){
@@ -567,17 +564,38 @@
     // Scene-specific progressive content
     if(f.scene===1) renderChoices(f.local);
     if(f.scene===2) renderSurvey(f.local);
-    if(f.scene===3 && f.local>=2){
-      document.getElementById("cntSurvey").textContent="148";
-      document.getElementById("cntChoices").textContent="312";
+    if(f.scene===3){
+      if(f.local>=2){
+        document.getElementById("cntSurvey").textContent="148";
+        document.getElementById("cntChoices").textContent="312";
+      } else {
+        document.getElementById("cntSurvey").textContent="—";
+        document.getElementById("cntChoices").textContent="—";
+      }
     }
-    // Upload bar fills at step 6+
+    // Upload: validate first, then bar climbs through packaging → POST → complete
     if(f.scene===4){
-      setBar("upBar","upPct", f.local>=6 ? (f.local>=8?100:70) : 0, f.local>=6);
+      var upMap={6:35,7:72,8:100};
+      var up=f.local>=6 ? (upMap[f.local]||0) : 0;
+      setBar("upBar","upPct", up);
+      var upPhase=document.getElementById("upPhase");
+      if(upPhase){
+        if(f.local<6) upPhase.textContent="waiting for validation…";
+        else if(f.local===6) upPhase.textContent="packaging + POSTing xlsx to /api/v2/imports/…";
+        else if(f.local===7) upPhase.textContent="upload received — import running on asset…";
+        else upPhase.textContent="upload complete — new form version on asset ✓";
+      }
     }
-    // Deploy bar
+    // Deploy bar then live phone
     if(f.scene===5){
-      setBar("depBar","depPct", f.local>=1 ? (f.local>=3?100:55) : 0, f.local>=1);
+      var depMap={1:40,2:75,3:100,4:100,5:100,6:100};
+      setBar("depBar","depPct", depMap[f.local]||0);
+      var depPhase=document.getElementById("depPhase");
+      if(depPhase){
+        if(f.local===1) depPhase.textContent="sending deployment request…";
+        else if(f.local===2) depPhase.textContent="version_id accepted — activating…";
+        else depPhase.textContent="deployment active = true — form is LIVE ✓";
+      }
     }
 
     document.getElementById("progBar").style.width=
