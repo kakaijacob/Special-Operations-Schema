@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EmONC Curriculum Tracking — Watching the Tool Build</title>
+<title>EmONC Deep Dive — Kobo Tool Creator</title>
 <style>
   :root{
     --navy:#0d1f39; --panel:#142c4d; --panel2:#1b3760; --edge:#27507f;
-    --blue:#2b6cb2; --accent:#57a8e8; --green:#2fa36b; --amber:#e0a63a;
-    --ink:#eaf1fa; --muted:#93abc9;
+    --blue:#2b6cb2; --accent:#57a8e8; --green:#2fa36b; --green-dim:#1d6f49;
+    --red:#e0605f; --amber:#e0a63a; --ink:#eaf1fa; --muted:#93abc9;
     --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -28,47 +28,59 @@
     display:flex; flex-direction:column;
   }
 
-  header{padding:14px 26px 0;flex:0 0 auto}
+  header{padding:12px 26px 0;flex:0 0 auto}
   .title-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  h1{font-size:19px}
+  h1{font-size:18px;letter-spacing:.2px}
   h1 span{color:var(--accent)}
+  .subtitle{font-size:11.5px;color:var(--muted);width:100%;margin-top:1px}
   .badge{
-    font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
     background:rgba(87,168,232,.15);border:1px solid rgba(87,168,232,.45);
     color:var(--accent);padding:3px 8px;border-radius:99px;
   }
-  .subtitle{font-size:12px;color:var(--muted);width:100%;margin-top:2px}
+  .badge.amber{background:rgba(224,166,58,.12);border-color:rgba(224,166,58,.4);color:#f0dcb2}
+  .badge.green{background:rgba(47,163,107,.14);border-color:rgba(47,163,107,.45);color:#9fe3c1}
 
-  .tracker{display:flex;align-items:center;gap:5px;margin-top:10px}
-  .stg{
-    flex:1; padding:6px 4px 7px; border-radius:8px;
-    background:rgba(255,255,255,.04); border:1px solid transparent;
-    text-align:center; transition:all .4s cubic-bezier(.4,0,.2,1);
+  .acts{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .act{
+    font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    padding:4px 10px;border-radius:6px;border:1px solid transparent;
+    color:var(--muted);background:rgba(255,255,255,.04);
   }
-  .stg .n{font-size:9px;letter-spacing:1.1px;color:var(--muted);font-weight:700}
-  .stg .l{font-size:11.5px;font-weight:600;color:#b9cbe2;margin-top:1px}
+  .act.on{color:#fff;background:linear-gradient(180deg,#2b6cb2,#1d4f8a);border-color:var(--accent)}
+  .act.done{color:#8fd9b4;background:rgba(47,163,107,.12);border-color:rgba(47,163,107,.35)}
+  .act-arrow{color:var(--muted);font-size:12px}
+
+  .tracker{display:flex;align-items:center;gap:4px;margin-top:8px}
+  .stg{
+    flex:1; padding:5px 3px 6px; border-radius:7px;
+    background:rgba(255,255,255,.04); border:1px solid transparent;
+    text-align:center; transition:all .35s cubic-bezier(.4,0,.2,1);
+  }
+  .stg .n{font-size:8.5px;letter-spacing:1px;color:var(--muted);font-weight:700}
+  .stg .l{font-size:10.5px;font-weight:600;color:#b9cbe2;margin-top:1px}
   .stg.done{background:rgba(47,163,107,.12);border-color:rgba(47,163,107,.35)}
   .stg.done .l{color:#8fd9b4}
   .stg.active{
     background:linear-gradient(180deg,#2b6cb2,#1d4f8a);
-    border-color:var(--accent); transform:translateY(-2px);
-    box-shadow:0 6px 18px rgba(43,108,178,.45);
+    border-color:var(--accent); transform:translateY(-1px);
+    box-shadow:0 5px 14px rgba(43,108,178,.4);
   }
   .stg.active .n{color:#cfe6ff}
   .stg.active .l{color:#fff}
-  .stg-sep{width:8px;height:2px;background:rgba(255,255,255,.12);flex:0 0 auto}
+  .stg-sep{width:6px;height:2px;background:rgba(255,255,255,.12);flex:0 0 auto}
 
-  main{flex:1 1 auto;position:relative;padding:6px 26px 0}
+  main{flex:1 1 auto;position:relative;padding:4px 26px 0}
   .scene{
-    position:absolute; inset:6px 26px 2px; display:none;
+    position:absolute; inset:4px 26px 2px; display:none;
     animation:sceneIn .35s ease both;
   }
   .scene.on{display:flex;flex-direction:column;justify-content:center}
   @keyframes sceneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-  .scene-head{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.4}
-  .scene-head b{color:var(--ink)}
-  .scene-head code{font-family:var(--mono);font-size:11.5px;color:var(--accent)}
+  .scene-head{font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.4}
+  .scene-head b{color:var(--ink);font-weight:600}
+  .scene-head code{font-family:var(--mono);font-size:11px;color:var(--accent)}
 
   [data-step]{opacity:0;transform:translateY(7px);transition:opacity .35s ease,transform .35s ease}
   [data-step].show{opacity:1;transform:none}
@@ -77,32 +89,65 @@
     animation:none!important;opacity:1;transition:none!important;
   }
   body.noanim .barfill{width:var(--w)!important}
-  body.noanim .prog i,body.noanim .stg{transition:none!important}
+  body.noanim .prog i,body.noanim .stg,body.noanim .act{transition:none!important}
 
   .card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px}
   .card h3{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:700}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .grid21{display:grid;grid-template-columns:1.35fr .95fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 
-  /* Google Sheet mock */
+  .row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+  .row .k{width:110px;color:var(--muted);font-size:11.5px;flex:0 0 auto}
+  .row .v{font-family:var(--mono);font-size:12.5px;color:#fff}
+  .bad{color:#ffc9c9;background:rgba(224,96,95,.16);border-radius:4px;padding:1px 6px;border:1px solid rgba(224,96,95,.4)}
+  .good{color:#b7f0d3;background:rgba(47,163,107,.16);border-radius:4px;padding:1px 6px;border:1px solid rgba(47,163,107,.45)}
+  .strike{text-decoration:line-through;opacity:.5}
+
+  .chip{display:inline-block;font-size:11px;padding:3px 9px;border-radius:99px;margin:2px 4px 2px 0}
+  .chip.warn{background:rgba(224,166,58,.14);border:1px solid rgba(224,166,58,.45);color:#f2d69a}
+  .chip.ok{background:rgba(47,163,107,.14);border:1px solid rgba(47,163,107,.45);color:#9fe3c1}
+
+  .xform{display:flex;align-items:center;gap:10px;margin:7px 0;font-family:var(--mono);font-size:12.5px}
+  .xform .from{color:#ffc9c9}
+  .xform .arw{color:var(--accent);font-size:14px}
+  .xform .to{color:#b7f0d3;font-weight:600}
+  .xform .lbl{font-family:'Segoe UI',sans-serif;font-size:11px;color:var(--muted);width:120px;flex:0 0 auto}
+
+  .code{background:#0a1830;border:1px solid var(--edge);border-radius:8px;padding:10px 12px;
+        font-family:var(--mono);font-size:12px;line-height:1.8;color:#cfe0f5;overflow:hidden}
+  .code .cm{color:#6f8bad}
+  .hl{background:rgba(47,163,107,.22);border-bottom:2px solid var(--green);border-radius:3px;padding:0 3px}
+  .hl-bad{background:rgba(224,96,95,.2);border-bottom:2px solid var(--red);border-radius:3px;padding:0 3px}
+
+  .check{display:flex;align-items:flex-start;gap:10px;padding:7px 0;font-size:12.5px}
+  .tick{
+    width:18px;height:18px;border-radius:50%;flex:0 0 auto;margin-top:1px;
+    background:rgba(47,163,107,.18);border:1.5px solid var(--green);
+    display:flex;align-items:center;justify-content:center;color:#8fe6b8;font-size:11px;font-weight:800;
+  }
+  .tick.fail{background:rgba(224,96,95,.18);border-color:var(--red);color:#ffb3b3}
+  .check .ct{color:#dfe9f6}
+  .check .cs{color:var(--muted);font-size:11px;display:block;margin-top:1px}
+
   .sheet{
     background:#0a1830;border:1px solid var(--edge);border-radius:10px;overflow:hidden;
     font-family:var(--mono);font-size:11px;
   }
   .sheet-tabs{display:flex;gap:0;background:#0d1f38;border-bottom:1px solid var(--edge)}
   .stab{
-    padding:7px 14px;font-size:11px;color:var(--muted);border-right:1px solid var(--edge);
+    padding:6px 12px;font-size:11px;color:var(--muted);border-right:1px solid var(--edge);
     font-family:'Segoe UI',sans-serif;
   }
   .stab.on{background:var(--panel);color:#fff;font-weight:600;border-bottom:2px solid var(--accent)}
   .stab.done{color:#8fd9b4}
-  .sheet-body{padding:0;max-height:340px;overflow:hidden}
+  .sheet-body{padding:0;max-height:300px;overflow:hidden}
   table.grid{width:100%;border-collapse:collapse}
   table.grid th,table.grid td{
-    border:1px solid rgba(39,80,127,.55);padding:5px 8px;text-align:left;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;
+    border:1px solid rgba(39,80,127,.55);padding:4px 7px;text-align:left;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;
   }
-  table.grid th{background:#12294a;color:var(--accent);font-weight:600;font-size:10.5px;position:sticky;top:0}
+  table.grid th{background:#12294a;color:var(--accent);font-weight:600;font-size:10px}
   table.grid td{color:#d6e4f5}
   table.grid tr.row-in{animation:rowIn .4s ease both}
   @keyframes rowIn{from{opacity:0;background:rgba(87,168,232,.25)}to{opacity:1;background:transparent}}
@@ -111,23 +156,17 @@
   .col-name{color:#a8d4f5}
   .muted-cell{color:#6f8bad}
 
-  .stat{
-    display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;
-  }
+  .stat{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
   .pill{
-    font-size:11px;padding:3px 9px;border-radius:99px;
+    font-size:10.5px;padding:3px 8px;border-radius:99px;
     background:rgba(47,163,107,.14);border:1px solid rgba(47,163,107,.45);color:#9fe3c1;
   }
   .pill.blue{background:rgba(87,168,232,.12);border-color:rgba(87,168,232,.4);color:#a8d4f5}
-  .pill.amber{background:rgba(224,166,58,.12);border-color:rgba(224,166,58,.4);color:#f0dcb2}
 
-  /* Upload / deploy progress */
   .job{margin:8px 0}
   .job-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
   .job-label span:last-child{font-family:var(--mono);color:var(--accent)}
-  .bar{
-    height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;
-  }
+  .bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
   .barfill{
     height:100%;width:0;border-radius:6px;
     background:linear-gradient(90deg,var(--blue),var(--accent));
@@ -136,14 +175,14 @@
   .barfill.green{background:linear-gradient(90deg,#1d6f49,var(--green))}
   .barfill.go{width:var(--w)}
   .logline{
-    font-family:var(--mono);font-size:11.5px;color:#9fb6d0;padding:3px 0;
+    font-family:var(--mono);font-size:11px;color:#9fb6d0;padding:2px 0;
     border-left:2px solid transparent;padding-left:8px;
   }
   .logline.ok{color:#9fe3c1;border-left-color:var(--green)}
   .logline.info{color:#a8d4f5;border-left-color:var(--accent)}
 
   .phone{
-    width:240px;height:400px;border-radius:20px;background:#0a1830;
+    width:230px;height:380px;border-radius:20px;background:#0a1830;
     border:6px solid #24405f;box-shadow:0 12px 36px rgba(0,0,0,.5);
     padding:10px 9px;overflow:hidden;flex:0 0 auto;
   }
@@ -151,7 +190,7 @@
   .pq{font-size:10.5px;color:var(--muted);margin:7px 0 3px}
   .opt{
     background:#12294a;border:1px solid var(--edge);border-radius:6px;
-    padding:6px 8px;font-size:11.5px;margin-bottom:4px;color:#dbe7f6;
+    padding:6px 8px;font-size:11px;margin-bottom:4px;color:#dbe7f6;
   }
   .opt.sel{background:rgba(43,108,178,.35);border-color:var(--accent);color:#fff;font-weight:600}
   .opt.hit{background:rgba(47,163,107,.22);border-color:var(--green);color:#c9f4de;font-weight:600;
@@ -163,17 +202,22 @@
     padding:8px 11px;border-radius:0 8px 8px 0;font-size:12px;color:#f0dcb2;
   }
   .callout.g{border-left-color:var(--green);background:rgba(47,163,107,.1);color:#bfeed8}
+  .callout.b{border-left-color:var(--accent);background:rgba(87,168,232,.1);color:#c5dff7}
   .callout b{color:#fff}
 
-  .flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .fnode{
-    background:var(--panel2);border:1px solid var(--edge);border-radius:7px;
-    padding:7px 10px;font-size:11px;text-align:center;color:#dbe7f6;
-  }
+  .flowbox{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:4px;flex-wrap:wrap}
+  .fnode{background:var(--panel2);border:1px solid var(--edge);border-radius:7px;
+         padding:7px 10px;font-size:11px;text-align:center;color:#dbe7f6}
   .fnode b{display:block;font-size:10px;color:var(--accent);letter-spacing:.4px}
-  .fnode.on{background:rgba(43,108,178,.35);border-color:var(--accent)}
   .fnode.done{background:rgba(47,163,107,.15);border-color:rgba(47,163,107,.45)}
-  .farw{color:var(--accent)}
+  .fArrow{color:var(--accent);font-size:15px}
+
+  .bridge{
+    text-align:center;padding:20px 40px;
+  }
+  .bridge .big{font-size:22px;font-weight:700;color:#fff;margin:10px 0 8px}
+  .bridge .big span{color:var(--accent)}
+  .bridge .sub{font-size:13.5px;color:var(--muted);line-height:1.5;max-width:720px;margin:0 auto}
 
   footer{
     flex:0 0 auto;padding:8px 26px 12px;display:flex;align-items:center;gap:10px;
@@ -194,88 +238,234 @@
 
   <header>
     <div class="title-row">
-      <h1>Watching the tool get built — <span>EmONC Curriculum Tracking</span></h1>
-      <span class="badge">emonc_ctf</span>
-      <div class="subtitle">Sync the source databases, generate the shared lists, watch the form assemble, then upload and deploy to Kobo</div>
+      <h1>Kobo Tool Creator — <span id="titleSpan">The Process</span></h1>
+      <span class="badge" id="phaseBadge">Part 1 · Process</span>
+      <div class="subtitle" id="subtitle">One pipeline: messy source data → cleaned sheets → shared lists → validated forms → live on Kobo</div>
+    </div>
+    <div class="acts">
+      <div class="act on" id="act0">Part 1 · Process</div>
+      <div class="act-arrow">→</div>
+      <div class="act" id="act1">Part 2 · EmONC example</div>
     </div>
     <div class="tracker" id="tracker"></div>
   </header>
 
   <main>
 
-    <!-- SCENE S1: SYNC FROM SOURCE DATABASES -->
-    <section class="scene" id="scSync">
-      <div class="scene-head"><b>Sync.</b> <code>refreshAllKoboTools()</code> pulls the two external databases into local sheets before anything is built.</div>
+    <!-- ========== PART 1: PROCESS ========== -->
+
+    <section class="scene" id="p1_trigger">
+      <div class="scene-head">A weekly trigger fires <b>refreshAllKoboTools()</b>. It takes a lock, checks the config and Kobo token, then reads the databases — typed by hand, so the data arrives messy.</div>
       <div class="grid2">
         <div class="card" data-step="1">
-          <h3>Source → local (mentees)</h3>
-          <div class="flow" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div class="fnode" style="text-align:left"><b>EXTERNAL</b>Mentee Database 2026</div>
-            <div style="text-align:center;color:var(--accent);font-size:14px">↓ <span style="font-family:var(--mono);font-size:10.5px">syncMenteeDatabaseFromSource()</span></div>
-            <div class="fnode done" style="text-align:left" data-step="3"><b>LOCAL</b>Mentee Database</div>
-          </div>
-          <div class="logline info" data-step="2">filter Status = Inactive → dropped</div>
-          <div class="logline info" data-step="2">normalize Mentee ID (strip 254 / leading 0)</div>
-          <div class="logline info" data-step="3">Program "EmONC Curriculum" → "MENTORS Curriculum"</div>
-          <div class="stat" data-step="3">
-            <span class="pill">Jane Wanjiku · 712345678</span>
-            <span class="pill">Kirinyaga · Kerugoya</span>
-            <span class="pill blue">Status = Active</span>
-          </div>
-        </div>
-        <div class="card" data-step="4">
-          <h3>Source → local (mentors / IFM)</h3>
-          <div class="flow" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div class="fnode" style="text-align:left"><b>EXTERNAL</b>Mentor (IFM) Database 2026</div>
-            <div style="text-align:center;color:var(--accent);font-size:14px">↓ <span style="font-family:var(--mono);font-size:10.5px">syncIFMListFromSource()</span></div>
-            <div class="fnode done" style="text-align:left" data-step="5"><b>LOCAL</b>IFM List</div>
-          </div>
-          <div class="logline info" data-step="5">headers remapped to kobocreator names</div>
-          <div class="logline info" data-step="5">Inactive rows + non-allowed counties dropped</div>
-          <div class="logline ok" data-step="6">both local sheets refreshed — sync complete</div>
-          <div style="margin-top:8px" data-step="6" class="callout">
-            The form is only ever built from these <b>local</b> sheets, so a stale source never leaks half-synced data into Kobo.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SCENE S2: KOBOCREATOR GENERATES THE SHARED LISTS -->
-    <section class="scene" id="scGen">
-      <div class="scene-head"><b>Generate.</b> <code>generateAllOutputs()</code> turns the synced databases into the shared choice sheets every form reads.</div>
-      <div class="grid21">
-        <div class="card" data-step="1">
-          <h3>kobocreator output sheets</h3>
-          <div class="sheet">
-            <div class="sheet-tabs">
-              <div class="stab on done">EmONC Mentees List (Choices)</div>
-              <div class="stab" id="genTab2">EmONC Facilities List (Choices)</div>
-            </div>
-            <div class="sheet-body">
-              <table class="grid">
-                <thead>
-                  <tr><th style="width:20%">County</th><th style="width:32%">Facility</th><th style="width:22%">list_name</th><th style="width:26%">label</th></tr>
-                </thead>
-                <tbody id="genBody"></tbody>
-              </table>
-            </div>
+          <h3>Raw row · Mentee Database 2026</h3>
+          <div class="row"><span class="k">Name</span><span class="v">&nbsp;&nbsp;Grace&nbsp;&nbsp;Hopper&nbsp;</span></div>
+          <div class="row"><span class="k">Mentee ID</span><span class="v bad">+254 700 000 002</span></div>
+          <div class="row"><span class="k">County</span><span class="v">Makueni</span></div>
+          <div class="row"><span class="k">Facility</span><span class="v bad">Makueni County Refferal Hospital</span></div>
+          <div class="row"><span class="k">Facility Code</span><span class="v">12457</span></div>
+          <div class="row"><span class="k">Program</span><span class="v bad">newborn curriculum&nbsp;</span></div>
+          <div class="row"><span class="k">Status</span><span class="v good">Active</span></div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+            …plus an older <b style="color:#ffc9c9">Inactive</b> row, and a MENTORS row
+            for the same facility spelled <b style="color:#b7f0d3">“Referral”</b>.
           </div>
         </div>
         <div class="card" data-step="2">
-          <h3>Rules applied here</h3>
-          <div class="logline info" data-step="2">resetFacilityNameRegistry_()</div>
-          <div class="logline ok" data-step="3">one canonical name per Facility Code</div>
-          <div class="logline ok" data-step="4">EmONC filter = MENTORS Curriculum / Both</div>
-          <div class="logline ok" data-step="5">list_name = kerugoya_mentees</div>
-          <div style="margin-top:8px" data-step="6" class="callout g">
-            <b>Lists ready.</b> The EmONC builder now has facilities and mentees to point its selects at.
+          <h3>Five things that would break the form</h3>
+          <div class="check"><div class="tick fail">!</div><div class="ct">Prefixed / padded ID
+            <span class="cs">“+254 700 000 002” breaks Power BI joins.</span></div></div>
+          <div class="check"><div class="tick fail">!</div><div class="ct">Trailing-space Programme
+            <span class="cs">A strict filter drops “newborn curriculum ”.</span></div></div>
+          <div class="check"><div class="tick fail">!</div><div class="ct">Two spellings, one facility code
+            <span class="cs">“Refferal” vs “Referral” for code 12457.</span></div></div>
+          <div class="check"><div class="tick fail">!</div><div class="ct">Stale duplicate row
+            <span class="cs">The old Inactive row must not win.</span></div></div>
+          <div class="check"><div class="tick fail">!</div><div class="ct">Attrition
+            <span class="cs">If Status flips, the mentee must disappear.</span></div></div>
+        </div>
+      </div>
+      <div style="margin-top:10px" data-step="3">
+        <div class="callout">Every one of these has broken a live deployment before. Watch each get resolved automatically.</div>
+      </div>
+    </section>
+
+    <section class="scene" id="p1_sync">
+      <div class="scene-head"><b>Steps 1–2 · Sync.</b> Raw databases are copied into cleaned local sheets. Builders never read the raw data.</div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Cleaning &amp; validation</h3>
+          <div class="xform" data-step="1"><span class="lbl">Mentee ID</span>
+            <span class="from">+254 700 000 002</span><span class="arw">→</span><span class="to">700000002</span></div>
+          <div style="font-size:11px;color:var(--muted);margin:-2px 0 6px 132px" data-step="1">
+            Strip <b>+254</b> and spaces · must be 9 digits starting 1 or 7.</div>
+          <div class="xform" data-step="2"><span class="lbl">Programme</span>
+            <span class="from">“newborn curriculum ”</span><span class="arw">→</span><span class="to">newborn_curriculum</span></div>
+          <div class="xform" data-step="3"><span class="lbl">Status</span>
+            <span class="from strike">Inactive row</span><span class="arw">→</span><span class="to">dropped</span></div>
+          <div class="xform" data-step="4"><span class="lbl">County (elsewhere)</span>
+            <span class="from">Murang’a / Murangá</span><span class="arw">→</span><span class="to">muranga</span></div>
+        </div>
+        <div class="card">
+          <h3>One canonical facility name per code</h3>
+          <div data-step="5" style="font-size:12px;color:var(--muted);margin-bottom:8px">
+            Code <b style="color:#fff">12457</b> arrived spelled two ways. The most-used spelling wins.
+          </div>
+          <div class="code" data-step="5">
+            <span class="hl-bad">Makueni County Refferal Hospital</span> &nbsp;<span class="cm">× 1</span><br/>
+            <span class="hl">Makueni County Referral Hospital</span> &nbsp;<span class="cm">× 2 ← canonical</span>
+          </div>
+          <div style="margin-top:10px" data-step="6">
+            <div class="callout">Conflict logged: <b>12457 kept “Makueni County Referral Hospital”</b>.</div>
+          </div>
+          <div style="margin-top:8px" data-step="6">
+            <span class="chip ok">IFM counties allow-listed</span>
+            <span class="chip ok">canonical spellings</span>
+            <span class="chip ok">EmONC → MENTORS</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 0: START BUILD -->
-    <section class="scene" id="sc0">
+    <section class="scene" id="p1_generate">
+      <div class="scene-head"><b>Step 3 · Generate.</b> <code>generateAllOutputs()</code> turns the two clean sheets into the shared survey / choices / logic sheets every form reads.</div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Choices — facilities &amp; mentees</h3>
+          <div class="code" data-step="1">
+<span class="cm">list_name            name</span><br/>
+makueni_facilities   <span class="hl">12457_makueni_county_referral_hospital</span><br/>
+makueni_nbc_mentees  700000002_grace_hopper
+          </div>
+          <div style="margin-top:10px" data-step="2">
+            <h3 style="margin-bottom:6px">Survey — the question</h3>
+            <div class="code">
+<span class="cm">type</span>&nbsp; select_one makueni_nbc_mentees<br/>
+<span class="cm">name</span>&nbsp; makueni_nbc_mentees<br/>
+<span class="cm">label</span> Makueni Newborn Curriculum Mentees
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Relevance — when the question appears</h3>
+          <div class="code" data-step="3">
+(${makueni_facilities} =<br/>
+&nbsp;&nbsp;'<span class="hl">12457_makueni_county_referral_hospital</span>'<br/>
+&nbsp;&nbsp;and ${program} = 'newborn_curriculum')
+          </div>
+          <div style="margin-top:10px" data-step="4">
+            <div class="callout g"><b>The two green strings are identical.</b> Choice value and relevance are built from the same canonical name, so the condition can actually be true.</div>
+          </div>
+          <div style="margin-top:8px" data-step="4">
+            <span class="chip ok">only facilities with real mentees</span>
+            <span class="chip ok">unique names per facility code</span>
+            <span class="chip ok">ASCII-safe field names</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" id="p1_build">
+      <div class="scene-head"><b>Step 4 · Build</b> writes each form’s tabs — then <b>Step 5 · Validate</b> checks the form the way Kobo will, before anything is uploaded.</div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Build — five registered tools</h3>
+          <div class="flowbox" data-step="1">
+            <div class="fnode"><b>SURVEY</b>questions + logic</div>
+            <div class="fnode"><b>CHOICES</b>counties, facilities,<br/>mentees, IFMs</div>
+            <div class="fnode"><b>SETTINGS</b>form options</div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted)" data-step="2">
+            EmONC CTF · Newborn CTF · MoH SAC · EmONC KA · Newborn KA — all from the same generated sheets.
+          </div>
+          <div style="margin-top:10px" data-step="2">
+            <div class="callout">Counties and facility selects are derived from the generated facility list — a new county can never be missing from the form.</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Validate — what Kobo would reject</h3>
+          <div class="check" data-step="3"><div class="tick">✓</div><div class="ct">Every select has choices
+            <span class="cs">no “List name not in choices sheet”</span></div></div>
+          <div class="check" data-step="4"><div class="tick">✓</div><div class="ct">No duplicate question names</div></div>
+          <div class="check" data-step="5"><div class="tick">✓</div><div class="ct">Expressions balanced
+            <span class="cs">parentheses &amp; quotes, ignoring quoted text</span></div></div>
+          <div class="check" data-step="6"><div class="tick">✓</div><div class="ct">No unreachable comparisons
+            <span class="cs">every <code>${field} = 'value'</code> matches a real choice</span></div></div>
+          <div style="margin-top:8px" data-step="7">
+            <div class="callout"><b>This catches the silent bug.</b> With the old “Refferal” spelling the comparison could never be true — Kobo deploys it and the mentee list simply never opens.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" id="p1_deploy">
+      <div class="scene-head"><b>Step 5 · Deploy.</b> Only forms that passed validation are uploaded — a broken form never blocks the others.</div>
+      <div style="display:grid;grid-template-columns:1fr 240px;gap:16px">
+        <div>
+          <div class="card" data-step="1">
+            <h3>Publish to Kobo</h3>
+            <div class="flowbox" style="justify-content:flex-start">
+              <div class="fnode"><b>FLUSH</b>writes</div><span class="fArrow">→</span>
+              <div class="fnode"><b>EXPORT</b>.xlsx</div><span class="fArrow">→</span>
+              <div class="fnode"><b>IMPORT</b>KPI API</div><span class="fArrow">→</span>
+              <div class="fnode"><b>DEPLOY</b>version</div>
+            </div>
+            <div style="margin-top:10px;font-size:11.5px;color:var(--muted)">
+              Existing asset updated in place · <span style="font-family:var(--mono)">eu.kobotoolbox.org</span>
+            </div>
+          </div>
+          <div style="margin-top:12px" data-step="5">
+            <div class="callout g"><b>Result:</b> enumerator picks county → facility → mentee list opens with <b>Grace Hopper</b> — because choice value and relevance are the same string.</div>
+          </div>
+          <div style="margin-top:10px" data-step="6">
+            <div class="grid3">
+              <div class="card" style="padding:9px 11px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">CLEAN IDS</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Power BI joins hold</div></div>
+              <div class="card" style="padding:9px 11px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">LIVE POPULATION</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Attrition auto-applied</div></div>
+              <div class="card" style="padding:9px 11px"><div style="font-size:10.5px;color:var(--accent);font-weight:700">ONE CLICK</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Or one weekly trigger</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="phone" data-step="2">
+          <div class="notch"></div>
+          <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.5px">MoH SKILLS ASSESSMENT</div>
+          <div class="pq">Programme</div>
+          <div class="opt sel">Newborn training curriculum</div>
+          <div class="pq" data-step="3">Select your county</div>
+          <div class="opt sel" data-step="3">Makueni</div>
+          <div class="pq" data-step="4">Which facility?</div>
+          <div class="opt sel" data-step="4" style="font-size:10px">Makueni County Referral Hospital</div>
+          <div class="pq" data-step="5">Makueni Newborn Curriculum Mentees</div>
+          <div class="opt hit" data-step="5">Grace Hopper</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== BRIDGE ========== -->
+
+    <section class="scene" id="bridge">
+      <div class="bridge">
+        <div class="badge amber" data-step="1">Same pipeline · one tool</div>
+        <div class="big" data-step="1">Now drill into <span>EmONC Curriculum Tracking</span></div>
+        <div class="sub" data-step="2">
+          Watch <code style="font-family:var(--mono);color:var(--accent)">createEmONCCurriculumTrackingForm2026()</code>
+          assemble the form spreadsheet — choices and survey tabs filling row by row —
+          then validate, upload to asset <b style="color:#fff">aJaBJKDs7pCRMi8zm3BXze</b>, and deploy live
+          with mentee <b style="color:#fff">Jane Wanjiku</b> (Kirinyaga / Kerugoya).
+        </div>
+        <div style="margin-top:18px" data-step="3" class="flowbox">
+          <div class="fnode done"><b>PROCESS</b>you just saw</div>
+          <span class="fArrow">→</span>
+          <div class="fnode" style="background:rgba(43,108,178,.35);border-color:var(--accent)"><b>EXAMPLE</b>emonc_ctf build</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PART 2: EmONC DEEP DIVE ========== -->
+
+    <section class="scene" id="p2_open">
       <div class="scene-head"><code>createEmONCCurriculumTrackingForm2026()</code> opens (or creates) the form spreadsheet and prepares three empty tabs.</div>
       <div class="grid2">
         <div class="card" data-step="1">
@@ -287,7 +477,7 @@
               <div class="stab">choices</div>
               <div class="stab">settings</div>
             </div>
-            <div class="sheet-body" style="padding:28px;text-align:center;color:var(--muted);font-family:'Segoe UI',sans-serif;font-size:13px">
+            <div class="sheet-body" style="padding:24px;text-align:center;color:var(--muted);font-family:'Segoe UI',sans-serif;font-size:12.5px">
               Tabs created · waiting for content
             </div>
           </div>
@@ -298,21 +488,20 @@
         </div>
         <div class="card" data-step="2">
           <h3>Inputs the builder will pull</h3>
-          <div class="flow" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;flex-direction:column;gap:8px">
             <div class="fnode" style="text-align:left"><b>FROM KOBOCREATOR</b>
               EmONC Facilities List (Choices) · EmONC Mentees List (Choices) · Curriculum Tracking Form</div>
             <div class="fnode" style="text-align:left"><b>AUTHORED IN BUILDER</b>
               16 counties · activity lists (Lecturettes, Videos, Case scenarios…)</div>
           </div>
-          <div style="margin-top:12px" data-step="3" class="callout">
-            Choices are built <b>first</b>, then the survey is written against those exact lists — so every select already has choices.
+          <div style="margin-top:10px" data-step="3" class="callout">
+            Choices are built <b>first</b>, then the survey is written against those exact lists.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 1: CHOICES BEING WRITTEN -->
-    <section class="scene" id="sc1">
+    <section class="scene" id="p2_choices">
       <div class="scene-head"><b>Writing the <code>choices</code> tab</b> — counties, facilities, mentees and activities land row by row.</div>
       <div class="sheet" data-step="1">
         <div class="sheet-tabs">
@@ -325,13 +514,11 @@
             <thead>
               <tr><th style="width:28%">list_name</th><th style="width:36%">name</th><th style="width:36%">label</th></tr>
             </thead>
-            <tbody id="choicesBody">
-              <!-- filled by JS on reveal -->
-            </tbody>
+            <tbody id="choicesBody"></tbody>
           </table>
         </div>
       </div>
-      <div class="stat" data-step="6" style="margin-top:10px">
+      <div class="stat" data-step="6" style="margin-top:8px">
         <span class="pill">16 counties</span>
         <span class="pill">Kirinyaga facilities</span>
         <span class="pill">Jane Wanjiku (mentee)</span>
@@ -340,8 +527,7 @@
       </div>
     </section>
 
-    <!-- SCENE 2: SURVEY BEING WRITTEN -->
-    <section class="scene" id="sc2">
+    <section class="scene" id="p2_survey">
       <div class="scene-head"><b>Writing the <code>survey</code> tab</b> — questions, relevance and calculations appear as the form structure builds.</div>
       <div class="sheet" data-step="1">
         <div class="sheet-tabs">
@@ -363,7 +549,7 @@
           </table>
         </div>
       </div>
-      <div class="stat" data-step="7" style="margin-top:10px">
+      <div class="stat" data-step="7" style="margin-top:8px">
         <span class="pill">intro + mentor details</span>
         <span class="pill">county → facility cascade</span>
         <span class="pill">kerugoya_mentees question</span>
@@ -372,9 +558,8 @@
       </div>
     </section>
 
-    <!-- SCENE 3: RESULTANT OUTCOME -->
-    <section class="scene" id="sc3">
-      <div class="scene-head"><b>Resultant outcome</b> — the finished Google Sheet form, ready for Kobo. Settings written; counts locked in.</div>
+    <section class="scene" id="p2_outcome">
+      <div class="scene-head"><b>Resultant outcome</b> — the finished Google Sheet form, ready for Kobo.</div>
       <div class="grid21">
         <div class="card" data-step="1">
           <h3>Finished form spreadsheet</h3>
@@ -389,7 +574,7 @@
               <div>allow_choice_duplicates &nbsp;=&nbsp; <span style="color:#9fe3c1">yes</span></div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px" data-step="2">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px" data-step="2">
             <div class="card" style="padding:10px;text-align:center">
               <div style="font-size:22px;font-weight:700;color:#fff" id="cntSurvey">—</div>
               <div style="font-size:11px;color:var(--muted)">survey rows</div>
@@ -407,21 +592,20 @@
         <div class="card" data-step="3">
           <h3>What this form now contains</h3>
           <div style="font-size:12.5px;line-height:1.55;color:#dbe7f6">
-            <div style="margin-bottom:8px">• Mentor name + session date</div>
-            <div style="margin-bottom:8px">• County select (incl. <b>Kirinyaga</b>)</div>
-            <div style="margin-bottom:8px">• Facility select → <b>Kerugoya County Referral Hospital</b></div>
-            <div style="margin-bottom:8px">• Mentee multi-select → <b>Jane Wanjiku</b></div>
-            <div style="margin-bottom:8px">• Activity types + modules (AMTSL, PPH…)</div>
+            <div style="margin-bottom:7px">• Mentor name + session date</div>
+            <div style="margin-bottom:7px">• County select (incl. <b>Kirinyaga</b>)</div>
+            <div style="margin-bottom:7px">• Facility → <b>Kerugoya County Referral Hospital</b></div>
+            <div style="margin-bottom:7px">• Mentee multi-select → <b>Jane Wanjiku</b></div>
+            <div style="margin-bottom:7px">• Activity types + modules (AMTSL, PPH…)</div>
           </div>
           <div style="margin-top:10px" data-step="4" class="callout g">
-            <b>Build complete.</b> Next: validate, export as .xlsx, upload and deploy.
+            <b>Build complete.</b> Next: validate, export, upload and deploy.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCENE 4: VALIDATE + UPLOAD -->
-    <section class="scene" id="sc4">
+    <section class="scene" id="p2_upload">
       <div class="scene-head"><b>Validate → Export → Upload.</b> <code>deployKoboTool("emonc_ctf")</code> checks the form, then POSTs the xlsx to Kobo.</div>
       <div class="grid2">
         <div class="card">
@@ -448,10 +632,9 @@
       </div>
     </section>
 
-    <!-- SCENE 5: DEPLOY + LIVE -->
-    <section class="scene" id="sc5">
-      <div class="scene-head"><b>Deploy</b> the new version, then the live form on Kobo — Jane is selectable.</div>
-      <div style="display:grid;grid-template-columns:1fr 248px;gap:16px;align-items:center">
+    <section class="scene" id="p2_deploy">
+      <div class="scene-head"><b>Deploy</b> the new version — then the live form on Kobo. Jane is selectable.</div>
+      <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:center">
         <div>
           <div class="card" data-step="1">
             <h3>Deploy new version</h3>
@@ -469,7 +652,7 @@
             </div>
           </div>
           <div style="margin-top:10px" data-step="6" class="callout g">
-            <b>Done.</b> Built → validated → uploaded → deployed. Selecting Kerugoya opens Jane Wanjiku in the live EmONC Curriculum Tracking Form.
+            <b>Done.</b> Process understood → EmONC built → validated → uploaded → deployed. Selecting Kerugoya opens Jane Wanjiku.
           </div>
         </div>
         <div class="phone" data-step="4">
@@ -482,7 +665,7 @@
           <div class="pq" data-step="5">County</div>
           <div class="opt sel" data-step="5">Kirinyaga</div>
           <div class="pq" data-step="5">Facility</div>
-          <div class="opt sel" data-step="5" style="font-size:10.5px">Kerugoya County Referral Hospital</div>
+          <div class="opt sel" data-step="5" style="font-size:10px">Kerugoya County Referral Hospital</div>
           <div class="pq" data-step="6">Mentees who attended</div>
           <div class="opt hit" data-step="6">Jane Wanjiku</div>
         </div>
@@ -495,9 +678,10 @@
     <button id="btnPlay">⏸ Pause</button>
     <button id="btnPrev">← Back</button>
     <button id="btnNext">Next →</button>
+    <button id="btnSkip">Skip to EmONC →</button>
     <button id="btnRestart">↻ Restart</button>
     <div class="prog"><i id="progBar"></i></div>
-    <div class="hint">Space play/pause · ← → step · F fullscreen</div>
+    <div class="hint">Space · ← → · E = EmONC · F fullscreen</div>
   </footer>
 
 </div></div>
@@ -506,51 +690,64 @@
 (function(){
   "use strict";
 
-  var STAGES = [
-    {n:"1", l:"Sync"},
-    {n:"2", l:"Generate"},
-    {n:"3", l:"Open form"},
-    {n:"4", l:"Choices"},
-    {n:"5", l:"Survey"},
-    {n:"6", l:"Outcome"},
-    {n:"7", l:"Upload"},
-    {n:"8", l:"Deploy"}
+  // Two acts. Tracker shows stages for the active act only.
+  var ACTS = [
+    {
+      id:0, label:"Part 1 · Process", title:"The Process",
+      badge:"Part 1 · Process", badgeClass:"badge",
+      subtitle:"One pipeline: messy source data → cleaned sheets → shared lists → validated forms → live on Kobo",
+      stages:[
+        {n:"0", l:"Trigger"},
+        {n:"1–2", l:"Sync"},
+        {n:"3", l:"Generate"},
+        {n:"4", l:"Build"},
+        {n:"5", l:"Validate"},
+        {n:"5", l:"Deploy"}
+      ]
+    },
+    {
+      id:1, label:"Part 2 · EmONC example", title:"EmONC Curriculum Tracking",
+      badge:"Part 2 · emonc_ctf", badgeClass:"badge green",
+      subtitle:"Deep dive: watch one form spreadsheet assemble, then upload and deploy — Jane Wanjiku / Kirinyaga",
+      stages:[
+        {n:"1", l:"Open form"},
+        {n:"2", l:"Choices"},
+        {n:"3", l:"Survey"},
+        {n:"4", l:"Outcome"},
+        {n:"5", l:"Upload"},
+        {n:"6", l:"Deploy"}
+      ]
+    }
   ];
 
-  // Scene step counts — must match max data-step in each scene
   var SCENES = [
-    {el:"scSync", steps:6, stage:0, kind:"sync"},
-    {el:"scGen",  steps:6, stage:1, kind:"gen"},
-    {el:"sc0", steps:3, stage:2, kind:"open"},
-    {el:"sc1", steps:6, stage:3, kind:"choices"},
-    {el:"sc2", steps:7, stage:4, kind:"survey"},
-    {el:"sc3", steps:4, stage:5, kind:"outcome"},
-    {el:"sc4", steps:8, stage:6, kind:"upload"},
-    {el:"sc5", steps:6, stage:7, kind:"deploy"}
+    // Part 1
+    {el:"p1_trigger",  steps:3, act:0, stage:0, kind:"static"},
+    {el:"p1_sync",     steps:6, act:0, stage:1, kind:"static"},
+    {el:"p1_generate", steps:4, act:0, stage:2, kind:"static"},
+    {el:"p1_build",    steps:7, act:0, stage:3, stageAt:{3:4}, kind:"static"},
+    {el:"p1_deploy",   steps:6, act:0, stage:5, kind:"static"},
+    // Bridge
+    {el:"bridge",      steps:3, act:1, stage:0, kind:"bridge", bridge:true},
+    // Part 2 EmONC
+    {el:"p2_open",     steps:3, act:1, stage:0, kind:"open"},
+    {el:"p2_choices",  steps:6, act:1, stage:1, kind:"choices"},
+    {el:"p2_survey",   steps:7, act:1, stage:2, kind:"survey"},
+    {el:"p2_outcome",  steps:4, act:1, stage:3, kind:"outcome"},
+    {el:"p2_upload",   steps:8, act:1, stage:4, kind:"upload"},
+    {el:"p2_deploy",   steps:6, act:1, stage:5, kind:"deploy"}
   ];
 
-  // Progressive rows for the choices sheet mock
   var CHOICE_ROWS = [
-    {at:2, cells:["county","Kirinyaga","Kirinyaga"], hl:false},
-    {at:2, cells:["county","Makueni","Makueni"], hl:false},
+    {at:2, cells:["county","Kirinyaga","Kirinyaga"]},
+    {at:2, cells:["county","Makueni","Makueni"]},
     {at:2, cells:["county","…","14 more counties"], muted:true},
     {at:3, cells:["kirinyaga_facilities","16002_kerugoya_county_referral_hospital","Kerugoya County Referral Hospital"], hl:true},
     {at:4, cells:["kerugoya_mentees","712345678_jane_wanjiku","Jane Wanjiku"], hl:true},
-    {at:5, cells:["emonc_activities","cmes","Activity 1: Lecturettes"], hl:false},
-    {at:5, cells:["emonc_activities","videos","Activity 2: Videos"], hl:false},
-    {at:5, cells:["cmes","AMTSL","Active management of third stage…"], hl:false},
+    {at:5, cells:["emonc_activities","cmes","Activity 1: Lecturettes"]},
+    {at:5, cells:["emonc_activities","videos","Activity 2: Videos"]},
+    {at:5, cells:["cmes","AMTSL","Active management of third stage…"]},
     {at:6, cells:["…","…","+ curriculum modules"], muted:true}
-  ];
-
-  // kobocreator output rows, revealed as the generators run
-  var GEN_ROWS = [
-    {at:1, cells:["Kirinyaga","Kerugoya County Referral Hospital","kerugoya_mentees","Jane Wanjiku"], hl:true},
-    {at:1, cells:["Kirinyaga","Kerugoya County Referral Hospital","kerugoya_mentees","Peter Mwangi"]},
-    {at:3, cells:["Makueni","Makueni County Referral Hospital","makueni_mentees","Alice Kamene"]},
-    {at:3, cells:["…","(one spelling per Facility Code)","…","…"], muted:true},
-    {at:4, cells:["Kirinyaga","Kerugoya County Referral Hospital","kirinyaga_facilities","Kerugoya County Referral Hospital"], hl:true},
-    {at:5, cells:["Kirinyaga","Sagana Sub County Hospital","kirinyaga_facilities","Sagana Sub County Hospital"]},
-    {at:6, cells:["…","16 counties covered","…","+ facility & mentee rows"], muted:true}
   ];
 
   var SURVEY_ROWS = [
@@ -565,65 +762,65 @@
     {at:7, cells:["select_multiple cmes","cmes","Lecturette topics","${emonc_activities}='cmes'"]}
   ];
 
-  // Build tracker
   var tracker = document.getElementById("tracker");
-  STAGES.forEach(function(s,i){
-    if(i){ var sep=document.createElement("div"); sep.className="stg-sep"; tracker.appendChild(sep); }
-    var d=document.createElement("div");
-    d.className="stg"; d.id="stg"+i;
-    d.innerHTML='<div class="n">STEP '+s.n+'</div><div class="l">'+s.l+'</div>';
-    tracker.appendChild(d);
-  });
-
   var FLAT=[];
   SCENES.forEach(function(sc,si){
     for(var k=1;k<=sc.steps;k++) FLAT.push({scene:si, local:k});
   });
+
+  // Index of first Part 2 content scene (bridge)
+  var BRIDGE_IDX = FLAT.findIndex(function(f){ return SCENES[f.scene].bridge; });
+  var EMONC_OPEN_IDX = FLAT.findIndex(function(f){ return SCENES[f.scene].kind==="open"; });
 
   var idx=0, playing=true, timer=null;
   var STEP_MS=1400, SCENE_PAUSE=2000;
 
   var params=new URLSearchParams(location.search);
   if(params.has("step")) idx=parseInt(params.get("step"),10)||0;
+  if(params.get("part")!=="1") idx=BRIDGE_IDX; // default to EmONC deep dive when opened from this file
   if(params.get("autoplay")==="0"){ playing=false; document.body.classList.add("noanim"); }
 
-  function renderRows(tbodyId, rows, local){
+  function currentStage(f){
+    var sc=SCENES[f.scene];
+    var stage=sc.stage;
+    if(sc.stageAt){
+      Object.keys(sc.stageAt).forEach(function(threshold){
+        if(f.local>=Number(threshold)) stage=sc.stageAt[threshold];
+      });
+    }
+    return stage;
+  }
+
+  function rebuildTracker(actId, activeStage){
+    var act=ACTS[actId];
+    tracker.innerHTML="";
+    act.stages.forEach(function(s,i){
+      if(i){ var sep=document.createElement("div"); sep.className="stg-sep"; tracker.appendChild(sep); }
+      var d=document.createElement("div");
+      d.className="stg";
+      if(i===activeStage) d.classList.add("active");
+      else if(i<activeStage) d.classList.add("done");
+      d.innerHTML='<div class="n">STEP '+s.n+'</div><div class="l">'+s.l+'</div>';
+      tracker.appendChild(d);
+    });
+  }
+
+  function setHeader(actId){
+    var act=ACTS[actId];
+    document.getElementById("titleSpan").textContent=act.title;
+    var badge=document.getElementById("phaseBadge");
+    badge.className=act.badgeClass;
+    badge.textContent=act.badge;
+    document.getElementById("subtitle").textContent=act.subtitle;
+    document.getElementById("act0").className="act"+(actId===0?" on":" done");
+    document.getElementById("act1").className="act"+(actId===1?" on":"");
+  }
+
+  function renderTable(tbodyId, rows, local){
     var tb=document.getElementById(tbodyId);
     if(!tb) return;
     var html="";
     rows.forEach(function(r){
-      if(r.at>local) return;
-      var cls="row-in"+(r.hl?" hl":"");
-      html+='<tr class="'+cls+'">';
-      r.cells.forEach(function(c,i){
-        var extra=r.muted?" muted-cell":(i===0?" col-type":i===1?" col-name":"");
-        html+='<td class="'+extra+'">'+c+'</td>';
-      });
-      html+='</tr>';
-    });
-    tb.innerHTML=html;
-  }
-
-  function renderChoices(local){
-    var tb=document.getElementById("choicesBody");
-    var html="";
-    CHOICE_ROWS.forEach(function(r){
-      if(r.at>local) return;
-      var cls="row-in"+(r.hl?" hl":"");
-      html+='<tr class="'+cls+'">';
-      r.cells.forEach(function(c,i){
-        var extra=r.muted?" muted-cell":(i===0?" col-type":i===1?" col-name":"");
-        html+='<td class="'+extra+'">'+c+'</td>';
-      });
-      html+='</tr>';
-    });
-    tb.innerHTML=html;
-  }
-
-  function renderSurvey(local){
-    var tb=document.getElementById("surveyBody");
-    var html="";
-    SURVEY_ROWS.forEach(function(r){
       if(r.at>local) return;
       var cls="row-in"+(r.hl?" hl":"");
       html+='<tr class="'+cls+'">';
@@ -648,41 +845,34 @@
 
   function render(){
     var f=FLAT[idx];
-    SCENES.forEach(function(sc,si){
-      document.getElementById(sc.el).classList.toggle("on", si===f.scene);
+    var sc=SCENES[f.scene];
+    SCENES.forEach(function(s,si){
+      document.getElementById(s.el).classList.toggle("on", si===f.scene);
     });
-    var active=document.getElementById(SCENES[f.scene].el);
+    var active=document.getElementById(sc.el);
     active.querySelectorAll("[data-step]").forEach(function(node){
       node.classList.toggle("show", Number(node.getAttribute("data-step"))<=f.local);
     });
 
-    // Stage tracker
-    var stage=SCENES[f.scene].stage;
-    for(var i=0;i<STAGES.length;i++){
-      var d=document.getElementById("stg"+i);
-      d.classList.toggle("active", i===stage);
-      d.classList.toggle("done", i<stage);
+    var actId = sc.bridge ? 1 : sc.act;
+    // On bridge, show Part 2 tracker with no step active yet (or stage 0 soft)
+    var stage = sc.bridge ? -1 : currentStage(f);
+    setHeader(actId);
+    rebuildTracker(actId, Math.max(0, stage));
+    if(sc.bridge){
+      // mark no stage active during bridge
+      Array.prototype.forEach.call(tracker.querySelectorAll(".stg"), function(d){
+        d.classList.remove("active","done");
+      });
     }
 
-    // Scene-specific progressive content
-    var kind=SCENES[f.scene].kind;
-    if(kind==="gen"){
-      renderRows("genBody", GEN_ROWS, f.local);
-      var t2=document.getElementById("genTab2");
-      if(t2) t2.className = f.local>=4 ? "stab on done" : "stab";
-    }
-    if(kind==="choices") renderChoices(f.local);
-    if(kind==="survey") renderSurvey(f.local);
+    var kind=sc.kind;
+    if(kind==="choices") renderTable("choicesBody", CHOICE_ROWS, f.local);
+    if(kind==="survey") renderTable("surveyBody", SURVEY_ROWS, f.local);
     if(kind==="outcome"){
-      if(f.local>=2){
-        document.getElementById("cntSurvey").textContent="148";
-        document.getElementById("cntChoices").textContent="312";
-      } else {
-        document.getElementById("cntSurvey").textContent="—";
-        document.getElementById("cntChoices").textContent="—";
-      }
+      document.getElementById("cntSurvey").textContent = f.local>=2 ? "148" : "—";
+      document.getElementById("cntChoices").textContent = f.local>=2 ? "312" : "—";
     }
-    // Upload: validate first, then bar climbs through packaging → POST → complete
     if(kind==="upload"){
       var upMap={6:35,7:72,8:100};
       var up=f.local>=6 ? (upMap[f.local]||0) : 0;
@@ -695,7 +885,6 @@
         else upPhase.textContent="upload complete — new form version on asset ✓";
       }
     }
-    // Deploy bar then live phone
     if(kind==="deploy"){
       var depMap={1:40,2:75,3:100,4:100,5:100,6:100};
       setBar("depBar","depPct", depMap[f.local]||0);
@@ -717,8 +906,8 @@
     if(idx===FLAT.length-1){ playing=false; syncBtn(); return; }
     var next=FLAT[idx+1];
     var wait=(next.scene!==FLAT[idx].scene)?SCENE_PAUSE:STEP_MS;
-    // Slow slightly on upload/deploy bars so the fill is visible
     var curKind=SCENES[FLAT[idx].scene].kind;
+    if(SCENES[FLAT[idx].scene].bridge) wait=2600;
     if(curKind==="upload" && FLAT[idx].local>=6) wait=1800;
     if(curKind==="deploy" && FLAT[idx].local<=2) wait=1600;
     timer=setTimeout(function(){ idx++; render(); schedule(); }, wait);
@@ -736,16 +925,24 @@
     if(playing){ if(idx===FLAT.length-1) idx=0; render(); schedule(); }
     else clearTimeout(timer);
   }
+  function skipToEmOnc(){
+    playing=true; syncBtn();
+    go(BRIDGE_IDX);
+  }
 
   document.getElementById("btnNext").onclick=function(){ playing=false; syncBtn(); clearTimeout(timer); go(idx+1); };
   document.getElementById("btnPrev").onclick=function(){ playing=false; syncBtn(); clearTimeout(timer); go(idx-1); };
   document.getElementById("btnPlay").onclick=toggle;
   document.getElementById("btnRestart").onclick=function(){ idx=0; playing=true; syncBtn(); render(); schedule(); };
+  document.getElementById("btnSkip").onclick=skipToEmOnc;
+  document.getElementById("act1").onclick=skipToEmOnc;
+  document.getElementById("act0").onclick=function(){ playing=true; syncBtn(); go(0); };
 
   document.addEventListener("keydown",function(e){
     if(e.code==="Space"){ e.preventDefault(); toggle(); }
     else if(e.code==="ArrowRight"){ playing=false; syncBtn(); clearTimeout(timer); go(idx+1); }
     else if(e.code==="ArrowLeft"){ playing=false; syncBtn(); clearTimeout(timer); go(idx-1); }
+    else if(e.key==="e"||e.key==="E"){ skipToEmOnc(); }
     else if(e.key==="f"||e.key==="F"){
       if(!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
