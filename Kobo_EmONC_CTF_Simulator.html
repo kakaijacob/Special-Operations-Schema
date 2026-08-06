@@ -196,12 +196,83 @@
     <div class="title-row">
       <h1>Watching the tool get built — <span>EmONC Curriculum Tracking</span></h1>
       <span class="badge">emonc_ctf</span>
-      <div class="subtitle">See the form spreadsheet assemble, the finished outcome, then upload and deploy to Kobo</div>
+      <div class="subtitle">Sync the source databases, generate the shared lists, watch the form assemble, then upload and deploy to Kobo</div>
     </div>
     <div class="tracker" id="tracker"></div>
   </header>
 
   <main>
+
+    <!-- SCENE S1: SYNC FROM SOURCE DATABASES -->
+    <section class="scene" id="scSync">
+      <div class="scene-head"><b>Sync.</b> <code>refreshAllKoboTools()</code> pulls the two external databases into local sheets before anything is built.</div>
+      <div class="grid2">
+        <div class="card" data-step="1">
+          <h3>Source → local (mentees)</h3>
+          <div class="flow" style="flex-direction:column;align-items:stretch;gap:6px">
+            <div class="fnode" style="text-align:left"><b>EXTERNAL</b>Mentee Database 2026</div>
+            <div style="text-align:center;color:var(--accent);font-size:14px">↓ <span style="font-family:var(--mono);font-size:10.5px">syncMenteeDatabaseFromSource()</span></div>
+            <div class="fnode done" style="text-align:left" data-step="3"><b>LOCAL</b>Mentee Database</div>
+          </div>
+          <div class="logline info" data-step="2">filter Status = Inactive → dropped</div>
+          <div class="logline info" data-step="2">normalize Mentee ID (strip 254 / leading 0)</div>
+          <div class="logline info" data-step="3">Program "EmONC Curriculum" → "MENTORS Curriculum"</div>
+          <div class="stat" data-step="3">
+            <span class="pill">Jane Wanjiku · 712345678</span>
+            <span class="pill">Kirinyaga · Kerugoya</span>
+            <span class="pill blue">Status = Active</span>
+          </div>
+        </div>
+        <div class="card" data-step="4">
+          <h3>Source → local (mentors / IFM)</h3>
+          <div class="flow" style="flex-direction:column;align-items:stretch;gap:6px">
+            <div class="fnode" style="text-align:left"><b>EXTERNAL</b>Mentor (IFM) Database 2026</div>
+            <div style="text-align:center;color:var(--accent);font-size:14px">↓ <span style="font-family:var(--mono);font-size:10.5px">syncIFMListFromSource()</span></div>
+            <div class="fnode done" style="text-align:left" data-step="5"><b>LOCAL</b>IFM List</div>
+          </div>
+          <div class="logline info" data-step="5">headers remapped to kobocreator names</div>
+          <div class="logline info" data-step="5">Inactive rows + non-allowed counties dropped</div>
+          <div class="logline ok" data-step="6">both local sheets refreshed — sync complete</div>
+          <div style="margin-top:8px" data-step="6" class="callout">
+            The form is only ever built from these <b>local</b> sheets, so a stale source never leaks half-synced data into Kobo.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE S2: KOBOCREATOR GENERATES THE SHARED LISTS -->
+    <section class="scene" id="scGen">
+      <div class="scene-head"><b>Generate.</b> <code>generateAllOutputs()</code> turns the synced databases into the shared choice sheets every form reads.</div>
+      <div class="grid21">
+        <div class="card" data-step="1">
+          <h3>kobocreator output sheets</h3>
+          <div class="sheet">
+            <div class="sheet-tabs">
+              <div class="stab on done">EmONC Mentees List (Choices)</div>
+              <div class="stab" id="genTab2">EmONC Facilities List (Choices)</div>
+            </div>
+            <div class="sheet-body">
+              <table class="grid">
+                <thead>
+                  <tr><th style="width:20%">County</th><th style="width:32%">Facility</th><th style="width:22%">list_name</th><th style="width:26%">label</th></tr>
+                </thead>
+                <tbody id="genBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card" data-step="2">
+          <h3>Rules applied here</h3>
+          <div class="logline info" data-step="2">resetFacilityNameRegistry_()</div>
+          <div class="logline ok" data-step="3">one canonical name per Facility Code</div>
+          <div class="logline ok" data-step="4">EmONC filter = MENTORS Curriculum / Both</div>
+          <div class="logline ok" data-step="5">list_name = kerugoya_mentees</div>
+          <div style="margin-top:8px" data-step="6" class="callout g">
+            <b>Lists ready.</b> The EmONC builder now has facilities and mentees to point its selects at.
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- SCENE 0: START BUILD -->
     <section class="scene" id="sc0">
@@ -436,22 +507,26 @@
   "use strict";
 
   var STAGES = [
-    {n:"1", l:"Open form"},
-    {n:"2", l:"Write choices"},
-    {n:"3", l:"Write survey"},
-    {n:"4", l:"Outcome"},
-    {n:"5", l:"Upload"},
-    {n:"6", l:"Deploy"}
+    {n:"1", l:"Sync"},
+    {n:"2", l:"Generate"},
+    {n:"3", l:"Open form"},
+    {n:"4", l:"Choices"},
+    {n:"5", l:"Survey"},
+    {n:"6", l:"Outcome"},
+    {n:"7", l:"Upload"},
+    {n:"8", l:"Deploy"}
   ];
 
   // Scene step counts — must match max data-step in each scene
   var SCENES = [
-    {el:"sc0", steps:3, stage:0},
-    {el:"sc1", steps:6, stage:1},
-    {el:"sc2", steps:7, stage:2},
-    {el:"sc3", steps:4, stage:3},
-    {el:"sc4", steps:8, stage:4},
-    {el:"sc5", steps:6, stage:5}
+    {el:"scSync", steps:6, stage:0, kind:"sync"},
+    {el:"scGen",  steps:6, stage:1, kind:"gen"},
+    {el:"sc0", steps:3, stage:2, kind:"open"},
+    {el:"sc1", steps:6, stage:3, kind:"choices"},
+    {el:"sc2", steps:7, stage:4, kind:"survey"},
+    {el:"sc3", steps:4, stage:5, kind:"outcome"},
+    {el:"sc4", steps:8, stage:6, kind:"upload"},
+    {el:"sc5", steps:6, stage:7, kind:"deploy"}
   ];
 
   // Progressive rows for the choices sheet mock
@@ -465,6 +540,17 @@
     {at:5, cells:["emonc_activities","videos","Activity 2: Videos"], hl:false},
     {at:5, cells:["cmes","AMTSL","Active management of third stage…"], hl:false},
     {at:6, cells:["…","…","+ curriculum modules"], muted:true}
+  ];
+
+  // kobocreator output rows, revealed as the generators run
+  var GEN_ROWS = [
+    {at:1, cells:["Kirinyaga","Kerugoya County Referral Hospital","kerugoya_mentees","Jane Wanjiku"], hl:true},
+    {at:1, cells:["Kirinyaga","Kerugoya County Referral Hospital","kerugoya_mentees","Peter Mwangi"]},
+    {at:3, cells:["Makueni","Makueni County Referral Hospital","makueni_mentees","Alice Kamene"]},
+    {at:3, cells:["…","(one spelling per Facility Code)","…","…"], muted:true},
+    {at:4, cells:["Kirinyaga","Kerugoya County Referral Hospital","kirinyaga_facilities","Kerugoya County Referral Hospital"], hl:true},
+    {at:5, cells:["Kirinyaga","Sagana Sub County Hospital","kirinyaga_facilities","Sagana Sub County Hospital"]},
+    {at:6, cells:["…","16 counties covered","…","+ facility & mentee rows"], muted:true}
   ];
 
   var SURVEY_ROWS = [
@@ -500,6 +586,23 @@
   var params=new URLSearchParams(location.search);
   if(params.has("step")) idx=parseInt(params.get("step"),10)||0;
   if(params.get("autoplay")==="0"){ playing=false; document.body.classList.add("noanim"); }
+
+  function renderRows(tbodyId, rows, local){
+    var tb=document.getElementById(tbodyId);
+    if(!tb) return;
+    var html="";
+    rows.forEach(function(r){
+      if(r.at>local) return;
+      var cls="row-in"+(r.hl?" hl":"");
+      html+='<tr class="'+cls+'">';
+      r.cells.forEach(function(c,i){
+        var extra=r.muted?" muted-cell":(i===0?" col-type":i===1?" col-name":"");
+        html+='<td class="'+extra+'">'+c+'</td>';
+      });
+      html+='</tr>';
+    });
+    tb.innerHTML=html;
+  }
 
   function renderChoices(local){
     var tb=document.getElementById("choicesBody");
@@ -562,9 +665,15 @@
     }
 
     // Scene-specific progressive content
-    if(f.scene===1) renderChoices(f.local);
-    if(f.scene===2) renderSurvey(f.local);
-    if(f.scene===3){
+    var kind=SCENES[f.scene].kind;
+    if(kind==="gen"){
+      renderRows("genBody", GEN_ROWS, f.local);
+      var t2=document.getElementById("genTab2");
+      if(t2) t2.className = f.local>=4 ? "stab on done" : "stab";
+    }
+    if(kind==="choices") renderChoices(f.local);
+    if(kind==="survey") renderSurvey(f.local);
+    if(kind==="outcome"){
       if(f.local>=2){
         document.getElementById("cntSurvey").textContent="148";
         document.getElementById("cntChoices").textContent="312";
@@ -574,7 +683,7 @@
       }
     }
     // Upload: validate first, then bar climbs through packaging → POST → complete
-    if(f.scene===4){
+    if(kind==="upload"){
       var upMap={6:35,7:72,8:100};
       var up=f.local>=6 ? (upMap[f.local]||0) : 0;
       setBar("upBar","upPct", up);
@@ -587,7 +696,7 @@
       }
     }
     // Deploy bar then live phone
-    if(f.scene===5){
+    if(kind==="deploy"){
       var depMap={1:40,2:75,3:100,4:100,5:100,6:100};
       setBar("depBar","depPct", depMap[f.local]||0);
       var depPhase=document.getElementById("depPhase");
@@ -609,8 +718,9 @@
     var next=FLAT[idx+1];
     var wait=(next.scene!==FLAT[idx].scene)?SCENE_PAUSE:STEP_MS;
     // Slow slightly on upload/deploy bars so the fill is visible
-    if(FLAT[idx].scene===4 && FLAT[idx].local===6) wait=1800;
-    if(FLAT[idx].scene===5 && FLAT[idx].local===1) wait=1600;
+    var curKind=SCENES[FLAT[idx].scene].kind;
+    if(curKind==="upload" && FLAT[idx].local>=6) wait=1800;
+    if(curKind==="deploy" && FLAT[idx].local<=2) wait=1600;
     timer=setTimeout(function(){ idx++; render(); schedule(); }, wait);
   }
 
