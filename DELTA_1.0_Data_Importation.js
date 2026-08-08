@@ -15,7 +15,8 @@ const FLOWS = {
   "4638aa69-0191-4ba1-a0d7-3f195ddd87a1": "PIH",
   "9b52d228-e62e-4ea6-a8ec-eb661be15013": "NNR",
   "f453595c-620f-4963-b582-6aa78d8b8c31": "Maternal Shock",
-  "0980e214-ca17-4e06-9561-f5dcb3a21ffc": "Maternal Resuscitation",
+  "e0bf0deb-0f1e-47b1-ad8b-254ba4a6d4a0": "Maternal Resuscitation",
+  "0980e214-ca17-4e06-9561-f5dcb3a21ffc": "AVD",
   "588a7a45-a8f6-4ec3-802f-9165896d7daa": "Shoulder Dystocia",
   "1c1d6c41-0364-4ea7-b30a-d9e44b9c221c": "Breech",
   "028c85cc-32c1-4ee3-a6b0-71b9f983751b": "PPH",
@@ -78,8 +79,21 @@ const FLOW_FIELDS = {
     {field:"pre_score", header:"Pretest Score"},
     {field:"post_score", header:"Posttest Score"}
   ],
-  // Maternal Resuscitation
+  // AVD
   "0980e214-ca17-4e06-9561-f5dcb3a21ffc": [
+    {field:"contact_uuid", header:"Contact UUID", type:"contact", key:"uuid"},
+    {field:"contact_name", header:"Contact Name", type:"contact", key:"name"},
+    {field:"urn", header:"URN Value", type:"contact", key:"urn"},
+    {field:"cadre", header:"Cadre"},
+    {field:"county", header:"County"},
+    {field:"facility_name", header:"Facility"},
+    {field:"created_on", header:"Started", type:"meta"},
+    {field:"modified_on", header:"Modified", type:"meta"},
+    {field:"pre_score", header:"Pretest Score"},
+    {field:"post_score", header:"Posttest Score"}
+  ],
+  // Maternal Resuscitation
+  "e0bf0deb-0f1e-47b1-ad8b-254ba4a6d4a0": [
     {field:"contact_uuid", header:"Contact UUID", type:"contact", key:"uuid"},
     {field:"contact_name", header:"Contact Name", type:"contact", key:"name"},
     {field:"urn", header:"URN Value", type:"contact", key:"urn"},
