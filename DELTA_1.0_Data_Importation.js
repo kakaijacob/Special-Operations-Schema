@@ -7,8 +7,21 @@
 const BASE_URL = "https://prompts.jacarandahealth.org/api/v2";
 const API_TOKEN = "5f39306380a6dbe3cd497ce9bf8931deeaa6993a";
 
-// Identity Flow UUID (contains cadre, county, facility)
+// Identity Flow UUID (captures cadre, county, facility)
 const IDENTITY_FLOW_UUID = "8a4765d7-b608-41b1-a459-f6628b3d0559";
+
+// The identity flow saves these details onto the contact record instead of
+// exposing them as flow results, and /runs.json only returns a contact's
+// uuid/name/urn. They therefore have to be read from contact fields, which is
+// also why a manual flow-results export shows them but the API did not.
+// Some contacts were registered against older field keys, hence the fallbacks.
+const IDENTITY_FIELD_KEYS = {
+  cadre: ["cadre"],
+  county: ["county"],
+  facility_name: ["facility_name", "facilityname"]
+};
+
+const UNSPECIFIED = "Unspecified";
 
 // FLOW UUID : SheetName
 const FLOWS = {
@@ -223,7 +236,12 @@ function exportFlow(flowUUID) {
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   if (rows.length > 0) sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
 
-  Logger.log(`✔ Imported ${rows.length} records → ${sheetName}`);
+  const missingIdentity = runs.filter(r =>
+    r.values.cadre.value === UNSPECIFIED && r.values.county.value === UNSPECIFIED
+  ).length;
+
+  Logger.log(`✔ Imported ${rows.length} records → ${sheetName}` +
+    (missingIdentity ? ` (${missingIdentity} without cadre/county on their contact record)` : ""));
   return sheetName;
 }
 
@@ -358,37 +376,76 @@ function findHeaderIndex(headerRow, aliases) {
   return -1;
 }
 
-// Enrich runs with identity flow fields
+// Enrich runs with cadre / county / facility.
+// Contact fields are authoritative; identity flow results are a fallback in
+// case the flow is later changed to save these as results too.
 function enrichFlowWithIdentity(runs) {
-  const identityLookup = fetchIdentityFlow();
+  cacheContactIdentities(runs.map(r => r.contact?.uuid));
+  const flowIdentities = fetchIdentityFlow();
 
   return runs.map(run => {
     const contactUUID = run.contact?.uuid;
-    const identity = identityLookup[contactUUID] || {
-      cadre: "Unspecified",
-      county: "Unspecified",
-      facility_name: "Unspecified"
-    };
+    const fromContact = contactIdentityCache[contactUUID] || {};
+    const fromFlow = flowIdentities[contactUUID] || {};
 
     return {
       ...run,
       values: {
         ...run.values,
-        cadre: { value: identity.cadre },
-        county: { value: identity.county },
-        facility_name: { value: identity.facility_name }
+        cadre: { value: firstValue(fromContact.cadre, fromFlow.cadre) },
+        county: { value: firstValue(fromContact.county, fromFlow.county) },
+        facility_name: { value: firstValue(fromContact.facility_name, fromFlow.facility_name) }
       }
     };
   });
 }
 
-// Fetch identity flow data
-// Cached for the lifetime of the execution: every flow needs the same lookup,
-// and re-paginating it per flow risks the Apps Script execution time limit.
-let identityLookupCache = null;
+// Contact identities are cached for the lifetime of the execution so a contact
+// appearing in several modules is only fetched once.
+let contactIdentityCache = {};
+
+function cacheContactIdentities(contactUUIDs) {
+  const pending = contactUUIDs
+    .filter(uuid => uuid && !contactIdentityCache[uuid])
+    .filter((uuid, i, list) => list.indexOf(uuid) === i);
+
+  const CHUNK_SIZE = 25;
+
+  for (let i = 0; i < pending.length; i += CHUNK_SIZE) {
+    const chunk = pending.slice(i, i + CHUNK_SIZE);
+
+    const responses = UrlFetchApp.fetchAll(chunk.map(uuid => ({
+      url: `${BASE_URL}/contacts.json?uuid=${encodeURIComponent(uuid)}`,
+      headers: { Authorization: `Token ${API_TOKEN}` },
+      muteHttpExceptions: true
+    })));
+
+    responses.forEach((response, idx) => {
+      const uuid = chunk[idx];
+      const identity = {};
+
+      if (response.getResponseCode() === 200) {
+        const results = JSON.parse(response.getContentText()).results || [];
+        const fields = results[0]?.fields || {};
+
+        Object.keys(IDENTITY_FIELD_KEYS).forEach(target => {
+          const value = firstValue(...IDENTITY_FIELD_KEYS[target].map(k => fields[k]));
+          if (value !== UNSPECIFIED) identity[target] = value;
+        });
+      } else {
+        Logger.log(`⚠ Contact lookup failed for ${uuid}: HTTP ${response.getResponseCode()}`);
+      }
+
+      contactIdentityCache[uuid] = identity;
+    });
+  }
+}
+
+// Fetch identity flow results, cached for the lifetime of the execution.
+let identityFlowCache = null;
 
 function fetchIdentityFlow() {
-  if (identityLookupCache) return identityLookupCache;
+  if (identityFlowCache) return identityFlowCache;
 
   let runs = [];
   let next = `${BASE_URL}/runs.json?flow=${IDENTITY_FLOW_UUID}`;
@@ -399,16 +456,35 @@ function fetchIdentityFlow() {
     next = data.next;
   }
 
+  // Oldest first so a newer run wins, and blanks never overwrite a value that
+  // an earlier run already supplied.
+  runs.sort((a, b) => new Date(a.modified_on) - new Date(b.modified_on));
+
   const identityLookup = {};
   runs.forEach(run => {
-    const contactUUID = run.contact.uuid;
-    identityLookup[contactUUID] = {
-      cadre: run.values?.cadre?.value || "Unspecified",
-      county: run.values?.county?.value || "Unspecified",
-      facility_name: run.values?.facility_name?.value || "Unspecified"
-    };
+    const contactUUID = run.contact?.uuid;
+    if (!contactUUID) return;
+
+    const identity = identityLookup[contactUUID] || (identityLookup[contactUUID] = {});
+    Object.keys(IDENTITY_FIELD_KEYS).forEach(target => {
+      const value = firstValue(run.values?.[target]?.value);
+      if (value !== UNSPECIFIED) identity[target] = value;
+    });
   });
 
-  identityLookupCache = identityLookup;
+  identityFlowCache = identityLookup;
   return identityLookup;
+}
+
+// A few contact records hold spreadsheet error text (e.g. "#REF!") from an
+// earlier bulk import, which is treated the same as a missing value.
+const ERROR_LITERAL = /^#(REF|NUM|N\/A|VALUE|DIV\/0|NAME|NULL)[!?]?$/i;
+
+function firstValue(...candidates) {
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null) continue;
+    const value = String(candidate).trim();
+    if (value !== "" && !ERROR_LITERAL.test(value)) return value;
+  }
+  return UNSPECIFIED;
 }
