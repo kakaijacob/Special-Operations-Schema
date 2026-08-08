@@ -8,6 +8,25 @@ const BASE_URL = "https://prompts.jacarandahealth.org/api/v2";
 const API_TOKEN = "5f39306380a6dbe3cd497ce9bf8931deeaa6993a";
 const RECORD_CHUNK_SIZE = 500;
 
+// RapidPro keeps only recent runs in /runs.json and moves older ones into
+// archives, so history has to be read from /archives.json. The CME module
+// flows were created on 2024-03-25, hence the default start date.
+const ARCHIVE_START_DATE = "2024-03-01";
+
+// Archived runs are staged in their own sheet because exportFlow() rewrites the
+// module sheets on every import. Rows are keyed by run id so the backfill can be
+// resumed and re-run without duplicating anything.
+const ARCHIVE_SHEET_NAME = "_archived_runs";
+const ARCHIVE_SHEET_HEADERS = [
+  "run_id","flow_uuid","contact_uuid","contact_name","urn",
+  "created_on","modified_on","pre_score","post_score"
+];
+
+// One archive can expand to tens of megabytes, so the backfill processes as many
+// as fit in this budget and records progress, letting the next run continue.
+const ARCHIVE_TIME_BUDGET_MS = 4.5 * 60 * 1000;
+const ARCHIVE_PROGRESS_KEY = "DELTA_ARCHIVES_COMPLETED";
+
 // Identity Flow UUID (captures cadre, county, facility)
 const IDENTITY_FLOW_UUID = "8a4765d7-b608-41b1-a459-f6628b3d0559";
 
@@ -204,13 +223,17 @@ function exportFlow(flowUUID) {
   const sheet = getSheet(sheetName);
   sheet.clearContents();
 
-  // No date filter is applied: import every run retained by RapidPro,
-  // beginning with the earliest available record. RapidPro returns newest
-  // first, so sort after all pages have been downloaded.
-  let runs = fetchAllRapidProResults(
+  // No date filter is applied, but /runs.json only holds recent runs: RapidPro
+  // archives older ones. Combine the live runs with any history already staged
+  // by backfillArchivedRuns(), then sort oldest first.
+  const liveRuns = fetchAllRapidProResults(
     `${BASE_URL}/runs.json?flow=${encodeURIComponent(flowUUID)}`
   );
+  const archivedRuns = getStagedRuns(flowUUID);
+  let runs = mergeRunsById(archivedRuns, liveRuns);
   runs.sort((a, b) => new Date(a.created_on) - new Date(b.created_on));
+
+  Logger.log(`${sheetName}: ${liveRuns.length} live + ${archivedRuns.length} archived = ${runs.length} run(s)`);
 
   // Enrich runs with identity flow fields
   runs = enrichFlowWithIdentity(runs);
@@ -356,6 +379,209 @@ function mergeSheetsToMoH(sheetNames) {
   Logger.log(`✔ Merged ${sheetNames.length} sheets into ${masterSheetName}`);
 }
 
+/********** ARCHIVED (HISTORICAL) RUNS **********/
+// Run once (repeatedly, if it reports remaining work) to pull the history that
+// /runs.json no longer serves. importRapidProAndMerge() then combines the staged
+// archived runs with the live ones on every import.
+function backfillArchivedRuns() {
+  const startedAt = Date.now();
+  const properties = PropertiesService.getScriptProperties();
+  const completed = JSON.parse(properties.getProperty(ARCHIVE_PROGRESS_KEY) || "[]");
+
+  const archives = listRunArchives().filter(a => completed.indexOf(archiveKey(a)) === -1);
+  if (archives.length === 0) {
+    Logger.log("✔ No archives left to process. History is already staged.");
+    return;
+  }
+
+  Logger.log(`Processing ${archives.length} remaining archive(s) from ${ARCHIVE_START_DATE}`);
+
+  const sheet = getSheet(ARCHIVE_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, ARCHIVE_SHEET_HEADERS.length).setValues([ARCHIVE_SHEET_HEADERS]);
+  }
+
+  const stagedRunIds = readStagedRunIds(sheet);
+  let appended = 0;
+  let processed = 0;
+  let failed = 0;
+
+  for (const archive of archives) {
+    if (Date.now() - startedAt > ARCHIVE_TIME_BUDGET_MS) break;
+
+    const result = readArchiveRows(archive, stagedRunIds);
+
+    // A failed download is left uncheckpointed so the next run retries it.
+    if (!result.ok) {
+      failed++;
+      if (result.fatal) break;
+      continue;
+    }
+
+    if (result.rows.length > 0) {
+      writeRowsInChunks(sheet, sheet.getLastRow() + 1, result.rows, ARCHIVE_SHEET_HEADERS.length);
+      SpreadsheetApp.flush();
+      appended += result.rows.length;
+    }
+
+    completed.push(archiveKey(archive));
+    properties.setProperty(ARCHIVE_PROGRESS_KEY, JSON.stringify(completed));
+    processed++;
+    Logger.log(`  ${archive.period} ${archive.start_date}: staged ${result.rows.length} module run(s)`);
+  }
+
+  const remaining = archives.length - processed - failed;
+  Logger.log(`✔ Staged ${appended} archived run(s) from ${processed} archive(s).` +
+    (failed > 0 ? ` ${failed} archive(s) could not be downloaded.` : "") +
+    (remaining > 0 ? ` ${remaining} archive(s) remaining — run backfillArchivedRuns() again.` : ""));
+}
+
+// Forget the checkpoint so the next backfill re-reads every archive.
+function resetArchiveBackfill() {
+  PropertiesService.getScriptProperties().deleteProperty(ARCHIVE_PROGRESS_KEY);
+  Logger.log("✔ Archive progress reset.");
+}
+
+function listRunArchives() {
+  const archives = fetchAllRapidProResults(`${BASE_URL}/archives.json?archive_type=run`);
+  return archives
+    .filter(a => a.record_count > 0 && a.start_date >= ARCHIVE_START_DATE)
+    .sort((a, b) => (a.start_date < b.start_date ? -1 : 1));
+}
+
+function archiveKey(archive) {
+  return `${archive.period}:${archive.start_date}`;
+}
+
+// Archives are gzipped JSONL covering every flow in the workspace, so records
+// are filtered down to the configured modules as they are read.
+function readArchiveRows(archive, stagedRunIds) {
+  const response = UrlFetchApp.fetch(archive.download_url, { muteHttpExceptions: true });
+
+  if (response.getResponseCode() !== 200) {
+    const body = response.getContentText();
+    Logger.log(`⚠ Could not download ${archiveKey(archive)}: HTTP ${response.getResponseCode()}. ` +
+      `${body.slice(0, 200)}`);
+
+    // RapidPro signs archive links with AWS Signature V2 while the bucket now
+    // requires V4, which no client can work around, so stop rather than retry
+    // every remaining archive.
+    const signingRejected = body.indexOf("AWS4-HMAC-SHA256") !== -1;
+    if (signingRejected) {
+      Logger.log("⚠ RapidPro is generating obsolete AWS SigV2 archive links. " +
+        "The workspace administrator must configure SigV4 signing (or supply the " +
+        "archives directly) before history can be imported.");
+    }
+
+    return { ok: false, rows: [], fatal: signingRejected };
+  }
+
+  const blob = response.getBlob().setContentType("application/x-gzip");
+  const lines = Utilities.ungzip(blob).getDataAsString().split("\n");
+  const rows = [];
+
+  lines.forEach(line => {
+    if (!line) return;
+
+    const run = JSON.parse(line);
+    const flowUUID = run.flow?.uuid;
+    if (!FLOWS[flowUUID]) return;
+
+    const runId = String(run.id);
+    if (stagedRunIds[runId]) return;
+    stagedRunIds[runId] = true;
+
+    rows.push([
+      runId,
+      flowUUID,
+      run.contact?.uuid || "",
+      run.contact?.name || "",
+      run.contact?.urn || "",
+      run.created_on || "",
+      run.modified_on || "",
+      resultValue(run, "pre_score"),
+      resultValue(run, "post_score")
+    ]);
+  });
+
+  return { ok: true, rows: rows };
+}
+
+function resultValue(run, key) {
+  const result = run.values?.[key];
+  if (result === undefined || result === null) return "";
+  return (typeof result === "object" ? result.value : result) || "";
+}
+
+function readStagedRunIds(sheet) {
+  const ids = {};
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return ids;
+
+  sheet.getRange(2, 1, lastRow - 1, 1).getValues().forEach(row => {
+    if (row[0] !== "") ids[String(row[0])] = true;
+  });
+
+  return ids;
+}
+
+// Staged rows are read once per execution and reshaped to look like API runs so
+// exportFlow() can treat archived and live history identically.
+let stagedRunsByFlow = null;
+
+function getStagedRuns(flowUUID) {
+  if (stagedRunsByFlow === null) {
+    stagedRunsByFlow = {};
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(ARCHIVE_SHEET_NAME);
+    const lastRow = sheet ? sheet.getLastRow() : 0;
+
+    if (lastRow > 1) {
+      const values = sheet.getRange(2, 1, lastRow - 1, ARCHIVE_SHEET_HEADERS.length).getValues();
+
+      values.forEach(row => {
+        const flow = row[1];
+        if (!flow) return;
+
+        (stagedRunsByFlow[flow] = stagedRunsByFlow[flow] || []).push({
+          id: row[0],
+          contact: { uuid: row[2], name: row[3], urn: row[4] },
+          created_on: toIsoString(row[5]),
+          modified_on: toIsoString(row[6]),
+          values: {
+            pre_score: { value: row[7] },
+            post_score: { value: row[8] }
+          }
+        });
+      });
+    }
+  }
+
+  return stagedRunsByFlow[flowUUID] || [];
+}
+
+// Sheets may hand back either the original ISO text or a parsed Date.
+function toIsoString(value) {
+  if (value instanceof Date) return value.toISOString();
+  return value ? String(value) : "";
+}
+
+function mergeRunsById(archivedRuns, liveRuns) {
+  const merged = [];
+  const seen = {};
+
+  // Live runs win: an archived copy of the same run is always older.
+  liveRuns.concat(archivedRuns).forEach(run => {
+    const id = String(run.id);
+    if (seen[id]) return;
+    seen[id] = true;
+    merged.push(run);
+  });
+
+  return merged;
+}
+
 /***************** HELPERS *****************/
 function rapidGet(url) {
   return JSON.parse(UrlFetchApp.fetch(url, {headers:{ Authorization:`Token ${API_TOKEN}` }}).getContentText());
@@ -432,18 +658,32 @@ function enrichFlowWithIdentity(runs) {
   });
 }
 
-// Contact identities are cached for the lifetime of the execution so a contact
-// appearing in several modules is only fetched once.
-let contactIdentityCache = {};
+// Contact identities are cached in a sheet as well as in memory. The historical
+// dataset spans thousands of contacts and each one costs a request, so lookups
+// accumulate across executions instead of being repeated on every import.
+const CONTACT_SHEET_NAME = "_contact_identity";
+const CONTACT_SHEET_HEADERS = ["contact_uuid", "cadre", "county", "facility_name"];
+const CONTACT_LOOKUP_BUDGET_MS = 2 * 60 * 1000;
+
+let contactIdentityCache = null;
 
 function cacheContactIdentities(contactUUIDs) {
+  const sheet = loadContactIdentityCache();
+
   const pending = contactUUIDs
     .filter(uuid => uuid && !contactIdentityCache[uuid])
     .filter((uuid, i, list) => list.indexOf(uuid) === i);
 
+  if (pending.length === 0) return;
+
+  const startedAt = Date.now();
   const CHUNK_SIZE = 25;
+  const newRows = [];
+  let looked = 0;
 
   for (let i = 0; i < pending.length; i += CHUNK_SIZE) {
+    if (Date.now() - startedAt > CONTACT_LOOKUP_BUDGET_MS) break;
+
     const chunk = pending.slice(i, i + CHUNK_SIZE);
 
     const responses = UrlFetchApp.fetchAll(chunk.map(uuid => ({
@@ -469,8 +709,44 @@ function cacheContactIdentities(contactUUIDs) {
       }
 
       contactIdentityCache[uuid] = identity;
+      newRows.push([uuid, identity.cadre || "", identity.county || "", identity.facility_name || ""]);
+      looked++;
     });
   }
+
+  if (newRows.length > 0) {
+    writeRowsInChunks(sheet, sheet.getLastRow() + 1, newRows, CONTACT_SHEET_HEADERS.length);
+  }
+
+  if (looked < pending.length) {
+    Logger.log(`⚠ Looked up ${looked} of ${pending.length} new contacts; ` +
+      `re-run the import to resolve the rest.`);
+  }
+}
+
+function loadContactIdentityCache() {
+  const sheet = getSheet(CONTACT_SHEET_NAME);
+
+  if (contactIdentityCache === null) {
+    contactIdentityCache = {};
+
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, CONTACT_SHEET_HEADERS.length).setValues([CONTACT_SHEET_HEADERS]);
+    } else if (sheet.getLastRow() > 1) {
+      sheet.getRange(2, 1, sheet.getLastRow() - 1, CONTACT_SHEET_HEADERS.length)
+        .getValues()
+        .forEach(row => {
+          if (!row[0]) return;
+          const identity = {};
+          if (row[1]) identity.cadre = row[1];
+          if (row[2]) identity.county = row[2];
+          if (row[3]) identity.facility_name = row[3];
+          contactIdentityCache[String(row[0])] = identity;
+        });
+    }
+  }
+
+  return sheet;
 }
 
 // Fetch identity flow results, cached for the lifetime of the execution.
