@@ -6,6 +6,7 @@
 
 const BASE_URL = "https://prompts.jacarandahealth.org/api/v2";
 const API_TOKEN = "5f39306380a6dbe3cd497ce9bf8931deeaa6993a";
+const RECORD_CHUNK_SIZE = 500;
 
 // Identity Flow UUID (captures cadre, county, facility)
 const IDENTITY_FLOW_UUID = "8a4765d7-b608-41b1-a459-f6628b3d0559";
@@ -203,14 +204,13 @@ function exportFlow(flowUUID) {
   const sheet = getSheet(sheetName);
   sheet.clearContents();
 
-  let runs = [];
-  let next = `${BASE_URL}/runs.json?flow=${flowUUID}`;
-
-  while (next) {
-    const data = rapidGet(next);
-    runs = runs.concat(data.results);
-    next = data.next;
-  }
+  // No date filter is applied: import every run retained by RapidPro,
+  // beginning with the earliest available record. RapidPro returns newest
+  // first, so sort after all pages have been downloaded.
+  let runs = fetchAllRapidProResults(
+    `${BASE_URL}/runs.json?flow=${encodeURIComponent(flowUUID)}`
+  );
+  runs.sort((a, b) => new Date(a.created_on) - new Date(b.created_on));
 
   // Enrich runs with identity flow fields
   runs = enrichFlowWithIdentity(runs);
@@ -234,7 +234,7 @@ function exportFlow(flowUUID) {
   }));
 
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  if (rows.length > 0) sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  writeRowsInChunks(sheet, 2, rows, headers.length);
 
   const missingIdentity = runs.filter(r =>
     r.values.cadre.value === UNSPECIFIED && r.values.county.value === UNSPECIFIED
@@ -350,9 +350,7 @@ function mergeSheetsToMoH(sheetNames) {
   });
 
   masterSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  if (rows.length > 0) {
-    masterSheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-  }
+  writeRowsInChunks(masterSheet, 2, rows, headers.length);
 
   SpreadsheetApp.flush();
   Logger.log(`✔ Merged ${sheetNames.length} sheets into ${masterSheetName}`);
@@ -361,6 +359,40 @@ function mergeSheetsToMoH(sheetNames) {
 /***************** HELPERS *****************/
 function rapidGet(url) {
   return JSON.parse(UrlFetchApp.fetch(url, {headers:{ Authorization:`Token ${API_TOKEN}` }}).getContentText());
+}
+
+// Retrieve every available API record in pages of 500. The first request
+// explicitly sets page_size; RapidPro's `next` URL carries pagination forward.
+function fetchAllRapidProResults(url) {
+  let next = addQueryParameter(url, "page_size", RECORD_CHUNK_SIZE);
+  const results = [];
+  let pageNumber = 0;
+
+  while (next) {
+    const data = rapidGet(next);
+    const pageResults = data.results || [];
+    results.push(...pageResults);
+    pageNumber++;
+    Logger.log(`Fetched page ${pageNumber}: ${pageResults.length} records (${results.length} total)`);
+    next = data.next || null;
+  }
+
+  return results;
+}
+
+function addQueryParameter(url, key, value) {
+  const encodedKey = encodeURIComponent(key);
+  const keyPattern = new RegExp(`([?&])${encodedKey}=`);
+  if (keyPattern.test(url)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}${encodedKey}=${encodeURIComponent(value)}`;
+}
+
+// Keep large setValues operations bounded as the historical dataset grows.
+function writeRowsInChunks(sheet, startRow, rows, columnCount) {
+  for (let i = 0; i < rows.length; i += RECORD_CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + RECORD_CHUNK_SIZE);
+    sheet.getRange(startRow + i, 1, chunk.length, columnCount).setValues(chunk);
+  }
 }
 
 function getSheet(name) {
@@ -447,14 +479,9 @@ let identityFlowCache = null;
 function fetchIdentityFlow() {
   if (identityFlowCache) return identityFlowCache;
 
-  let runs = [];
-  let next = `${BASE_URL}/runs.json?flow=${IDENTITY_FLOW_UUID}`;
-
-  while (next) {
-    const data = rapidGet(next);
-    runs = runs.concat(data.results);
-    next = data.next;
-  }
+  const runs = fetchAllRapidProResults(
+    `${BASE_URL}/runs.json?flow=${encodeURIComponent(IDENTITY_FLOW_UUID)}`
+  );
 
   // Oldest first so a newer run wins, and blanks never overwrite a value that
   // an earlier run already supplied.
