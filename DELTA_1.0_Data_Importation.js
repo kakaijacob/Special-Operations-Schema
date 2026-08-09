@@ -356,7 +356,9 @@ function mergeSheetsToMoH(sheetNames) {
     menteeModules[item.mentee_id].add(item.cme_module);
   });
 
-  const totalModules = sheetNames.length;
+  // Require every configured module. Using only populated sheetNames would
+  // falsely mark a mentee complete whenever one module currently has no rows.
+  const totalModules = Object.keys(FLOWS).length;
 
   const rows = allData.map(item => {
     const module_count = menteeModules[item.mentee_id].size;
