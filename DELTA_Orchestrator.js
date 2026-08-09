@@ -4,6 +4,7 @@
  * Keep this file in the same Apps Script project as:
  *   - DELTA_1.0_Data_Importation.js
  *   - DELTA_Newborn_Modules.js
+ *   - DELTA_Self_Led_Learning.js
  ****************************/
 
 // Normal scheduled entry point. A script lock prevents overlapping time-driven
@@ -23,6 +24,11 @@ function runAllDeltaImports() {
     ORCH_runStep(
       "DELTA Newborn Modules",
       importDeltaNewbornModules,
+      failures
+    );
+    ORCH_runStep(
+      "DELTA Self-led Learning",
+      importDeltaSelfLedLearning,
       failures
     );
   } finally {
@@ -56,6 +62,11 @@ function runAllDeltaArchiveBackfills() {
     ORCH_runStep(
       "Newborn archive backfill",
       backfillNewbornArchivedRuns,
+      failures
+    );
+    ORCH_runStep(
+      "Self-led archive backfill",
+      backfillSelfLedArchivedRuns,
       failures
     );
   } finally {
