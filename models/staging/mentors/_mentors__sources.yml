@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: mentors
+    description: Raw mentorship and clinical skills assessment data.
+    schema: "{{ env_var('DBT_SOURCE_SCHEMA', 'mentors') }}"
+    tables:
+      - name: moh_skills_checklist
+        description: One submission per Ministry of Health skills checklist assessment.
+        columns:
+          - name: submission_id
+            description: Unique source-system identifier for the assessment submission.
+            data_tests:
+              - not_null
+              - unique
