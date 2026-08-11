@@ -1,0 +1,18 @@
+version: 2
+
+seeds:
+  - name: moh_skills_checklist_sample
+    description: Sample MoH skills checklist submissions for local practice until real source data is loaded.
+    config:
+      column_types:
+        submission_id: String
+        date_started: DateTime
+        date_ended: DateTime
+        date_submitted: DateTime
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+        mentee_name: String
+        mentee_id: String
+        skill_evaluation: String
