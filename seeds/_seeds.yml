@@ -55,3 +55,33 @@ seeds:
         facility_code: String
         skill_evaluation: String
         average_score: Float64
+
+  - name: newborn_curriculum_tracking_sample
+    description: Sample newborn activities covering a complete essential-care mentee and partial mentees.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        mentorship_activity: String
+        program: String
+        topic: String
+
+  - name: newborn_resuscitation_assessment_sample
+    description: Sample NNR baseline and endline assessments for newborn curriculum modelling.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+        skill_evaluation: String
+        average_score: Float64

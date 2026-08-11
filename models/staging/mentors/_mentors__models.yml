@@ -56,3 +56,31 @@ models:
       - name: average_score
         data_tests:
           - not_null
+
+  - name: stg_mentors__newborn_curriculum_tracking
+    description: Cleaned newborn curriculum activities with normalized activity and program labels.
+    columns:
+      - name: submission_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: submitted_at
+        data_tests:
+          - not_null
+
+  - name: stg_mentors__newborn_resuscitation_assessments
+    description: Newborn curriculum NNR assessments with normalized labels and scores.
+    columns:
+      - name: submission_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: average_score
+        data_tests:
+          - not_null

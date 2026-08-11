@@ -40,6 +40,24 @@ This mart includes an empty progress row for every mentee/cohort combination.
 It applies cohort-specific topic requirements, the 85% skill pass threshold,
 and records the date on which the final curriculum requirement was reached.
 
+The newborn curriculum-completion chain is:
+
+```text
+sample newborn tracking and NNR assessment seeds
+  -> stg_mentors__newborn_curriculum_tracking
+  -> stg_mentors__newborn_resuscitation_assessments
+  -> int_newborn_cohorts / int_newborn_mentees
+  -> int_newborn_mentee_cycles
+  -> int_newborn_curriculum_activity_progress
+  -> int_newborn_nnr_assessment_progress
+  -> mart_newborn_curriculum_completion
+```
+
+Activity and program labels are normalized in staging. The mart applies
+program-specific practicum requirements and treats the first NNR assessment as
+baseline and the last assessment as endline; an endline score of at least 85%
+is required for completion.
+
 ## Connection setup
 
 dbt needs the ClickHouse adapter:
@@ -67,4 +85,5 @@ To build only the mart and everything upstream:
 ```bash
 dbt build --select +mart_skill_assessment_summary
 dbt build --select +mart_emonc_curriculum_completion
+dbt build --select +mart_newborn_curriculum_completion
 ```

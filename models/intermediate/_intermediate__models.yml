@@ -32,3 +32,35 @@ models:
 
   - name: int_emonc_skill_evaluation_progress
     description: Per-cycle skill pass counts, average maximum score, and threshold date.
+
+  - name: int_newborn_cohorts
+    description: Newborn cohort windows and curriculum requirements.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_newborn_mentees
+    description: Newborn mentee spine preferring master data while retaining fact-only mentees.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_newborn_mentee_cycles
+    description: Every newborn mentee crossed with every configured cohort.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+
+  - name: int_newborn_curriculum_activity_progress
+    description: Distinct newborn activity-topic counts and threshold dates by cycle.
+
+  - name: int_newborn_nnr_assessment_progress
+    description: First-attempt baseline and last-attempt endline NNR scores by cycle.
