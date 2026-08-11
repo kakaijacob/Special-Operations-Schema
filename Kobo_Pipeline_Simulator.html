@@ -270,6 +270,28 @@
   #overlay .btns{display:flex;gap:12px;margin-top:8px}
   #overlay button{padding:10px 18px;font-size:13px}
   #overlay button.primary{background:linear-gradient(180deg,#2b6cb2,#1d4f8a);border-color:var(--accent);color:#fff;font-weight:600}
+
+  /* voice-over recording studio */
+  #recPanel{
+    position:absolute; right:18px; bottom:66px; width:336px; z-index:55; display:none;
+    background:rgba(10,24,48,.97); border:1px solid var(--edge); border-radius:12px;
+    padding:12px 14px; box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+  #recPanel.on{display:block}
+  .rec-head{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;
+            color:var(--accent);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .rec-head span{color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
+  .rec-step{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px}
+  .rec-script{background:#0a1830;border:1px solid var(--edge);border-radius:8px;padding:9px 11px;
+              font-size:12.5px;line-height:1.5;color:#e6f0fb;margin:6px 0 9px;max-height:96px;overflow:auto}
+  .rec-btns{display:flex;flex-wrap:wrap;gap:6px}
+  .rec-btns button{padding:5px 9px;font-size:11.5px}
+  #recToggle.armed{background:rgba(224,96,95,.22);border-color:#e0605f;color:#ffc9c9}
+  .rec-hint{font-size:10.5px;color:var(--muted);margin-top:9px;line-height:1.45}
+  .rec-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0605f;
+           margin-right:5px;animation:blink 1s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .saved{color:#9fe3c1}
   button.on{background:rgba(47,163,107,.18);border-color:rgba(47,163,107,.5);color:#9fe3c1}
 
   footer{
@@ -925,8 +947,24 @@ makueni_nbc_mentees  700000002_grace_hopper
     <button id="btnRestart">↻ Restart</button>
     <div class="prog"><i id="progBar"></i></div>
     <button id="btnVoice">🔇 Voice off</button>
+    <button id="btnRec">🎙 Record</button>
     <div class="hint">Space · ← → · V voice · E EmONC · T tools · A full run · F fullscreen</div>
   </footer>
+
+  <div id="recPanel">
+    <div class="rec-head">🎙 Voice-over studio <span id="recCount">0 recorded</span></div>
+    <div class="rec-step" id="recStep">—</div>
+    <div class="rec-script" id="recScript"></div>
+    <div class="rec-btns">
+      <button id="recToggle">● Record</button>
+      <button id="recPlay">▶ Play</button>
+      <button id="recDelete">🗑 Delete</button>
+      <button id="recPrev">← Step</button>
+      <button id="recNext">Step →</button>
+      <button id="recExport">⬇ Download all</button>
+    </div>
+    <div class="rec-hint" id="recHint">Read the line above, then press Record. Your clips are saved in this browser and play automatically instead of the synthesized voice.</div>
+  </div>
 
   <div id="overlay">
     <h2>Kobo Tool Creator — narrated walkthrough</h2>
@@ -936,9 +974,8 @@ makueni_nbc_mentees  700000002_grace_hopper
       <button class="primary" id="btnStartVoice">▶ Play with voice-over</button>
       <button id="btnStartSilent">Play without sound</button>
     </div>
-    <p style="font-size:11.5px">Voice-over uses your browser's speech engine. To narrate in your own recorded voice,
-       add <span style="font-family:var(--mono)">?audio=voiceover</span> and place files named
-       <span style="font-family:var(--mono)">&lt;scene&gt;_&lt;step&gt;.mp3</span> in a <span style="font-family:var(--mono)">voiceover/</span> folder.</p>
+    <p style="font-size:11.5px">Narration uses your browser's speech engine by default. To hear it in <b>your own voice</b>,
+       press <b>🎙 Record</b> and read each line — your clips are saved in this browser and play automatically from then on.</p>
   </div>
 
 </div></div>
@@ -1608,6 +1645,7 @@ makueni_nbc_mentees  700000002_grace_hopper
   var voiceOn = false, chosenVoice = null, speechSeq = 0;
   var currentScale = 1, pointerTarget = null, audioEl = null;
   var AUDIO_BASE = (params.get("audio") || "").replace(/\/$/, "");
+  var AUDIO_EXT = params.get("ext") || ".webm";
 
   function pickVoice(){
     if(!synth) return null;
@@ -1625,6 +1663,39 @@ makueni_nbc_mentees  700000002_grace_hopper
     chosenVoice = pickVoice();
     synth.onvoiceschanged = function(){ if(!chosenVoice) chosenVoice = pickVoice(); };
   }
+
+  // Clips recorded in the studio live in IndexedDB, keyed <scene>_<step>.
+  var VODB = (function(){
+    var DB=null, NAME="kobo_voiceover", STORE="clips";
+    function open(){
+      return new Promise(function(res,rej){
+        if(DB) return res(DB);
+        if(!window.indexedDB) return rej(new Error("no indexedDB"));
+        var r=indexedDB.open(NAME,1);
+        r.onupgradeneeded=function(){ r.result.createObjectStore(STORE); };
+        r.onsuccess=function(){ DB=r.result; res(DB); };
+        r.onerror=function(){ rej(r.error); };
+      });
+    }
+    function tx(mode,fn){
+      return open().then(function(db){
+        return new Promise(function(res,rej){
+          var t=db.transaction(STORE,mode), s=t.objectStore(STORE), out=fn(s);
+          t.oncomplete=function(){ res(out && out.result!==undefined ? out.result : out); };
+          t.onerror=function(){ rej(t.error); };
+        });
+      });
+    }
+    return {
+      put:function(k,b){ return tx("readwrite",function(s){ return s.put(b,k); }); },
+      get:function(k){ return tx("readonly",function(s){ return s.get(k); }); },
+      del:function(k){ return tx("readwrite",function(s){ return s.delete(k); }); },
+      keys:function(){ return tx("readonly",function(s){ return s.getAllKeys(); }); }
+    };
+  })();
+
+  var recordedKeys = {};
+  function stepKey(f){ return SCENES[f.scene].el + "_" + f.local; }
 
   function narrationFor(f){
     var list = NARRATION[SCENES[f.scene].el];
@@ -1682,7 +1753,7 @@ makueni_nbc_mentees  700000002_grace_hopper
 
   // Optional pre-recorded narration: ?audio=voiceover -> voiceover/<scene>_<step>.mp3
   function playRecorded(f, text, done){
-    var a = new Audio(AUDIO_BASE + "/" + SCENES[f.scene].el + "_" + f.local + ".mp3");
+    var a = new Audio(AUDIO_BASE + "/" + SCENES[f.scene].el + "_" + f.local + (AUDIO_EXT || ".mp3"));
     audioEl = a;
     var seq = ++speechSeq, fired=false;
     function fallback(){
@@ -1694,6 +1765,30 @@ makueni_nbc_mentees  700000002_grace_hopper
     a.onerror=fallback;
     a.play().catch(fallback);
     return true;
+  }
+
+  // Play a clip recorded in the studio; fall back to speech if it cannot play.
+  function playOwnClip(f, text, done){
+    var seq = ++speechSeq, key = stepKey(f);
+    VODB.get(key).then(function(blob){
+      if(!blob || seq!==speechSeq){ fallbackNarration(seq, text, done); return; }
+      var url=URL.createObjectURL(blob), a=new Audio(url), fired=false;
+      audioEl=a;
+      function finish(ok){
+        if(fired) return; fired=true;
+        URL.revokeObjectURL(url);
+        if(seq!==speechSeq) return;
+        if(ok) done && done(); else fallbackNarration(seq, text, done);
+      }
+      a.onended=function(){ finish(true); };
+      a.onerror=function(){ finish(false); };
+      a.play().catch(function(){ finish(false); });
+    }).catch(function(){ fallbackNarration(seq, text, done); });
+    return true;
+  }
+  function fallbackNarration(seq, text, done){
+    if(seq!==speechSeq) return;
+    if(!speak(text, done) && playing){ clearTimeout(timer); timer=setTimeout(next, baseWait()); }
   }
 
   function baseWait(){
@@ -1721,8 +1816,10 @@ makueni_nbc_mentees  700000002_grace_hopper
     var narrating=false;
     if(voiceOn && text){
       var onDone=function(){ if(playing){ clearTimeout(timer); timer=setTimeout(next, 420); } };
-      narrating = AUDIO_BASE ? playRecorded(f, text, onDone) : speak(text, onDone);
+      if(recordedKeys[stepKey(f)]) narrating = playOwnClip(f, text, onDone);
+      else narrating = AUDIO_BASE ? playRecorded(f, text, onDone) : speak(text, onDone);
     }
+    updateRecUI();
     if(playing){
       // Cap the wait on narrated steps in case the engine never reports an end.
       var guard = Math.max(9000, text.split(/\s+/).length * 520);
@@ -1780,6 +1877,124 @@ makueni_nbc_mentees  700000002_grace_hopper
     else if(e.key==="r"||e.key==="R"){ idx=0; playing=true; syncBtn(); render(); }
   });
 
+  // ---------------- recording studio ----------------
+  var mediaRec=null, recChunks=[], recStream=null, recArmed=false;
+
+  function currentStep(){ return FLAT[idx]; }
+
+  function updateRecUI(){
+    var panel=document.getElementById("recPanel");
+    if(!panel || !panel.classList.contains("on")) return;
+    var f=currentStep(), narr=narrationFor(f), key=stepKey(f);
+    document.getElementById("recStep").textContent =
+      key + "   (step " + (idx+1) + " of " + FLAT.length + ")";
+    document.getElementById("recScript").textContent = narr ? narr.t : "(no narration for this step)";
+    var n=0; for(var k in recordedKeys){ if(recordedKeys[k]) n++; }
+    var count=document.getElementById("recCount");
+    count.textContent = n + " of " + FLAT.length + " recorded";
+    count.className = recordedKeys[key] ? "saved" : "";
+    document.getElementById("recToggle").textContent = recArmed ? "■ Stop" : (recordedKeys[key] ? "● Re-record" : "● Record");
+    document.getElementById("recToggle").classList.toggle("armed", recArmed);
+  }
+
+  function setRecHint(msg){ document.getElementById("recHint").innerHTML = msg; }
+
+  function startRecording(){
+    if(!navigator.mediaDevices || !window.MediaRecorder){
+      setRecHint("This browser cannot record audio. Use Chrome, Edge or Firefox over https or a local file.");
+      return;
+    }
+    playing=false; syncBtn(); clearTimeout(timer); stopAudio();
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      recStream=stream; recChunks=[];
+      var opts={};
+      if(window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm;codecs=opus")){
+        opts.mimeType="audio/webm;codecs=opus";
+      }
+      mediaRec=new MediaRecorder(stream, opts);
+      var key=stepKey(currentStep());
+      mediaRec.ondataavailable=function(e){ if(e.data && e.data.size) recChunks.push(e.data); };
+      mediaRec.onstop=function(){
+        var blob=new Blob(recChunks,{type:(mediaRec && mediaRec.mimeType) || "audio/webm"});
+        recStream.getTracks().forEach(function(t){ t.stop(); });
+        recStream=null; recArmed=false;
+        VODB.put(key, blob).then(function(){
+          recordedKeys[key]=true;
+          setRecHint("Saved <b class='saved'>" + key + "</b>. Press Play to hear it, or Step → for the next line.");
+          updateRecUI();
+        }).catch(function(){
+          setRecHint("Could not save that clip in this browser's storage.");
+          updateRecUI();
+        });
+      };
+      mediaRec.start();
+      recArmed=true;
+      setRecHint("<span class='rec-dot'></span>Recording — read the line above, then press Stop.");
+      updateRecUI();
+    }).catch(function(){
+      setRecHint("Microphone permission was refused, so nothing can be recorded.");
+    });
+  }
+
+  function stopRecording(){
+    if(mediaRec && mediaRec.state!=="inactive") mediaRec.stop();
+    recArmed=false; updateRecUI();
+  }
+
+  function loadRecordedKeys(){
+    return VODB.keys().then(function(keys){
+      recordedKeys={};
+      (keys||[]).forEach(function(k){ recordedKeys[k]=true; });
+      updateRecUI();
+    }).catch(function(){});
+  }
+
+  document.getElementById("btnRec").onclick=function(){
+    var panel=document.getElementById("recPanel");
+    var on=!panel.classList.contains("on");
+    panel.classList.toggle("on", on);
+    document.getElementById("btnRec").classList.toggle("on", on);
+    if(on){ playing=false; syncBtn(); clearTimeout(timer); stopAudio(); updateRecUI(); }
+    else if(recArmed){ stopRecording(); }
+  };
+  document.getElementById("recToggle").onclick=function(){ recArmed ? stopRecording() : startRecording(); };
+  document.getElementById("recPlay").onclick=function(){
+    var f=currentStep(), narr=narrationFor(f);
+    stopAudio();
+    if(recordedKeys[stepKey(f)]) playOwnClip(f, narr?narr.t:"", function(){});
+    else if(narr) speak(narr.t, function(){});
+  };
+  document.getElementById("recDelete").onclick=function(){
+    var key=stepKey(currentStep());
+    VODB.del(key).then(function(){
+      delete recordedKeys[key];
+      setRecHint("Deleted " + key + ".");
+      updateRecUI();
+    });
+  };
+  document.getElementById("recPrev").onclick=function(){ playing=false; syncBtn(); go(idx-1); };
+  document.getElementById("recNext").onclick=function(){ playing=false; syncBtn(); go(idx+1); };
+  document.getElementById("recExport").onclick=function(){
+    var keys=Object.keys(recordedKeys).filter(function(k){ return recordedKeys[k]; }).sort();
+    if(!keys.length){ setRecHint("Nothing recorded yet."); return; }
+    setRecHint("Downloading " + keys.length + " clip(s) — allow multiple downloads if asked. Put them in a <b>voiceover/</b> folder and open with <b>?audio=voiceover</b>.");
+    var i=0;
+    (function step(){
+      if(i>=keys.length) return;
+      var k=keys[i++];
+      VODB.get(k).then(function(blob){
+        if(blob){
+          var url=URL.createObjectURL(blob);
+          var a=document.createElement("a");
+          a.href=url; a.download=k+".webm";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        }
+        setTimeout(step, 350);
+      }).catch(function(){ setTimeout(step, 120); });
+    })();
+  };
+
   function updateVoiceBtn(){
     var b=document.getElementById("btnVoice");
     b.textContent = voiceOn ? "🔊 Voice on" : "🔇 Voice off";
@@ -1817,7 +2032,7 @@ makueni_nbc_mentees  700000002_grace_hopper
     playing=false;
   }
 
-  fit(); updateVoiceBtn(); render(); syncBtn();
+  fit(); updateVoiceBtn(); render(); syncBtn(); loadRecordedKeys();
 })();
 </script>
 </body>
