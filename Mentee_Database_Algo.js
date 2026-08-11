@@ -20,6 +20,7 @@ function updateAllStatusesByName() {
   const colDateDeactivated = headers.indexOf("Date Deactivated") + 1;
   const colStatus = headers.indexOf("Status") + 1;
   const colReasonForDeactivation = headers.indexOf("Reason for Deactivation") + 1;
+  const colLearningMode = headers.indexOf("Learning Mode") + 1;
 
   // Validation columns
   const colFacilityCode = headers.indexOf("Facility Code") + 1;
@@ -224,6 +225,38 @@ function updateAllStatusesByName() {
     sheet
       .getRange(rowNum, colStatus)
       .setValue(status);
+
+    // ----------------------------
+    // LEARNING MODE
+    // ----------------------------
+    if (colLearningMode > 0) {
+
+      const anyInPerson =
+        row[colEmONC - 1] === "Yes" ||
+        row[colEssentialNB - 1] === "Yes" ||
+        row[colComprehensiveNB - 1] === "Yes";
+
+      const anyDelta =
+        row[colDeltaEmONC - 1] === "Yes" ||
+        row[colDeltaEssential - 1] === "Yes";
+
+      let learningMode = "";
+
+      if (anyInPerson && anyDelta) {
+        learningMode = "Hybrid (Both)";
+
+      } else if (anyInPerson) {
+        learningMode = "In-person Only";
+
+      } else if (anyDelta) {
+        learningMode = "Virtually (DELTA)";
+      }
+
+      sheet
+        .getRange(rowNum, colLearningMode)
+        .setValue(learningMode);
+
+    }
 
     // ----------------------------
     // ROW START CHECK
