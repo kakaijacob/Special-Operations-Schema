@@ -141,8 +141,8 @@ progress_ids as (
 )
 
 select
-    ids.cycle_id,
-    ids.mentee_id,
+    ids.cycle_id as cycle_id,
+    ids.mentee_id as mentee_id,
     s.cme_completed_topics,
     s.cme_threshold_date,
     s.drill_completed_topics,
