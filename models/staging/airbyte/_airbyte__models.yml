@@ -30,6 +30,8 @@ models:
                   - Nairobi
                   - Nakuru
                   - Siaya
+      - name: reason_for_deactivation
+        description: Free-text deactivation reason, passed through unchanged.
       - name: status
         data_tests:
           - accepted_values:

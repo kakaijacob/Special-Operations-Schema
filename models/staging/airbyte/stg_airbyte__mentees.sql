@@ -35,6 +35,10 @@ cleaned as (
             as raw_date_deactivated,
         nullIf(trim(toString({{ resolve_column(mentees, 'Date Reactivated') }})), '')
             as raw_date_reactivated,
+        nullIf(
+            trim(toString({{ resolve_column(mentees, 'Reason for Deactivation') }})),
+            ''
+        ) as raw_reason_for_deactivation,
         nullIf(trim(toString({{ resolve_column(mentees, 'Status') }})), '')
             as raw_status,
         nullIf(trim(toString({{ resolve_column(mentees, 'Program') }})), '')
@@ -79,6 +83,7 @@ transformed as (
         {{ parse_sheet_date('raw_date_activated') }} as date_activated,
         {{ parse_sheet_date('raw_date_deactivated') }} as date_deactivated,
         {{ parse_sheet_date('raw_date_reactivated') }} as date_reactivated,
+        raw_reason_for_deactivation as reason_for_deactivation,
         {{ sentence_case('raw_status') }} as status,
         {{ sentence_case('raw_program') }} as program,
         initcapUTF8(raw_emonc_inperson) as emonc_inperson,

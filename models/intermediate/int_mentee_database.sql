@@ -34,6 +34,7 @@ select
     date_activated,
     date_deactivated,
     date_reactivated,
+    reason_for_deactivation,
     status,
     program,
     emonc_inperson,
