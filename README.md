@@ -22,6 +22,24 @@ The staging model currently reads the seed. When real assessment data is
 ingested into ClickHouse, declare it as a dbt source and swap the `ref()` in
 `stg_mentors__moh_skills_checklist` for a `source()`.
 
+The EmONC curriculum-completion chain is:
+
+```text
+sample mentee, curriculum-tracking, and processed-skill seeds
+  -> stg_mentors__mentee_database
+  -> stg_mentors__mentee_curriculum_tracking
+  -> stg_mentors__processed_skill_assessments
+  -> int_emonc_cohorts / int_emonc_mentees
+  -> int_emonc_mentee_cycles
+  -> int_emonc_curriculum_activity_progress
+  -> int_emonc_skill_evaluation_progress
+  -> mart_emonc_curriculum_completion
+```
+
+This mart includes an empty progress row for every mentee/cohort combination.
+It applies cohort-specific topic requirements, the 85% skill pass threshold,
+and records the date on which the final curriculum requirement was reached.
+
 ## Connection setup
 
 dbt needs the ClickHouse adapter:
@@ -48,4 +66,5 @@ To build only the mart and everything upstream:
 
 ```bash
 dbt build --select +mart_skill_assessment_summary
+dbt build --select +mart_emonc_curriculum_completion
 ```

@@ -17,3 +17,42 @@ models:
         description: Skill assessed in the submission.
         data_tests:
           - not_null
+
+  - name: stg_mentors__mentee_database
+    description: Cleaned mentee master data, including normalized program labels.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_mentors__mentee_curriculum_tracking
+    description: Cleaned curriculum activity submissions.
+    columns:
+      - name: submission_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: submitted_at
+        data_tests:
+          - not_null
+
+  - name: stg_mentors__processed_skill_assessments
+    description: Cleaned skill assessment results with scores expressed from zero to one.
+    columns:
+      - name: submission_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: skill_evaluation
+        data_tests:
+          - not_null
+      - name: average_score
+        data_tests:
+          - not_null

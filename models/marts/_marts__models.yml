@@ -16,3 +16,22 @@ models:
         description: Number of distinct non-null mentee identifiers assessed.
         data_tests:
           - not_null
+
+  - name: mart_emonc_curriculum_completion
+    description: Cohort-level EmONC curriculum progress and completion status for every mentee.
+    columns:
+      - name: mentee_id
+        description: Stable mentee identifier.
+        data_tests:
+          - not_null
+      - name: cycle_id
+        description: Cohort identifier.
+        data_tests:
+          - not_null
+      - name: curriculum_completion
+        description: One when all six curriculum requirements are complete, otherwise zero.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
