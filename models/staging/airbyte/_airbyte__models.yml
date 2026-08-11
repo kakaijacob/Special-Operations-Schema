@@ -11,6 +11,8 @@ models:
       - name: mentee_name
         data_tests:
           - not_null
+      # Option-list checks warn rather than fail: the sheet is hand-edited, and
+      # unexpected values should be reported without blocking downstream models.
       - name: county
         data_tests:
           - accepted_values:
@@ -30,6 +32,8 @@ models:
                   - Nairobi
                   - Nakuru
                   - Siaya
+              config:
+                severity: warn
       - name: reason_for_deactivation
         description: Free-text deactivation reason, passed through unchanged.
       - name: status
@@ -37,8 +41,12 @@ models:
           - accepted_values:
               arguments:
                 values: [Active, Inactive]
+              config:
+                severity: warn
       - name: gender
         data_tests:
           - accepted_values:
               arguments:
                 values: [Male, Female]
+              config:
+                severity: warn

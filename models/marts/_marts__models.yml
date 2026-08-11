@@ -8,6 +8,8 @@ models:
         data_tests:
           - not_null
           - unique
+      # Option-list checks warn rather than fail: the sheet is hand-edited, and
+      # unexpected values should be reported without blocking downstream models.
       - name: cadre
         data_tests:
           - accepted_values:
@@ -17,11 +19,15 @@ models:
                   - Medical officer
                   - Nurse
                   - Pediatrician
+              config:
+                severity: warn
       - name: new_existing
         data_tests:
           - accepted_values:
               arguments:
                 values: [New, Existing]
+              config:
+                severity: warn
       - name: program
         data_tests:
           - accepted_values:
@@ -31,6 +37,8 @@ models:
                   - Mentors curriculum
                   - Newborn curriculum
                   - Other
+              config:
+                severity: warn
 
   - name: mart_skill_assessment_summary
     description: Monthly assessment activity by location, program, and evaluated skill.
