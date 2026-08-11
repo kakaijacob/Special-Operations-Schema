@@ -529,7 +529,7 @@ function updateAllStatusesByName() {
 
         addError(
           colEssentialNB,
-          "Essential Newborn In-person cannot be Yes for EmONC Curriculum."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
@@ -538,7 +538,7 @@ function updateAllStatusesByName() {
 
         addError(
           colComprehensiveNB,
-          "Comprehensive Newborn In-person cannot be Yes for EmONC Curriculum."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
@@ -560,7 +560,7 @@ function updateAllStatusesByName() {
 
         addError(
           colEmONC,
-          "EmONC In-person cannot be Yes for Newborn Curriculum."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
@@ -594,7 +594,7 @@ function updateAllStatusesByName() {
 
         addError(
           colEmONC,
-          "EmONC In-person cannot be Yes when Program is Other."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
@@ -603,7 +603,7 @@ function updateAllStatusesByName() {
 
         addError(
           colEssentialNB,
-          "Essential Newborn In-person cannot be Yes when Program is Other."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
@@ -612,7 +612,7 @@ function updateAllStatusesByName() {
 
         addError(
           colComprehensiveNB,
-          "Comprehensive Newborn In-person cannot be Yes when Program is Other."
+          `Program mismatch! Mentee mapped for ${program}.`
         );
 
       }
