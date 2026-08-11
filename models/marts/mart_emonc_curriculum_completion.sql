@@ -1,15 +1,15 @@
 with progress as (
 
     select
-        mc.mentee_id,
-        mc.mentee_name,
-        mc.county,
-        mc.facility,
-        mc.facility_code,
-        mc.cycle_id,
-        mc.cycle_label,
-        mc.cycle_start,
-        mc.cycle_end,
+        mc.mentee_id as mentee_id,
+        mc.mentee_name as mentee_name,
+        mc.county as county,
+        mc.facility as facility,
+        mc.facility_code as facility_code,
+        mc.cycle_id as cycle_id,
+        mc.cycle_label as cycle_label,
+        mc.cycle_start as cycle_start,
+        mc.cycle_end as cycle_end,
 
         round(
             least(
@@ -61,11 +61,11 @@ with progress as (
         ) as skill_evaluation_completion,
 
         round(se.avg_skill_score, 3) as avg_skill_score,
-        a.cme_threshold_date,
-        a.drill_threshold_date,
-        a.skill_demo_threshold_date,
-        a.return_demo_threshold_date,
-        a.labor_monitoring_threshold_date,
+        a.cme_threshold_date as cme_threshold_date,
+        a.drill_threshold_date as drill_threshold_date,
+        a.skill_demo_threshold_date as skill_demo_threshold_date,
+        a.return_demo_threshold_date as return_demo_threshold_date,
+        a.labor_monitoring_threshold_date as labor_monitoring_threshold_date,
         se.threshold_date as skill_evaluation_threshold_date
     from {{ ref('int_emonc_mentee_cycles') }} mc
     left join {{ ref('int_emonc_curriculum_activity_progress') }} a
