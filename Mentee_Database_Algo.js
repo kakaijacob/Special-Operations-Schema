@@ -511,7 +511,7 @@ function updateAllStatusesByName() {
 
     if (
       program ===
-      "MENTORS Curriculum"
+      "EmONC Curriculum"
     ) {
 
       if (
@@ -520,7 +520,25 @@ function updateAllStatusesByName() {
 
         addError(
           colProgram,
-          "EmONC must be Yes for MENTORS Curriculum."
+          "EmONC must be Yes for EmONC Curriculum."
+        );
+
+      }
+
+      if (row[colEssentialNB - 1] === "Yes") {
+
+        addError(
+          colEssentialNB,
+          "Essential Newborn In-person cannot be Yes for EmONC Curriculum."
+        );
+
+      }
+
+      if (row[colComprehensiveNB - 1] === "Yes") {
+
+        addError(
+          colComprehensiveNB,
+          "Comprehensive Newborn In-person cannot be Yes for EmONC Curriculum."
         );
 
       }
@@ -537,6 +555,15 @@ function updateAllStatusesByName() {
 
       const comp =
         row[colComprehensiveNB - 1];
+
+      if (row[colEmONC - 1] === "Yes") {
+
+        addError(
+          colEmONC,
+          "EmONC In-person cannot be Yes for Newborn Curriculum."
+        );
+
+      }
 
       if (
         essential !== "Yes" &&
@@ -562,6 +589,33 @@ function updateAllStatusesByName() {
 
       const d3 =
         row[colDeltaContinuum - 1];
+
+      if (row[colEmONC - 1] === "Yes") {
+
+        addError(
+          colEmONC,
+          "EmONC In-person cannot be Yes when Program is Other."
+        );
+
+      }
+
+      if (row[colEssentialNB - 1] === "Yes") {
+
+        addError(
+          colEssentialNB,
+          "Essential Newborn In-person cannot be Yes when Program is Other."
+        );
+
+      }
+
+      if (row[colComprehensiveNB - 1] === "Yes") {
+
+        addError(
+          colComprehensiveNB,
+          "Comprehensive Newborn In-person cannot be Yes when Program is Other."
+        );
+
+      }
 
       if (
         d1 !== "Yes" &&
