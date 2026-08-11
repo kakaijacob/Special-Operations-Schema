@@ -58,6 +58,27 @@ program-specific practicum requirements and treats the first NNR assessment as
 baseline and the last assessment as endline; an endline score of at least 85%
 is required for completion.
 
+The Airbyte-synced Google Sheets mentee chain is:
+
+```text
+Airbyte ClickHouse table: Mentees
+  -> stg_airbyte__mentees
+  -> int_mentee_database
+  -> mentee_database
+```
+
+By default dbt looks for `Mentees` in ClickHouse's `default` database. If
+Airbyte wrote it elsewhere, pass that database when building:
+
+```bash
+dbt build --select +mentee_database --vars '{"airbyte_schema": "airbyte"}'
+```
+
+The staging model standardizes casing, parses `DD/MM/YYYY` and ISO dates,
+normalizes Yes/No fields, and maps Yes/No or New/Existing values to the final
+`new_existing` labels. The intermediate model retains one deterministic record
+per mentee ID. Existing curriculum marts consume the final `mentee_database`.
+
 ## Connection setup
 
 dbt needs the ClickHouse adapter:
@@ -86,4 +107,5 @@ To build only the mart and everything upstream:
 dbt build --select +mart_skill_assessment_summary
 dbt build --select +mart_emonc_curriculum_completion
 dbt build --select +mart_newborn_curriculum_completion
+dbt build --select +mentee_database
 ```

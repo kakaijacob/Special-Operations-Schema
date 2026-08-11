@@ -1,6 +1,37 @@
 version: 2
 
 models:
+  - name: mentee_database
+    description: Analytics-ready, deduplicated mentee master table sourced from Airbyte.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+      - name: cadre
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - Clinical officer
+                  - Medical officer
+                  - Nurse
+                  - Pediatrician
+      - name: new_existing
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [New, Existing]
+      - name: program
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - Both
+                  - Mentors curriculum
+                  - Newborn curriculum
+                  - Other
+
   - name: mart_skill_assessment_summary
     description: Monthly assessment activity by location, program, and evaluated skill.
     columns:

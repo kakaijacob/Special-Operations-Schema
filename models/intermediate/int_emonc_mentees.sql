@@ -6,8 +6,8 @@ with db_mentees as (
         any(county) as county,
         any(facility) as facility,
         any(facility_code) as facility_code
-    from {{ ref('stg_mentors__mentee_database') }}
-    where program in ('emonc curriculum', 'both')
+    from {{ ref('mentee_database') }}
+    where lowerUTF8(program) in ('emonc curriculum', 'mentors curriculum', 'both')
       and mentee_id is not null
     group by mentee_id
 

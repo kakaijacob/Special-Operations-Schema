@@ -1,6 +1,14 @@
 version: 2
 
 models:
+  - name: int_mentee_database
+    description: One deterministic latest record per non-null mentee identifier.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
   - name: int_emonc_cohorts
     description: Cohort date windows and curriculum requirements.
     columns:
