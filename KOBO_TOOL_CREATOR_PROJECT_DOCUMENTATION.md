@@ -464,8 +464,9 @@ These are enforced in code and checked before upload:
    helpers; grow the grid with `koboKitEnsureSheetCapacity_()` before writing.
 3. Register the tool in **both** registries (`getKoboToolsRegistry_()` for build
    order in the orchestrator, `getKoboDeployToolsRegistry_()` for deployment).
-4. Seed the form spreadsheet ID and Kobo asset UID in `setupKoboDeployConfig()`
-   (omit the asset UID to create a brand-new Kobo project).
+4. Store the form spreadsheet ID and Kobo asset UID in Script Properties via
+   **Kobo Tools → Secrets** (see `KOBO_SECRETS.md`). Omit the asset UID only
+   if you want a brand-new Kobo project.
 5. Run `checkAllKoboFormsForDeployProblems()` before deploying.
 
 ### 12.2 Testing without Apps Script

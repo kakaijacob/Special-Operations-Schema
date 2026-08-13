@@ -1,5 +1,5 @@
-const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
-const formUid = 'a488FNw8rSGKWdJqpYfpny';
+const apiToken = getKoboApiToken_();
+const formUid = getKoboAssetUidSecret_('KOBO_ASSET_UID_NEWBORN_CTF');
 
 // Facility fields
 const facilityFields = [

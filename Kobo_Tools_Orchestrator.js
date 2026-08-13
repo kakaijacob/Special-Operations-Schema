@@ -3,14 +3,15 @@
 // Shared pipeline for all curriculum / assessment Kobo form builders.
 //
 // Apps Script project file order (recommended):
-//   1) kobocreator.js
-//   2) Kobo_Tools_Orchestrator.js  ← this file (ONLY onOpen / trigger)
-//   3) EmONC_Curriculum_Tracking_Form_2026.js
-//   4) Newborn_Curriculum_Tracking_Form.js
-//   5) MoH_Skills_Assessment_Checklist.js
-//   6) Newborn_Knowledge_Assessment.js
-//   7) EmONC_Knowledge_Assessment.js
-//   8) Kobo_Tools_Deployer.js  (upload/deploy; refresh skips deploy if missing)
+//   1) Kobo_Secrets.js            ← credentials / IDs (Script Properties only)
+//   2) kobocreator.js
+//   3) Kobo_Tools_Orchestrator.js  ← this file (ONLY onOpen / trigger)
+//   4) EmONC_Curriculum_Tracking_Form_2026.js
+//   5) Newborn_Curriculum_Tracking_Form.js
+//   6) MoH_Skills_Assessment_Checklist.js
+//   7) Newborn_Knowledge_Assessment.js
+//   8) EmONC_Knowledge_Assessment.js
+//   9) Kobo_Tools_Deployer.js  (upload/deploy; refresh skips deploy if missing)
 //
 // Trigger / menu should call ONLY refreshAllKoboTools().
 // Sequence (always in this order):
@@ -26,8 +27,6 @@
 var KOBO_TOOLS_PROP_SOURCE_ID = "MENTEE_DATABASE_2026_SPREADSHEET_ID";
 var KOBO_TOOLS_PROP_SOURCE_SHEET = "MENTEE_DATABASE_2026_SHEET_NAME";
 
-var KOBO_TOOLS_DEFAULT_SOURCE_ID =
-  "1W6YzsLt8BKIWkZvCT-Ggvs3CtA2GBnW7ggSfujlJypA";
 var KOBO_TOOLS_DEFAULT_SOURCE_SHEET = "Mentee Database";
 var KOBO_TOOLS_LOCAL_MENTEE_SHEET = "Mentee Database";
 
@@ -36,8 +35,6 @@ var KOBO_TOOLS_PROP_IFM_SOURCE_ID = "MENTOR_IFM_DATABASE_2026_SPREADSHEET_ID";
 var KOBO_TOOLS_PROP_IFM_SOURCE_SHEET = "MENTOR_IFM_DATABASE_2026_SHEET_NAME";
 var KOBO_TOOLS_PROP_IFM_SOURCE_GID = "MENTOR_IFM_DATABASE_2026_SHEET_GID";
 
-var KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID =
-  "1VPz5l3LwbMvwjEWv55c-4Fftm2sz7JCgZlX2TYwm0PY";
 var KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET = "Mentor (IFM) Database 2026";
 var KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID = 586824847;
 var KOBO_TOOLS_LOCAL_IFM_SHEET = "IFM List";
@@ -114,16 +111,33 @@ function onOpen() {
     .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
     .addItem("Install Daily Auto-Refresh", "installKoboToolsDailyTrigger")
     .addItem("Remove Auto-Refresh", "removeKoboToolsTriggers")
+    .addSeparator()
+    .addSubMenu(
+      SpreadsheetApp.getUi()
+        .createMenu("Secrets")
+        .addItem("Check secrets", "listKoboSecrets")
+        .addItem("Set Kobo API token…", "promptSetKoboApiToken")
+        .addItem("Set source spreadsheet IDs…", "promptSetKoboSourceIds")
+        .addItem("Set asset UID…", "promptSetKoboAssetUid")
+    )
     .addToUi();
 }
 
 /**
  * One-time setup: store external Mentee + Mentor (IFM) Database 2026 IDs.
+ * IDs must be passed in — they are not stored in this file.
+ * Prefer the menu: Kobo Tools → Secrets → Set source spreadsheet IDs…
  */
-function setupKoboToolsSource() {
-  setKoboToolsSourceConfig(KOBO_TOOLS_DEFAULT_SOURCE_ID);
+function setupKoboToolsSource(menteeSpreadsheetId, ifmSpreadsheetId) {
+  if (!menteeSpreadsheetId || !ifmSpreadsheetId) {
+    throw new Error(
+      "Pass both spreadsheet IDs, or use promptSetKoboSourceIds() from the " +
+      "Kobo Tools → Secrets menu. IDs must not be committed in source."
+    );
+  }
+  setKoboToolsSourceConfig(menteeSpreadsheetId);
   setKoboToolsIFMSourceConfig(
-    KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID,
+    ifmSpreadsheetId,
     KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET,
     KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID
   );
@@ -136,10 +150,10 @@ function setupKoboToolsSource() {
  */
 function setKoboToolsSourceConfig(sourceSpreadsheetId, sheetName) {
   if (!sourceSpreadsheetId) {
-    sourceSpreadsheetId = KOBO_TOOLS_DEFAULT_SOURCE_ID;
-  }
-  if (!sourceSpreadsheetId) {
-    throw new Error("sourceSpreadsheetId is required.");
+    throw new Error(
+      "sourceSpreadsheetId is required. Use promptSetKoboSourceIds() or " +
+      "setKoboToolsSourceConfig(id)."
+    );
   }
 
   var props = PropertiesService.getScriptProperties();
@@ -162,10 +176,10 @@ function setKoboToolsSourceConfig(sourceSpreadsheetId, sheetName) {
  */
 function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
   if (!sourceSpreadsheetId) {
-    sourceSpreadsheetId = KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID;
-  }
-  if (!sourceSpreadsheetId) {
-    throw new Error("IFM sourceSpreadsheetId is required.");
+    throw new Error(
+      "IFM sourceSpreadsheetId is required. Use promptSetKoboSourceIds() or " +
+      "setKoboToolsIFMSourceConfig(id)."
+    );
   }
 
   var props = PropertiesService.getScriptProperties();
@@ -243,7 +257,7 @@ function refreshAllKoboTools() {
     };
 
     Logger.log("=== Kobo Tools full pipeline finished: " + summary.status + " ===");
-    Logger.log(JSON.stringify(summary));
+    Logger.log(JSON.stringify(maskKoboPipelineSummary_(summary)));
     return summary;
   } catch (err) {
     Logger.log("=== Kobo Tools full pipeline FAILED ===");
@@ -255,26 +269,17 @@ function refreshAllKoboTools() {
 }
 
 /**
- * Step 0a: initialize configuration without overwriting existing custom source
- * settings. The deployer setup is invoked on every run so its embedded token,
- * server, initial form IDs and initial asset UIDs are applied automatically.
+ * Step 0a: seed public defaults only, then require secrets already stored
+ * in Script Properties. Never writes tokens, spreadsheet IDs or asset UIDs
+ * from source.
  */
 function ensureKoboToolsConfigured_() {
   var props = PropertiesService.getScriptProperties();
 
-  if (!props.getProperty(KOBO_TOOLS_PROP_SOURCE_ID)) {
-    props.setProperty(KOBO_TOOLS_PROP_SOURCE_ID, KOBO_TOOLS_DEFAULT_SOURCE_ID);
-  }
   if (!props.getProperty(KOBO_TOOLS_PROP_SOURCE_SHEET)) {
     props.setProperty(
       KOBO_TOOLS_PROP_SOURCE_SHEET,
       KOBO_TOOLS_DEFAULT_SOURCE_SHEET
-    );
-  }
-  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_ID)) {
-    props.setProperty(
-      KOBO_TOOLS_PROP_IFM_SOURCE_ID,
-      KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID
     );
   }
   if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET)) {
@@ -290,29 +295,16 @@ function ensureKoboToolsConfigured_() {
     );
   }
 
-  var setupDeployFn = resolveGlobalFunction_("setupKoboDeployConfig");
-  if (!setupDeployFn) {
+  if (!resolveGlobalFunction_("getKoboApiToken_")) {
     throw new Error(
-      "Kobo_Tools_Deployer.js is missing: setupKoboDeployConfig() not found."
+      "Kobo_Secrets.js is missing: getKoboApiToken_() not found. " +
+      "Add Kobo_Secrets.js to this Apps Script project first."
     );
   }
 
-  try {
-    setupDeployFn();
-  } catch (err) {
-    var tokenProp =
-      typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
-        ? KOBO_DEPLOY_PROP_API_TOKEN
-        : "KOBO_KPI_API_TOKEN";
-    if (!props.getProperty(tokenProp)) {
-      throw err;
-    }
-    Logger.log(
-      "Kobo setup warning (using already-saved deployment config): " +
-      err.message
-    );
-  }
-  Logger.log("Source and Kobo deployment configuration ready.");
+  seedKoboPublicDefaults_();
+  requireKoboPipelineSecrets_();
+  Logger.log("Source and Kobo deployment secrets are present (values masked).");
 }
 
 /**
@@ -323,7 +315,9 @@ function validateKoboPipelineDependencies_() {
   var requiredFunctions = [
     "generateAllOutputs",
     "deployKoboTool",
-    "testKoboConnection"
+    "testKoboConnection",
+    "getKoboApiToken_",
+    "listKoboSecrets"
   ];
   var registry = getKoboToolsRegistry_();
   var i;
@@ -338,6 +332,8 @@ function validateKoboPipelineDependencies_() {
     generateAllOutputs: "kobocreator.js",
     deployKoboTool: "Kobo_Tools_Deployer.js",
     testKoboConnection: "Kobo_Tools_Deployer.js",
+    getKoboApiToken_: "Kobo_Secrets.js",
+    listKoboSecrets: "Kobo_Secrets.js",
     createEmONCCurriculumTrackingForm2026:
       "EmONC_Curriculum_Tracking_Form_2026.js",
     createNewbornCurriculumTrackingForm: "Newborn_Curriculum_Tracking_Form.js",
@@ -363,16 +359,7 @@ function validateKoboPipelineDependencies_() {
 
   validateKoboPipelineFileRevisions_();
 
-  var tokenProp =
-    typeof KOBO_DEPLOY_PROP_API_TOKEN !== "undefined"
-      ? KOBO_DEPLOY_PROP_API_TOKEN
-      : "KOBO_KPI_API_TOKEN";
-  if (!PropertiesService.getScriptProperties().getProperty(tokenProp)) {
-    throw new Error(
-      "Kobo API token is missing after setup. Put the token in " +
-      "setupKoboDeployConfig() in Kobo_Tools_Deployer.js."
-    );
-  }
+  requireKoboPipelineSecrets_();
 
   resolveGlobalFunction_("testKoboConnection")();
   Logger.log("Pipeline preflight complete: code, server and token verified.");
@@ -430,6 +417,16 @@ function validateKoboPipelineFileRevisions_() {
       name: "findKoboFormProblems_",
       file: "Kobo_Tools_Deployer.js",
       fix: "pre-deploy check for empty choice lists"
+    },
+    {
+      name: "getKoboApiToken_",
+      file: "Kobo_Secrets.js",
+      fix: "reads the API token from Script Properties, never from source"
+    },
+    {
+      name: "maskKoboSecret_",
+      file: "Kobo_Secrets.js",
+      fix: "masks tokens and IDs in logs"
     }
   ];
 
@@ -513,16 +510,7 @@ function hasKoboPipelineErrors_(buildResults, deployResults) {
  */
 function syncMenteeDatabaseFromSource() {
   var props = PropertiesService.getScriptProperties();
-  var sourceId =
-    props.getProperty(KOBO_TOOLS_PROP_SOURCE_ID) ||
-    KOBO_TOOLS_DEFAULT_SOURCE_ID;
-
-  if (!sourceId) {
-    throw new Error(
-      "Mentee Database 2026 spreadsheet ID is not configured. " +
-      "Run setupKoboToolsSource() first."
-    );
-  }
+  var sourceId = getKoboSecret_(KOBO_TOOLS_PROP_SOURCE_ID, true);
 
   var sourceSs = SpreadsheetApp.openById(sourceId);
   var sourceSheetName =
@@ -785,16 +773,7 @@ function findCaseInsensitiveHeaderIndex_(header, name) {
  */
 function syncIFMListFromSource() {
   var props = PropertiesService.getScriptProperties();
-  var sourceId =
-    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_ID) ||
-    KOBO_TOOLS_DEFAULT_IFM_SOURCE_ID;
-
-  if (!sourceId) {
-    throw new Error(
-      "Mentor (IFM) Database 2026 spreadsheet ID is not configured. " +
-      "Run setupKoboToolsSource() first."
-    );
-  }
+  var sourceId = getKoboSecret_(KOBO_TOOLS_PROP_IFM_SOURCE_ID, true);
 
   var sourceSs = SpreadsheetApp.openById(sourceId);
   var selected = selectIFMSourceTable_(sourceSs, props);

@@ -4,8 +4,8 @@
 function fetchKoboData_Generic() {
 
   // ================= CONFIGURATION =================
-  const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
-  const formUid = 'aSwMMq2L7UbfpRAvLFkL6d';
+  const apiToken = getKoboApiToken_();
+  const formUid = getKoboAssetUidSecret_('KOBO_ASSET_UID_QUIPS');
   const startDate = "2026-04-30T00:00:00";
 
   const facilityTargets = {
