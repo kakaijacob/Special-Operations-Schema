@@ -89,9 +89,10 @@ also the source of Rule 5 below.
    - `getKoboToolsRegistry_()` in `Kobo_Tools_Orchestrator.js` — build order
    - `getKoboDeployToolsRegistry_()` in `Kobo_Tools_Deployer.js` — deployment
 
-5. **Seed the IDs** in `setupKoboDeployConfig()`: the form spreadsheet ID under
-   `initialFormIds`, and the Kobo asset UID under `initialAssetUids`. Leave the
-   asset UID out only if you want a brand new Kobo project created.
+5. **Store the IDs as secrets**, not in source. Use **Kobo Tools → Secrets →
+   Set asset UID…** (and Script Properties for the form spreadsheet ID). See
+   `KOBO_SECRETS.md`. Leave the asset UID unset only if you want a brand new
+   Kobo project created.
 
 6. **Check before deploying**: run `checkAllKoboFormsForDeployProblems()`. It
    reports empty choice lists, duplicate names and unbalanced expressions for

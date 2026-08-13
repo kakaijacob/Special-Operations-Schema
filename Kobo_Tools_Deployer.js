@@ -9,9 +9,13 @@
 //   ... form tool files...
 //   Kobo_Tools_Deployer.js
 //
-// Setup once:
-//   setupKoboDeployConfig()
-//   setKoboToolAssetUid("emonc_ctf", "aXXXX...")   // optional per tool
+// Secrets live in Script Properties — never in this file.
+// Setup once from the spreadsheet menu:
+//   Kobo Tools → Secrets → Set Kobo API token…
+//   Kobo Tools → Secrets → Set asset UID…
+// Or from the editor:
+//   promptSetKoboApiToken()
+//   setKoboToolAssetUid("emonc_ctf", "aXXXX...")
 //
 // Deploy one tool:
 //   deployKoboTool("emonc_ctf")
@@ -122,67 +126,14 @@ function getKoboDeployToolsRegistry_() {
 }
 
 /**
- * AUTOMATIC SETUP (called by refreshAllKoboTools)
- *
- * WHAT YOU NEED:
- * 1) Kobo API token — Account Settings → API Key
- * 2) KPI base URL — must match your Kobo server
- * 3) Per-tool Google Sheet IDs and Kobo asset UIDs below
+ * Validate deploy secrets. Does NOT write tokens, sheet IDs or asset UIDs.
+ * Those must already be in Script Properties (Kobo Tools → Secrets).
  */
 function setupKoboDeployConfig() {
-  // >>> EDIT THESE BEFORE RUNNING <<<
-  var apiToken = "1faf1291cb5e472b7f5a253f3888380d28e7900b";
-  // EU server (former humanitarianresponse.info). Global server: https://kf.kobotoolbox.org
-  var kpiBaseUrl = "https://eu.kobotoolbox.org";
-
-  // Generated xlsform Google Sheets.
-  var initialFormIds = {
-    emonc_ctf: "16bPRvqnjJg24I5uVZGSflL9LQaM5VaIUiima-JDFx0k",
-    newborn_ctf: "1_ROloM3Cn_z6ryYj-CMkxrKctgbbgqfW-__FvqPmmqA",
-    moh_sac: "1PKnhwD0sApSZ7lFYLrDH6pIZGMpGBXjckhm36-m8M1o",
-    newborn_ka: "1D439jz5Nc_PBZCHGHm3ZFwGz6c-2Y35-bfmOvf_P4u0",
-    emonc_ka: "1JOw1iNTLh-Yb4d9FyIujrSxRgL2tJr7xpwdA0cRIjBM"
-  };
-
-  // Existing Kobo projects to update/redeploy.
-  var initialAssetUids = {
-    emonc_ctf: "aJaBJKDs7pCRMi8zm3BXze",
-    newborn_ctf: "a488FNw8rSGKWdJqpYfpny",
-    moh_sac: "aR4bTSJFw3Tnev6o77S3Sg",
-    newborn_ka: "aFRcSLKi7wUvdrQ7js5Vbd",
-    emonc_ka: "auZqsTBpQMBnoDbMshmnrH"
-  };
-
-  var props = PropertiesService.getScriptProperties();
-  props.setProperty(KOBO_DEPLOY_PROP_KPI_BASE, normalizeKoboBaseUrl_(kpiBaseUrl));
-
-  // Seed sheet IDs and asset UIDs before validating the token, so an unedited
-  // token placeholder cannot silently skip this mapping.
-  var registry = getKoboDeployToolsRegistry_();
-  for (var i = 0; i < registry.length; i++) {
-    var tool = registry[i];
-
-    var formId = initialFormIds[tool.id];
-    if (formId) {
-      props.setProperty(tool.formIdProp, String(formId).trim());
-    }
-
-    var uid = initialAssetUids[tool.id];
-    if (uid) {
-      props.setProperty(tool.assetUidProp, String(uid).trim());
-    }
-  }
-
-  if (!apiToken || apiToken.indexOf("PASTE_") === 0) {
-    throw new Error(
-      "Set apiToken in setupKoboDeployConfig() to your real Kobo API token."
-    );
-  }
-
-  props.setProperty(KOBO_DEPLOY_PROP_API_TOKEN, String(apiToken).trim());
-
-  Logger.log("Saved shared Kobo deploy config.");
-  Logger.log("KPI base: " + props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE));
+  seedKoboPublicDefaults_();
+  requireKoboPipelineSecrets_();
+  Logger.log("Kobo deploy secrets are present (values masked).");
+  Logger.log("KPI base: " + getKoboKpiBase_());
   listKoboDeployTools();
 }
 
@@ -231,7 +182,10 @@ function setKoboToolAssetUid(toolId, assetUid) {
     tool.assetUidProp,
     String(assetUid).trim()
   );
-  Logger.log("Saved asset UID for " + tool.id + ": " + assetUid);
+  Logger.log(
+    "Saved asset UID for " + tool.id + ": " +
+    maskKoboSecret_(assetUid, KOBO_SECRET_KIND_ID)
+  );
 }
 
 /**
@@ -258,9 +212,9 @@ function listKoboDeployTools() {
       " | enabled=" +
       !!tool.enabled +
       " | sheet=" +
-      (props.getProperty(tool.formIdProp) || "(missing)") +
+      maskKoboSecret_(props.getProperty(tool.formIdProp), KOBO_SECRET_KIND_ID) +
       " | asset=" +
-      (props.getProperty(tool.assetUidProp) || "(none — will create new)")
+      maskKoboSecret_(props.getProperty(tool.assetUidProp), KOBO_SECRET_KIND_ID)
     );
   }
   return registry;
@@ -331,7 +285,10 @@ function deployKoboTool(toolId, rebuildFirst) {
     assetUid === priorUid ? priorVersionId : ""
   );
   Logger.log("Deploy finished: " + JSON.stringify(deployResult));
-  Logger.log("Done: " + tool.label + " → asset UID " + assetUid);
+  Logger.log(
+    "Done: " + tool.label + " → asset UID " +
+    maskKoboSecret_(assetUid, KOBO_SECRET_KIND_ID)
+  );
 
   return {
     toolId: tool.id,
@@ -380,7 +337,10 @@ function deployAllKoboTools(rebuildFirst) {
     }
   }
 
-  Logger.log("deployAllKoboTools finished: " + JSON.stringify(results));
+  Logger.log(
+    "deployAllKoboTools finished: " +
+    JSON.stringify(maskKoboPipelineSummary_({ deploy: results }).deploy)
+  );
   return results;
 }
 
@@ -413,18 +373,8 @@ function getKoboDeployToolById_(toolId) {
 }
 
 function getKoboDeploySharedConfig_() {
-  var props = PropertiesService.getScriptProperties();
-  var token = props.getProperty(KOBO_DEPLOY_PROP_API_TOKEN);
-  var base = normalizeKoboBaseUrl_(
-    props.getProperty(KOBO_DEPLOY_PROP_KPI_BASE) || KOBO_DEPLOY_DEFAULT_KPI_BASE
-  );
-
-  if (!token) {
-    throw new Error(
-      "Missing Kobo API token. Run setupKoboDeployConfig() first."
-    );
-  }
-
+  var token = getKoboApiToken_();
+  var base = getKoboKpiBase_();
   return { token: token, base: base };
 }
 

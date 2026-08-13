@@ -1,8 +1,8 @@
 function fetchKoboData_Generic() {
 
   // ================= CONFIG =================
-  const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
-  const formUid = 'aR4bTSJFw3Tnev6o77S3Sg';
+  const apiToken = getKoboApiToken_();
+  const formUid = getKoboAssetUidSecret_('KOBO_ASSET_UID_MOH_SAC');
   const startDate = "2026-01-01T00:00:00";
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();

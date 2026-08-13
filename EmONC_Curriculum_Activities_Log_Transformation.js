@@ -1,7 +1,7 @@
 function fetchKoboData_All() {
 
-  const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
-  const formUid  = 'aJaBJKDs7pCRMi8zm3BXze';
+  const apiToken = getKoboApiToken_();
+  const formUid  = getKoboAssetUidSecret_('KOBO_ASSET_UID_EMONC_CTF');
 
   const startDate = "2026-04-01T00:00:00";
 
