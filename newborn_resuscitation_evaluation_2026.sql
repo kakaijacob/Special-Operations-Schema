@@ -1,9 +1,23 @@
--- Deploy: recreate newborn resuscitation evaluation view
--- Fix: old/new form score cutoff uses date_submitted (not date_started)
--- so Newborn curriculum new-form rows are scored with the /46.5 formula.
+-- Deploy: recreate newborn resuscitation evaluation view (cycle-aware)
+-- Scoring fix: old/new form cutoff uses date_submitted (not date_started)
+-- Cycle grain: best average_score per mentee × cycle; includes cycle_* / attempt_count / first_pass_date
 
-CREATE OR REPLACE VIEW mentors.newborn_resuscitation_evaluation_2026
-AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
+-- -----------------------------------------------------------------------------
+-- 14. mentors.newborn_resuscitation_evaluation_2026
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW mentors.newborn_resuscitation_evaluation_2026 AS
+WITH skills_assessment_cohorts AS (
+    SELECT 1 AS cycle_id, CAST('Cohort 1' AS VARCHAR(50)) AS cycle_label,
+           DATE '2024-01-01' AS cycle_start, DATE '2026-03-31' AS cycle_end
+    UNION ALL
+    SELECT 2, CAST('Cohort 2' AS VARCHAR(50)),
+           DATE '2026-04-01', DATE '2027-03-31'
+    UNION ALL
+    SELECT 3, CAST('Cohort 3' AS VARCHAR(50)),
+           DATE '2027-04-01', DATE '2028-03-31'
+),
+scored_attempts AS (
+    SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
         CASE
             WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.delivery_of_the_baby::integer + msc.apgar_score::integer + msc.call_for_help_001::integer + msc.abc_assessement::integer + msc._40_60_ventilation_breathes::integer + msc.reasess_abc::integer + msc.when_to_start_cpr::integer + msc.ventilation_compression_ratio::integer + msc.right_mask_size::integer + msc.position_mask_correctly::integer + msc._2_hand_technique_cpr::integer + msc.depth_of_compression::integer + msc.warm_chain::integer + msc.subsequent_abc_reassessement::integer + msc.bvm_1_min_hr_60::integer + msc.another_abc_reassesment::integer + msc.put_on_oxygen::integer + msc.arrangement_for_transfer::integer)::numeric / 18.0
             ELSE (
@@ -98,7 +112,60 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
             CASE WHEN msc.q15_ifcdc THEN 0.5 ELSE 0::numeric END +
             CASE WHEN msc.documentation_nnr THEN 1 ELSE 0 END::numeric
             ) / 46.5
-        END AS "average score"
+        END AS "average score",
+    c.cycle_id,
+    c.cycle_label,
+    c.cycle_start,
+    c.cycle_end
    FROM mentors.moh_skills_checklist msc
-  WHERE msc.skill_evaluation::text = 'Newborn resuscitation'::text;
-
+  INNER JOIN skills_assessment_cohorts c
+      ON CAST(msc.date_submitted AS DATE) >= c.cycle_start
+     AND CAST(msc.date_submitted AS DATE) <= c.cycle_end
+  WHERE msc.skill_evaluation::text = 'Newborn resuscitation'::text
+),
+ranked_attempts AS (
+    SELECT
+        scored_attempts.*,
+        COUNT(*) OVER (
+            PARTITION BY mentee_id, cycle_id
+        ) AS attempt_count,
+        MIN(
+            CASE
+                WHEN "average score" >= 0.85
+                THEN CAST(date_submitted AS DATE)
+            END
+        ) OVER (
+            PARTITION BY mentee_id, cycle_id
+        ) AS first_pass_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY mentee_id, cycle_id
+            ORDER BY
+                "average score" DESC,
+                date_submitted DESC,
+                submission_id DESC
+        ) AS score_rank
+    FROM scored_attempts
+    WHERE mentee_id IS NOT NULL
+      AND "average score" IS NOT NULL
+)
+SELECT
+    submission_id,
+    date_started,
+    date_ended,
+    date_submitted,
+    county,
+    facility,
+    facility_code,
+    program,
+    mentee_name,
+    mentee_id,
+    skill_evaluation,
+    "average score" AS average_score,
+    cycle_id,
+    cycle_label,
+    cycle_start,
+    cycle_end,
+    attempt_count,
+    first_pass_date
+FROM ranked_attempts
+WHERE score_rank = 1;

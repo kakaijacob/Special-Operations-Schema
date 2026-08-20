@@ -4,7 +4,7 @@ Use this file to record SQL queries for tasks, projects, or investigations.
 
 ## Project / Task
 - Project name: Skills Assessment Views
-- Task description: Document AMTSL evaluation view definition
+- Task description: Cycle-aware skills assessment views (max score per mentee×cycle) with scoring-column fixes
 - Date: 2026-06-30
 
 ## Queries
@@ -436,3 +436,7 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 - B-Lynch: new-form score uses column `hysteroctomy_indication` (actual checklist name), not `hysterectomy_indication`.
 - PIH: score uses `horwashing_or_start` only (no `handwashing_and_start`); 23-item average with `fix_iv_line`.
 - Newborn resuscitation: old vs new form scoring cutoff uses `date_submitted` (not `date_started`), consistent with other skill views. Using `date_started` incorrectly routed Newborn curriculum new-form rows onto the old 18-item integer formula (NULLs), so they disappeared from `newborn_resuscitation_evaluation_2026` / `process_moh_skills_assessment_2026` when null scores were filtered.
+
+- Cycle columns: each child view joins inline `skills_assessment_cohorts` (Cohort 1–3) on `date_submitted`, ranks attempts per mentee×cycle, and keeps `score_rank = 1`. Output columns include `cycle_id`, `cycle_label`, `cycle_start`, `cycle_end`, `attempt_count`, `first_pass_date`, and `average_score`. Parent unions those columns. Deploy via `skills_assessment_cycle_views.sql` / `process_moh_skills_assessment_all_child_views.sql`. Flat per-attempt item columns remain only inside each child's `scored_attempts` CTE.
+- Grain note: cycle-best filtering drops non-best attempts and rows with NULL `average score` / NULL `mentee_id`. Scoring fixes (NNR `date_submitted`, PIH `fix_iv_line`, etc.) are required so valid attempts still get a non-null score before ranking.
+
