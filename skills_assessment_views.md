@@ -445,4 +445,5 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 - Database: mentors
 - Results / observations: View calculates average score using different item sets before and after 2026-04-01
 - Shoulder dystocia: removed hard `date_submitted <= 2026-04-01` WHERE filter so post-cutoff rows are included in the child/parent views.
+- B-Lynch: new-form score uses column `hysteroctomy_indication` (actual checklist name), not `hysterectomy_indication`.
 - Newborn resuscitation: old vs new form scoring cutoff uses `date_submitted` (not `date_started`), consistent with other skill views. Using `date_started` incorrectly routed Newborn curriculum new-form rows onto the old 18-item integer formula (NULLs), so they disappeared from `newborn_resuscitation_evaluation_2026` / `process_moh_skills_assessment_2026` when null scores were filtered.
