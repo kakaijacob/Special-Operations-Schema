@@ -10,7 +10,7 @@
 -- Scoring fixes retained: NNR date_submitted cutoff + new-form field detect + null-safe old ints, PIH fix_iv_line / horwashing_or_start,
 -- B-Lynch hysteroctomy_indication, shoulder dystocia no hard date WHERE filter.
 --
--- Grain: one row per mentee × cycle × skill (best average_score in cycle).
+-- Grain: one row per mentee × cycle × skill × program (best average_score in cycle).
 -- Extra columns: cycle_id, cycle_label, cycle_start, cycle_end, attempt_count, first_pass_date.
 
 -- -----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -56,10 +56,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -126,7 +126,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -134,10 +134,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -204,7 +204,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -212,10 +212,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -282,7 +282,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -290,10 +290,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -360,7 +360,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -368,10 +368,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -438,7 +438,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -446,10 +446,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -516,7 +516,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -524,10 +524,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -599,7 +599,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -607,10 +607,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -674,7 +674,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -682,10 +682,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -773,7 +773,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -781,10 +781,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -851,7 +851,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -859,10 +859,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -929,7 +929,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -937,10 +937,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1007,7 +1007,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1015,10 +1015,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1180,7 +1180,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1188,10 +1188,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1255,7 +1255,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1263,10 +1263,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1338,7 +1338,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1346,10 +1346,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1413,7 +1413,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1421,10 +1421,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1488,7 +1488,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1496,10 +1496,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1563,7 +1563,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1571,10 +1571,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1638,7 +1638,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1646,10 +1646,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
@@ -1713,7 +1713,7 @@ ranked_attempts AS (
     SELECT
         scored_attempts.*,
         COUNT(*) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS attempt_count,
         MIN(
             CASE
@@ -1721,10 +1721,10 @@ ranked_attempts AS (
                 THEN CAST(date_submitted AS DATE)
             END
         ) OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
         ) AS first_pass_date,
         ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id
+            PARTITION BY mentee_id, cycle_id, program
             ORDER BY
                 "average score" DESC,
                 date_submitted DESC,
