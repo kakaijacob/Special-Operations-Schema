@@ -1,5 +1,8 @@
 -- Deploy: recreate newborn resuscitation evaluation view (cycle-aware)
--- DATE POLICY: date_submitted is the sole date for cycle assignment and old/new form cutoff.
+-- DATE POLICY: date_submitted is the sole date for cycle assignment.
+-- Form cutoff: old 18-item formula only when date_submitted <= 2026-04-01 AND no new-form
+--   fields present (documentation_nnr / q1a_gestational_age / shout_help_nnr). Otherwise /46.5.
+-- Old-form integers are COALESCE to 0 so empty old fields cannot NULL the average_score.
 -- date_started / date_ended are passthrough only.
 -- Cycle grain: best average_score per mentee × cycle.
 
@@ -20,7 +23,11 @@ WITH skills_assessment_cohorts AS (
 scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
         CASE
-            WHEN CAST(msc.date_submitted AS DATE) <= DATE '2026-04-01' THEN (msc.delivery_of_the_baby::integer + msc.apgar_score::integer + msc.call_for_help_001::integer + msc.abc_assessement::integer + msc._40_60_ventilation_breathes::integer + msc.reasess_abc::integer + msc.when_to_start_cpr::integer + msc.ventilation_compression_ratio::integer + msc.right_mask_size::integer + msc.position_mask_correctly::integer + msc._2_hand_technique_cpr::integer + msc.depth_of_compression::integer + msc.warm_chain::integer + msc.subsequent_abc_reassessement::integer + msc.bvm_1_min_hr_60::integer + msc.another_abc_reassesment::integer + msc.put_on_oxygen::integer + msc.arrangement_for_transfer::integer)::numeric / 18.0
+            WHEN CAST(msc.date_submitted AS DATE) <= DATE '2026-04-01'
+                 AND msc.documentation_nnr IS NULL
+                 AND msc.q1a_gestational_age IS NULL
+                 AND msc.shout_help_nnr IS NULL
+            THEN (COALESCE(msc.delivery_of_the_baby::integer, 0) + COALESCE(msc.apgar_score::integer, 0) + COALESCE(msc.call_for_help_001::integer, 0) + COALESCE(msc.abc_assessement::integer, 0) + COALESCE(msc._40_60_ventilation_breathes::integer, 0) + COALESCE(msc.reasess_abc::integer, 0) + COALESCE(msc.when_to_start_cpr::integer, 0) + COALESCE(msc.ventilation_compression_ratio::integer, 0) + COALESCE(msc.right_mask_size::integer, 0) + COALESCE(msc.position_mask_correctly::integer, 0) + COALESCE(msc._2_hand_technique_cpr::integer, 0) + COALESCE(msc.depth_of_compression::integer, 0) + COALESCE(msc.warm_chain::integer, 0) + COALESCE(msc.subsequent_abc_reassessement::integer, 0) + COALESCE(msc.bvm_1_min_hr_60::integer, 0) + COALESCE(msc.another_abc_reassesment::integer, 0) + COALESCE(msc.put_on_oxygen::integer, 0) + COALESCE(msc.arrangement_for_transfer::integer, 0))::numeric / 18.0
             ELSE (
             -- Matches Kobo calculate: points / 46.5 (stored as 0-1 average_score)
             -- review_anc_history
