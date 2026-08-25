@@ -4,8 +4,8 @@
 --   fields present (documentation_nnr / q1a_gestational_age / shout_help_nnr). Otherwise /46.5.
 -- Old-form integers are COALESCE to 0 so empty old fields cannot NULL the average_score.
 -- date_started / date_ended are passthrough only.
--- Cycle grain: best average_score per mentee × cycle × program
---   (program included so Newborn curriculum is not displaced by another program).
+-- Grain: one row per scored attempt (all attempts kept).
+-- attempt_count / first_pass_date still computed per mentee × cycle × program.
 
 -- -----------------------------------------------------------------------------
 -- 14. mentors.newborn_resuscitation_evaluation_2026
@@ -146,14 +146,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -177,5 +170,4 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;

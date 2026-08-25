@@ -4,14 +4,15 @@
 -- DATE POLICY: date_submitted is the sole date used for:
 --   - cohort/cycle assignment (join to cycle windows)
 --   - old vs new form scoring cutoffs
---   - attempt ranking tie-break and first_pass_date
+--   - first_pass_date (and attempt windows)
 -- date_started / date_ended are passthrough attributes only (not used in logic).
 --
 -- Scoring fixes retained: NNR date_submitted cutoff + new-form field detect + null-safe old ints, PIH fix_iv_line / horwashing_or_start,
 -- B-Lynch hysteroctomy_indication, shoulder dystocia no hard date WHERE filter.
 --
--- Grain: one row per mentee × cycle × skill × program (best average_score in cycle).
--- Extra columns: cycle_id, cycle_label, cycle_start, cycle_end, attempt_count, first_pass_date.
+-- Grain: one row per scored attempt (all attempts kept).
+-- Extra columns: cycle_id, cycle_label, cycle_start, cycle_end, attempt_count, first_pass_date
+--   (attempt_count / first_pass_date still computed per mentee × cycle × program).
 
 -- -----------------------------------------------------------------------------
 -- 1. mentors.amstl_evaluation_2026
@@ -57,14 +58,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -88,8 +82,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 2. mentors.avd_evaluation_2026
@@ -135,14 +128,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -166,8 +152,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 3. mentors.b_lynch_evaluation_2026
@@ -213,14 +198,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -244,8 +222,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 4. mentors.bimanual_uterine_compression_evaluation_2026
@@ -291,14 +268,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -322,8 +292,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 5. mentors.breech_delivery_evaluation_2026
@@ -369,14 +338,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -400,8 +362,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 6. mentors.cervical_tear_repair_evaluation_2026
@@ -447,14 +408,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -478,8 +432,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 7. mentors.compression_abdominal_aorta_evaluation_2026
@@ -525,14 +478,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -556,8 +502,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 8. mentors.cord_prolapse_evaluation_2026
@@ -608,14 +553,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -639,8 +577,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 9. mentors.emotive_evaluation_2026
@@ -683,14 +620,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -714,8 +644,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 10. mentors.manual_placenta_removal_evaluation_2026
@@ -782,14 +711,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -813,8 +735,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 11. mentors.maternal_resuscitation_evaluation_2026
@@ -860,14 +781,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -891,8 +805,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 12. mentors.maternal_shock_evaluation_2026
@@ -938,14 +851,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -969,8 +875,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 13. mentors.nasg_evaluation_2026
@@ -1016,14 +921,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1047,8 +945,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 14. mentors.newborn_resuscitation_evaluation_2026
@@ -1189,14 +1086,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1220,8 +1110,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 15. mentors.partograph_evaluation_2026
@@ -1264,14 +1153,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1295,8 +1177,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 16. mentors.perineal_tear_repair_evaluation_2026
@@ -1347,14 +1228,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1378,8 +1252,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 17. mentors.pih_evaluation_2026
@@ -1422,14 +1295,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1453,8 +1319,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 18. mentors.shoulder_dystocia_evaluation_2026
@@ -1497,14 +1362,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1528,8 +1386,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 19. mentors.ubt_evaluation_2026
@@ -1572,14 +1429,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1603,8 +1453,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 20. mentors.ubt_free_flow_evaluation_2026
@@ -1647,14 +1496,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1678,8 +1520,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- -----------------------------------------------------------------------------
 -- 21. mentors.uterine_inversion_evaluation_2026
@@ -1722,14 +1563,7 @@ ranked_attempts AS (
             END
         ) OVER (
             PARTITION BY mentee_id, cycle_id, program
-        ) AS first_pass_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY mentee_id, cycle_id, program
-            ORDER BY
-                "average score" DESC,
-                date_submitted DESC,
-                submission_id DESC
-        ) AS score_rank
+        ) AS first_pass_date
     FROM scored_attempts
     WHERE mentee_id IS NOT NULL
       AND "average score" IS NOT NULL
@@ -1753,8 +1587,7 @@ SELECT
     cycle_end,
     attempt_count,
     first_pass_date
-FROM ranked_attempts
-WHERE score_rank = 1;
+FROM ranked_attempts;
 
 -- --------------------------- PARENT VIEW ---------------------------
 -- mentors.process_moh_skills_assessment_2026
