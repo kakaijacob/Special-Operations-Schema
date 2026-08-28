@@ -174,6 +174,38 @@ function fetchKoboData_Generic() {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
+  const INDIAN_RED = "#CD5C5C";
+  const MIN_OBSERVER_GAP_MS = 30 * 60 * 1000; // 30 minutes
+  const QA_TIMING_COLUMNS = [
+    "qa_short_observation",
+    "qa_successive_ended_lt_30m",
+    "qa_successive_submitted_lt_30m",
+    "qa_timing_issues"
+  ];
+  const QA_TIMING_SHEET_NAME = "QuIPS Timing QA";
+
+  function parseDateTimeValue(value) {
+    if (value === null || value === undefined || value === "") return null;
+    if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+      return value;
+    }
+    const s = String(value).trim();
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+    if (m) {
+      return new Date(
+        Number(m[1]), Number(m[2]) - 1, Number(m[3]),
+        Number(m[4]), Number(m[5]), Number(m[6])
+      );
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatMinutes(ms) {
+    if (ms === null || ms === undefined || isNaN(ms)) return "";
+    return (ms / 60000).toFixed(1);
+  }
+
   // Flags negative HH:MM:SS duration values (strings starting with "-") in Indian Red.
   function applyNegativeDurationConditionalFormatting(targetSheet) {
     const lastCol = targetSheet.getLastColumn();
@@ -191,7 +223,6 @@ function fetchKoboData_Generic() {
     if (durationCols.length === 0) return;
 
     const durationColSet = new Set(durationCols);
-    const indianRed = "#CD5C5C";
     const maxRows = targetSheet.getMaxRows();
 
     // Drop prior negative-duration rules on these columns so re-runs stay idempotent.
@@ -205,12 +236,222 @@ function fetchKoboData_Generic() {
       const range = targetSheet.getRange(2, col, maxRows - 1, 1);
       return SpreadsheetApp.newConditionalFormatRule()
         .whenTextStartsWith("-")
-        .setBackground(indianRed)
+        .setBackground(INDIAN_RED)
         .setRanges([range])
         .build();
     });
 
     targetSheet.setConditionalFormatRules(keptRules.concat(durationRules));
+  }
+
+  function ensureColumns(targetSheet, columnNames) {
+    const lastCol = Math.max(targetSheet.getLastColumn(), 1);
+    const headers = targetSheet.getRange(1, 1, 1, lastCol).getValues()[0]
+      .map(h => String(h || ""));
+    const headerIndex = {};
+
+    headers.forEach((h, i) => {
+      if (h) headerIndex[h] = i;
+    });
+
+    columnNames.forEach(name => {
+      if (headerIndex[name] === undefined) {
+        const newCol = targetSheet.getLastColumn() + 1;
+        targetSheet.getRange(1, newCol).setValue(name);
+        headerIndex[name] = newCol - 1;
+      }
+    });
+
+    return headerIndex;
+  }
+
+  function applyQaYesConditionalFormatting(targetSheet, headerIndex) {
+    const yesFlagCols = [
+      "qa_short_observation",
+      "qa_successive_ended_lt_30m",
+      "qa_successive_submitted_lt_30m"
+    ]
+      .map(name => headerIndex[name])
+      .filter(i => i !== undefined)
+      .map(i => i + 1);
+
+    const issuesCol = headerIndex.qa_timing_issues !== undefined
+      ? headerIndex.qa_timing_issues + 1
+      : null;
+
+    const managedCols = new Set(yesFlagCols.concat(issuesCol ? [issuesCol] : []));
+    if (managedCols.size === 0) return;
+
+    const maxRows = targetSheet.getMaxRows();
+
+    const keptRules = targetSheet.getConditionalFormatRules().filter(rule => {
+      return !rule.getRanges().some(range =>
+        range.getNumColumns() === 1 && managedCols.has(range.getColumn())
+      );
+    });
+
+    const qaRules = yesFlagCols.map(col =>
+      SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo("Yes")
+        .setBackground(INDIAN_RED)
+        .setRanges([targetSheet.getRange(2, col, maxRows - 1, 1)])
+        .build()
+    );
+
+    if (issuesCol) {
+      qaRules.push(
+        SpreadsheetApp.newConditionalFormatRule()
+          .whenCellNotEmpty()
+          .setBackground(INDIAN_RED)
+          .setRanges([targetSheet.getRange(2, issuesCol, maxRows - 1, 1)])
+          .build()
+      );
+    }
+
+    targetSheet.setConditionalFormatRules(keptRules.concat(qaRules));
+  }
+
+  // Observer timing malpractice checks:
+  // 1) date_ended - date_started < 30m → likely retrospective fill (not real-time)
+  // 2) successive same-observer date_ended gap < 30m
+  // 3) successive same-observer date_submitted gap < 30m
+  // date_started can be stale (form left open); date_ended / date_submitted are preferred anchors.
+  function refreshObserverTimingIntegrityChecks(targetSheet) {
+    const lastRow = targetSheet.getLastRow();
+    const lastCol = targetSheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) return;
+
+    const headerIndex = ensureColumns(targetSheet, QA_TIMING_COLUMNS);
+    const required = ["_uuid", "observer_name", "date_started", "date_ended", "date_submitted"];
+    if (required.some(name => headerIndex[name] === undefined)) {
+      Logger.log("Timing QA skipped: missing required metadata columns.");
+      return;
+    }
+
+    const width = targetSheet.getLastColumn();
+    const values = targetSheet.getRange(2, 1, lastRow - 1, width).getValues();
+
+    const records = values.map((row, idx) => {
+      const started = parseDateTimeValue(row[headerIndex.date_started]);
+      const ended = parseDateTimeValue(row[headerIndex.date_ended]);
+      const submitted = parseDateTimeValue(row[headerIndex.date_submitted]);
+      return {
+        rowIndex: idx,
+        uuid: String(row[headerIndex._uuid] || ""),
+        observer: String(row[headerIndex.observer_name] || "").trim(),
+        started,
+        ended,
+        submitted,
+        shortObservation: false,
+        successiveEnded: false,
+        successiveSubmitted: false,
+        notes: []
+      };
+    });
+
+    records.forEach(rec => {
+      if (rec.started && rec.ended) {
+        const windowMs = rec.ended.getTime() - rec.started.getTime();
+        if (windowMs < MIN_OBSERVER_GAP_MS) {
+          rec.shortObservation = true;
+          rec.notes.push(
+            windowMs < 0
+              ? `form_window_negative(${formatMinutes(windowMs)}m)`
+              : `form_window_lt_30m(${formatMinutes(windowMs)}m)`
+          );
+        }
+      }
+    });
+
+    function flagSuccessiveGaps(timeKey, flagKey, label) {
+      const byObserver = {};
+      records.forEach(rec => {
+        if (!rec.observer || !rec[timeKey]) return;
+        if (!byObserver[rec.observer]) byObserver[rec.observer] = [];
+        byObserver[rec.observer].push(rec);
+      });
+
+      Object.keys(byObserver).forEach(observer => {
+        const group = byObserver[observer].slice().sort((a, b) =>
+          a[timeKey].getTime() - b[timeKey].getTime()
+        );
+
+        for (let i = 1; i < group.length; i++) {
+          const prev = group[i - 1];
+          const curr = group[i];
+          const gapMs = curr[timeKey].getTime() - prev[timeKey].getTime();
+          if (gapMs < MIN_OBSERVER_GAP_MS) {
+            prev[flagKey] = true;
+            curr[flagKey] = true;
+            const detail = `${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
+            curr.notes.push(detail);
+            prev.notes.push(`${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
+          }
+        }
+      });
+    }
+
+    flagSuccessiveGaps("ended", "successiveEnded", "successive_date_ended");
+    flagSuccessiveGaps("submitted", "successiveSubmitted", "successive_date_submitted");
+
+    const shortCol = headerIndex.qa_short_observation + 1;
+    const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
+    const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
+    const issuesCol = headerIndex.qa_timing_issues + 1;
+
+    const shortValues = records.map(r => [r.shortObservation ? "Yes" : ""]);
+    const endedValues = records.map(r => [r.successiveEnded ? "Yes" : ""]);
+    const submittedValues = records.map(r => [r.successiveSubmitted ? "Yes" : ""]);
+    const issuesValues = records.map(r => {
+      const uniqueNotes = [...new Set(r.notes)];
+      return [uniqueNotes.join("; ")];
+    });
+
+    targetSheet.getRange(2, shortCol, records.length, 1).setValues(shortValues);
+    targetSheet.getRange(2, endedCol, records.length, 1).setValues(endedValues);
+    targetSheet.getRange(2, submittedCol, records.length, 1).setValues(submittedValues);
+    targetSheet.getRange(2, issuesCol, records.length, 1).setValues(issuesValues);
+
+    applyQaYesConditionalFormatting(targetSheet, headerIndex);
+
+    const ss = targetSheet.getParent();
+    let qaSheet = ss.getSheetByName(QA_TIMING_SHEET_NAME);
+    if (!qaSheet) qaSheet = ss.insertSheet(QA_TIMING_SHEET_NAME);
+    qaSheet.clearContents();
+
+    const qaHeaders = [
+      "_uuid",
+      "observer_name",
+      "qa_short_observation",
+      "qa_successive_ended_lt_30m",
+      "qa_successive_submitted_lt_30m",
+      "date_started",
+      "date_ended",
+      "date_submitted",
+      "qa_timing_issues"
+    ];
+    const flagged = records.filter(r =>
+      r.shortObservation || r.successiveEnded || r.successiveSubmitted
+    );
+
+    const qaRows = flagged.map(r => [
+      r.uuid,
+      r.observer,
+      r.shortObservation ? "Yes" : "",
+      r.successiveEnded ? "Yes" : "",
+      r.successiveSubmitted ? "Yes" : "",
+      r.started ? formatDateTime(r.started) : "",
+      r.ended ? formatDateTime(r.ended) : "",
+      r.submitted ? formatDateTime(r.submitted) : "",
+      [...new Set(r.notes)].join("; ")
+    ]);
+
+    qaSheet.getRange(1, 1, 1, qaHeaders.length).setValues([qaHeaders]);
+    if (qaRows.length > 0) {
+      qaSheet.getRange(2, 1, qaRows.length, qaHeaders.length).setValues(qaRows);
+    }
+
+    Logger.log(`Timing QA: flagged ${qaRows.length} of ${records.length} observations.`);
   }
 
 
@@ -1450,5 +1691,8 @@ kindly_none_of_above:
 
   // Data integrity: highlight negative durations on all *_duration columns.
   applyNegativeDurationConditionalFormatting(sheet);
+
+  // Data integrity: observer timing malpractice checks (<30m form window / successive gaps).
+  refreshObserverTimingIntegrityChecks(sheet);
 }
 ```
