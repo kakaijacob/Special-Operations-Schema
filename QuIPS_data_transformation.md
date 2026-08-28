@@ -380,8 +380,8 @@ function fetchKoboData_GenericLocked_() {
 
   // Data integrity / malpractice checks on QuIPS Transformed Data:
   // 1) date_ended - date_started < 30m → likely retrospective fill (not real-time)
-  // 2) successive same-observer date_ended gap < 30m
-  // 3) successive same-observer date_submitted gap < 30m
+  // 2) successive same-observer + same-facility date_ended gap < 30m
+  // 3) successive same-observer + same-facility date_submitted gap < 30m
   // 4) birth_companion = No but directly_engaged_companion_support = Yes
   // date_started can be stale (form left open); date_ended / date_submitted are preferred anchors.
   function refreshObserverTimingIntegrityChecks(targetSheet) {
@@ -390,7 +390,14 @@ function fetchKoboData_GenericLocked_() {
     if (lastRow < 2 || lastCol < 1) return;
 
     const headerIndex = ensureColumns(targetSheet, QA_INTEGRITY_COLUMNS);
-    const required = ["_uuid", "observer_name", "date_started", "date_ended", "date_submitted"];
+    const required = [
+      "_uuid",
+      "observer_name",
+      "facility_code",
+      "date_started",
+      "date_ended",
+      "date_submitted"
+    ];
     if (required.some(name => headerIndex[name] === undefined)) {
       Logger.log("Timing QA skipped: missing required metadata columns.");
       return;
@@ -434,6 +441,7 @@ function fetchKoboData_GenericLocked_() {
         rowIndex: idx,
         uuid: String(row[headerIndex._uuid] || ""),
         observer: String(row[headerIndex.observer_name] || "").trim(),
+        facilityCode: String(row[headerIndex.facility_code] || "").trim(),
         started,
         ended,
         submitted,
@@ -474,16 +482,18 @@ function fetchKoboData_GenericLocked_() {
       }
     });
 
+    // Successive timing gaps only within the same observer_name + facility_code.
     function flagSuccessiveGaps(timeKey, flagKey, label) {
-      const byObserver = {};
+      const byObserverFacility = {};
       records.forEach(rec => {
-        if (!rec.observer || !rec[timeKey]) return;
-        if (!byObserver[rec.observer]) byObserver[rec.observer] = [];
-        byObserver[rec.observer].push(rec);
+        if (!rec.observer || !rec.facilityCode || !rec[timeKey]) return;
+        const key = `${rec.observer}||${rec.facilityCode}`;
+        if (!byObserverFacility[key]) byObserverFacility[key] = [];
+        byObserverFacility[key].push(rec);
       });
 
-      Object.keys(byObserver).forEach(observer => {
-        const group = byObserver[observer].slice().sort((a, b) =>
+      Object.keys(byObserverFacility).forEach(key => {
+        const group = byObserverFacility[key].slice().sort((a, b) =>
           a[timeKey].getTime() - b[timeKey].getTime()
         );
 
