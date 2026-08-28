@@ -558,11 +558,11 @@ function fetchKoboData_GenericLocked_() {
       : ((flaggedCount / records.length) * 100).toFixed(1);
 
     const avgQa = records.length === 0
-      ? "1.000"
-      : (records.reduce((sum, r) => sum + r.qaCore, 0) / records.length).toFixed(3);
+      ? "100.0"
+      : ((records.reduce((sum, r) => sum + r.qaCore, 0) / records.length) * 100).toFixed(1);
 
     Logger.log(
-      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_core=${avgQa}.`
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_core=${avgQa}%.`
     );
   }
 
