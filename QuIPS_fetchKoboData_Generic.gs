@@ -191,12 +191,19 @@ function fetchKoboData_GenericLocked_() {
   const MIN_OBSERVER_GAP_MS = 30 * 60 * 1000; // 30 minutes
   const QA_INTEGRITY_COLUMNS = [
     "qa_short_observation",
-    "qa_successive_ended_lt_30m",
-    "qa_successive_submitted_lt_30m",
+    "qa_successive_ended_under_30m",
+    "qa_successive_submitted_under_30m",
     "qa_companion_inconsistency",
     "qa_core",
     "qa_timing_issues"
   ];
+
+  // Rename legacy QA headers in place so re-runs don't create duplicate columns.
+  const QA_HEADER_ALIASES = {
+    qa_successive_ended_lt_30m: "qa_successive_ended_under_30m",
+    qa_successive_submitted_lt_30m: "qa_successive_submitted_under_30m",
+    qa_score: "qa_core"
+  };
 
   function parseDateTimeValue(value) {
     if (value === null || value === undefined || value === "") return null;
@@ -268,6 +275,17 @@ function fetchKoboData_GenericLocked_() {
       if (h) headerIndex[h] = i;
     });
 
+    // Migrate old QA header names before adding any missing columns.
+    Object.keys(QA_HEADER_ALIASES).forEach(oldName => {
+      const newName = QA_HEADER_ALIASES[oldName];
+      if (headerIndex[oldName] !== undefined && headerIndex[newName] === undefined) {
+        const col = headerIndex[oldName] + 1;
+        targetSheet.getRange(1, col).setValue(newName);
+        headerIndex[newName] = headerIndex[oldName];
+        delete headerIndex[oldName];
+      }
+    });
+
     columnNames.forEach(name => {
       if (headerIndex[name] === undefined) {
         const newCol = targetSheet.getLastColumn() + 1;
@@ -282,8 +300,8 @@ function fetchKoboData_GenericLocked_() {
   function applyQaYesConditionalFormatting(targetSheet, headerIndex) {
     const yesFlagCols = [
       "qa_short_observation",
-      "qa_successive_ended_lt_30m",
-      "qa_successive_submitted_lt_30m",
+      "qa_successive_ended_under_30m",
+      "qa_successive_submitted_under_30m",
       "qa_companion_inconsistency"
     ]
       .map(name => headerIndex[name])
@@ -462,8 +480,8 @@ function fetchKoboData_GenericLocked_() {
           rec.shortObservation = true;
           rec.notes.push(
             windowMs < 0
-              ? `form_window_negative(${formatMinutes(windowMs)}m)`
-              : `form_window_lt_30m(${formatMinutes(windowMs)}m)`
+              ? `negative_form_window(${formatMinutes(windowMs)}m)`
+              : `short_form_window(${formatMinutes(windowMs)}m)`
           );
         }
       }
@@ -501,9 +519,9 @@ function fetchKoboData_GenericLocked_() {
           if (gapMs < MIN_OBSERVER_GAP_MS) {
             prev[flagKey] = true;
             curr[flagKey] = true;
-            const detail = `${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
+            const detail = `${label}_gap_under_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
             curr.notes.push(detail);
-            prev.notes.push(`${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
+            prev.notes.push(`${label}_gap_under_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
           }
         }
       });
@@ -517,8 +535,8 @@ function fetchKoboData_GenericLocked_() {
     });
 
     const shortCol = headerIndex.qa_short_observation + 1;
-    const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
-    const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
+    const endedCol = headerIndex.qa_successive_ended_under_30m + 1;
+    const submittedCol = headerIndex.qa_successive_submitted_under_30m + 1;
     const companionCol = headerIndex.qa_companion_inconsistency + 1;
     const scoreCol = headerIndex.qa_core + 1;
     const issuesCol = headerIndex.qa_timing_issues + 1;
