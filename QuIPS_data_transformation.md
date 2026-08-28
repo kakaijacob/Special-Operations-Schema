@@ -462,8 +462,12 @@ function fetchKoboData_GenericLocked_() {
       r.companionInconsistency
     ).length;
 
+    const flaggedPct = records.length === 0
+      ? "0.0"
+      : ((flaggedCount / records.length) * 100).toFixed(1);
+
     Logger.log(
-      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} observations.`
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations.`
     );
   }
 
