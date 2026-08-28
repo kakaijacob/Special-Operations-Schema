@@ -197,7 +197,7 @@ function fetchKoboData_GenericLocked_() {
     "qa_successive_ended_lt_30m",
     "qa_successive_submitted_lt_30m",
     "qa_companion_inconsistency",
-    "qa_score",
+    "qa_core",
     "qa_timing_issues"
   ];
 
@@ -297,8 +297,8 @@ function fetchKoboData_GenericLocked_() {
       ? headerIndex.qa_timing_issues + 1
       : null;
 
-    const scoreCol = headerIndex.qa_score !== undefined
-      ? headerIndex.qa_score + 1
+    const scoreCol = headerIndex.qa_core !== undefined
+      ? headerIndex.qa_core + 1
       : null;
 
     const managedCols = new Set(
@@ -334,7 +334,7 @@ function fetchKoboData_GenericLocked_() {
       );
     }
 
-    // Highlight imperfect integrity scores
+    // Highlight imperfect integrity scores (qa_core)
     if (scoreCol) {
       qaRules.push(
         SpreadsheetApp.newConditionalFormatRule()
@@ -349,7 +349,7 @@ function fetchKoboData_GenericLocked_() {
   }
 
   // Integrity score: share of applicable QA checks passed (1 = clean, 0 = all failed).
-  function computeQaScore(rec, hasCompanionCols) {
+  function computeQaCore(rec, hasCompanionCols) {
     let passed = 0;
     let total = 0;
 
@@ -445,7 +445,7 @@ function fetchKoboData_GenericLocked_() {
         successiveEnded: false,
         successiveSubmitted: false,
         companionInconsistency: false,
-        qaScore: 1,
+        qaCore: 1,
         notes: []
       };
     });
@@ -506,21 +506,21 @@ function fetchKoboData_GenericLocked_() {
     flagSuccessiveGaps("submitted", "successiveSubmitted", "successive_date_submitted");
 
     records.forEach(rec => {
-      rec.qaScore = computeQaScore(rec, hasCompanionCols);
+      rec.qaCore = computeQaCore(rec, hasCompanionCols);
     });
 
     const shortCol = headerIndex.qa_short_observation + 1;
     const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
     const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
     const companionCol = headerIndex.qa_companion_inconsistency + 1;
-    const scoreCol = headerIndex.qa_score + 1;
+    const scoreCol = headerIndex.qa_core + 1;
     const issuesCol = headerIndex.qa_timing_issues + 1;
 
     const shortValues = records.map(r => [r.shortObservation ? "Yes" : ""]);
     const endedValues = records.map(r => [r.successiveEnded ? "Yes" : ""]);
     const submittedValues = records.map(r => [r.successiveSubmitted ? "Yes" : ""]);
     const companionValues = records.map(r => [r.companionInconsistency ? "Yes" : ""]);
-    const scoreValues = records.map(r => [r.qaScore]);
+    const scoreValues = records.map(r => [r.qaCore]);
     const issuesValues = records.map(r => {
       const uniqueNotes = [...new Set(r.notes)];
       return [uniqueNotes.join("; ")];
@@ -549,10 +549,10 @@ function fetchKoboData_GenericLocked_() {
 
     const avgQa = records.length === 0
       ? "1.000"
-      : (records.reduce((sum, r) => sum + r.qaScore, 0) / records.length).toFixed(3);
+      : (records.reduce((sum, r) => sum + r.qaCore, 0) / records.length).toFixed(3);
 
     Logger.log(
-      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_score=${avgQa}.`
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_core=${avgQa}.`
     );
   }
 
