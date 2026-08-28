@@ -194,6 +194,7 @@ function fetchKoboData_GenericLocked_() {
     "qa_successive_ended_lt_30m",
     "qa_successive_submitted_lt_30m",
     "qa_companion_inconsistency",
+    "qa_score",
     "qa_timing_issues"
   ];
 
@@ -293,7 +294,15 @@ function fetchKoboData_GenericLocked_() {
       ? headerIndex.qa_timing_issues + 1
       : null;
 
-    const managedCols = new Set(yesFlagCols.concat(issuesCol ? [issuesCol] : []));
+    const scoreCol = headerIndex.qa_score !== undefined
+      ? headerIndex.qa_score + 1
+      : null;
+
+    const managedCols = new Set(
+      yesFlagCols
+        .concat(issuesCol ? [issuesCol] : [])
+        .concat(scoreCol ? [scoreCol] : [])
+    );
     if (managedCols.size === 0) return;
 
     const maxRows = targetSheet.getMaxRows();
@@ -322,7 +331,48 @@ function fetchKoboData_GenericLocked_() {
       );
     }
 
+    // Highlight imperfect integrity scores
+    if (scoreCol) {
+      qaRules.push(
+        SpreadsheetApp.newConditionalFormatRule()
+          .whenNumberLessThan(1)
+          .setBackground(INDIAN_RED)
+          .setRanges([targetSheet.getRange(2, scoreCol, maxRows - 1, 1)])
+          .build()
+      );
+    }
+
     targetSheet.setConditionalFormatRules(keptRules.concat(qaRules));
+  }
+
+  // Integrity score: share of applicable QA checks passed (1 = clean, 0 = all failed).
+  function computeQaScore(rec, hasCompanionCols) {
+    let passed = 0;
+    let total = 0;
+
+    if (rec.started && rec.ended) {
+      total += 1;
+      if (!rec.shortObservation) passed += 1;
+    }
+
+    total += 1;
+    if (!rec.successiveEnded) passed += 1;
+
+    total += 1;
+    if (!rec.successiveSubmitted) passed += 1;
+
+    if (hasCompanionCols) {
+      total += 1;
+      if (!rec.companionInconsistency) passed += 1;
+    }
+
+    if (rec.hasDurationValue) {
+      total += 1;
+      if (!rec.negativeDuration) passed += 1;
+    }
+
+    if (total === 0) return 1;
+    return Number((passed / total).toFixed(3));
   }
 
   // Data integrity / malpractice checks on QuIPS Transformed Data:
@@ -346,6 +396,13 @@ function fetchKoboData_GenericLocked_() {
     const width = targetSheet.getLastColumn();
     const values = targetSheet.getRange(2, 1, lastRow - 1, width).getValues();
 
+    // Re-read headers after ensureColumns (width may have grown)
+    const headersNow = targetSheet.getRange(1, 1, 1, width).getValues()[0];
+    const durationColIdxs = [];
+    headersNow.forEach((h, i) => {
+      if (String(h || "").endsWith("_duration")) durationColIdxs.push(i);
+    });
+
     const hasCompanionCols =
       headerIndex.birth_companion !== undefined &&
       headerIndex.directly_engaged_companion_support !== undefined;
@@ -361,6 +418,15 @@ function fetchKoboData_GenericLocked_() {
         ? String(row[headerIndex.directly_engaged_companion_support] || "").trim().toLowerCase()
         : "";
 
+      let hasDurationValue = false;
+      let negativeDuration = false;
+      durationColIdxs.forEach(i => {
+        const raw = row[i];
+        if (raw === null || raw === undefined || raw === "") return;
+        hasDurationValue = true;
+        if (String(raw).trim().startsWith("-")) negativeDuration = true;
+      });
+
       return {
         rowIndex: idx,
         uuid: String(row[headerIndex._uuid] || ""),
@@ -370,10 +436,13 @@ function fetchKoboData_GenericLocked_() {
         submitted,
         birthCompanion,
         engagedCompanion,
+        hasDurationValue,
+        negativeDuration,
         shortObservation: false,
         successiveEnded: false,
         successiveSubmitted: false,
         companionInconsistency: false,
+        qaScore: 1,
         notes: []
       };
     });
@@ -395,6 +464,10 @@ function fetchKoboData_GenericLocked_() {
       if (rec.birthCompanion === "no" && rec.engagedCompanion === "yes") {
         rec.companionInconsistency = true;
         rec.notes.push("companion_support_without_birth_companion");
+      }
+
+      if (rec.negativeDuration) {
+        rec.notes.push("negative_duration");
       }
     });
 
@@ -429,16 +502,22 @@ function fetchKoboData_GenericLocked_() {
     flagSuccessiveGaps("ended", "successiveEnded", "successive_date_ended");
     flagSuccessiveGaps("submitted", "successiveSubmitted", "successive_date_submitted");
 
+    records.forEach(rec => {
+      rec.qaScore = computeQaScore(rec, hasCompanionCols);
+    });
+
     const shortCol = headerIndex.qa_short_observation + 1;
     const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
     const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
     const companionCol = headerIndex.qa_companion_inconsistency + 1;
+    const scoreCol = headerIndex.qa_score + 1;
     const issuesCol = headerIndex.qa_timing_issues + 1;
 
     const shortValues = records.map(r => [r.shortObservation ? "Yes" : ""]);
     const endedValues = records.map(r => [r.successiveEnded ? "Yes" : ""]);
     const submittedValues = records.map(r => [r.successiveSubmitted ? "Yes" : ""]);
     const companionValues = records.map(r => [r.companionInconsistency ? "Yes" : ""]);
+    const scoreValues = records.map(r => [r.qaScore]);
     const issuesValues = records.map(r => {
       const uniqueNotes = [...new Set(r.notes)];
       return [uniqueNotes.join("; ")];
@@ -448,6 +527,7 @@ function fetchKoboData_GenericLocked_() {
     targetSheet.getRange(2, endedCol, records.length, 1).setValues(endedValues);
     targetSheet.getRange(2, submittedCol, records.length, 1).setValues(submittedValues);
     targetSheet.getRange(2, companionCol, records.length, 1).setValues(companionValues);
+    targetSheet.getRange(2, scoreCol, records.length, 1).setValues(scoreValues);
     targetSheet.getRange(2, issuesCol, records.length, 1).setValues(issuesValues);
 
     applyQaYesConditionalFormatting(targetSheet, headerIndex);
@@ -456,15 +536,20 @@ function fetchKoboData_GenericLocked_() {
       r.shortObservation ||
       r.successiveEnded ||
       r.successiveSubmitted ||
-      r.companionInconsistency
+      r.companionInconsistency ||
+      r.negativeDuration
     ).length;
 
     const flaggedPct = records.length === 0
       ? "0.0"
       : ((flaggedCount / records.length) * 100).toFixed(1);
 
+    const avgQa = records.length === 0
+      ? "1.000"
+      : (records.reduce((sum, r) => sum + r.qaScore, 0) / records.length).toFixed(3);
+
     Logger.log(
-      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations.`
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_score=${avgQa}.`
     );
   }
 
