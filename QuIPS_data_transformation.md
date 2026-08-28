@@ -66,7 +66,7 @@ function fetchKoboData_Generic() {
 };
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = 'QuIPS Cleaned Data';
+  const sheetName = 'QuIPS Transformed Data';
   const sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
 
   // ================= HELPERS =================
@@ -182,7 +182,6 @@ function fetchKoboData_Generic() {
     "qa_successive_submitted_lt_30m",
     "qa_timing_issues"
   ];
-  const QA_TIMING_SHEET_NAME = "QuIPS Timing QA";
 
   function parseDateTimeValue(value) {
     if (value === null || value === undefined || value === "") return null;
@@ -414,44 +413,13 @@ function fetchKoboData_Generic() {
 
     applyQaYesConditionalFormatting(targetSheet, headerIndex);
 
-    const ss = targetSheet.getParent();
-    let qaSheet = ss.getSheetByName(QA_TIMING_SHEET_NAME);
-    if (!qaSheet) qaSheet = ss.insertSheet(QA_TIMING_SHEET_NAME);
-    qaSheet.clearContents();
-
-    const qaHeaders = [
-      "_uuid",
-      "observer_name",
-      "qa_short_observation",
-      "qa_successive_ended_lt_30m",
-      "qa_successive_submitted_lt_30m",
-      "date_started",
-      "date_ended",
-      "date_submitted",
-      "qa_timing_issues"
-    ];
-    const flagged = records.filter(r =>
+    const flaggedCount = records.filter(r =>
       r.shortObservation || r.successiveEnded || r.successiveSubmitted
+    ).length;
+
+    Logger.log(
+      `Timing QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} observations.`
     );
-
-    const qaRows = flagged.map(r => [
-      r.uuid,
-      r.observer,
-      r.shortObservation ? "Yes" : "",
-      r.successiveEnded ? "Yes" : "",
-      r.successiveSubmitted ? "Yes" : "",
-      r.started ? formatDateTime(r.started) : "",
-      r.ended ? formatDateTime(r.ended) : "",
-      r.submitted ? formatDateTime(r.submitted) : "",
-      [...new Set(r.notes)].join("; ")
-    ]);
-
-    qaSheet.getRange(1, 1, 1, qaHeaders.length).setValues([qaHeaders]);
-    if (qaRows.length > 0) {
-      qaSheet.getRange(2, 1, qaRows.length, qaHeaders.length).setValues(qaRows);
-    }
-
-    Logger.log(`Timing QA: flagged ${qaRows.length} of ${records.length} observations.`);
   }
 
 
