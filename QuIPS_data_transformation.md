@@ -193,9 +193,9 @@ function fetchKoboData_GenericLocked_() {
   const INDIAN_RED = "#CD5C5C";
   const MIN_OBSERVER_GAP_MS = 30 * 60 * 1000; // 30 minutes
   const QA_INTEGRITY_COLUMNS = [
-    "qa_short_observation",
-    "qa_successive_ended_under_30m",
-    "qa_successive_submitted_under_30m",
+    "qa_form_window_under_30m",
+    "qa_date_ended_gap_under_30m",
+    "qa_date_submitted_gap_under_30m",
     "qa_companion_inconsistency",
     "qa_core",
     "qa_timing_issues"
@@ -203,8 +203,11 @@ function fetchKoboData_GenericLocked_() {
 
   // Rename legacy QA headers in place so re-runs don't create duplicate columns.
   const QA_HEADER_ALIASES = {
-    qa_successive_ended_lt_30m: "qa_successive_ended_under_30m",
-    qa_successive_submitted_lt_30m: "qa_successive_submitted_under_30m",
+    qa_short_observation: "qa_form_window_under_30m",
+    qa_successive_ended_lt_30m: "qa_date_ended_gap_under_30m",
+    qa_successive_submitted_lt_30m: "qa_date_submitted_gap_under_30m",
+    qa_successive_ended_under_30m: "qa_date_ended_gap_under_30m",
+    qa_successive_submitted_under_30m: "qa_date_submitted_gap_under_30m",
     qa_score: "qa_core"
   };
 
@@ -302,9 +305,9 @@ function fetchKoboData_GenericLocked_() {
 
   function applyQaYesConditionalFormatting(targetSheet, headerIndex) {
     const yesFlagCols = [
-      "qa_short_observation",
-      "qa_successive_ended_under_30m",
-      "qa_successive_submitted_under_30m",
+      "qa_form_window_under_30m",
+      "qa_date_ended_gap_under_30m",
+      "qa_date_submitted_gap_under_30m",
       "qa_companion_inconsistency"
     ]
       .map(name => headerIndex[name])
@@ -397,9 +400,9 @@ function fetchKoboData_GenericLocked_() {
   }
 
   // Data integrity / malpractice checks on QuIPS Transformed Data:
-  // 1) date_ended - date_started < 30m → likely retrospective fill (not real-time)
-  // 2) successive same-observer + same-facility date_ended gap < 30m
-  // 3) successive same-observer + same-facility date_submitted gap < 30m
+  // 1) form window: date_ended - date_started under 30m → likely retrospective fill
+  // 2) date_ended gap under 30m between successive same-observer + same-facility records
+  // 3) date_submitted gap under 30m between successive same-observer + same-facility records
   // 4) birth_companion = No but directly_engaged_companion_support = Yes
   // date_started can be stale (form left open); date_ended / date_submitted are preferred anchors.
   function refreshObserverTimingIntegrityChecks(targetSheet) {
@@ -483,8 +486,8 @@ function fetchKoboData_GenericLocked_() {
           rec.shortObservation = true;
           rec.notes.push(
             windowMs < 0
-              ? `negative_form_window(${formatMinutes(windowMs)}m)`
-              : `short_form_window(${formatMinutes(windowMs)}m)`
+              ? `form_window_negative(date_started_to_date_ended ${formatMinutes(windowMs)}m)`
+              : `form_window_under_30m(date_started_to_date_ended ${formatMinutes(windowMs)}m)`
           );
         }
       }
@@ -522,24 +525,24 @@ function fetchKoboData_GenericLocked_() {
           if (gapMs < MIN_OBSERVER_GAP_MS) {
             prev[flagKey] = true;
             curr[flagKey] = true;
-            const detail = `${label}_gap_under_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
+            const detail = `${label}_under_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
             curr.notes.push(detail);
-            prev.notes.push(`${label}_gap_under_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
+            prev.notes.push(`${label}_under_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
           }
         }
       });
     }
 
-    flagSuccessiveGaps("ended", "successiveEnded", "successive_date_ended");
-    flagSuccessiveGaps("submitted", "successiveSubmitted", "successive_date_submitted");
+    flagSuccessiveGaps("ended", "successiveEnded", "date_ended_gap");
+    flagSuccessiveGaps("submitted", "successiveSubmitted", "date_submitted_gap");
 
     records.forEach(rec => {
       rec.qaCore = computeQaCore(rec, hasCompanionCols);
     });
 
-    const shortCol = headerIndex.qa_short_observation + 1;
-    const endedCol = headerIndex.qa_successive_ended_under_30m + 1;
-    const submittedCol = headerIndex.qa_successive_submitted_under_30m + 1;
+    const shortCol = headerIndex.qa_form_window_under_30m + 1;
+    const endedCol = headerIndex.qa_date_ended_gap_under_30m + 1;
+    const submittedCol = headerIndex.qa_date_submitted_gap_under_30m + 1;
     const companionCol = headerIndex.qa_companion_inconsistency + 1;
     const scoreCol = headerIndex.qa_core + 1;
     const issuesCol = headerIndex.qa_timing_issues + 1;
