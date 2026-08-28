@@ -162,7 +162,7 @@ function fetchKoboData_Generic() {
     return "";
   }
 
-function formatCellValue(value) {
+  function formatCellValue(value) {
   if (!value) return "";
 
   const cleaned = value
@@ -173,6 +173,45 @@ function formatCellValue(value) {
 
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
+
+  // Flags negative HH:MM:SS duration values (strings starting with "-") in Indian Red.
+  function applyNegativeDurationConditionalFormatting(targetSheet) {
+    const lastCol = targetSheet.getLastColumn();
+    if (lastCol < 1) return;
+
+    const headers = targetSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const durationCols = [];
+
+    headers.forEach((header, index) => {
+      if (String(header || "").endsWith("_duration")) {
+        durationCols.push(index + 1);
+      }
+    });
+
+    if (durationCols.length === 0) return;
+
+    const durationColSet = new Set(durationCols);
+    const indianRed = "#CD5C5C";
+    const maxRows = targetSheet.getMaxRows();
+
+    // Drop prior negative-duration rules on these columns so re-runs stay idempotent.
+    const keptRules = targetSheet.getConditionalFormatRules().filter(rule => {
+      return !rule.getRanges().some(range =>
+        range.getNumColumns() === 1 && durationColSet.has(range.getColumn())
+      );
+    });
+
+    const durationRules = durationCols.map(col => {
+      const range = targetSheet.getRange(2, col, maxRows - 1, 1);
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextStartsWith("-")
+        .setBackground(indianRed)
+        .setRanges([range])
+        .build();
+    });
+
+    targetSheet.setConditionalFormatRules(keptRules.concat(durationRules));
+  }
 
 
 //=============SCORING HELPER FUNCTION ====================
@@ -1392,21 +1431,24 @@ kindly_none_of_above:
       
    });
 
-  if (transformedData.length === 0) return;
+  if (transformedData.length > 0) {
+    const headers = Object.keys(transformedData[0]);
 
-  const headers = Object.keys(transformedData[0]);
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    }
 
-  if (sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    const rows = transformedData.map(obj =>
+      headers.map(h => obj[h] || "")
+    );
+
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
+      .setValues(rows);
+
+    Logger.log(`Inserted ${rows.length} new records.`);
   }
 
-  const rows = transformedData.map(obj =>
-    headers.map(h => obj[h] || "")
-  );
-
-  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
-    .setValues(rows);
-
-  Logger.log(`Inserted ${rows.length} new records.`);
+  // Data integrity: highlight negative durations on all *_duration columns.
+  applyNegativeDurationConditionalFormatting(sheet);
 }
 ```
