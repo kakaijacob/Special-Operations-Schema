@@ -334,6 +334,8 @@ function updateAllStatusesByName() {
       "Essential Newborn DELTA",
       "Comprehensive Newborn In-person",
       "Continuum of Care",
+      "Safe Surgery",
+      "OPOCUS",
       "Name",
       "Mentee ID",
       "County",
