@@ -176,10 +176,11 @@ function fetchKoboData_Generic() {
 
   const INDIAN_RED = "#CD5C5C";
   const MIN_OBSERVER_GAP_MS = 30 * 60 * 1000; // 30 minutes
-  const QA_TIMING_COLUMNS = [
+  const QA_INTEGRITY_COLUMNS = [
     "qa_short_observation",
     "qa_successive_ended_lt_30m",
     "qa_successive_submitted_lt_30m",
+    "qa_companion_inconsistency",
     "qa_timing_issues"
   ];
 
@@ -268,7 +269,8 @@ function fetchKoboData_Generic() {
     const yesFlagCols = [
       "qa_short_observation",
       "qa_successive_ended_lt_30m",
-      "qa_successive_submitted_lt_30m"
+      "qa_successive_submitted_lt_30m",
+      "qa_companion_inconsistency"
     ]
       .map(name => headerIndex[name])
       .filter(i => i !== undefined)
@@ -310,17 +312,18 @@ function fetchKoboData_Generic() {
     targetSheet.setConditionalFormatRules(keptRules.concat(qaRules));
   }
 
-  // Observer timing malpractice checks:
+  // Data integrity / malpractice checks on QuIPS Transformed Data:
   // 1) date_ended - date_started < 30m → likely retrospective fill (not real-time)
   // 2) successive same-observer date_ended gap < 30m
   // 3) successive same-observer date_submitted gap < 30m
+  // 4) birth_companion = No but directly_engaged_companion_support = Yes
   // date_started can be stale (form left open); date_ended / date_submitted are preferred anchors.
   function refreshObserverTimingIntegrityChecks(targetSheet) {
     const lastRow = targetSheet.getLastRow();
     const lastCol = targetSheet.getLastColumn();
     if (lastRow < 2 || lastCol < 1) return;
 
-    const headerIndex = ensureColumns(targetSheet, QA_TIMING_COLUMNS);
+    const headerIndex = ensureColumns(targetSheet, QA_INTEGRITY_COLUMNS);
     const required = ["_uuid", "observer_name", "date_started", "date_ended", "date_submitted"];
     if (required.some(name => headerIndex[name] === undefined)) {
       Logger.log("Timing QA skipped: missing required metadata columns.");
@@ -330,10 +333,21 @@ function fetchKoboData_Generic() {
     const width = targetSheet.getLastColumn();
     const values = targetSheet.getRange(2, 1, lastRow - 1, width).getValues();
 
+    const hasCompanionCols =
+      headerIndex.birth_companion !== undefined &&
+      headerIndex.directly_engaged_companion_support !== undefined;
+
     const records = values.map((row, idx) => {
       const started = parseDateTimeValue(row[headerIndex.date_started]);
       const ended = parseDateTimeValue(row[headerIndex.date_ended]);
       const submitted = parseDateTimeValue(row[headerIndex.date_submitted]);
+      const birthCompanion = hasCompanionCols
+        ? String(row[headerIndex.birth_companion] || "").trim().toLowerCase()
+        : "";
+      const engagedCompanion = hasCompanionCols
+        ? String(row[headerIndex.directly_engaged_companion_support] || "").trim().toLowerCase()
+        : "";
+
       return {
         rowIndex: idx,
         uuid: String(row[headerIndex._uuid] || ""),
@@ -341,9 +355,12 @@ function fetchKoboData_Generic() {
         started,
         ended,
         submitted,
+        birthCompanion,
+        engagedCompanion,
         shortObservation: false,
         successiveEnded: false,
         successiveSubmitted: false,
+        companionInconsistency: false,
         notes: []
       };
     });
@@ -359,6 +376,12 @@ function fetchKoboData_Generic() {
               : `form_window_lt_30m(${formatMinutes(windowMs)}m)`
           );
         }
+      }
+
+      // Companion present = No cannot pair with engaged companion support = Yes
+      if (rec.birthCompanion === "no" && rec.engagedCompanion === "yes") {
+        rec.companionInconsistency = true;
+        rec.notes.push("companion_support_without_birth_companion");
       }
     });
 
@@ -396,11 +419,13 @@ function fetchKoboData_Generic() {
     const shortCol = headerIndex.qa_short_observation + 1;
     const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
     const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
+    const companionCol = headerIndex.qa_companion_inconsistency + 1;
     const issuesCol = headerIndex.qa_timing_issues + 1;
 
     const shortValues = records.map(r => [r.shortObservation ? "Yes" : ""]);
     const endedValues = records.map(r => [r.successiveEnded ? "Yes" : ""]);
     const submittedValues = records.map(r => [r.successiveSubmitted ? "Yes" : ""]);
+    const companionValues = records.map(r => [r.companionInconsistency ? "Yes" : ""]);
     const issuesValues = records.map(r => {
       const uniqueNotes = [...new Set(r.notes)];
       return [uniqueNotes.join("; ")];
@@ -409,16 +434,20 @@ function fetchKoboData_Generic() {
     targetSheet.getRange(2, shortCol, records.length, 1).setValues(shortValues);
     targetSheet.getRange(2, endedCol, records.length, 1).setValues(endedValues);
     targetSheet.getRange(2, submittedCol, records.length, 1).setValues(submittedValues);
+    targetSheet.getRange(2, companionCol, records.length, 1).setValues(companionValues);
     targetSheet.getRange(2, issuesCol, records.length, 1).setValues(issuesValues);
 
     applyQaYesConditionalFormatting(targetSheet, headerIndex);
 
     const flaggedCount = records.filter(r =>
-      r.shortObservation || r.successiveEnded || r.successiveSubmitted
+      r.shortObservation ||
+      r.successiveEnded ||
+      r.successiveSubmitted ||
+      r.companionInconsistency
     ).length;
 
     Logger.log(
-      `Timing QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} observations.`
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} observations.`
     );
   }
 
