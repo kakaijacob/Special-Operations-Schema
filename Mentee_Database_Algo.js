@@ -36,6 +36,7 @@ function updateAllStatusesByName() {
   const colFacility = headers.indexOf("Facility") + 1;
   const colMenteeID = headers.indexOf("Mentee ID") + 1;
   const colProgram = headers.indexOf("Program") + 1;
+  const colPhoneNumberWhatsapp = headers.indexOf("phone_number_whatsapp") + 1;
 
   const colEmONC = headers.indexOf("EmONC In-person") + 1;
   const colEssentialNB = headers.indexOf("Essential Newborn In-person") + 1;
@@ -290,6 +291,8 @@ function updateAllStatusesByName() {
     // ----------------------------
     // LEARNING MODE
     // ----------------------------
+    let learningMode = "";
+
     if (colLearningMode > 0) {
 
       const anyInPerson =
@@ -300,8 +303,6 @@ function updateAllStatusesByName() {
       const anyDelta =
         row[colDeltaEmONC - 1] === "Yes" ||
         row[colDeltaEssential - 1] === "Yes";
-
-      let learningMode = "";
 
       if (anyInPerson && anyDelta) {
         learningMode = "Hybrid (Both)";
@@ -378,6 +379,27 @@ function updateAllStatusesByName() {
           colReasonForDeactivation,
           "Required if mentee is mapped as 'Ineligible'!"
         );
+
+      }
+
+      if (colPhoneNumberWhatsapp > 0) {
+
+        const phoneNumberWhatsapp = row[colPhoneNumberWhatsapp - 1];
+
+        if (
+          learningMode === "Hybrid (Both)" &&
+          (
+            phoneNumberWhatsapp === null ||
+            String(phoneNumberWhatsapp).trim() === ""
+          )
+        ) {
+
+          addError(
+            colPhoneNumberWhatsapp,
+            "Required if Learning Mode is Hybrid."
+          );
+
+        }
 
       }
 
