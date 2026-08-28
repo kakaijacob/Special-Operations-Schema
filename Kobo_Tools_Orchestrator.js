@@ -505,7 +505,8 @@ function hasKoboPipelineErrors_(buildResults, deployResults) {
 
 /**
  * Step 1: Copy external Mentee Database 2026 → local "Mentee Database".
- * Excludes Status=Inactive and normalizes Program
+ * Converts Status Eligible→Active / Ineligible→Inactive, excludes
+ * Status=Inactive, validates Mentee IDs, and normalizes Program
  * "EmONC Curriculum" → "MENTORS Curriculum".
  */
 function syncMenteeDatabaseFromSource() {
@@ -530,11 +531,17 @@ function syncMenteeDatabaseFromSource() {
     throw new Error("Mentee Database 2026 source sheet is empty.");
   }
 
+  // Mentee-only: map eligibility labels before Inactive filtering.
+  var statusNormalize = normalizeEligibleStatusValues_(
+    values,
+    "Mentee Database 2026"
+  );
+  values = statusNormalize.values;
   var statusFilter = filterInactiveRows_(values, "Mentee Database 2026");
   values = statusFilter.values;
   var menteeIdFilter = normalizeAndFilterMenteeIds_(values);
   values = menteeIdFilter.values;
-  var programNormalize = normalizeSourceProgramValues_(values);
+  var programNormalize = normalizeSourceProgramValues_(values, true);
   values = programNormalize.values;
 
   var localSs = SpreadsheetApp.getActiveSpreadsheet();
@@ -566,6 +573,10 @@ function syncMenteeDatabaseFromSource() {
     "Synced " + (values.length - 1) +
     " mentee rows from '" + sourceSheet.getName() + "' into '" +
     KOBO_TOOLS_LOCAL_MENTEE_SHEET + "'. " +
+    "Converted Status Eligible→Active on " +
+    statusNormalize.eligibleConverted +
+    " row(s) and Ineligible→Inactive on " +
+    statusNormalize.ineligibleConverted + " row(s). " +
     "Excluded " + statusFilter.removed + " Status=Inactive row(s). " +
     "Excluded " + menteeIdFilter.removed +
     " row(s) with an invalid Mentee ID. Removed country code 254 from " +
@@ -590,6 +601,17 @@ function syncMenteeDatabaseFromSource() {
  * digits starting with 1 or 7 is excluded entirely.
  */
 function normalizeAndFilterMenteeIds_(values) {
+  return normalizeAndFilterPersonIds_(
+    values,
+    "Mentee ID",
+    "Mentee Database 2026"
+  );
+}
+
+/**
+ * Normalize phone-style person IDs (Mentee ID / IFM ID) and drop invalid rows.
+ */
+function normalizeAndFilterPersonIds_(values, idColumnName, sourceLabel) {
   if (!values || !values.length) {
     return {
       values: values,
@@ -599,11 +621,13 @@ function normalizeAndFilterMenteeIds_(values) {
     };
   }
 
-  var idIndex = findCaseInsensitiveHeaderIndex_(values[0], "Mentee ID");
+  var idIndex = findCaseInsensitiveHeaderIndex_(values[0], idColumnName);
   if (idIndex === -1) {
     throw new Error(
-      "Mentee Database 2026 is missing the 'Mentee ID' column required for " +
-      "ID validation."
+      sourceLabel +
+      " is missing the '" +
+      idColumnName +
+      "' column required for ID validation."
     );
   }
 
@@ -683,23 +707,66 @@ function normalizeMenteeId_(rawValue) {
   };
 }
 
-function normalizeSourceProgramValues_(values) {
+/**
+ * Map Status Eligible → Active and Ineligible → Inactive (mentee sync only).
+ * Comparison is trimmed and case-insensitive; other statuses are left as-is.
+ */
+function normalizeEligibleStatusValues_(values, sourceLabel) {
+  var eligibleConverted = 0;
+  var ineligibleConverted = 0;
+
+  if (!values || !values.length) {
+    return {
+      values: values,
+      eligibleConverted: eligibleConverted,
+      ineligibleConverted: ineligibleConverted
+    };
+  }
+
+  var statusIndex = findCaseInsensitiveHeaderIndex_(values[0], "Status");
+  if (statusIndex === -1) {
+    throw new Error(
+      sourceLabel + " is missing the 'Status' column required for syncing."
+    );
+  }
+
+  for (var i = 1; i < values.length; i++) {
+    var raw = values[i][statusIndex];
+    var cleaned = String(raw == null ? "" : raw).trim().toLowerCase();
+
+    if (cleaned === "eligible") {
+      values[i][statusIndex] = "Active";
+      eligibleConverted++;
+    } else if (cleaned === "ineligible") {
+      values[i][statusIndex] = "Inactive";
+      ineligibleConverted++;
+    }
+  }
+
+  return {
+    values: values,
+    eligibleConverted: eligibleConverted,
+    ineligibleConverted: ineligibleConverted
+  };
+}
+
+/**
+ * Normalize Program "EmONC Curriculum" → "MENTORS Curriculum".
+ * When requireProgramColumn is false, a missing Program column is a no-op.
+ */
+function normalizeSourceProgramValues_(values, requireProgramColumn) {
   var converted = 0;
   if (!values || values.length < 2) {
     return { values: values, converted: converted };
   }
 
-  var header = values[0];
-  var programIndex = -1;
-  for (var c = 0; c < header.length; c++) {
-    if (String(header[c]).trim() === "Program") {
-      programIndex = c;
-      break;
-    }
-  }
+  var programIndex = findCaseInsensitiveHeaderIndex_(values[0], "Program");
 
   if (programIndex === -1) {
-    throw new Error("Source Mentee Database is missing a 'Program' column.");
+    if (requireProgramColumn) {
+      throw new Error("Source Mentee Database is missing a 'Program' column.");
+    }
+    return { values: values, converted: converted };
   }
 
   for (var i = 1; i < values.length; i++) {
@@ -762,7 +829,9 @@ function findCaseInsensitiveHeaderIndex_(header, name) {
 
 /**
  * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
- * Excludes every posting whose Status is Inactive or whose County is outside
+ * Applies the same mentee sync validations (Inactive filter, phone-ID
+ * normalization, Program EmONC→MENTORS remap) except Eligible/Ineligible
+ * Status conversion, which is mentee-only. Also excludes counties outside
  * KOBO_TOOLS_ALLOWED_IFM_COUNTIES.
  * Chooses the source tab with real mentor rows (gid preferred, then best match).
  *
@@ -805,11 +874,21 @@ function syncIFMListFromSource() {
   // Map Mentor (IFM) Database headers → original kobocreator IFM List names
   // so generateIFM* can keep using County / IFM ID / Status / etc.
   values = normalizeIFMListHeadersForKobocreator_(values);
+
+  // Same mentee validations, excluding Eligible/Ineligible → Active/Inactive.
   var statusFilter = filterInactiveRows_(
     values,
     "Mentor (IFM) Database 2026"
   );
   values = statusFilter.values;
+  var ifmIdFilter = normalizeAndFilterPersonIds_(
+    values,
+    "IFM ID",
+    "Mentor (IFM) Database 2026"
+  );
+  values = ifmIdFilter.values;
+  var programNormalize = normalizeSourceProgramValues_(values, false);
+  values = programNormalize.values;
   var countyFilter = filterIFMRowsToAllowedCounties_(values);
   values = countyFilter.values;
   var usableRows = countIFMUsableRows_(values);
@@ -852,7 +931,15 @@ function syncIFMListFromSource() {
     usableRows +
     " with County/Facility/Facility Code. Excluded " +
     statusFilter.removed +
-    " Status=Inactive posting(s) and " +
+    " Status=Inactive posting(s). Excluded " +
+    ifmIdFilter.removed +
+    " row(s) with an invalid IFM ID. Removed country code 254 from " +
+    ifmIdFilter.countryCodeTrimmed +
+    " IFM ID(s) and removed a leading zero from " +
+    ifmIdFilter.leadingZeroTrimmed +
+    " IFM ID(s). Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
+    programNormalize.converted +
+    " row(s). Excluded " +
     countyFilter.removed +
     " posting(s) outside the allowed counties. Allowed counties: [" +
     KOBO_TOOLS_ALLOWED_IFM_COUNTIES.join(" | ") +
