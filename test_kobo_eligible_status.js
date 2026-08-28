@@ -3,7 +3,7 @@
  */
 
 function mapEligibleStatusValue_(rawStatus) {
-  var cleaned = String(rawStatus == null ? "")
+  var cleaned = String(rawStatus == null ? "" : rawStatus)
     .trim()
     .toLowerCase();
 

@@ -83,7 +83,7 @@ function findStatusColumnIndex_(headerRow) {
  * Returns null when the value should be left unchanged.
  */
 function mapEligibleStatusValue_(rawStatus) {
-  var cleaned = String(rawStatus == null ? "")
+  var cleaned = String(rawStatus == null ? "" : rawStatus)
     .trim()
     .toLowerCase();
 
