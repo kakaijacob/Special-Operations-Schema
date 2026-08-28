@@ -2,6 +2,9 @@
 // FULLY INTEGRATED WORKFLOW (11 SHEETS)
 // =====================================================
 function generateAllOutputs() {
+  // Source sheets may still say Eligible / Ineligible.
+  // Convert to Active / Inactive before any Kobo builders run.
+  normalizeEligibleStatusOnSourceSheets_();
   resetFacilityNameRegistry_();
   generateMenteeList();
   generateVariableNames();
@@ -17,6 +20,76 @@ function generateAllOutputs() {
   generateNewbornChoicesSheet()
   generateSurveySheetIFM(); // ✅ NEW;
   generateSurveySheetNewborn(); // ✅ NEW
+}
+
+// =====================================================
+// SOURCE STATUS NORMALIZATION (before Kobo builders)
+// Eligible → Active, Ineligible → Inactive
+// Sheets: "Mentee Database", "IFM List"
+// =====================================================
+function normalizeEligibleStatusOnSourceSheets_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  normalizeEligibleStatusOnSheet_(ss.getSheetByName("Mentee Database"));
+  normalizeEligibleStatusOnSheet_(ss.getSheetByName("IFM List"));
+}
+
+/**
+ * Rewrite Status column in place on one source sheet.
+ * Only Eligible / Ineligible are changed; Active, Inactive, blank, and
+ * any other value are left alone.
+ */
+function normalizeEligibleStatusOnSheet_(sheet) {
+  if (!sheet) return;
+
+  var data = sheet.getDataRange().getValues();
+  if (!data || data.length < 2) return;
+
+  var statusIndex = findStatusColumnIndex_(data[0]);
+  if (statusIndex === -1) return;
+
+  var changed = false;
+  for (var i = 1; i < data.length; i++) {
+    var mapped = mapEligibleStatusValue_(data[i][statusIndex]);
+    if (mapped !== null) {
+      data[i][statusIndex] = mapped;
+      changed = true;
+    }
+  }
+
+  if (!changed) return;
+
+  var statusColumn = [];
+  for (var r = 0; r < data.length; r++) {
+    statusColumn.push([data[r][statusIndex]]);
+  }
+  sheet.getRange(1, statusIndex + 1, statusColumn.length, 1).setValues(statusColumn);
+}
+
+function findStatusColumnIndex_(headerRow) {
+  for (var c = 0; c < headerRow.length; c++) {
+    if (
+      String(headerRow[c] == null ? "" : headerRow[c])
+        .trim()
+        .toLowerCase() === "status"
+    ) {
+      return c;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Eligible → "Active", Ineligible → "Inactive".
+ * Returns null when the value should be left unchanged.
+ */
+function mapEligibleStatusValue_(rawStatus) {
+  var cleaned = String(rawStatus == null ? "")
+    .trim()
+    .toLowerCase();
+
+  if (cleaned === "eligible") return "Active";
+  if (cleaned === "ineligible") return "Inactive";
+  return null;
 }
 
 // =====================================================
