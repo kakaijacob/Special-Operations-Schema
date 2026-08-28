@@ -1,11 +1,20 @@
 function updateAllStatusesByName() {
 
+  Logger.log("Starting updateAllStatusesByName...");
+
   const MASTER_FACILITIES_SHEET_ID =
     "1EEZJU-DNERkydsMIDtCu-19hzopurtAR7cN5cZ6bvFI";
 
   const sheet = SpreadsheetApp
     .getActiveSpreadsheet()
     .getSheetByName("Mentees");
+
+  if (!sheet) {
+    Logger.log("ERROR: Sheet 'Mentees' not found. Aborting.");
+    return;
+  }
+
+  Logger.log("Loaded sheet: Mentees");
 
   const headerRow = 1;
   const commentRow = 2;
@@ -36,11 +45,24 @@ function updateAllStatusesByName() {
   const colDeltaEssential = headers.indexOf("Essential Newborn DELTA") + 1;
   const colDeltaContinuum = headers.indexOf("Continuum of Care") + 1;
 
+  Logger.log(
+    "Resolved columns — Status: " + colStatus +
+    ", Learning Mode: " + colLearningMode +
+    ", Facility Code: " + colFacilityCode +
+    ", Facility: " + colFacility +
+    ", Program: " + colProgram
+  );
+
   const lastRow = sheet.getLastRow();
 
-  if (lastRow <= commentRow) return;
+  if (lastRow <= commentRow) {
+    Logger.log("No mentee data rows found (lastRow=" + lastRow + "). Exiting.");
+    return;
+  }
 
   const numRows = lastRow - commentRow;
+
+  Logger.log("Processing " + numRows + " mentee row(s) (rows " + (commentRow + 1) + "–" + lastRow + ").");
 
   const data = sheet
     .getRange(
@@ -93,6 +115,8 @@ function updateAllStatusesByName() {
   // normalized facility name → [{ code, facility }]
   const masterByNormName = {};
 
+  Logger.log("Opening master facilities sheet: " + MASTER_FACILITIES_SHEET_ID);
+
   const masterSheet = SpreadsheetApp
     .openById(MASTER_FACILITIES_SHEET_ID)
     .getSheets()[0];
@@ -111,6 +135,7 @@ function updateAllStatusesByName() {
     const idxMasterFacility = findHeaderIndex(masterHeaders, "facility");
 
     if (idxMasterCode === -1 || idxMasterFacility === -1) {
+      Logger.log("ERROR: Master facilities sheet missing required headers ('dhis code', 'facility').");
       throw new Error(
         "Master facilities sheet must include 'dhis code' and 'facility' columns."
       );
@@ -141,6 +166,15 @@ function updateAllStatusesByName() {
 
     }
 
+    Logger.log(
+      "Master facilities loaded — codes: " +
+      Object.keys(masterByCode).length +
+      ", unique normalized names: " +
+      Object.keys(masterByNormName).length
+    );
+
+  } else {
+    Logger.log("WARNING: Master facilities sheet appears empty (lastRow=" + masterLastRow + ", lastCol=" + masterLastCol + ").");
   }
 
   // ----------------------------
@@ -168,9 +202,23 @@ function updateAllStatusesByName() {
     facilityToCodes[norm].add(codeStr);
 
   });
+
+  const multiCodeFacilities = Object.keys(facilityToCodes).filter(
+    norm => facilityToCodes[norm].size > 1
+  );
+
+  Logger.log(
+    "Intra-sheet facility map built — facilities: " +
+    Object.keys(facilityToCodes).length +
+    ", facilities with multiple codes: " +
+    multiCodeFacilities.length
+  );
+
   // ----------------------------
   // CLEAR FORMATTING
   // ----------------------------
+  Logger.log("Clearing previous validation backgrounds and notes...");
+
   const fullRange = sheet.getRange(
     commentRow + 1,
     1,
@@ -184,6 +232,13 @@ function updateAllStatusesByName() {
   // ----------------------------
   // MAIN LOOP
   // ----------------------------
+  let eligibleCount = 0;
+  let ineligibleCount = 0;
+  let rowsWithErrors = 0;
+  let totalErrors = 0;
+
+  Logger.log("Starting main row validation loop...");
+
   data.forEach((row, i) => {
 
     const rowNum = commentRow + 1 + i;
@@ -192,7 +247,7 @@ function updateAllStatusesByName() {
     const dateReactivated = row[colDateReactivated - 1];
     const dateDeactivated = row[colDateDeactivated - 1];
 
-    let status = "Inactive";
+    let status = "Ineligible";
 
     let invalidMap = {};
 
@@ -210,16 +265,22 @@ function updateAllStatusesByName() {
     // STATUS LOGIC
     // ----------------------------
     if (dateReactivated) {
-      status = "Active";
+      status = "Eligible";
 
     } else if (dateDeactivated) {
-      status = "Inactive";
+      status = "Ineligible";
 
     } else if (dateActivated) {
-      status = "Active";
+      status = "Eligible";
 
     } else {
-      status = "Inactive";
+      status = "Ineligible";
+    }
+
+    if (status === "Eligible") {
+      eligibleCount++;
+    } else {
+      ineligibleCount++;
     }
 
     sheet
@@ -304,7 +365,7 @@ function updateAllStatusesByName() {
       const reasonForDeactivation = row[colReasonForDeactivation - 1];
 
       if (
-        status === "Inactive" &&
+        status === "Ineligible" &&
         (
           reasonForDeactivation === null ||
           String(reasonForDeactivation).trim() === ""
@@ -313,7 +374,7 @@ function updateAllStatusesByName() {
 
         addError(
           colReasonForDeactivation,
-          "Required if mentee is mapped as 'Inactive'!"
+          "Required if mentee is mapped as 'Ineligible'!"
         );
 
       }
@@ -677,9 +738,14 @@ function updateAllStatusesByName() {
       Object.keys(invalidMap).length > 0
     ) {
 
+      rowsWithErrors++;
+
       Object.keys(
         invalidMap
       ).forEach(col => {
+
+        const messages = invalidMap[col];
+        totalErrors += messages.length;
 
         const cell =
           sheet.getRange(
@@ -694,14 +760,29 @@ function updateAllStatusesByName() {
 
         cell
           .setNote(
-            invalidMap[col]
+            messages
               .join("\n")
           );
 
       });
 
+      Logger.log(
+        "Row " + rowNum +
+        " marked with " +
+        Object.keys(invalidMap).length +
+        " invalid column(s). Status=" + status +
+        ", Program=" + (program || "(blank)")
+      );
+
     }
 
   });
+
+  Logger.log(
+    "Finished updateAllStatusesByName — Eligible: " + eligibleCount +
+    ", Ineligible: " + ineligibleCount +
+    ", rows with errors: " + rowsWithErrors +
+    ", total validation messages: " + totalErrors
+  );
 
 }
