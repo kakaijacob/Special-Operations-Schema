@@ -7,7 +7,7 @@
 --   - first_pass_date (and attempt windows)
 -- date_started / date_ended are passthrough attributes only (not used in logic).
 --
--- Scoring fixes retained: NNR date_submitted cutoff + new-form TRUE detect + null-safe old ints, PIH fix_iv_line / horwashing_or_start,
+-- Scoring fixes retained: NNR content-based form pick (old ints present → /18, else /46.5) + null-safe old ints, PIH fix_iv_line / horwashing_or_start,
 -- B-Lynch hysteroctomy_indication, shoulder dystocia no hard date WHERE filter.
 --
 -- Grain: one row per scored attempt (all attempts kept).
@@ -964,13 +964,31 @@ WITH skills_assessment_cohorts AS (
 scored_attempts AS (
     SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.delivery_of_the_baby::integer AS "baby delivery", msc.apgar_score::integer AS "apgar score", msc.call_for_help_001::integer AS "call for help", msc.abc_assessement::integer AS "abc assessment", msc._40_60_ventilation_breathes::integer AS "ventilation breathes", msc.reasess_abc::integer AS "reassess abc", msc.when_to_start_cpr::integer AS "initiating cpr", msc.ventilation_compression_ratio::integer AS "cpr ratio", msc.right_mask_size::integer AS "right mask", msc.position_mask_correctly::integer AS "mask position", msc._2_hand_technique_cpr::integer AS "2hand technique", msc.depth_of_compression::integer AS "compression depth", msc.warm_chain::integer AS "warm chain", msc.subsequent_abc_reassessement::integer AS "2 abc reassessment", msc.bvm_1_min_hr_60::integer AS "stopping ventilation", msc.another_abc_reassesment::integer AS "3 abc reassessment", msc.put_on_oxygen::integer AS "on oxygen", msc.arrangement_for_transfer::integer AS transfer,
         CASE
-            -- Old 18-item: before 2026-04-01 unless a new-form item is TRUE.
-            -- Use NOT COALESCE(..., false) — IS NULL wrongly treated Kobo false as "new form"
-            -- and scored Cohort 1 rows with /46.5 empty booleans → average_score = 0.
+            -- Safe form pick (both methods verified independently):
+            --   old /18  when date_submitted < 2026-04-01 AND at least one classic
+            --            18-item integer is present
+            --   new /46.5 otherwise (post-cutoff, or pre-cutoff new-form-only rows)
             WHEN CAST(msc.date_submitted AS DATE) < DATE '2026-04-01'
-                 AND NOT COALESCE(msc.documentation_nnr, false)
-                 AND NOT COALESCE(msc.q1a_gestational_age, false)
-                 AND NOT COALESCE(msc.shout_help_nnr, false)
+                 AND (
+                     msc.delivery_of_the_baby IS NOT NULL
+                     OR msc.apgar_score IS NOT NULL
+                     OR msc.call_for_help_001 IS NOT NULL
+                     OR msc.abc_assessement IS NOT NULL
+                     OR msc._40_60_ventilation_breathes IS NOT NULL
+                     OR msc.reasess_abc IS NOT NULL
+                     OR msc.when_to_start_cpr IS NOT NULL
+                     OR msc.ventilation_compression_ratio IS NOT NULL
+                     OR msc.right_mask_size IS NOT NULL
+                     OR msc.position_mask_correctly IS NOT NULL
+                     OR msc._2_hand_technique_cpr IS NOT NULL
+                     OR msc.depth_of_compression IS NOT NULL
+                     OR msc.warm_chain IS NOT NULL
+                     OR msc.subsequent_abc_reassessement IS NOT NULL
+                     OR msc.bvm_1_min_hr_60 IS NOT NULL
+                     OR msc.another_abc_reassesment IS NOT NULL
+                     OR msc.put_on_oxygen IS NOT NULL
+                     OR msc.arrangement_for_transfer IS NOT NULL
+                 )
             THEN (COALESCE(msc.delivery_of_the_baby::integer, 0) + COALESCE(msc.apgar_score::integer, 0) + COALESCE(msc.call_for_help_001::integer, 0) + COALESCE(msc.abc_assessement::integer, 0) + COALESCE(msc._40_60_ventilation_breathes::integer, 0) + COALESCE(msc.reasess_abc::integer, 0) + COALESCE(msc.when_to_start_cpr::integer, 0) + COALESCE(msc.ventilation_compression_ratio::integer, 0) + COALESCE(msc.right_mask_size::integer, 0) + COALESCE(msc.position_mask_correctly::integer, 0) + COALESCE(msc._2_hand_technique_cpr::integer, 0) + COALESCE(msc.depth_of_compression::integer, 0) + COALESCE(msc.warm_chain::integer, 0) + COALESCE(msc.subsequent_abc_reassessement::integer, 0) + COALESCE(msc.bvm_1_min_hr_60::integer, 0) + COALESCE(msc.another_abc_reassesment::integer, 0) + COALESCE(msc.put_on_oxygen::integer, 0) + COALESCE(msc.arrangement_for_transfer::integer, 0))::numeric / 18.0
             ELSE (
             -- Matches Kobo calculate: points / 46.5 (stored as 0-1 average_score)
