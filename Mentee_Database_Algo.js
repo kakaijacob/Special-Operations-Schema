@@ -36,7 +36,7 @@ function updateAllStatusesByName() {
   const colFacility = headers.indexOf("Facility") + 1;
   const colMenteeID = headers.indexOf("Mentee ID") + 1;
   const colProgram = headers.indexOf("Program") + 1;
-  const colPhoneNumberWhatsapp = headers.indexOf("phone_number_whatsapp") + 1;
+  const colPhoneNumberWhatsapp = headers.indexOf("whatsapp_phone_numbers") + 1;
 
   const colEmONC = headers.indexOf("EmONC In-person") + 1;
   const colEssentialNB = headers.indexOf("Essential Newborn In-person") + 1;
@@ -481,6 +481,30 @@ function updateAllStatusesByName() {
         colMenteeID,
         "Must be 9 digits starting with 1 or 7."
       );
+
+    }
+
+    // ----------------------------
+    // WHATSAPP PHONE NUMBERS VALIDATION
+    // (same rules as Mentee ID)
+    // ----------------------------
+    if (colPhoneNumberWhatsapp > 0) {
+
+      const phoneNumberWhatsapp = row[colPhoneNumberWhatsapp - 1];
+
+      if (
+        phoneNumberWhatsapp &&
+        !/^[17]\d{8}$/.test(
+          String(phoneNumberWhatsapp)
+        )
+      ) {
+
+        addError(
+          colPhoneNumberWhatsapp,
+          "Must be 9 digits starting with 1 or 7."
+        );
+
+      }
 
     }
 
