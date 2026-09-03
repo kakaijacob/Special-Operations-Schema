@@ -2,8 +2,10 @@ function updateAllStatusesByName() {
 
   Logger.log("Starting updateAllStatusesByName...");
 
-  const MASTER_FACILITIES_SHEET_ID =
-    "1EEZJU-DNERkydsMIDtCu-19hzopurtAR7cN5cZ6bvFI";
+  // MASTER_FACILITIES_SHEET_ID comes from Script Properties
+  // (see Mentee_Database_Secrets.js). Never hardcode it here.
+  requireMenteeDatabaseSecrets_();
+  const MASTER_FACILITIES_SHEET_ID = getMasterFacilitiesSheetId_();
 
   const sheet = SpreadsheetApp
     .getActiveSpreadsheet()
@@ -116,7 +118,10 @@ function updateAllStatusesByName() {
   // normalized facility name → [{ code, facility }]
   const masterByNormName = {};
 
-  Logger.log("Opening master facilities sheet: " + MASTER_FACILITIES_SHEET_ID);
+  Logger.log(
+    "Opening master facilities sheet: " +
+    maskMenteeSecret_(MASTER_FACILITIES_SHEET_ID, MENTEE_SECRET_KIND_ID)
+  );
 
   const masterSheet = SpreadsheetApp
     .openById(MASTER_FACILITIES_SHEET_ID)
