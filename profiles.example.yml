@@ -1,0 +1,14 @@
+# Copy this file to ~/.dbt/profiles.yml and fill in your ClickHouse details.
+# The profile name must stay `special_operations` to match dbt_project.yml.
+special_operations:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: your-instance.eu-west-1.aws.clickhouse.cloud
+      port: 8443
+      user: default
+      password: your-password
+      schema: dbt_dev
+      secure: true
+      threads: 4
