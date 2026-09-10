@@ -583,6 +583,10 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'Section_10_Commodities/iron_freq': 0,
   'Section_10_Commodities/fe_cond_freq': 1,
   'Section_10_Commodities/oxy_store': 0,
+  'best_practices/patient_info': 1,
+  'best_practices/authorized': 0,
+  'best_practices/secure': 1,
+  'operation/opening': 2,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -639,6 +643,12 @@ assert.strictEqual(routed[0].iron_freq, 'No');
 assert.strictEqual(routed[0].fe_cond_freq, 'Yes');
 assert.strictEqual(routed[0].oxy_store, 'No');
 assert.strictEqual(routed[0].folic_freq, '');
+assert.strictEqual(routed[0].patient_info, 'Yes');
+assert.strictEqual(routed[0].authorized, 'No');
+assert.strictEqual(routed[0].secure, 'Yes');
+assert.strictEqual(routed[0].opening, 'Sometimes when the facility is open, but not always');
+assert.strictEqual(routed[0]['best_practices/patient_info'], undefined);
+assert.strictEqual(routed[0]['operation/opening'], undefined);
 assert.strictEqual(routed[0]['Section_10_Commodities/nutrition'], undefined);
 assert.strictEqual(routed[0]['Section_10_Commodities/prescription'], undefined);
 assert.strictEqual(routed[0]['Section_10_Commodities/iron_freq'], undefined);
@@ -675,6 +685,10 @@ assert.strictEqual(phLegacy.nutrition, '');
 assert.strictEqual(phLegacy.prescription, '');
 assert.strictEqual(phLegacy.iron_freq, '');
 assert.strictEqual(phLegacy.Iv_hydro_freq, '');
+assert.strictEqual(phLegacy.patient_info, '');
+assert.strictEqual(phLegacy.authorized, '');
+assert.strictEqual(phLegacy.secure, '');
+assert.strictEqual(phLegacy.opening, '');
 
 const phAlias = g('transformPharmacyRecord_')({
   _uuid: 'ph-alias',
@@ -739,6 +753,52 @@ assert.strictEqual(
   }).nutrition,
   'Always available'
 );
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-opening-1',
+    _submission_time: '2026-06-07T08:00:00',
+    'best_practices/patient_info': 0,
+    'best_practices/authorized': 1,
+    'best_practices/secure': 0,
+    'operation/opening': 1,
+  }).opening,
+  'Accessible at all facility open times'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-opening-3',
+    _submission_time: '2026-06-07T08:00:00',
+    'operation/opening': 3,
+  }).opening,
+  'Rarely assessible (it is often difficult to access pharmaceuticals in this facility)'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-opening-1b',
+    _submission_time: '2026-06-07T08:00:00',
+    'best_practices/patient_info': 0,
+    'best_practices/authorized': 1,
+    'best_practices/secure': 0,
+    'operation/opening': 1,
+  }).patient_info,
+  'No'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-opening-1c',
+    _submission_time: '2026-06-07T08:00:00',
+    'best_practices/authorized': 1,
+  }).authorized,
+  'Yes'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-opening-1d',
+    _submission_time: '2026-06-07T08:00:00',
+    'best_practices/secure': 0,
+  }).secure,
+  'No'
+);
 assert.strictEqual(phAlias.artesunete, 'Sometimes available');
 assert.strictEqual(phAlias.pyrizimomide, 'Never available');
 assert.strictEqual(phAlias.dda_used, 'Yes');
@@ -802,8 +862,12 @@ assert.ok(phHeaders.indexOf('receipt') < phHeaders.indexOf('prescription'));
 assert.ok(phHeaders.indexOf('fe_condoms') < phHeaders.indexOf('nutrition'));
 assert.ok(phHeaders.indexOf('nutrition') < phHeaders.indexOf('iron_freq'));
 assert.ok(phHeaders.indexOf('Iv_hydro_freq') < phHeaders.indexOf('oxy_store'));
-assert.strictEqual(phHeaders.slice(-3).join('|'),
-  'depo_freq|cond_freq|fe_cond_freq'
+assert.ok(phHeaders.indexOf('fe_cond_freq') < phHeaders.indexOf('patient_info'));
+assert.ok(phHeaders.indexOf('patient_info') < phHeaders.indexOf('authorized'));
+assert.ok(phHeaders.indexOf('authorized') < phHeaders.indexOf('secure'));
+assert.ok(phHeaders.indexOf('secure') < phHeaders.indexOf('opening'));
+assert.strictEqual(phHeaders.slice(-4).join('|'),
+  'patient_info|authorized|secure|opening'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 

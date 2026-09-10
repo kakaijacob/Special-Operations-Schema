@@ -384,6 +384,20 @@ const PHARMACY_COMMODITY_YES_NO_FIELDS = [
   'fe_cond_freq',
 ];
 
+/** best_practices/* Yes/No questions. 1 Yes / 0 No. Names drop the prefix. */
+const PHARMACY_BEST_PRACTICES_YES_NO_FIELDS = [
+  'patient_info',
+  'authorized',
+  'secure',
+];
+
+/** operation/opening */
+const PHARMACY_OPENING_MAP = {
+  1: 'Accessible at all facility open times',
+  2: 'Sometimes when the facility is open, but not always',
+  3: 'Rarely assessible (it is often difficult to access pharmaceuticals in this facility)',
+};
+
 function pharmacyCommoditySource_(dest) {
   return 'Section_10_Commodities/' + dest;
 }
@@ -433,6 +447,10 @@ const PHARMACY_SOURCE_KEYS = (function () {
   PHARMACY_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
     keys[pharmacyCommoditySource_(dest)] = true;
   });
+  PHARMACY_BEST_PRACTICES_YES_NO_FIELDS.forEach(function (dest) {
+    keys['best_practices/' + dest] = true;
+  });
+  keys['operation/opening'] = true;
   return keys;
 })();
 
@@ -578,6 +596,18 @@ function transformPharmacyRecord_(rec) {
     out[dest] = lookupCoded_(raw, YES_NO_MAP);
   });
 
+  PHARMACY_BEST_PRACTICES_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['best_practices/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  out.opening = lookupCoded_(
+    rec['operation/opening'],
+    PHARMACY_OPENING_MAP
+  );
+
   return out;
 }
 
@@ -608,5 +638,7 @@ function pharmacyPreferredHeaders_() {
     .concat(['fridge', 'cabinet', 'receipt'])
     .concat(PHARMACY_COMMODITY_AVAIL_FIELDS)
     .concat(['nutrition'])
-    .concat(PHARMACY_COMMODITY_YES_NO_FIELDS);
+    .concat(PHARMACY_COMMODITY_YES_NO_FIELDS)
+    .concat(PHARMACY_BEST_PRACTICES_YES_NO_FIELDS)
+    .concat(['opening']);
 }
