@@ -639,6 +639,7 @@ assert.strictEqual(routed[0].iron_freq, 'No');
 assert.strictEqual(routed[0].fe_cond_freq, 'Yes');
 assert.strictEqual(routed[0].oxy_store, 'No');
 assert.strictEqual(routed[0].folic_freq, '');
+assert.strictEqual(routed[0]['Section_10_Commodities/nutrition'], undefined);
 assert.strictEqual(routed[0]['Section_10_Commodities/prescription'], undefined);
 assert.strictEqual(routed[0]['Section_10_Commodities/iron_freq'], undefined);
 assert.strictEqual(routed[0]['Section_7_Infrastructure/maintained'], undefined);
