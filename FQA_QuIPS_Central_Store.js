@@ -9,6 +9,10 @@ const CENTRAL_STORE_SOURCE_KEYS = {
   'facility_profile/facility': true,
   'facility_profile/gazetted_facility': true,
   'facility_profile/contact': true,
+  'group_1/nam_contact': true,
+  'group_1/phone_contact': true,
+  'facility_profile/nam_contact': true,
+  'facility_profile/phone_contact': true,
 };
 
 function transformCentralStoreRecord_(rec) {
@@ -56,6 +60,7 @@ function transformCentralStoreRecord_(rec) {
     rec['facility_profile/contact'],
     CONTACT_PERSON_MAP
   );
+  assignContactNamePhone_(out, rec);
 
   return out;
 }
@@ -70,5 +75,7 @@ function centralStorePreferredHeaders_() {
     'facility',
     'facility_level',
     'contact',
+    'contact_name',
+    'phone_number',
   ];
 }

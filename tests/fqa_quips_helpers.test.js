@@ -155,6 +155,8 @@ const lab = g('transformLabRecord_')({
   'group_1/facility': 80,
   'group_1/gazetted': 3,
   'group_1/contact': 2,
+  'group_1/nam_contact': 'Jane Lab',
+  'group_1/phone_contact': '0711111111',
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -163,7 +165,10 @@ assert.strictEqual(lab.county, 'Nakuru');
 assert.strictEqual(lab.facility, 'Bahati Sub County Hospital');
 assert.strictEqual(lab.facility_level, 'Level 3');
 assert.strictEqual(lab.contact, 'Nursing officer in charge');
+assert.strictEqual(lab.contact_name, 'Jane Lab');
+assert.strictEqual(lab.phone_number, '0711111111');
 assert.strictEqual(lab['group_1/county'], undefined);
+assert.strictEqual(lab['group_1/nam_contact'], undefined);
 
 const labLegacy = g('transformLabRecord_')({
   _uuid: 'lab-legacy',
@@ -172,8 +177,8 @@ const labLegacy = g('transformLabRecord_')({
 });
 assert.strictEqual(labLegacy.facility, 'Matiliku Sub County Hospital');
 assert.strictEqual(
-  g('labPreferredHeaders_')().slice(0, 8).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+  g('labPreferredHeaders_')().slice(0, 10).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
@@ -184,6 +189,8 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'facility_profile/facility': 16,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 6,
+  'group_1/nam_contact': 'Paul Pharmacy',
+  'group_1/phone_contact': '0722222222',
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -191,6 +198,8 @@ assert.strictEqual(routed[0].county, 'Kisii');
 assert.strictEqual(routed[0].facility, 'Kisii Teaching And Referral Hospital (Level 6)');
 assert.strictEqual(routed[0].facility_level, 'Level 4');
 assert.strictEqual(routed[0].contact, 'Medical superintendent');
+assert.strictEqual(routed[0].contact_name, 'Paul Pharmacy');
+assert.strictEqual(routed[0].phone_number, '0722222222');
 assert.strictEqual(routed[0]['facility_profile/county'], undefined);
 
 const phLegacy = g('transformPharmacyRecord_')({
@@ -199,9 +208,18 @@ const phLegacy = g('transformPharmacyRecord_')({
   'facility_profile/facility': 16,
 });
 assert.strictEqual(phLegacy.facility, 'Iyabe Sub County Hospital');
+
+const phAlias = g('transformPharmacyRecord_')({
+  _uuid: 'ph-alias',
+  _submission_time: '2026-06-02T08:00:00',
+  'facility_profile/nam_contact': 'Alias Name',
+  'facility_profile/phone_contact': '0700000000',
+});
+assert.strictEqual(phAlias.contact_name, 'Alias Name');
+assert.strictEqual(phAlias.phone_number, '0700000000');
 assert.strictEqual(
-  g('pharmacyPreferredHeaders_')().slice(0, 8).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+  g('pharmacyPreferredHeaders_')().slice(0, 10).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
@@ -214,12 +232,16 @@ const fg = g('transformFacilityGeneralRecord_')({
   'facility_profile/facilities': 109,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 3,
+  'group_1/nam_contact': 'Faith General',
+  'group_1/phone_contact': '0733333333',
   leftover_fg: 'keep',
 });
 assert.strictEqual(fg.county, "Murang'a");
 assert.strictEqual(fg.facility, "Murang'a County Referal Hospital");
 assert.strictEqual(fg.facility_level, 'Level 4');
 assert.strictEqual(fg.contact, 'Facility in charge');
+assert.strictEqual(fg.contact_name, 'Faith General');
+assert.strictEqual(fg.phone_number, '0733333333');
 assert.strictEqual(fg.leftover_fg, 'keep');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
 
@@ -230,8 +252,8 @@ const fgLegacy = g('transformFacilityGeneralRecord_')({
 });
 assert.strictEqual(fgLegacy.facility, 'Iyabe Sub County Hospital');
 assert.strictEqual(
-  g('facilityGeneralPreferredHeaders_')().slice(0, 8).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+  g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({
@@ -243,11 +265,15 @@ const ot = g('transformOperatingTheatreRecord_')({
   'facility_profile/facility': 58,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 5,
+  'group_1/nam_contact': 'Owen Theatre',
+  'group_1/phone_contact': '0744444444',
 });
 assert.strictEqual(ot.county, 'Makueni');
 assert.strictEqual(ot.facility, 'Makueni County Referral Hospital');
 assert.strictEqual(ot.facility_level, 'Level 4');
 assert.strictEqual(ot.contact, 'Medical officer in charge');
+assert.strictEqual(ot.contact_name, 'Owen Theatre');
+assert.strictEqual(ot.phone_number, '0744444444');
 assert.strictEqual(ot['facility_profile/facility'], undefined);
 
 const otLegacy = g('transformOperatingTheatreRecord_')({
@@ -257,8 +283,8 @@ const otLegacy = g('transformOperatingTheatreRecord_')({
 });
 assert.strictEqual(otLegacy.facility, 'Kasikeu Dispensary');
 assert.strictEqual(
-  g('operatingTheatrePreferredHeaders_')().slice(0, 8).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+  g('operatingTheatrePreferredHeaders_')().slice(0, 10).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 
 const cs = g('transformCentralStoreRecord_')({
@@ -270,11 +296,15 @@ const cs = g('transformCentralStoreRecord_')({
   'facility_profile/facility': 125,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 1,
+  'group_1/nam_contact': 'Cora Store',
+  'group_1/phone_contact': '0755555555',
 });
 assert.strictEqual(cs.county, 'Kakamega');
 assert.strictEqual(cs.facility, 'Kakamega County General Refferal Hospital');
 assert.strictEqual(cs.facility_level, 'Level 4');
 assert.strictEqual(cs.contact, 'Clinical officer in charge');
+assert.strictEqual(cs.contact_name, 'Cora Store');
+assert.strictEqual(cs.phone_number, '0755555555');
 assert.strictEqual(cs['facility_profile/county'], undefined);
 
 const csLegacy = g('transformCentralStoreRecord_')({
@@ -284,8 +314,8 @@ const csLegacy = g('transformCentralStoreRecord_')({
 });
 assert.strictEqual(csLegacy.facility, 'Iyabe Sub County Hospital');
 assert.strictEqual(
-  g('centralStorePreferredHeaders_')().slice(0, 8).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+  g('centralStorePreferredHeaders_')().slice(0, 10).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 
 let threw = false;

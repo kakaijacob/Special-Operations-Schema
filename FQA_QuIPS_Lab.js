@@ -9,6 +9,8 @@ const LAB_SOURCE_KEYS = {
   'group_1/facility': true,
   'group_1/gazetted': true,
   'group_1/contact': true,
+  'group_1/nam_contact': true,
+  'group_1/phone_contact': true,
 };
 
 function transformLabRecord_(rec) {
@@ -61,6 +63,7 @@ function transformLabRecord_(rec) {
     rec['group_1/contact'],
     CONTACT_PERSON_MAP
   );
+  assignContactNamePhone_(out, rec);
 
   return out;
 }
@@ -75,5 +78,7 @@ function labPreferredHeaders_() {
     'facility',
     'facility_level',
     'contact',
+    'contact_name',
+    'phone_number',
   ];
 }

@@ -1660,6 +1660,21 @@ function assignFacilityProfile_(out, rec, dateSubmitted, facilityKey) {
   out.phone_number = rec['facility_profile/phone_contact'] == null ? '' : rec['facility_profile/phone_contact'];
 }
 
+/**
+ * Contact name and phone as entered. Prefer group_1 fields, then
+ * facility_profile aliases used on some later forms.
+ */
+function assignContactNamePhone_(out, rec) {
+  out.contact_name = firstValue_(rec, [
+    'group_1/nam_contact',
+    'facility_profile/nam_contact',
+  ]);
+  out.phone_number = firstValue_(rec, [
+    'group_1/phone_contact',
+    'facility_profile/phone_contact',
+  ]);
+}
+
 function firstValue_(rec, keys) {
   let found = '';
   for (let i = 0; i < keys.length; i++) {
