@@ -256,6 +256,39 @@ const LAB_CONFIRM_SOPS_CHOICES = [
   { code: '31', slug: 'via_testing' },
 ];
 
+/** group_7/soap_available — option 3 is "Present in no service areas". */
+const LAB_SOAP_AVAILABLE_MAP = {
+  1: 'Present in ALL service areas',
+  2: 'Present in some service areas',
+  3: 'Present in no service areas',
+};
+
+/** group_7 Yes/No questions. 1 Yes / 0 No. */
+const LAB_GROUP_7_YES_NO_FIELDS = [
+  'consistent_water',
+  'connected_drainage_system',
+  'separate_sinks',
+  'segregation_wastes',
+  'functional_toilet',
+  'toilet_handwashing_area',
+  'sharp_container',
+  'sharp_container_full',
+];
+
+const LAB_GROUP_7_HEADERS = [
+  'water_source',
+  'consistent_water',
+  'connected_drainage_system',
+  'soap_available',
+  'separate_sinks',
+  'waste_management_protocol',
+  'segregation_wastes',
+  'functional_toilet',
+  'toilet_handwashing_area',
+  'sharp_container',
+  'sharp_container_full',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -301,6 +334,12 @@ const LAB_SOURCE_KEYS = (function () {
     keys['group_6/' + dest] = true;
   });
   keys['group_6/confirm_sops'] = true;
+  keys['group_7/water_source'] = true;
+  keys['group_7/soap_available'] = true;
+  keys['group_7/waste_management_protocol'] = true;
+  LAB_GROUP_7_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_7/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -311,7 +350,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_6 codes. `_submission_time` is also retained as a
+   * group_1 through group_7 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -445,6 +484,61 @@ function transformLabRecord_(rec) {
     LAB_CONFIRM_SOPS_CHOICES
   );
 
+  out.water_source = lookupCoded_(
+    rec['group_7/water_source'],
+    WATER_SOURCE_MAP
+  );
+
+  out.consistent_water = lookupCoded_(
+    rec['group_7/consistent_water'],
+    YES_NO_MAP
+  );
+
+  out.connected_drainage_system = lookupCoded_(
+    rec['group_7/connected_drainage_system'],
+    YES_NO_MAP
+  );
+
+  out.soap_available = lookupCoded_(
+    rec['group_7/soap_available'],
+    LAB_SOAP_AVAILABLE_MAP
+  );
+
+  out.separate_sinks = lookupCoded_(
+    rec['group_7/separate_sinks'],
+    YES_NO_MAP
+  );
+
+  out.waste_management_protocol = lookupCoded_(
+    rec['group_7/waste_management_protocol'],
+    WASTE_MANAGEMENT_MAP
+  );
+
+  out.segregation_wastes = lookupCoded_(
+    rec['group_7/segregation_wastes'],
+    YES_NO_MAP
+  );
+
+  out.functional_toilet = lookupCoded_(
+    rec['group_7/functional_toilet'],
+    YES_NO_MAP
+  );
+
+  out.toilet_handwashing_area = lookupCoded_(
+    rec['group_7/toilet_handwashing_area'],
+    YES_NO_MAP
+  );
+
+  out.sharp_container = lookupCoded_(
+    rec['group_7/sharp_container'],
+    YES_NO_MAP
+  );
+
+  out.sharp_container_full = lookupCoded_(
+    rec['group_7/sharp_container_full'],
+    YES_NO_MAP
+  );
+
   return out;
 }
 
@@ -483,5 +577,6 @@ function labPreferredHeaders_() {
     .concat(selectMultipleHeaders_(
       LAB_CONFIRM_SOPS_PREFIX,
       LAB_CONFIRM_SOPS_CHOICES
-    ));
+    ))
+    .concat(LAB_GROUP_7_HEADERS);
 }

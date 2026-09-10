@@ -195,6 +195,17 @@ const lab = g('transformLabRecord_')({
   'group_6/stock_inv_control_store': 0,
   'group_6/stock_inv_control_reagents': 1,
   'group_6/confirm_sops': '1 9 31',
+  'group_7/water_source': 1,
+  'group_7/consistent_water': 1,
+  'group_7/connected_drainage_system': 0,
+  'group_7/soap_available': 2,
+  'group_7/separate_sinks': 1,
+  'group_7/waste_management_protocol': 3,
+  'group_7/segregation_wastes': 0,
+  'group_7/functional_toilet': 1,
+  'group_7/toilet_handwashing_area': 0,
+  'group_7/sharp_container': 1,
+  'group_7/sharp_container_full': 0,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -255,6 +266,19 @@ assert.strictEqual(lab.confirm_sops_abo_blood_group_and_rh_testing, 'Yes');
 assert.strictEqual(lab.confirm_sops_hiv_rapid_testing, 'Yes');
 assert.strictEqual(lab.confirm_sops_via_testing, 'Yes');
 assert.strictEqual(lab.confirm_sops_hbsag_testing, 'No');
+assert.strictEqual(lab.water_source, 'Present, functional');
+assert.strictEqual(lab.consistent_water, 'Yes');
+assert.strictEqual(lab.connected_drainage_system, 'No');
+assert.strictEqual(lab.soap_available, 'Present in some service areas');
+assert.strictEqual(lab.separate_sinks, 'Yes');
+assert.strictEqual(lab.waste_management_protocol, 'Not present');
+assert.strictEqual(lab.segregation_wastes, 'No');
+assert.strictEqual(lab.functional_toilet, 'Yes');
+assert.strictEqual(lab.toilet_handwashing_area, 'No');
+assert.strictEqual(lab.sharp_container, 'Yes');
+assert.strictEqual(lab.sharp_container_full, 'No');
+assert.strictEqual(lab['group_7/water_source'], undefined);
+assert.strictEqual(lab['group_7/soap_available'], undefined);
 assert.strictEqual(lab['group_6/sop'], undefined);
 assert.strictEqual(lab['group_6/confirm_sops'], undefined);
 assert.strictEqual(lab['group_6/handwashing_protocol'], undefined);
@@ -291,6 +315,20 @@ assert.strictEqual(labComprehensive.sop_none, '');
 assert.strictEqual(labComprehensive.specimen_collection_labelling, '');
 assert.strictEqual(labComprehensive.guide_ref_critical_values, '');
 assert.strictEqual(labComprehensive.confirm_sops_via_testing, '');
+assert.strictEqual(labComprehensive.water_source, '');
+assert.strictEqual(labComprehensive.soap_available, '');
+assert.strictEqual(labComprehensive.sharp_container_full, '');
+
+const labSoapNone = g('transformLabRecord_')({
+  _uuid: 'lab-soap-3',
+  _submission_time: '2026-05-06T12:00:00',
+  'group_7/soap_available': 3,
+  'group_7/water_source': 2,
+  'group_7/waste_management_protocol': 1,
+});
+assert.strictEqual(labSoapNone.soap_available, 'Present in no service areas');
+assert.strictEqual(labSoapNone.water_source, 'Present, non-functional');
+assert.strictEqual(labSoapNone.waste_management_protocol, 'Present, well displayed');
 
 const labHandwashingDisplayed = g('transformLabRecord_')({
   _uuid: 'lab-hw-1',
@@ -343,8 +381,9 @@ assert.ok(labHeaders.indexOf('have_quality_manual') < labHeaders.indexOf('sop_pe
 assert.ok(labHeaders.indexOf('sop_none') < labHeaders.indexOf('specimen_collection_labelling'));
 assert.ok(labHeaders.indexOf('specimen_collection_none') < labHeaders.indexOf('guide_ref_critical_values'));
 assert.ok(labHeaders.indexOf('stock_inv_control_reagents') < labHeaders.indexOf('confirm_sops_abo_blood_group_and_rh_testing'));
-assert.strictEqual(labHeaders.slice(-2).join('|'),
-  'confirm_sops_hpv_testing|confirm_sops_via_testing'
+assert.ok(labHeaders.indexOf('confirm_sops_via_testing') < labHeaders.indexOf('water_source'));
+assert.strictEqual(labHeaders.slice(-11).join('|'),
+  'water_source|consistent_water|connected_drainage_system|soap_available|separate_sinks|waste_management_protocol|segregation_wastes|functional_toilet|toilet_handwashing_area|sharp_container|sharp_container_full'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
