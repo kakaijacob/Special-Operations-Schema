@@ -185,6 +185,16 @@ const lab = g('transformLabRecord_')({
   'group_5/training_pro_testing_HIV': 1,
   'group_5/yearly_cpd': 1,
   'group_5/eqa': 0,
+  'group_6/handwashing_protocol': 2,
+  'group_6/have_quality_manual': 1,
+  'group_6/sop': '1 16',
+  'group_6/specimen_collection': '2 4',
+  'group_6/guide_ref_critical_values': 1,
+  'group_6/packaging_specimen': 0,
+  'group_6/sop_lab': 1,
+  'group_6/stock_inv_control_store': 0,
+  'group_6/stock_inv_control_reagents': 1,
+  'group_6/confirm_sops': '1 9 31',
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -227,6 +237,27 @@ assert.strictEqual(lab.training_unit_biosafety, 0);
 assert.strictEqual(lab.training_pro_testing_HIV, 1);
 assert.strictEqual(lab.yearly_cpd, 'Yes');
 assert.strictEqual(lab.eqa, 'No');
+assert.strictEqual(lab.handwashing_protocol, 'They have written up to date protocols, not displayed');
+assert.strictEqual(lab.have_quality_manual, 'Yes');
+assert.strictEqual(lab.sop_personal_protective_equipment_ppe_use, 'Yes');
+assert.strictEqual(lab.sop_chemical_safety, 'No');
+assert.strictEqual(lab.sop_none, 'Yes');
+assert.strictEqual(lab.specimen_collection_labelling, 'No');
+assert.strictEqual(lab.specimen_collection_patient_safety, 'Yes');
+assert.strictEqual(lab.specimen_collection_transportation_to_persons_responsible_for_primary_sample_collection, 'Yes');
+assert.strictEqual(lab.specimen_collection_none, 'No');
+assert.strictEqual(lab.guide_ref_critical_values, 'Yes');
+assert.strictEqual(lab.packaging_specimen, 'No');
+assert.strictEqual(lab.sop_lab, 'Yes');
+assert.strictEqual(lab.stock_inv_control_store, 'No');
+assert.strictEqual(lab.stock_inv_control_reagents, 'Yes');
+assert.strictEqual(lab.confirm_sops_abo_blood_group_and_rh_testing, 'Yes');
+assert.strictEqual(lab.confirm_sops_hiv_rapid_testing, 'Yes');
+assert.strictEqual(lab.confirm_sops_via_testing, 'Yes');
+assert.strictEqual(lab.confirm_sops_hbsag_testing, 'No');
+assert.strictEqual(lab['group_6/sop'], undefined);
+assert.strictEqual(lab['group_6/confirm_sops'], undefined);
+assert.strictEqual(lab['group_6/handwashing_protocol'], undefined);
 assert.strictEqual(lab['group_5/yearly_cpd'], undefined);
 assert.strictEqual(lab['group_5/training_blood_safety'], undefined);
 assert.strictEqual(lab['group_4/cert_lab_techs'], undefined);
@@ -254,6 +285,32 @@ assert.strictEqual(labComprehensive.training_blood_safety, '');
 assert.strictEqual(labComprehensive.training_pro_testing_HIV, '');
 assert.strictEqual(labComprehensive.yearly_cpd, '');
 assert.strictEqual(labComprehensive.eqa, '');
+assert.strictEqual(labComprehensive.handwashing_protocol, '');
+assert.strictEqual(labComprehensive.have_quality_manual, '');
+assert.strictEqual(labComprehensive.sop_none, '');
+assert.strictEqual(labComprehensive.specimen_collection_labelling, '');
+assert.strictEqual(labComprehensive.guide_ref_critical_values, '');
+assert.strictEqual(labComprehensive.confirm_sops_via_testing, '');
+
+const labHandwashingDisplayed = g('transformLabRecord_')({
+  _uuid: 'lab-hw-1',
+  _submission_time: '2026-05-04T12:00:00',
+  'group_6/handwashing_protocol': 1,
+});
+assert.strictEqual(
+  labHandwashingDisplayed.handwashing_protocol,
+  'They have displayed, up to date protocols'
+);
+
+const labHandwashingNone = g('transformLabRecord_')({
+  _uuid: 'lab-hw-3',
+  _submission_time: '2026-05-05T12:00:00',
+  'group_6/handwashing_protocol': 3,
+});
+assert.strictEqual(
+  labHandwashingNone.handwashing_protocol,
+  'They do not have up to date displayed or written protocols'
+);
 
 const labPersonnelMissing = g('transformLabRecord_')({
   _uuid: 'lab-personnel-0',
@@ -281,8 +338,13 @@ assert.ok(labHeaders.indexOf('standard_lab_request_none') < labHeaders.indexOf('
 assert.ok(labHeaders.indexOf('quality_control_freq') < labHeaders.indexOf('cert_lab_techs'));
 assert.ok(labHeaders.indexOf('inadequate_staff') < labHeaders.indexOf('training_blood_safety'));
 assert.ok(labHeaders.indexOf('training_pro_testing_HIV') < labHeaders.indexOf('yearly_cpd'));
-assert.strictEqual(labHeaders.slice(-5).join('|'),
-  'training_blood_safety|training_unit_biosafety|training_pro_testing_HIV|yearly_cpd|eqa'
+assert.ok(labHeaders.indexOf('eqa') < labHeaders.indexOf('handwashing_protocol'));
+assert.ok(labHeaders.indexOf('have_quality_manual') < labHeaders.indexOf('sop_personal_protective_equipment_ppe_use'));
+assert.ok(labHeaders.indexOf('sop_none') < labHeaders.indexOf('specimen_collection_labelling'));
+assert.ok(labHeaders.indexOf('specimen_collection_none') < labHeaders.indexOf('guide_ref_critical_values'));
+assert.ok(labHeaders.indexOf('stock_inv_control_reagents') < labHeaders.indexOf('confirm_sops_abo_blood_group_and_rh_testing'));
+assert.strictEqual(labHeaders.slice(-2).join('|'),
+  'confirm_sops_hpv_testing|confirm_sops_via_testing'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

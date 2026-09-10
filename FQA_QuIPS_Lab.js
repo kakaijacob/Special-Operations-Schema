@@ -164,6 +164,98 @@ const LAB_GROUP_5_YES_NO_FIELDS = [
   'eqa',
 ];
 
+/** group_6/handwashing_protocol */
+const LAB_HANDWASHING_PROTOCOL_MAP = {
+  1: 'They have displayed, up to date protocols',
+  2: 'They have written up to date protocols, not displayed',
+  3: 'They do not have up to date displayed or written protocols',
+};
+
+/**
+ * select_multiple: group_6/sop
+ * Columns: sop_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_SOP_PREFIX = 'sop';
+const LAB_SOP_CHOICES = [
+  { code: '1', slug: 'personal_protective_equipment_ppe_use' },
+  { code: '2', slug: 'handling_biological_specimens' },
+  { code: '3', slug: 'chemical_safety' },
+  { code: '4', slug: 'spill_management' },
+  { code: '5', slug: 'emergency_preparedness' },
+  { code: '6', slug: 'sharps_safety' },
+  { code: '7', slug: 'equipment_preventive_maintenance' },
+  { code: '8', slug: 'equipment_calibration' },
+  { code: '9', slug: 'internal_quality_control' },
+  { code: '10', slug: 'document_control' },
+  { code: '11', slug: 'error_reporting_and_corrective_actions' },
+  { code: '12', slug: 'sample_reception_and_handling' },
+  { code: '13', slug: 'turnaround_time_monitoring' },
+  { code: '14', slug: 'inventory_management' },
+  { code: '15', slug: 'logbook_use' },
+  { code: '16', slug: 'none' },
+];
+
+/**
+ * select_multiple: group_6/specimen_collection
+ * Columns: specimen_collection_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_SPECIMEN_COLLECTION_PREFIX = 'specimen_collection';
+const LAB_SPECIMEN_COLLECTION_CHOICES = [
+  { code: '1', slug: 'labelling' },
+  { code: '2', slug: 'patient_safety' },
+  { code: '3', slug: 'staff_safety' },
+  { code: '4', slug: 'transportation_to_persons_responsible_for_primary_sample_collection' },
+  { code: '5', slug: 'none' },
+];
+
+/** group_6 Yes/No questions after specimen collection. */
+const LAB_GROUP_6_YES_NO_FIELDS = [
+  'guide_ref_critical_values',
+  'packaging_specimen',
+  'sop_lab',
+  'stock_inv_control_store',
+  'stock_inv_control_reagents',
+];
+
+/**
+ * select_multiple: group_6/confirm_sops
+ * Columns: confirm_sops_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_CONFIRM_SOPS_PREFIX = 'confirm_sops';
+const LAB_CONFIRM_SOPS_CHOICES = [
+  { code: '1', slug: 'abo_blood_group_and_rh_testing' },
+  { code: '2', slug: 'hbsag_testing' },
+  { code: '3', slug: 'vdrl_or_rpr_testing' },
+  { code: '4', slug: 'general_microscopy_wet_mounts' },
+  { code: '5', slug: 'full_haemogram_testing' },
+  { code: '6', slug: 'urine_for_microscopy' },
+  { code: '7', slug: 'urine_rapid_test_for_pregnancy' },
+  { code: '8', slug: 'urine_dipstick_testing' },
+  { code: '9', slug: 'hiv_rapid_testing' },
+  { code: '10', slug: 'malaria_testing_giemsa_stain' },
+  { code: '11', slug: 'tb_testing' },
+  { code: '12', slug: 'blood_glucose_test' },
+  { code: '13', slug: 'high_vaginal_swab' },
+  { code: '14', slug: 'esr_testing' },
+  { code: '15', slug: 'thyroid_function_tests' },
+  { code: '16', slug: 'hormone_profile_testing' },
+  { code: '17', slug: 'hga1c_testing' },
+  { code: '18', slug: 'crp_testing' },
+  { code: '19', slug: 'coombs_ab_testing' },
+  { code: '20', slug: 'cross_match_testing' },
+  { code: '21', slug: 'hcv_testing' },
+  { code: '22', slug: 'urinalysis_for_culture_and_sensitivity' },
+  { code: '23', slug: 'dbs_for_hiv_viral_load' },
+  { code: '24', slug: 'liver_function_testing' },
+  { code: '25', slug: 'urea_electrolytes_and_creatinine_testing' },
+  { code: '26', slug: 'bilirubin_testing' },
+  { code: '27', slug: 'uric_acid_level_testing' },
+  { code: '28', slug: 'coagulation_profile_testing' },
+  { code: '29', slug: 'blood_culture_and_sensitivity' },
+  { code: '30', slug: 'hpv_testing' },
+  { code: '31', slug: 'via_testing' },
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -201,6 +293,14 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_5_YES_NO_FIELDS.forEach(function (dest) {
     keys['group_5/' + dest] = true;
   });
+  keys['group_6/handwashing_protocol'] = true;
+  keys['group_6/have_quality_manual'] = true;
+  keys['group_6/sop'] = true;
+  keys['group_6/specimen_collection'] = true;
+  LAB_GROUP_6_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_6/' + dest] = true;
+  });
+  keys['group_6/confirm_sops'] = true;
   return keys;
 })();
 
@@ -211,7 +311,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 / group_2 / group_3 / group_4 / group_5 codes. `_submission_time` is also retained as a
+   * group_1 through group_6 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -307,6 +407,44 @@ function transformLabRecord_(rec) {
     );
   });
 
+  out.handwashing_protocol = lookupCoded_(
+    rec['group_6/handwashing_protocol'],
+    LAB_HANDWASHING_PROTOCOL_MAP
+  );
+
+  out.have_quality_manual = lookupCoded_(
+    rec['group_6/have_quality_manual'],
+    YES_NO_MAP
+  );
+
+  expandSelectMultiple_(
+    out,
+    rec['group_6/sop'],
+    LAB_SOP_PREFIX,
+    LAB_SOP_CHOICES
+  );
+
+  expandSelectMultiple_(
+    out,
+    rec['group_6/specimen_collection'],
+    LAB_SPECIMEN_COLLECTION_PREFIX,
+    LAB_SPECIMEN_COLLECTION_CHOICES
+  );
+
+  LAB_GROUP_6_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_6/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  expandSelectMultiple_(
+    out,
+    rec['group_6/confirm_sops'],
+    LAB_CONFIRM_SOPS_PREFIX,
+    LAB_CONFIRM_SOPS_CHOICES
+  );
+
   return out;
 }
 
@@ -334,5 +472,16 @@ function labPreferredHeaders_() {
     .concat(LAB_GROUP_4_COUNT_FIELDS)
     .concat(['personnel', 'inadequate_staff'])
     .concat(LAB_GROUP_5_TRAINING_FIELDS)
-    .concat(LAB_GROUP_5_YES_NO_FIELDS);
+    .concat(LAB_GROUP_5_YES_NO_FIELDS)
+    .concat(['handwashing_protocol', 'have_quality_manual'])
+    .concat(selectMultipleHeaders_(LAB_SOP_PREFIX, LAB_SOP_CHOICES))
+    .concat(selectMultipleHeaders_(
+      LAB_SPECIMEN_COLLECTION_PREFIX,
+      LAB_SPECIMEN_COLLECTION_CHOICES
+    ))
+    .concat(LAB_GROUP_6_YES_NO_FIELDS)
+    .concat(selectMultipleHeaders_(
+      LAB_CONFIRM_SOPS_PREFIX,
+      LAB_CONFIRM_SOPS_CHOICES
+    ));
 }
