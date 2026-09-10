@@ -234,6 +234,33 @@ assert.strictEqual(
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
 );
 
+const ot = g('transformOperatingTheatreRecord_')({
+  _uuid: 'ot-1',
+  start: '2026-08-01T08:00:00',
+  end: '2026-08-01T09:00:00',
+  _submission_time: '2026-08-01T10:00:00',
+  'facility_profile/county': 2,
+  'facility_profile/facility': 58,
+  'facility_profile/gazetted_facility': 4,
+  'facility_profile/contact': 5,
+});
+assert.strictEqual(ot.county, 'Makueni');
+assert.strictEqual(ot.facility, 'Makueni County Referral Hospital');
+assert.strictEqual(ot.facility_level, 'Level 4');
+assert.strictEqual(ot.contact, 'Medical officer in charge');
+assert.strictEqual(ot['facility_profile/facility'], undefined);
+
+const otLegacy = g('transformOperatingTheatreRecord_')({
+  _uuid: 'ot-legacy',
+  _submission_time: '2025-03-01T08:00:00',
+  'facility_profile/facility': 58,
+});
+assert.strictEqual(otLegacy.facility, 'Kasikeu Dispensary');
+assert.strictEqual(
+  g('operatingTheatrePreferredHeaders_')().slice(0, 8).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+);
+
 let threw = false;
 try { g('transformRecordsForSheet_')('Unknown', []); } catch (e) { threw = true; }
 assert.ok(threw);
