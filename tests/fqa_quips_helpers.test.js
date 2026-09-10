@@ -169,10 +169,12 @@ let threw = false;
 try { g('transformRecordsForSheet_')('Unknown', []); } catch (e) { threw = true; }
 assert.ok(threw);
 
-const tokenNeedle = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');
-  assert.ok(text.indexOf(tokenNeedle) === -1, 'token leaked in ' + name);
+  assert.ok(
+    !/KOBO_API_TOKEN_OVERRIDE\s*=\s*["'][a-f0-9]{20,}["']/.test(text),
+    'token override leaked in ' + name
+  );
 });
 
 const example = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Token.example.js'), 'utf8');
