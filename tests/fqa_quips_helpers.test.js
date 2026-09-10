@@ -157,6 +157,16 @@ const lab = g('transformLabRecord_')({
   'group_1/contact': 2,
   'group_1/nam_contact': 'Jane Lab',
   'group_1/phone_contact': '0711111111',
+  'group_1/units': 3,
+  'group_2/abo_blood': 1,
+  'group_2/abo_monthly': 0,
+  'group_2/perform_hbsag': 2,
+  'group_2/hbsag_monthly': 1,
+  'group_2/perform_rpr': 3,
+  'group_2/rpr_monthly': 1,
+  'group_2/perform_syphilis': 1,
+  'group_2/urinalyisis_micro_mon': 0,
+  'group_2/HPV_testing_monthly': 1,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -167,8 +177,27 @@ assert.strictEqual(lab.facility_level, 'Level 3');
 assert.strictEqual(lab.contact, 'Nursing officer in charge');
 assert.strictEqual(lab.contact_name, 'Jane Lab');
 assert.strictEqual(lab.phone_number, '0711111111');
+assert.strictEqual(lab.units, 'Basic Laboratory services');
+assert.strictEqual(lab.blood_group_testing, 'Always');
+assert.strictEqual(lab.abo_monthly, 'No');
+assert.strictEqual(lab.perform_hbsag, 'Sometimes');
+assert.strictEqual(lab.hbsag_monthly, 'Yes');
+assert.strictEqual(lab.perform_rpr, 'Never');
+assert.strictEqual(lab.rpr_monthly, 'Yes');
+assert.strictEqual(lab.perform_syphilis, 'Always');
+assert.strictEqual(lab.urinalyisis_micro_mon, 'No');
+assert.strictEqual(lab.HPV_testing_monthly, 'Yes');
 assert.strictEqual(lab['group_1/county'], undefined);
 assert.strictEqual(lab['group_1/nam_contact'], undefined);
+assert.strictEqual(lab['group_2/abo_blood'], undefined);
+assert.strictEqual(lab['group_1/units'], undefined);
+
+const labComprehensive = g('transformLabRecord_')({
+  _uuid: 'lab-comp',
+  _submission_time: '2026-05-02T12:00:00',
+  'group_1/units': 4,
+});
+assert.strictEqual(labComprehensive.units, 'Comprehensive laboratory services');
 
 const labLegacy = g('transformLabRecord_')({
   _uuid: 'lab-legacy',
@@ -177,9 +206,11 @@ const labLegacy = g('transformLabRecord_')({
 });
 assert.strictEqual(labLegacy.facility, 'Matiliku Sub County Hospital');
 assert.strictEqual(
-  g('labPreferredHeaders_')().slice(0, 10).join('|'),
-  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
+  g('labPreferredHeaders_')().slice(0, 17).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number|units|blood_group_testing|abo_monthly|perform_hbsag|hbsag_monthly|perform_rpr|rpr_monthly'
 );
+assert.strictEqual(g('labPreferredHeaders_')().indexOf('perform_via'), g('labPreferredHeaders_')().length - 2);
+assert.strictEqual(g('labPreferredHeaders_')().pop(), 'via_monthly');
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   _uuid: 'ph-1',
