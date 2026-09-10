@@ -236,6 +236,9 @@ const lab = g('transformLabRecord_')({
   'group_11/temp_record_monitor': 0,
   'group_11/tincl_lab_report': '1 9',
   'group_11/tblood_product_labels': '3 4',
+  'group_12/on_laboratory_open': 2,
+  'group_12/cross_match_24hours': 1,
+  'group_12/abo_rh_24hours': 0,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -347,9 +350,15 @@ assert.strictEqual(lab.tblood_product_labels_name_of_the_blood_product, 'No');
 assert.strictEqual(lab.tblood_product_labels_blood_type_abo_and_rh_factor, 'Yes');
 assert.strictEqual(lab.tblood_product_labels_batch_number, 'Yes');
 assert.strictEqual(lab.tblood_product_labels_none, 'No');
+assert.strictEqual(lab.on_laboratory_open, '8-12 HOURS');
+assert.strictEqual(lab.cross_match_24hours, 'Yes');
+assert.strictEqual(lab.abo_rh_24hours, 'No');
 assert.strictEqual(lab.stand_lab_report, '');
 assert.strictEqual(lab.stool_polypot, '');
 assert.strictEqual(lab.ziehl_stain_bright_field_microscope, '');
+assert.strictEqual(lab['group_12/on_laboratory_open'], undefined);
+assert.strictEqual(lab['group_12/cross_match_24hours'], undefined);
+assert.strictEqual(lab['group_12/abo_rh_24hours'], undefined);
 assert.strictEqual(lab['group_11/internal_control_iqc'], undefined);
 assert.strictEqual(lab['group_11/tincl_lab_report'], undefined);
 assert.strictEqual(lab['group_11/tblood_product_labels'], undefined);
@@ -414,6 +423,28 @@ assert.strictEqual(labComprehensive.internal_control_iqc, '');
 assert.strictEqual(labComprehensive.external_contrlol_eqc, '');
 assert.strictEqual(labComprehensive.tincl_lab_report_none, '');
 assert.strictEqual(labComprehensive.tblood_product_labels_none, '');
+assert.strictEqual(labComprehensive.on_laboratory_open, '');
+assert.strictEqual(labComprehensive.cross_match_24hours, '');
+assert.strictEqual(labComprehensive.abo_rh_24hours, '');
+
+const labHoursOpen = g('transformLabRecord_')({
+  _uuid: 'lab-hours',
+  _submission_time: '2026-05-08T12:00:00',
+  'group_12/on_laboratory_open': 1,
+  'group_12/cross_match_24hours': 0,
+  'group_12/abo_rh_24hours': 1,
+});
+assert.strictEqual(labHoursOpen.on_laboratory_open, '<8 HOURS');
+assert.strictEqual(labHoursOpen.cross_match_24hours, 'No');
+assert.strictEqual(labHoursOpen.abo_rh_24hours, 'Yes');
+assert.strictEqual(
+  g('transformLabRecord_')({
+    _uuid: 'lab-hours-24',
+    _submission_time: '2026-05-08T13:00:00',
+    'group_12/on_laboratory_open': 3,
+  }).on_laboratory_open,
+  '24 HOURS'
+);
 
 const labBloodCountNone = g('transformLabRecord_')({
   _uuid: 'lab-bc-3',
@@ -500,8 +531,9 @@ assert.ok(labHeaders.indexOf('urine_test_kit10') < labHeaders.indexOf('serum_ele
 assert.ok(labHeaders.indexOf('type_o') < labHeaders.indexOf('internal_control_iqc'));
 assert.ok(labHeaders.indexOf('temp_record_monitor') < labHeaders.indexOf('tincl_lab_report_examination_performed'));
 assert.ok(labHeaders.indexOf('tincl_lab_report_none') < labHeaders.indexOf('tblood_product_labels_name_of_the_blood_product'));
+assert.ok(labHeaders.indexOf('tblood_product_labels_none') < labHeaders.indexOf('on_laboratory_open'));
 assert.strictEqual(labHeaders.slice(-3).join('|'),
-  'tblood_product_labels_blood_type_abo_and_rh_factor|tblood_product_labels_batch_number|tblood_product_labels_none'
+  'on_laboratory_open|cross_match_24hours|abo_rh_24hours'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

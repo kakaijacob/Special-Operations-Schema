@@ -598,6 +598,19 @@ function labGroup11SelectMultiples_() {
   ];
 }
 
+/** group_12/on_laboratory_open */
+const LAB_ON_LABORATORY_OPEN_MAP = {
+  1: '<8 HOURS',
+  2: '8-12 HOURS',
+  3: '24 HOURS',
+};
+
+/** group_12 Yes/No questions. 1 Yes / 0 No. Names drop the group_12/ prefix. */
+const LAB_GROUP_12_YES_NO_FIELDS = [
+  'cross_match_24hours',
+  'abo_rh_24hours',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -673,6 +686,10 @@ const LAB_SOURCE_KEYS = (function () {
   labGroup11SelectMultiples_().forEach(function (field) {
     keys[field.source] = true;
   });
+  keys['group_12/on_laboratory_open'] = true;
+  LAB_GROUP_12_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_12/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -683,7 +700,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_11 codes. `_submission_time` is also retained as a
+   * group_1 through group_12 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -940,6 +957,18 @@ function transformLabRecord_(rec) {
     );
   });
 
+  out.on_laboratory_open = lookupCoded_(
+    rec['group_12/on_laboratory_open'],
+    LAB_ON_LABORATORY_OPEN_MAP
+  );
+
+  LAB_GROUP_12_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_12/' + dest],
+      YES_NO_MAP
+    );
+  });
+
   return out;
 }
 
@@ -991,5 +1020,7 @@ function labPreferredHeaders_() {
     .concat(LAB_GROUP_11_YES_NO_FIELDS)
     .concat(labGroup11SelectMultiples_().reduce(function (headers, field) {
       return headers.concat(selectMultipleHeaders_(field.prefix, field.choices));
-    }, []));
+    }, []))
+    .concat(['on_laboratory_open'])
+    .concat(LAB_GROUP_12_YES_NO_FIELDS);
 }
