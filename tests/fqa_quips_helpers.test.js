@@ -167,6 +167,9 @@ const lab = g('transformLabRecord_')({
   'group_2/perform_syphilis': 1,
   'group_2/urinalyisis_micro_mon': 0,
   'group_2/HPV_testing_monthly': 1,
+  'group_3/lab_register': 1,
+  'group_3/lab_register_used': 0,
+  'group_3/request_form': 1,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -187,6 +190,10 @@ assert.strictEqual(lab.rpr_monthly, 'Yes');
 assert.strictEqual(lab.perform_syphilis, 'Always');
 assert.strictEqual(lab.urinalyisis_micro_mon, 'No');
 assert.strictEqual(lab.HPV_testing_monthly, 'Yes');
+assert.strictEqual(lab.lab_register, 'Yes');
+assert.strictEqual(lab.lab_register_used, 'No');
+assert.strictEqual(lab.request_form, 'Yes');
+assert.strictEqual(lab['group_3/lab_register'], undefined);
 assert.strictEqual(lab['group_1/county'], undefined);
 assert.strictEqual(lab['group_1/nam_contact'], undefined);
 assert.strictEqual(lab['group_2/abo_blood'], undefined);
@@ -209,8 +216,11 @@ assert.strictEqual(
   g('labPreferredHeaders_')().slice(0, 17).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number|units|blood_group_testing|abo_monthly|perform_hbsag|hbsag_monthly|perform_rpr|rpr_monthly'
 );
-assert.strictEqual(g('labPreferredHeaders_')().indexOf('perform_via'), g('labPreferredHeaders_')().length - 2);
-assert.strictEqual(g('labPreferredHeaders_')().pop(), 'via_monthly');
+const labHeaders = g('labPreferredHeaders_')();
+assert.ok(labHeaders.indexOf('via_monthly') < labHeaders.indexOf('lab_register'));
+assert.strictEqual(labHeaders.slice(-10).join('|'),
+  'lab_register|lab_register_used|lab_summary_register|summary_reg_used|consumption_register|consumption_reg_used|hts_register|hts_reg_used|referral_register|request_form'
+);
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   _uuid: 'ph-1',

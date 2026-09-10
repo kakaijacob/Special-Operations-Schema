@@ -87,6 +87,20 @@ const LAB_GROUP_2_FIELDS = [
   { source: 'group_2/via_monthly', dest: 'via_monthly' },
 ];
 
+/** group_3 register questions: 1 Yes / 0 No, names without the group_3/ prefix. */
+const LAB_GROUP_3_FIELDS = [
+  'lab_register',
+  'lab_register_used',
+  'lab_summary_register',
+  'summary_reg_used',
+  'consumption_register',
+  'consumption_reg_used',
+  'hts_register',
+  'hts_reg_used',
+  'referral_register',
+  'request_form',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -109,6 +123,9 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_2_FIELDS.forEach(function (field) {
     keys[field.source] = true;
   });
+  LAB_GROUP_3_FIELDS.forEach(function (dest) {
+    keys['group_3/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -119,7 +136,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 / group_2 codes. `_submission_time` is also retained as a
+   * group_1 / group_2 / group_3 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -176,6 +193,13 @@ function transformLabRecord_(rec) {
     );
   });
 
+  LAB_GROUP_3_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_3/' + dest],
+      YES_NO_MAP
+    );
+  });
+
   return out;
 }
 
@@ -194,5 +218,5 @@ function labPreferredHeaders_() {
     'units',
   ].concat(LAB_GROUP_2_FIELDS.map(function (field) {
     return field.dest;
-  }));
+  })).concat(LAB_GROUP_3_FIELDS);
 }
