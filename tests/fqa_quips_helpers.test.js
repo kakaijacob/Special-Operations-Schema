@@ -574,6 +574,14 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'Section_9_Equipment/fridge': 1,
   'Section_9_Equipment/cabinet': 2,
   'Section_9_Equipment/receipt': 3,
+  'Section_10_Commodities/prescription': 1,
+  'Section_10_Commodities/iron_tab': 2,
+  'Section_10_Commodities/fe_condoms': 3,
+  'Section_10_Commodities/chlorxidine': 1,
+  'Section_10_Commodities/Iv_hydro_freq': 1,
+  'Section_10_Commodities/iron_freq': 0,
+  'Section_10_Commodities/fe_cond_freq': 1,
+  'Section_10_Commodities/oxy_store': 0,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -619,6 +627,18 @@ assert.strictEqual(routed[0].therm_readings, 'No');
 assert.strictEqual(routed[0].fridge, 'Yes, functional');
 assert.strictEqual(routed[0].cabinet, 'Yes, cabinet not locked today');
 assert.strictEqual(routed[0].receipt, 'Not applicable');
+assert.strictEqual(routed[0].prescription, 'Always available');
+assert.strictEqual(routed[0].iron_tab, 'Sometimes available');
+assert.strictEqual(routed[0].fe_condoms, 'Never available');
+assert.strictEqual(routed[0].chlorxidine, 'Always available');
+assert.strictEqual(routed[0].latex, '');
+assert.strictEqual(routed[0].Iv_hydro_freq, 'Yes');
+assert.strictEqual(routed[0].iron_freq, 'No');
+assert.strictEqual(routed[0].fe_cond_freq, 'Yes');
+assert.strictEqual(routed[0].oxy_store, 'No');
+assert.strictEqual(routed[0].folic_freq, '');
+assert.strictEqual(routed[0]['Section_10_Commodities/prescription'], undefined);
+assert.strictEqual(routed[0]['Section_10_Commodities/iron_freq'], undefined);
 assert.strictEqual(routed[0]['Section_7_Infrastructure/maintained'], undefined);
 assert.strictEqual(routed[0]['Section_9_Equipment/fridge'], undefined);
 assert.strictEqual(routed[0]['sop/handwashing'], undefined);
@@ -648,6 +668,9 @@ assert.strictEqual(phLegacy.maintained, '');
 assert.strictEqual(phLegacy.fridge, '');
 assert.strictEqual(phLegacy.cabinet, '');
 assert.strictEqual(phLegacy.receipt, '');
+assert.strictEqual(phLegacy.prescription, '');
+assert.strictEqual(phLegacy.iron_freq, '');
+assert.strictEqual(phLegacy.Iv_hydro_freq, '');
 
 const phAlias = g('transformPharmacyRecord_')({
   _uuid: 'ph-alias',
@@ -662,6 +685,10 @@ const phAlias = g('transformPharmacyRecord_')({
   'Section_9_Equipment/fridge': 2,
   'Section_9_Equipment/cabinet': 1,
   'Section_9_Equipment/receipt': 2,
+  'Section_10_Commodities/artesunete': 2,
+  'Section_10_Commodities/pyrizimomide': 3,
+  'record/dda_used': 1,
+  'Section_7_Infrastructure/wall_clock': 1,
 });
 assert.strictEqual(phAlias.contact_name, 'Alias Name');
 assert.strictEqual(phAlias.phone_number, '0700000000');
@@ -684,6 +711,20 @@ assert.strictEqual(
 assert.strictEqual(phAlias.fridge, 'Yes, non-functional');
 assert.strictEqual(phAlias.cabinet, 'Yes, cabinet locked today');
 assert.strictEqual(phAlias.receipt, 'No');
+assert.strictEqual(phAlias.artesunete, 'Sometimes available');
+assert.strictEqual(phAlias.pyrizimomide, 'Never available');
+assert.strictEqual(phAlias.dda_used, 'Yes');
+assert.strictEqual(phAlias.wall_clock, 'Yes');
+const phCommodityOverlap = g('transformPharmacyRecord_')({
+  _uuid: 'ph-commod-overlap',
+  _submission_time: '2026-06-05T08:00:00',
+  'record/dda_used': 1,
+  'Section_7_Infrastructure/wall_clock': 1,
+  'Section_10_Commodities/dda_used': 0,
+  'Section_10_Commodities/wall_clock': 0,
+});
+assert.strictEqual(phCommodityOverlap.dda_used, 'No');
+assert.strictEqual(phCommodityOverlap.wall_clock, 'No');
 assert.strictEqual(
   g('transformPharmacyRecord_')({
     _uuid: 'ph-equip-3',
@@ -729,8 +770,11 @@ assert.ok(phHeaders.indexOf('soap_disp') < phHeaders.indexOf('maintained'));
 assert.ok(phHeaders.indexOf('certification') < phHeaders.indexOf('privacy'));
 assert.ok(phHeaders.indexOf('privacy') < phHeaders.indexOf('computer'));
 assert.ok(phHeaders.indexOf('therm_readings') < phHeaders.indexOf('fridge'));
+assert.ok(phHeaders.indexOf('receipt') < phHeaders.indexOf('prescription'));
+assert.ok(phHeaders.indexOf('fe_condoms') < phHeaders.indexOf('iron_freq'));
+assert.ok(phHeaders.indexOf('Iv_hydro_freq') < phHeaders.indexOf('oxy_store'));
 assert.strictEqual(phHeaders.slice(-3).join('|'),
-  'fridge|cabinet|receipt'
+  'depo_freq|cond_freq|fe_cond_freq'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 

@@ -124,6 +124,262 @@ const PHARMACY_RECEIPT_MAP = {
   3: 'Not applicable',
 };
 
+/** Section_10_Commodities select_one. 1 Always / 2 Sometimes / 3 Never available. */
+const PHARMACY_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP = {
+  1: 'Always available',
+  2: 'Sometimes available',
+  3: 'Never available',
+};
+
+const PHARMACY_COMMODITY_AVAIL_FIELDS = [
+  'prescription',
+  'latex',
+  'iron_tab',
+  'folic_acid',
+  'ifas',
+  'calcium',
+  'multivit',
+  'iron_syrup',
+  'vit_d',
+  'vit_k',
+  'tetra',
+  'deworming',
+  'disinfectant',
+  'lidocaine',
+  'lidocaine1',
+  'dextrose10',
+  'dextrose5',
+  'dextrose15',
+  'water_inj',
+  'saline_45',
+  'saline_90',
+  'saline3',
+  'potassium',
+  'chlorxidine',
+  'anti_d',
+  'plasma',
+  'ringers_lactate',
+  'lasix',
+  'esomeprazole',
+  'esomeprazole_iv',
+  'para_tabs',
+  'para_suspe',
+  'para_iv',
+  'morphine',
+  'tramadol',
+  'aspirin',
+  'metform',
+  'insulin',
+  'thyroxine',
+  'pyritone',
+  'odt',
+  'metroclo',
+  'enoxaparin',
+  'warfarin',
+  'genta',
+  'ampicilin',
+  'cephalo',
+  'flucloxacilin',
+  'metra',
+  'clindamycin',
+  'vancomycin',
+  'amoxil',
+  'benzathine',
+  'amikacin',
+  'ampiclox',
+  'aminophylin',
+  'artemether',
+  'sulfadoxine',
+  'artesunete',
+  'isoniazid',
+  'rifampicin',
+  'pyrizimomide',
+  'ethambutol',
+  'vitB6',
+  'acyclovir',
+  'salbutemol',
+  'salbutamol_oral',
+  'salbutamol_inhaler',
+  'iprapitm',
+  'nifedi',
+  'hydralazine',
+  'hydralazine_oral',
+  'methyl',
+  'labetalol',
+  'calcium_inj',
+  'mgso4',
+  'phenytoin',
+  'diazapam',
+  'midazolam',
+  'phenobar',
+  'betametha',
+  'iv_hydro',
+  'oral_hydro',
+  'inj_oxytocin',
+  'carbetocin',
+  'tranexamic',
+  'misoprostol',
+  'ergometrine',
+  'nevirapine',
+  'nevirapine_tab',
+  'azt',
+  'abacavir_dtg',
+  'tenofovir_alafenamide',
+  'dolutegravir',
+  'abacavir_tdf',
+  'naloxone',
+  'adrenaline',
+  'atropine',
+  'amiodarone',
+  'caffeine',
+  'surfactant',
+  'bicarbonate',
+  'bcg_vaccine',
+  'polio',
+  'hep_b',
+  'formula',
+  'progesterone',
+  'e_contra',
+  'progest_pills',
+  'iud',
+  'copper',
+  'combined',
+  'inj_implant',
+  'depo',
+  'condoms',
+  'fe_condoms',
+];
+
+/**
+ * Section_10_Commodities Yes/No questions. 1 Yes / 0 No.
+ * Names drop the section prefix. dda_used and wall_clock also exist
+ * earlier from record/ and Section_7_Infrastructure/.
+ */
+const PHARMACY_COMMODITY_YES_NO_FIELDS = [
+  'dda_used',
+  'wall_clock',
+  'iron_freq',
+  'folic_freq',
+  'ifas_freq',
+  'cal_freq',
+  'nut_freq',
+  'multivit_freq',
+  'syrup_freq',
+  'vit_freq',
+  'vitk_freq',
+  'tetra_freq',
+  'deworm_freq',
+  'dis_freq',
+  'lido_freq',
+  'lido_freq1',
+  'dex_freq10',
+  'dex_freq5',
+  'dex_freq15',
+  'inj_freq',
+  'saline_freq45',
+  'saline_freq90',
+  'saline_freq3',
+  'pota_freq',
+  'chlor_freq',
+  'anti_dfreq',
+  'plasma_frq',
+  'ringers_freq',
+  'lasix_freq',
+  'esome_freq',
+  'esomeprazole_iv_freq',
+  'tabs_freq',
+  'suspe_freq',
+  'iv_freq',
+  'morph_freq',
+  'trama_freq',
+  'aspirin_freq',
+  'metform_freq',
+  'insulin_freq',
+  'thyro_freq',
+  'pyrit_freq',
+  'odt_freq',
+  'metro_freq',
+  'enoxa_freq',
+  'warf_freq',
+  'genta_freq',
+  'ampi_freq',
+  'cepha_freq',
+  'fluclo_freq',
+  'metra_freq',
+  'clinda_freq',
+  'canco_freq',
+  'amoxil_freq',
+  'benza_freq',
+  'amika_freq',
+  'ampiclo_freq',
+  'amino_freq',
+  'arte_freq',
+  'sulfa_freq',
+  'artesu_freq',
+  'ison_freq',
+  'rifam_freq',
+  'pyrizi_freq',
+  'etham_freq',
+  'vitB6_freq',
+  'acyclo_freq',
+  'sulbu_freq',
+  'salbutamol_oral_freq',
+  'salbutamol_inhaler_freq',
+  'iprap_freq',
+  'nifedi_freq',
+  'hydra_freq',
+  'hydralazine_oral_freq',
+  'methyl_freq',
+  'labe_freq',
+  'cal_inj_freq',
+  'mgso4_freq',
+  'pheny_freq',
+  'diaza_freq',
+  'mida_freq',
+  'pheno_freq',
+  'betame_freq',
+  'Iv_hydro_freq',
+  'oral_freq',
+  'oxyto_freq',
+  'oxy_store',
+  'carbe_freq',
+  'trane_freq',
+  'miso_freq',
+  'ergo_freq',
+  'nevira_freq',
+  'nevirapine_tab_freq',
+  'azt_freq',
+  'abacavir_dtg_freq',
+  'tenofovir_alafenamide_freq',
+  'dolutegravir_freq',
+  'abacavir_tdf_freq',
+  'nalo_freq',
+  'adren_freq',
+  'atropine_freq',
+  'amiodarone_freq',
+  'caffe_freq',
+  'surfa_freq',
+  'biocar_freq',
+  'bcg_frq',
+  'polio_freq',
+  'hep_freq',
+  'formula_freq',
+  'proge_freq',
+  'contra_freq',
+  'progest_freq',
+  'iud_freq',
+  'copper_freq',
+  'combined_freq',
+  'mplant_freq',
+  'depo_freq',
+  'cond_freq',
+  'fe_cond_freq',
+];
+
+function pharmacyCommoditySource_(dest) {
+  return 'Section_10_Commodities/' + dest;
+}
+
 const PHARMACY_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -162,6 +418,12 @@ const PHARMACY_SOURCE_KEYS = (function () {
   keys['Section_9_Equipment/fridge'] = true;
   keys['Section_9_Equipment/cabinet'] = true;
   keys['Section_9_Equipment/receipt'] = true;
+  PHARMACY_COMMODITY_AVAIL_FIELDS.forEach(function (dest) {
+    keys[pharmacyCommoditySource_(dest)] = true;
+  });
+  PHARMACY_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
+    keys[pharmacyCommoditySource_(dest)] = true;
+  });
   return keys;
 })();
 
@@ -286,6 +548,22 @@ function transformPharmacyRecord_(rec) {
     PHARMACY_RECEIPT_MAP
   );
 
+  PHARMACY_COMMODITY_AVAIL_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[pharmacyCommoditySource_(dest)],
+      PHARMACY_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP
+    );
+  });
+
+  PHARMACY_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
+    const raw = rec[pharmacyCommoditySource_(dest)];
+    if ((dest === 'dda_used' || dest === 'wall_clock') &&
+        (raw == null || raw === '')) {
+      return;
+    }
+    out[dest] = lookupCoded_(raw, YES_NO_MAP);
+  });
+
   return out;
 }
 
@@ -313,5 +591,7 @@ function pharmacyPreferredHeaders_() {
     .concat(PHARMACY_INFRA_EQUIP_YES_NO_FIELDS.map(function (field) {
       return field.dest;
     }))
-    .concat(['fridge', 'cabinet', 'receipt']);
+    .concat(['fridge', 'cabinet', 'receipt'])
+    .concat(PHARMACY_COMMODITY_AVAIL_FIELDS)
+    .concat(PHARMACY_COMMODITY_YES_NO_FIELDS);
 }
