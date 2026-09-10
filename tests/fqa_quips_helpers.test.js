@@ -212,6 +212,18 @@ const lab = g('transformLabRecord_')({
   'group_8/well_ventilated': 0,
   'group_8/access_disabled': 1,
   'group_8/evidence8': 0,
+  'group_9/list_referral': 1,
+  'group_9/evidence_cal_pipettes': 0,
+  'group_9/maintenance_chart_colo_hae': 1,
+  'group_9/PPE_equipment': '1 5',
+  'group_9/tb_diagnostic': '2',
+  'group_9/genexpert': '1 3',
+  'group_9/available_pipettes': 1,
+  'group_9/available_centrifuge': 2,
+  'group_9/vortex_mixer': 3,
+  'group_9/maint_contract_colo_hae': 0,
+  'group_9/sputum_smear': 1,
+  'group_9/blood_count': 2,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -289,6 +301,26 @@ assert.strictEqual(lab.safety_cabinents8, 'Yes');
 assert.strictEqual(lab.well_ventilated, 'No');
 assert.strictEqual(lab.access_disabled, 'Yes');
 assert.strictEqual(lab.evidence8, 'No');
+assert.strictEqual(lab.list_referral, 'Yes');
+assert.strictEqual(lab.evidence_cal_pipettes, 'No');
+assert.strictEqual(lab.maintenance_chart_colo_hae, 'Yes');
+assert.strictEqual(lab.PPE_equipment_gloves, 'Yes');
+assert.strictEqual(lab.PPE_equipment_masks, 'No');
+assert.strictEqual(lab.PPE_equipment_none, 'Yes');
+assert.strictEqual(lab.tb_diagnostic_sputum_smear_microscopy, 'No');
+assert.strictEqual(lab.tb_diagnostic_genexpert_mtb_rif_assay, 'Yes');
+assert.strictEqual(lab.genexpert_genexpert_machine, 'Yes');
+assert.strictEqual(lab.genexpert_reliable_power_source, 'Yes');
+assert.strictEqual(lab.genexpert_cartridges, 'No');
+assert.strictEqual(lab.available_pipettes, 'Yes, functional');
+assert.strictEqual(lab.available_centrifuge, 'Yes, non-functional');
+assert.strictEqual(lab.vortex_mixer, 'No');
+assert.strictEqual(lab.maint_contract_colo_hae, 'Not available');
+assert.strictEqual(lab.sputum_smear, 'Ziehl-Neelsen Staining');
+assert.strictEqual(lab.blood_count, 'Manual Method');
+assert.strictEqual(lab.ziehl_stain_bright_field_microscope, '');
+assert.strictEqual(lab['group_9/PPE_equipment'], undefined);
+assert.strictEqual(lab['group_9/blood_count'], undefined);
 assert.strictEqual(lab.chairs_staff8, '');
 assert.strictEqual(lab['group_8/evidence8'], undefined);
 assert.strictEqual(lab['group_8/waiting_area8'], undefined);
@@ -336,6 +368,21 @@ assert.strictEqual(labComprehensive.sharp_container_full, '');
 assert.strictEqual(labComprehensive.waiting_area8, '');
 assert.strictEqual(labComprehensive.access_disabled, '');
 assert.strictEqual(labComprehensive.evidence8, '');
+assert.strictEqual(labComprehensive.list_referral, '');
+assert.strictEqual(labComprehensive.PPE_equipment_gloves, '');
+assert.strictEqual(labComprehensive.available_pipettes, '');
+assert.strictEqual(labComprehensive.blood_count, '');
+
+const labBloodCountNone = g('transformLabRecord_')({
+  _uuid: 'lab-bc-3',
+  _submission_time: '2026-05-07T12:00:00',
+  'group_9/blood_count': 3,
+  'group_9/sputum_smear': 2,
+  'group_9/maint_contract_colo_hae': 1,
+});
+assert.strictEqual(labBloodCountNone.blood_count, 'Full blood count not available in this unit');
+assert.strictEqual(labBloodCountNone.sputum_smear, 'Auramine-O Staining');
+assert.strictEqual(labBloodCountNone.maint_contract_colo_hae, 'Available');
 
 const labSoapNone = g('transformLabRecord_')({
   _uuid: 'lab-soap-3',
@@ -402,8 +449,12 @@ assert.ok(labHeaders.indexOf('stock_inv_control_reagents') < labHeaders.indexOf(
 assert.ok(labHeaders.indexOf('confirm_sops_via_testing') < labHeaders.indexOf('water_source'));
 assert.ok(labHeaders.indexOf('sharp_container_full') < labHeaders.indexOf('waiting_area8'));
 assert.ok(labHeaders.indexOf('access_disabled') < labHeaders.indexOf('evidence8'));
-assert.strictEqual(labHeaders.slice(-16).join('|'),
-  'waiting_area8|working_tables8|chairs_staff8|safety_cabinents8|storage_shelves8|wash_basin8|well_lit8|well_ventilated|wall_clock|wall_thermometer|designated_spaces|special_area_samples|lockable_doors8|certification|access_disabled|evidence8'
+assert.ok(labHeaders.indexOf('evidence8') < labHeaders.indexOf('list_referral'));
+assert.ok(labHeaders.indexOf('maintenance_chart_colo_hae') < labHeaders.indexOf('PPE_equipment_gloves'));
+assert.ok(labHeaders.indexOf('blood_type_crossmatch_equi_none') < labHeaders.indexOf('available_pipettes'));
+assert.ok(labHeaders.indexOf('vortex_mixer') < labHeaders.indexOf('maint_contract_colo_hae'));
+assert.strictEqual(labHeaders.slice(-3).join('|'),
+  'maint_contract_colo_hae|sputum_smear|blood_count'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

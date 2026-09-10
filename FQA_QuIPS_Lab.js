@@ -309,6 +309,148 @@ const LAB_GROUP_8_YES_NO_FIELDS = [
   'evidence8',
 ];
 
+/** group_9 Yes/No questions. 1 Yes / 0 No. */
+const LAB_GROUP_9_YES_NO_FIELDS = [
+  'list_referral',
+  'evidence_cal_pipettes',
+  'evidence_cal_centrifuge',
+  'centrifuge_maintenance',
+  'evidence_cal_balance',
+  'evidence_cal_thermo',
+  'maint_microscope_chart',
+  'refrigerator_thermometer',
+  'temp_monitor_chart',
+  'maintenance_refrigerator',
+  'cal_glucometer',
+  'evid_colorimeter_haemoglobin',
+  'maintenance_chart_colo_hae',
+];
+
+const LAB_PPE_EQUIPMENT_CHOICES = [
+  { code: '1', slug: 'gloves' },
+  { code: '2', slug: 'masks' },
+  { code: '3', slug: 'lab_coats' },
+  { code: '4', slug: 'eye_shields' },
+  { code: '5', slug: 'none' },
+];
+
+const LAB_TB_DIAGNOSTIC_CHOICES = [
+  { code: '1', slug: 'sputum_smear_microscopy' },
+  { code: '2', slug: 'genexpert_mtb_rif_assay' },
+  { code: '3', slug: 'none_available' },
+];
+
+const LAB_ZIEHL_STAIN_CHOICES = [
+  { code: '1', slug: 'bright_field_microscope' },
+  { code: '2', slug: 'carbol_fuchsin_primary_stain' },
+  { code: '3', slug: 'acid_alcohol_decolorizer' },
+  { code: '4', slug: 'methylene_blue_counterstain' },
+  { code: '5', slug: 'slides_and_coverslips' },
+  { code: '6', slug: 'bunsen_burner_or_spirit_lamp_for_heat_fixation' },
+  { code: '7', slug: 'immersion_oil_for_bright_field_microscopy' },
+  { code: '8', slug: 'sputum_containers' },
+];
+
+const LAB_AURAMINE_STAIN_CHOICES = [
+  { code: '1', slug: 'fluorescence_microscope' },
+  { code: '2', slug: 'auramine_o_primary_stain' },
+  { code: '3', slug: 'potassium_permanganate_or_acridine_orange_counterstain' },
+  { code: '4', slug: 'slides_and_coverslips' },
+  { code: '5', slug: 'bunsen_burner_or_spirit_lamp_for_heat_fixation' },
+  { code: '6', slug: 'sputum_containers' },
+];
+
+const LAB_GENEXPERT_CHOICES = [
+  { code: '1', slug: 'genexpert_machine' },
+  { code: '2', slug: 'cartridges' },
+  { code: '3', slug: 'reliable_power_source' },
+];
+
+const LAB_LIVER_FUNCTION_EQUIPMENT_CHOICES = [
+  { code: '1', slug: 'biochemistry_analyzer' },
+  { code: '2', slug: 'specific_assay_kits_liver_function_test' },
+  { code: '3', slug: 'specific_assay_kits_renal_function_test' },
+  { code: '4', slug: 'none' },
+];
+
+const LAB_BC_ANALYZER_CHOICES = [
+  { code: '1', slug: 'a_basic_3_part_or_5_part_hematology_analyzer' },
+  { code: '2', slug: 'diluent_reagents' },
+  { code: '3', slug: 'lyse_reagents' },
+  { code: '4', slug: 'cleaning_solutions' },
+  { code: '5', slug: 'control_samples_for_calibration_and_quality_control' },
+];
+
+const LAB_BC_TOOLS_CHOICES = [
+  { code: '1', slug: 'light_microscope_with_100x_magnification_for_differential_wbc_count' },
+  { code: '2', slug: 'hemocytometer' },
+  { code: '3', slug: 'cuvettes_or_tubes' },
+  { code: '4', slug: 'microhematocrit_centrifuge' },
+  { code: '5', slug: 'capillary_tubes' },
+  { code: '6', slug: 'leishman_stain_or_wright_giemsa_stain' },
+  { code: '7', slug: 'drabkins_solution' },
+  { code: '8', slug: 'edta_tubes_or_heparin' },
+  { code: '9', slug: 'saline_solution' },
+];
+
+const LAB_HIV_TESTING_EQUIPMENT_CHOICES = [
+  { code: '1', slug: 'cd4_count_testing_option' },
+  { code: '2', slug: 'flow_cytometry_and_fluorescent_antibodies_for_cd4_identification' },
+  { code: '3', slug: 'equipment_not_available' },
+];
+
+const LAB_BLOOD_TYPE_CROSSMATCH_EQUI_CHOICES = [
+  { code: '1', slug: '37c_incubator' },
+  { code: '2', slug: 'water_bath_at_37c' },
+  { code: '3', slug: 'grouping_sera' },
+  { code: '4', slug: 'none' },
+];
+
+function labGroup9SelectMultiples_() {
+  return [
+    { source: 'group_9/PPE_equipment', prefix: 'PPE_equipment', choices: LAB_PPE_EQUIPMENT_CHOICES },
+    { source: 'group_9/tb_diagnostic', prefix: 'tb_diagnostic', choices: LAB_TB_DIAGNOSTIC_CHOICES },
+    { source: 'group_9/ziehl_stain', prefix: 'ziehl_stain', choices: LAB_ZIEHL_STAIN_CHOICES },
+    { source: 'group_9/auramine_stain', prefix: 'auramine_stain', choices: LAB_AURAMINE_STAIN_CHOICES },
+    { source: 'group_9/genexpert', prefix: 'genexpert', choices: LAB_GENEXPERT_CHOICES },
+    { source: 'group_9/liver_function_equipment', prefix: 'liver_function_equipment', choices: LAB_LIVER_FUNCTION_EQUIPMENT_CHOICES },
+    { source: 'group_9/bc_analyzer', prefix: 'bc_analyzer', choices: LAB_BC_ANALYZER_CHOICES },
+    { source: 'group_9/bc_tools', prefix: 'bc_tools', choices: LAB_BC_TOOLS_CHOICES },
+    { source: 'group_9/hiv_testing_equipment', prefix: 'hiv_testing_equipment', choices: LAB_HIV_TESTING_EQUIPMENT_CHOICES },
+    { source: 'group_9/blood_type_crossmatch_equi', prefix: 'blood_type_crossmatch_equi', choices: LAB_BLOOD_TYPE_CROSSMATCH_EQUI_CHOICES },
+  ];
+}
+
+/** group_9 select_one: 1 Yes, functional / 2 Yes, non-functional / 3 No. */
+const LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS = [
+  'available_pipettes',
+  'available_centrifuge',
+  'available_balance',
+  'available_thermometer',
+  'avail_light_microscope',
+  'working_refrigerator',
+  'avail_glucometer',
+  'colorimeter_haemoglobin',
+  'fridge_blood_products',
+  'vortex_mixer',
+];
+
+const LAB_AVAILABLE_NOT_AVAILABLE_MAP = {
+  1: 'Available',
+  0: 'Not available',
+};
+
+const LAB_SPUTUM_SMEAR_MAP = {
+  1: 'Ziehl-Neelsen Staining',
+  2: 'Auramine-O Staining',
+};
+
+const LAB_BLOOD_COUNT_MAP = {
+  1: 'Automated hematology analyzer',
+  2: 'Manual Method',
+  3: 'Full blood count not available in this unit',
+};
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -363,6 +505,18 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_8_YES_NO_FIELDS.forEach(function (dest) {
     keys['group_8/' + dest] = true;
   });
+  LAB_GROUP_9_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_9/' + dest] = true;
+  });
+  labGroup9SelectMultiples_().forEach(function (field) {
+    keys[field.source] = true;
+  });
+  LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS.forEach(function (dest) {
+    keys['group_9/' + dest] = true;
+  });
+  keys['group_9/maint_contract_colo_hae'] = true;
+  keys['group_9/sputum_smear'] = true;
+  keys['group_9/blood_count'] = true;
   return keys;
 })();
 
@@ -373,7 +527,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_8 codes. `_submission_time` is also retained as a
+   * group_1 through group_9 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -569,6 +723,44 @@ function transformLabRecord_(rec) {
     );
   });
 
+  LAB_GROUP_9_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_9/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  labGroup9SelectMultiples_().forEach(function (field) {
+    expandSelectMultiple_(
+      out,
+      rec[field.source],
+      field.prefix,
+      field.choices
+    );
+  });
+
+  LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_9/' + dest],
+      EQUIP_FUNCTIONAL_MAP
+    );
+  });
+
+  out.maint_contract_colo_hae = lookupCoded_(
+    rec['group_9/maint_contract_colo_hae'],
+    LAB_AVAILABLE_NOT_AVAILABLE_MAP
+  );
+
+  out.sputum_smear = lookupCoded_(
+    rec['group_9/sputum_smear'],
+    LAB_SPUTUM_SMEAR_MAP
+  );
+
+  out.blood_count = lookupCoded_(
+    rec['group_9/blood_count'],
+    LAB_BLOOD_COUNT_MAP
+  );
+
   return out;
 }
 
@@ -609,5 +801,11 @@ function labPreferredHeaders_() {
       LAB_CONFIRM_SOPS_CHOICES
     ))
     .concat(LAB_GROUP_7_HEADERS)
-    .concat(LAB_GROUP_8_YES_NO_FIELDS);
+    .concat(LAB_GROUP_8_YES_NO_FIELDS)
+    .concat(LAB_GROUP_9_YES_NO_FIELDS)
+    .concat(labGroup9SelectMultiples_().reduce(function (headers, field) {
+      return headers.concat(selectMultipleHeaders_(field.prefix, field.choices));
+    }, []))
+    .concat(LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS)
+    .concat(['maint_contract_colo_hae', 'sputum_smear', 'blood_count']);
 }
