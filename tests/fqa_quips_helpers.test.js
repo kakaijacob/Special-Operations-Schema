@@ -261,6 +261,33 @@ assert.strictEqual(
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
 );
 
+const cs = g('transformCentralStoreRecord_')({
+  _uuid: 'cs-1',
+  starttime: '2026-09-01T08:00:00',
+  endtime: '2026-09-01T09:00:00',
+  _submission_time: '2026-09-01T10:00:00',
+  'facility_profile/county': 6,
+  'facility_profile/facility': 125,
+  'facility_profile/gazetted_facility': 4,
+  'facility_profile/contact': 1,
+});
+assert.strictEqual(cs.county, 'Kakamega');
+assert.strictEqual(cs.facility, 'Kakamega County General Refferal Hospital');
+assert.strictEqual(cs.facility_level, 'Level 4');
+assert.strictEqual(cs.contact, 'Clinical officer in charge');
+assert.strictEqual(cs['facility_profile/county'], undefined);
+
+const csLegacy = g('transformCentralStoreRecord_')({
+  _uuid: 'cs-legacy',
+  _submission_time: '2025-04-01T08:00:00',
+  'facility_profile/facility': 16,
+});
+assert.strictEqual(csLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(
+  g('centralStorePreferredHeaders_')().slice(0, 8).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+);
+
 let threw = false;
 try { g('transformRecordsForSheet_')('Unknown', []); } catch (e) { threw = true; }
 assert.ok(threw);
