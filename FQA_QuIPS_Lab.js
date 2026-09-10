@@ -137,6 +137,20 @@ function labGroup3YesNoFields_() {
   return LAB_GROUP_3_REGISTER_FIELDS.concat(LAB_GROUP_3_FOLLOWUP_FIELDS);
 }
 
+/** group_4 integer counts; names drop the group_4/ prefix. */
+const LAB_GROUP_4_COUNT_FIELDS = [
+  'cert_lab_techs',
+  'contract_lab_techs',
+  'county_lab_tech_working',
+  'contract_lab_techs_working',
+];
+
+/** group_4/personnel: 1 Present / 0 Not present. */
+const LAB_PERSONNEL_MAP = {
+  1: 'Present',
+  0: 'Not present',
+};
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -163,6 +177,11 @@ const LAB_SOURCE_KEYS = (function () {
     keys['group_3/' + dest] = true;
   });
   keys['group_3/standard_lab_request'] = true;
+  LAB_GROUP_4_COUNT_FIELDS.forEach(function (dest) {
+    keys['group_4/' + dest] = true;
+  });
+  keys['group_4/personnel'] = true;
+  keys['group_4/inadequate_staff'] = true;
   return keys;
 })();
 
@@ -173,7 +192,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 / group_2 / group_3 codes. `_submission_time` is also retained as a
+   * group_1 / group_2 / group_3 / group_4 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -244,6 +263,20 @@ function transformLabRecord_(rec) {
     LAB_STANDARD_LAB_REQUEST_CHOICES
   );
 
+  LAB_GROUP_4_COUNT_FIELDS.forEach(function (dest) {
+    out[dest] = toIntegerOrBlank_(rec['group_4/' + dest]);
+  });
+
+  out.personnel = lookupCoded_(
+    rec['group_4/personnel'],
+    LAB_PERSONNEL_MAP
+  );
+
+  out.inadequate_staff = lookupCoded_(
+    rec['group_4/inadequate_staff'],
+    YES_NO_MAP
+  );
+
   return out;
 }
 
@@ -267,5 +300,7 @@ function labPreferredHeaders_() {
       LAB_STANDARD_LAB_REQUEST_PREFIX,
       LAB_STANDARD_LAB_REQUEST_CHOICES
     ))
-    .concat(LAB_GROUP_3_FOLLOWUP_FIELDS);
+    .concat(LAB_GROUP_3_FOLLOWUP_FIELDS)
+    .concat(LAB_GROUP_4_COUNT_FIELDS)
+    .concat(['personnel', 'inadequate_staff']);
 }

@@ -174,6 +174,12 @@ const lab = g('transformLabRecord_')({
   'group_3/sample_accpt_rej_form': 1,
   'group_3/temp_monitoring_form': 0,
   'group_3/quality_control_freq': 1,
+  'group_4/cert_lab_techs': 2,
+  'group_4/contract_lab_techs': 0,
+  'group_4/county_lab_tech_working': 1,
+  'group_4/contract_lab_techs_working': 3,
+  'group_4/personnel': 1,
+  'group_4/inadequate_staff': 0,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -205,6 +211,14 @@ assert.strictEqual(lab.standard_lab_request_clinical_background, 'No');
 assert.strictEqual(lab.sample_accpt_rej_form, 'Yes');
 assert.strictEqual(lab.temp_monitoring_form, 'No');
 assert.strictEqual(lab.quality_control_freq, 'Yes');
+assert.strictEqual(lab.cert_lab_techs, 2);
+assert.strictEqual(lab.contract_lab_techs, 0);
+assert.strictEqual(lab.county_lab_tech_working, 1);
+assert.strictEqual(lab.contract_lab_techs_working, 3);
+assert.strictEqual(lab.personnel, 'Present');
+assert.strictEqual(lab.inadequate_staff, 'No');
+assert.strictEqual(lab['group_4/cert_lab_techs'], undefined);
+assert.strictEqual(lab['group_4/personnel'], undefined);
 assert.strictEqual(lab['group_3/standard_lab_request'], undefined);
 assert.strictEqual(lab['group_3/lab_register'], undefined);
 assert.strictEqual(lab['group_1/county'], undefined);
@@ -221,6 +235,18 @@ assert.strictEqual(labComprehensive.units, 'Comprehensive laboratory services');
 assert.strictEqual(labComprehensive.standard_lab_request_patient_name, '');
 assert.strictEqual(labComprehensive.standard_lab_request_none, '');
 assert.strictEqual(labComprehensive.sample_accpt_rej_form, '');
+assert.strictEqual(labComprehensive.cert_lab_techs, '');
+assert.strictEqual(labComprehensive.personnel, '');
+assert.strictEqual(labComprehensive.inadequate_staff, '');
+
+const labPersonnelMissing = g('transformLabRecord_')({
+  _uuid: 'lab-personnel-0',
+  _submission_time: '2026-05-03T12:00:00',
+  'group_4/personnel': 0,
+  'group_4/inadequate_staff': 1,
+});
+assert.strictEqual(labPersonnelMissing.personnel, 'Not present');
+assert.strictEqual(labPersonnelMissing.inadequate_staff, 'Yes');
 
 const labLegacy = g('transformLabRecord_')({
   _uuid: 'lab-legacy',
@@ -236,8 +262,9 @@ const labHeaders = g('labPreferredHeaders_')();
 assert.ok(labHeaders.indexOf('via_monthly') < labHeaders.indexOf('lab_register'));
 assert.ok(labHeaders.indexOf('request_form') < labHeaders.indexOf('standard_lab_request_patient_name'));
 assert.ok(labHeaders.indexOf('standard_lab_request_none') < labHeaders.indexOf('sample_accpt_rej_form'));
-assert.strictEqual(labHeaders.slice(-18).join('|'),
-  'request_form|standard_lab_request_patient_name|standard_lab_request_patient_age_date_of_birth|standard_lab_request_patient_gender|standard_lab_request_patient_location_contact_information|standard_lab_request_name_or_unique_identifier_of_requesting_clinician|standard_lab_request_date_and_time_of_sample_collection|standard_lab_request_type_of_sample_collection_requested|standard_lab_request_clinical_background|standard_lab_request_urgency_classification|standard_lab_request_none|sample_accpt_rej_form|temp_monitoring_form|chart_filled_daily|daily_rota|rota_filled_daily|qc_register|quality_control_freq'
+assert.ok(labHeaders.indexOf('quality_control_freq') < labHeaders.indexOf('cert_lab_techs'));
+assert.strictEqual(labHeaders.slice(-6).join('|'),
+  'cert_lab_techs|contract_lab_techs|county_lab_tech_working|contract_lab_techs_working|personnel|inadequate_staff'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
