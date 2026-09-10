@@ -180,6 +180,9 @@ const lab = g('transformLabRecord_')({
   'group_4/contract_lab_techs_working': 3,
   'group_4/personnel': 1,
   'group_4/inadequate_staff': 0,
+  'group_5/training_blood_safety': 2,
+  'group_5/training_unit_biosafety': 0,
+  'group_5/training_pro_testing_HIV': 1,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -217,6 +220,10 @@ assert.strictEqual(lab.county_lab_tech_working, 1);
 assert.strictEqual(lab.contract_lab_techs_working, 3);
 assert.strictEqual(lab.personnel, 'Present');
 assert.strictEqual(lab.inadequate_staff, 'No');
+assert.strictEqual(lab.training_blood_safety, 2);
+assert.strictEqual(lab.training_unit_biosafety, 0);
+assert.strictEqual(lab.training_pro_testing_HIV, 1);
+assert.strictEqual(lab['group_5/training_blood_safety'], undefined);
 assert.strictEqual(lab['group_4/cert_lab_techs'], undefined);
 assert.strictEqual(lab['group_4/personnel'], undefined);
 assert.strictEqual(lab['group_3/standard_lab_request'], undefined);
@@ -238,6 +245,8 @@ assert.strictEqual(labComprehensive.sample_accpt_rej_form, '');
 assert.strictEqual(labComprehensive.cert_lab_techs, '');
 assert.strictEqual(labComprehensive.personnel, '');
 assert.strictEqual(labComprehensive.inadequate_staff, '');
+assert.strictEqual(labComprehensive.training_blood_safety, '');
+assert.strictEqual(labComprehensive.training_pro_testing_HIV, '');
 
 const labPersonnelMissing = g('transformLabRecord_')({
   _uuid: 'lab-personnel-0',
@@ -263,8 +272,9 @@ assert.ok(labHeaders.indexOf('via_monthly') < labHeaders.indexOf('lab_register')
 assert.ok(labHeaders.indexOf('request_form') < labHeaders.indexOf('standard_lab_request_patient_name'));
 assert.ok(labHeaders.indexOf('standard_lab_request_none') < labHeaders.indexOf('sample_accpt_rej_form'));
 assert.ok(labHeaders.indexOf('quality_control_freq') < labHeaders.indexOf('cert_lab_techs'));
-assert.strictEqual(labHeaders.slice(-6).join('|'),
-  'cert_lab_techs|contract_lab_techs|county_lab_tech_working|contract_lab_techs_working|personnel|inadequate_staff'
+assert.ok(labHeaders.indexOf('inadequate_staff') < labHeaders.indexOf('training_blood_safety'));
+assert.strictEqual(labHeaders.slice(-3).join('|'),
+  'training_blood_safety|training_unit_biosafety|training_pro_testing_HIV'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

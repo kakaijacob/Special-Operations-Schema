@@ -151,6 +151,13 @@ const LAB_PERSONNEL_MAP = {
   0: 'Not present',
 };
 
+/** group_5 training fields; names drop the group_5/ prefix. */
+const LAB_GROUP_5_TRAINING_FIELDS = [
+  'training_blood_safety',
+  'training_unit_biosafety',
+  'training_pro_testing_HIV',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -182,6 +189,9 @@ const LAB_SOURCE_KEYS = (function () {
   });
   keys['group_4/personnel'] = true;
   keys['group_4/inadequate_staff'] = true;
+  LAB_GROUP_5_TRAINING_FIELDS.forEach(function (dest) {
+    keys['group_5/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -192,7 +202,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 / group_2 / group_3 / group_4 codes. `_submission_time` is also retained as a
+   * group_1 / group_2 / group_3 / group_4 / group_5 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -277,6 +287,10 @@ function transformLabRecord_(rec) {
     YES_NO_MAP
   );
 
+  LAB_GROUP_5_TRAINING_FIELDS.forEach(function (dest) {
+    out[dest] = toIntegerOrBlank_(rec['group_5/' + dest]);
+  });
+
   return out;
 }
 
@@ -302,5 +316,6 @@ function labPreferredHeaders_() {
     ))
     .concat(LAB_GROUP_3_FOLLOWUP_FIELDS)
     .concat(LAB_GROUP_4_COUNT_FIELDS)
-    .concat(['personnel', 'inadequate_staff']);
+    .concat(['personnel', 'inadequate_staff'])
+    .concat(LAB_GROUP_5_TRAINING_FIELDS);
 }
