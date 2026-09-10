@@ -180,9 +180,29 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   _uuid: 'ph-1',
   start: '2026-06-01T01:00:00',
   _submission_time: '2026-06-01T02:00:00',
+  'facility_profile/county': 3,
+  'facility_profile/facility': 16,
+  'facility_profile/gazetted_facility': 4,
+  'facility_profile/contact': 6,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
+assert.strictEqual(routed[0].county, 'Kisii');
+assert.strictEqual(routed[0].facility, 'Kisii Teaching And Referral Hospital (Level 6)');
+assert.strictEqual(routed[0].facility_level, 'Level 4');
+assert.strictEqual(routed[0].contact, 'Medical superintendent');
+assert.strictEqual(routed[0]['facility_profile/county'], undefined);
+
+const phLegacy = g('transformPharmacyRecord_')({
+  _uuid: 'ph-legacy',
+  _submission_time: '2025-11-01T08:00:00',
+  'facility_profile/facility': 16,
+});
+assert.strictEqual(phLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(
+  g('pharmacyPreferredHeaders_')().slice(0, 8).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+);
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
 let threw = false;
