@@ -52,6 +52,39 @@ const PHARMACY_PRESENT_MAP = {
   0: 'Not present',
 };
 
+/** sop/handwashing — option 3 wording is Pharmacy-specific. */
+const PHARMACY_HANDWASHING_MAP = {
+  1: 'They have displayed, up to date protocols',
+  2: 'They have written up to date protocols, not displayed',
+  3: 'They do not have up displayed or written protocols',
+};
+
+/**
+ * train/, sop/, and sanitation/ Yes/No questions. 1 Yes / 0 No.
+ * Names drop the group prefix.
+ */
+const PHARMACY_SOP_SANITATION_YES_NO_FIELDS = [
+  { source: 'train/cpds', dest: 'cpds' },
+  { source: 'sop/request', dest: 'request' },
+  { source: 'sop/del_medication', dest: 'del_medication' },
+  { source: 'sop/sop_dispensing', dest: 'sop_dispensing' },
+  { source: 'sop/sop_expiry', dest: 'sop_expiry' },
+  { source: 'sop/moni_temp', dest: 'moni_temp' },
+  { source: 'sop/recording', dest: 'recording' },
+  { source: 'sanitation/water_consistent', dest: 'water_consistent' },
+  { source: 'sanitation/drainage', dest: 'drainage' },
+  { source: 'sanitation/sharps', dest: 'sharps' },
+  { source: 'sanitation/available_cont', dest: 'available_cont' },
+  { source: 'sanitation/visible_cont', dest: 'visible_cont' },
+];
+
+/** sanitation/soap_disp — option 3 is "Absent in all service areas". */
+const PHARMACY_SOAP_DISP_MAP = {
+  1: 'Present in ALL service areas',
+  2: 'Present in some service areas',
+  3: 'Absent in all service areas',
+};
+
 const PHARMACY_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -78,6 +111,12 @@ const PHARMACY_SOURCE_KEYS = (function () {
     keys['hrh/' + dest] = true;
   });
   keys['hrh/prese'] = true;
+  keys['sop/handwashing'] = true;
+  PHARMACY_SOP_SANITATION_YES_NO_FIELDS.forEach(function (field) {
+    keys[field.source] = true;
+  });
+  keys['sanitation/water_source'] = true;
+  keys['sanitation/soap_disp'] = true;
   return keys;
 })();
 
@@ -158,6 +197,28 @@ function transformPharmacyRecord_(rec) {
     PHARMACY_PRESENT_MAP
   );
 
+  out.handwashing = lookupCoded_(
+    rec['sop/handwashing'],
+    PHARMACY_HANDWASHING_MAP
+  );
+
+  PHARMACY_SOP_SANITATION_YES_NO_FIELDS.forEach(function (field) {
+    out[field.dest] = lookupCoded_(
+      rec[field.source],
+      YES_NO_MAP
+    );
+  });
+
+  out.water_source = lookupCoded_(
+    rec['sanitation/water_source'],
+    WATER_SOURCE_MAP
+  );
+
+  out.soap_disp = lookupCoded_(
+    rec['sanitation/soap_disp'],
+    PHARMACY_SOAP_DISP_MAP
+  );
+
   return out;
 }
 
@@ -177,5 +238,9 @@ function pharmacyPreferredHeaders_() {
     .concat(PHARMACY_RECORD_YES_NO_FIELDS)
     .concat(PHARMACY_HRH_COUNT_FIELDS)
     .concat(PHARMACY_HRH_YES_NO_FIELDS)
-    .concat(['prese']);
+    .concat(['prese', 'handwashing'])
+    .concat(PHARMACY_SOP_SANITATION_YES_NO_FIELDS.map(function (field) {
+      return field.dest;
+    }))
+    .concat(['water_source', 'soap_disp']);
 }

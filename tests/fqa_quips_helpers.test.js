@@ -556,6 +556,15 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'hrh/on_duty': 1,
   'hrh/avail_opening': 0,
   'hrh/prese': 1,
+  'sop/handwashing': 2,
+  'train/cpds': 1,
+  'sop/request': 0,
+  'sop/recording': 1,
+  'sanitation/water_consistent': 1,
+  'sanitation/drainage': 0,
+  'sanitation/visible_cont': 1,
+  'sanitation/water_source': 1,
+  'sanitation/soap_disp': 2,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -581,6 +590,19 @@ assert.strictEqual(routed[0].clinical_pharm, '');
 assert.strictEqual(routed[0].on_duty, 'Yes');
 assert.strictEqual(routed[0].avail_opening, 'No');
 assert.strictEqual(routed[0].prese, 'Present');
+assert.strictEqual(routed[0].handwashing, 'They have written up to date protocols, not displayed');
+assert.strictEqual(routed[0].cpds, 'Yes');
+assert.strictEqual(routed[0].request, 'No');
+assert.strictEqual(routed[0].recording, 'Yes');
+assert.strictEqual(routed[0].del_medication, '');
+assert.strictEqual(routed[0].water_consistent, 'Yes');
+assert.strictEqual(routed[0].drainage, 'No');
+assert.strictEqual(routed[0].visible_cont, 'Yes');
+assert.strictEqual(routed[0].water_source, 'Present, functional');
+assert.strictEqual(routed[0].soap_disp, 'Present in some service areas');
+assert.strictEqual(routed[0]['sop/handwashing'], undefined);
+assert.strictEqual(routed[0]['train/cpds'], undefined);
+assert.strictEqual(routed[0]['sanitation/water_source'], undefined);
 assert.strictEqual(routed[0]['facility_profile/unit'], undefined);
 assert.strictEqual(routed[0]['record/activity_logs'], undefined);
 assert.strictEqual(routed[0]['hrh/pharmacist'], undefined);
@@ -597,6 +619,10 @@ assert.strictEqual(phLegacy.activity_logs, '');
 assert.strictEqual(phLegacy.pharmacist, '');
 assert.strictEqual(phLegacy.on_duty, '');
 assert.strictEqual(phLegacy.prese, '');
+assert.strictEqual(phLegacy.handwashing, '');
+assert.strictEqual(phLegacy.cpds, '');
+assert.strictEqual(phLegacy.water_source, '');
+assert.strictEqual(phLegacy.soap_disp, '');
 
 const phAlias = g('transformPharmacyRecord_')({
   _uuid: 'ph-alias',
@@ -605,6 +631,9 @@ const phAlias = g('transformPharmacyRecord_')({
   'facility_profile/phone_contact': '0700000000',
   'hrh/prese': 0,
   'facility_profile/unit': '1 5 6',
+  'sop/handwashing': 1,
+  'sanitation/soap_disp': 3,
+  'sanitation/water_source': 2,
 });
 assert.strictEqual(phAlias.contact_name, 'Alias Name');
 assert.strictEqual(phAlias.phone_number, '0700000000');
@@ -613,6 +642,17 @@ assert.strictEqual(phAlias.units_outpatient_mnh_services, 'Yes');
 assert.strictEqual(phAlias.units_inpatient_bemonc_services, 'Yes');
 assert.strictEqual(phAlias.units_newborn_unit_services, 'Yes');
 assert.strictEqual(phAlias.units_pharmacy_services, 'No');
+assert.strictEqual(phAlias.handwashing, 'They have displayed, up to date protocols');
+assert.strictEqual(phAlias.soap_disp, 'Absent in all service areas');
+assert.strictEqual(phAlias.water_source, 'Present, non-functional');
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-hw-3',
+    _submission_time: '2026-06-03T08:00:00',
+    'sop/handwashing': 3,
+  }).handwashing,
+  'They do not have up displayed or written protocols'
+);
 assert.strictEqual(
   g('pharmacyPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -623,8 +663,12 @@ assert.ok(phHeaders.indexOf('units_central_store_non_pharm_commodities') < phHea
 assert.ok(phHeaders.indexOf('dda_used') < phHeaders.indexOf('pharmacist'));
 assert.ok(phHeaders.indexOf('pharmtech') < phHeaders.indexOf('on_duty'));
 assert.ok(phHeaders.indexOf('avail_opening') < phHeaders.indexOf('prese'));
+assert.ok(phHeaders.indexOf('prese') < phHeaders.indexOf('handwashing'));
+assert.ok(phHeaders.indexOf('handwashing') < phHeaders.indexOf('cpds'));
+assert.ok(phHeaders.indexOf('recording') < phHeaders.indexOf('water_consistent'));
+assert.ok(phHeaders.indexOf('visible_cont') < phHeaders.indexOf('water_source'));
 assert.strictEqual(phHeaders.slice(-3).join('|'),
-  'on_duty|avail_opening|prese'
+  'visible_cont|water_source|soap_disp'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
