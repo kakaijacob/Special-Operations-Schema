@@ -85,6 +85,45 @@ const PHARMACY_SOAP_DISP_MAP = {
   3: 'Absent in all service areas',
 };
 
+/**
+ * Infrastructure, privacy, and equipment Yes/No questions. 1 Yes / 0 No.
+ * Names drop the section prefix.
+ */
+const PHARMACY_INFRA_EQUIP_YES_NO_FIELDS = [
+  { source: 'Section_7_Infrastructure/maintained', dest: 'maintained' },
+  { source: 'Section_7_Infrastructure/barrier', dest: 'barrier' },
+  { source: 'Section_7_Infrastructure/work_tables', dest: 'work_tables' },
+  { source: 'Section_7_Infrastructure/chairs', dest: 'chairs' },
+  { source: 'Section_7_Infrastructure/cabinets', dest: 'cabinets' },
+  { source: 'Section_7_Infrastructure/storage', dest: 'storage' },
+  { source: 'Section_7_Infrastructure/wash_basin', dest: 'wash_basin' },
+  { source: 'Section_7_Infrastructure/well_lit', dest: 'well_lit' },
+  { source: 'Section_7_Infrastructure/well_vent', dest: 'well_vent' },
+  { source: 'Section_7_Infrastructure/wall_clock', dest: 'wall_clock' },
+  { source: 'Section_7_Infrastructure/certification', dest: 'certification' },
+  { source: 'Section_8_Privacy_Confidentiality/privacy', dest: 'privacy' },
+  { source: 'Section_9_Equipment/computer', dest: 'computer' },
+  { source: 'Section_9_Equipment/fridge_temp', dest: 'fridge_temp' },
+  { source: 'Section_9_Equipment/lock_cabin', dest: 'lock_cabin' },
+  { source: 'Section_9_Equipment/label', dest: 'label' },
+  { source: 'Section_9_Equipment/room_therm', dest: 'room_therm' },
+  { source: 'Section_9_Equipment/therm_readings', dest: 'therm_readings' },
+];
+
+/** Section_9_Equipment/cabinet */
+const PHARMACY_CABINET_MAP = {
+  1: 'Yes, cabinet locked today',
+  2: 'Yes, cabinet not locked today',
+  3: 'No',
+};
+
+/** Section_9_Equipment/receipt */
+const PHARMACY_RECEIPT_MAP = {
+  1: 'Yes',
+  2: 'No',
+  3: 'Not applicable',
+};
+
 const PHARMACY_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -117,6 +156,12 @@ const PHARMACY_SOURCE_KEYS = (function () {
   });
   keys['sanitation/water_source'] = true;
   keys['sanitation/soap_disp'] = true;
+  PHARMACY_INFRA_EQUIP_YES_NO_FIELDS.forEach(function (field) {
+    keys[field.source] = true;
+  });
+  keys['Section_9_Equipment/fridge'] = true;
+  keys['Section_9_Equipment/cabinet'] = true;
+  keys['Section_9_Equipment/receipt'] = true;
   return keys;
 })();
 
@@ -219,6 +264,28 @@ function transformPharmacyRecord_(rec) {
     PHARMACY_SOAP_DISP_MAP
   );
 
+  PHARMACY_INFRA_EQUIP_YES_NO_FIELDS.forEach(function (field) {
+    out[field.dest] = lookupCoded_(
+      rec[field.source],
+      YES_NO_MAP
+    );
+  });
+
+  out.fridge = lookupCoded_(
+    rec['Section_9_Equipment/fridge'],
+    EQUIP_FUNCTIONAL_MAP
+  );
+
+  out.cabinet = lookupCoded_(
+    rec['Section_9_Equipment/cabinet'],
+    PHARMACY_CABINET_MAP
+  );
+
+  out.receipt = lookupCoded_(
+    rec['Section_9_Equipment/receipt'],
+    PHARMACY_RECEIPT_MAP
+  );
+
   return out;
 }
 
@@ -242,5 +309,9 @@ function pharmacyPreferredHeaders_() {
     .concat(PHARMACY_SOP_SANITATION_YES_NO_FIELDS.map(function (field) {
       return field.dest;
     }))
-    .concat(['water_source', 'soap_disp']);
+    .concat(['water_source', 'soap_disp'])
+    .concat(PHARMACY_INFRA_EQUIP_YES_NO_FIELDS.map(function (field) {
+      return field.dest;
+    }))
+    .concat(['fridge', 'cabinet', 'receipt']);
 }

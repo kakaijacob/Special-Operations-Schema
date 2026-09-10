@@ -565,6 +565,15 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'sanitation/visible_cont': 1,
   'sanitation/water_source': 1,
   'sanitation/soap_disp': 2,
+  'Section_7_Infrastructure/maintained': 1,
+  'Section_7_Infrastructure/barrier': 0,
+  'Section_7_Infrastructure/certification': 1,
+  'Section_8_Privacy_Confidentiality/privacy': 0,
+  'Section_9_Equipment/computer': 1,
+  'Section_9_Equipment/therm_readings': 0,
+  'Section_9_Equipment/fridge': 1,
+  'Section_9_Equipment/cabinet': 2,
+  'Section_9_Equipment/receipt': 3,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -600,6 +609,18 @@ assert.strictEqual(routed[0].drainage, 'No');
 assert.strictEqual(routed[0].visible_cont, 'Yes');
 assert.strictEqual(routed[0].water_source, 'Present, functional');
 assert.strictEqual(routed[0].soap_disp, 'Present in some service areas');
+assert.strictEqual(routed[0].maintained, 'Yes');
+assert.strictEqual(routed[0].barrier, 'No');
+assert.strictEqual(routed[0].certification, 'Yes');
+assert.strictEqual(routed[0].work_tables, '');
+assert.strictEqual(routed[0].privacy, 'No');
+assert.strictEqual(routed[0].computer, 'Yes');
+assert.strictEqual(routed[0].therm_readings, 'No');
+assert.strictEqual(routed[0].fridge, 'Yes, functional');
+assert.strictEqual(routed[0].cabinet, 'Yes, cabinet not locked today');
+assert.strictEqual(routed[0].receipt, 'Not applicable');
+assert.strictEqual(routed[0]['Section_7_Infrastructure/maintained'], undefined);
+assert.strictEqual(routed[0]['Section_9_Equipment/fridge'], undefined);
 assert.strictEqual(routed[0]['sop/handwashing'], undefined);
 assert.strictEqual(routed[0]['train/cpds'], undefined);
 assert.strictEqual(routed[0]['sanitation/water_source'], undefined);
@@ -623,6 +644,10 @@ assert.strictEqual(phLegacy.handwashing, '');
 assert.strictEqual(phLegacy.cpds, '');
 assert.strictEqual(phLegacy.water_source, '');
 assert.strictEqual(phLegacy.soap_disp, '');
+assert.strictEqual(phLegacy.maintained, '');
+assert.strictEqual(phLegacy.fridge, '');
+assert.strictEqual(phLegacy.cabinet, '');
+assert.strictEqual(phLegacy.receipt, '');
 
 const phAlias = g('transformPharmacyRecord_')({
   _uuid: 'ph-alias',
@@ -634,6 +659,9 @@ const phAlias = g('transformPharmacyRecord_')({
   'sop/handwashing': 1,
   'sanitation/soap_disp': 3,
   'sanitation/water_source': 2,
+  'Section_9_Equipment/fridge': 2,
+  'Section_9_Equipment/cabinet': 1,
+  'Section_9_Equipment/receipt': 2,
 });
 assert.strictEqual(phAlias.contact_name, 'Alias Name');
 assert.strictEqual(phAlias.phone_number, '0700000000');
@@ -653,6 +681,36 @@ assert.strictEqual(
   }).handwashing,
   'They do not have up displayed or written protocols'
 );
+assert.strictEqual(phAlias.fridge, 'Yes, non-functional');
+assert.strictEqual(phAlias.cabinet, 'Yes, cabinet locked today');
+assert.strictEqual(phAlias.receipt, 'No');
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-equip-3',
+    _submission_time: '2026-06-04T08:00:00',
+    'Section_9_Equipment/fridge': 3,
+    'Section_9_Equipment/cabinet': 3,
+    'Section_9_Equipment/receipt': 1,
+  }).fridge,
+  'No'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-equip-3b',
+    _submission_time: '2026-06-04T08:00:00',
+    'Section_9_Equipment/cabinet': 3,
+    'Section_9_Equipment/receipt': 1,
+  }).cabinet,
+  'No'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-equip-3c',
+    _submission_time: '2026-06-04T08:00:00',
+    'Section_9_Equipment/receipt': 1,
+  }).receipt,
+  'Yes'
+);
 assert.strictEqual(
   g('pharmacyPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -667,8 +725,12 @@ assert.ok(phHeaders.indexOf('prese') < phHeaders.indexOf('handwashing'));
 assert.ok(phHeaders.indexOf('handwashing') < phHeaders.indexOf('cpds'));
 assert.ok(phHeaders.indexOf('recording') < phHeaders.indexOf('water_consistent'));
 assert.ok(phHeaders.indexOf('visible_cont') < phHeaders.indexOf('water_source'));
+assert.ok(phHeaders.indexOf('soap_disp') < phHeaders.indexOf('maintained'));
+assert.ok(phHeaders.indexOf('certification') < phHeaders.indexOf('privacy'));
+assert.ok(phHeaders.indexOf('privacy') < phHeaders.indexOf('computer'));
+assert.ok(phHeaders.indexOf('therm_readings') < phHeaders.indexOf('fridge'));
 assert.strictEqual(phHeaders.slice(-3).join('|'),
-  'visible_cont|water_source|soap_disp'
+  'fridge|cabinet|receipt'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
