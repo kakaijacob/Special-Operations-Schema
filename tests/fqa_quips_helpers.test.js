@@ -546,6 +546,16 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'facility_profile/contact': 6,
   'group_1/nam_contact': 'Paul Pharmacy',
   'group_1/phone_contact': '0722222222',
+  'facility_profile/unit': '2 8',
+  'record/activity_logs': 1,
+  'record/activity_used': 0,
+  'record/dda_used': 1,
+  'hrh/pharmacist': 2,
+  'hrh/pharmce': 0,
+  'hrh/pharmtech': 4,
+  'hrh/on_duty': 1,
+  'hrh/avail_opening': 0,
+  'hrh/prese': 1,
 }]);
 assert.strictEqual(routed.length, 1);
 assert.strictEqual(routed[0]._uuid, 'ph-1');
@@ -556,6 +566,25 @@ assert.strictEqual(routed[0].contact, 'Medical superintendent');
 assert.strictEqual(routed[0].contact_name, 'Paul Pharmacy');
 assert.strictEqual(routed[0].phone_number, '0722222222');
 assert.strictEqual(routed[0]['facility_profile/county'], undefined);
+assert.strictEqual(routed[0].units_pharmacy_services, 'Yes');
+assert.strictEqual(routed[0].units_outpatient_mnh_services, 'No');
+assert.strictEqual(routed[0].units_central_store_non_pharm_commodities, 'Yes');
+assert.strictEqual(routed[0].units_newborn_unit_services, 'No');
+assert.strictEqual(routed[0].activity_logs, 'Yes');
+assert.strictEqual(routed[0].activity_used, 'No');
+assert.strictEqual(routed[0].dda_used, 'Yes');
+assert.strictEqual(routed[0].workload, '');
+assert.strictEqual(routed[0].pharmacist, 2);
+assert.strictEqual(routed[0].pharmce, 0);
+assert.strictEqual(routed[0].pharmtech, 4);
+assert.strictEqual(routed[0].clinical_pharm, '');
+assert.strictEqual(routed[0].on_duty, 'Yes');
+assert.strictEqual(routed[0].avail_opening, 'No');
+assert.strictEqual(routed[0].prese, 'Present');
+assert.strictEqual(routed[0]['facility_profile/unit'], undefined);
+assert.strictEqual(routed[0]['record/activity_logs'], undefined);
+assert.strictEqual(routed[0]['hrh/pharmacist'], undefined);
+assert.strictEqual(routed[0]['hrh/prese'], undefined);
 
 const phLegacy = g('transformPharmacyRecord_')({
   _uuid: 'ph-legacy',
@@ -563,18 +592,39 @@ const phLegacy = g('transformPharmacyRecord_')({
   'facility_profile/facility': 16,
 });
 assert.strictEqual(phLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(phLegacy.units_pharmacy_services, '');
+assert.strictEqual(phLegacy.activity_logs, '');
+assert.strictEqual(phLegacy.pharmacist, '');
+assert.strictEqual(phLegacy.on_duty, '');
+assert.strictEqual(phLegacy.prese, '');
 
 const phAlias = g('transformPharmacyRecord_')({
   _uuid: 'ph-alias',
   _submission_time: '2026-06-02T08:00:00',
   'facility_profile/nam_contact': 'Alias Name',
   'facility_profile/phone_contact': '0700000000',
+  'hrh/prese': 0,
+  'facility_profile/unit': '1 5 6',
 });
 assert.strictEqual(phAlias.contact_name, 'Alias Name');
 assert.strictEqual(phAlias.phone_number, '0700000000');
+assert.strictEqual(phAlias.prese, 'Not present');
+assert.strictEqual(phAlias.units_outpatient_mnh_services, 'Yes');
+assert.strictEqual(phAlias.units_inpatient_bemonc_services, 'Yes');
+assert.strictEqual(phAlias.units_newborn_unit_services, 'Yes');
+assert.strictEqual(phAlias.units_pharmacy_services, 'No');
 assert.strictEqual(
   g('pharmacyPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
+);
+const phHeaders = g('pharmacyPreferredHeaders_')();
+assert.ok(phHeaders.indexOf('phone_number') < phHeaders.indexOf('units_outpatient_mnh_services'));
+assert.ok(phHeaders.indexOf('units_central_store_non_pharm_commodities') < phHeaders.indexOf('activity_logs'));
+assert.ok(phHeaders.indexOf('dda_used') < phHeaders.indexOf('pharmacist'));
+assert.ok(phHeaders.indexOf('pharmtech') < phHeaders.indexOf('on_duty'));
+assert.ok(phHeaders.indexOf('avail_opening') < phHeaders.indexOf('prese'));
+assert.strictEqual(phHeaders.slice(-3).join('|'),
+  'on_duty|avail_opening|prese'
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
