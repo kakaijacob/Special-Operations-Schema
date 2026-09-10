@@ -151,10 +151,30 @@ const lab = g('transformLabRecord_')({
   starttime: '2026-05-01T11:00:00',
   endtime: '2026-05-01T11:30:00',
   _submission_time: '2026-05-01T12:00:00',
+  'group_1/county': 4,
+  'group_1/facility': 80,
+  'group_1/gazetted': 3,
+  'group_1/contact': 2,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
 assert.ok(lab.date_started.indexOf('2026-05-01') === 0);
+assert.strictEqual(lab.county, 'Nakuru');
+assert.strictEqual(lab.facility, 'Bahati Sub County Hospital');
+assert.strictEqual(lab.facility_level, 'Level 3');
+assert.strictEqual(lab.contact, 'Nursing officer in charge');
+assert.strictEqual(lab['group_1/county'], undefined);
+
+const labLegacy = g('transformLabRecord_')({
+  _uuid: 'lab-legacy',
+  _submission_time: '2025-12-15T12:00:00',
+  'group_1/facility': 80,
+});
+assert.strictEqual(labLegacy.facility, 'Matiliku Sub County Hospital');
+assert.strictEqual(
+  g('labPreferredHeaders_')().slice(0, 8).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+);
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   _uuid: 'ph-1',
