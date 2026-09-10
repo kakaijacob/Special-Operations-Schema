@@ -211,6 +211,7 @@ const lab = g('transformLabRecord_')({
   'group_8/safety_cabinents8': 1,
   'group_8/well_ventilated': 0,
   'group_8/access_disabled': 1,
+  'group_8/evidence8': 0,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -287,7 +288,9 @@ assert.strictEqual(lab.working_tables8, 'No');
 assert.strictEqual(lab.safety_cabinents8, 'Yes');
 assert.strictEqual(lab.well_ventilated, 'No');
 assert.strictEqual(lab.access_disabled, 'Yes');
+assert.strictEqual(lab.evidence8, 'No');
 assert.strictEqual(lab.chairs_staff8, '');
+assert.strictEqual(lab['group_8/evidence8'], undefined);
 assert.strictEqual(lab['group_8/waiting_area8'], undefined);
 assert.strictEqual(lab['group_7/water_source'], undefined);
 assert.strictEqual(lab['group_7/soap_available'], undefined);
@@ -332,6 +335,7 @@ assert.strictEqual(labComprehensive.soap_available, '');
 assert.strictEqual(labComprehensive.sharp_container_full, '');
 assert.strictEqual(labComprehensive.waiting_area8, '');
 assert.strictEqual(labComprehensive.access_disabled, '');
+assert.strictEqual(labComprehensive.evidence8, '');
 
 const labSoapNone = g('transformLabRecord_')({
   _uuid: 'lab-soap-3',
@@ -397,8 +401,9 @@ assert.ok(labHeaders.indexOf('specimen_collection_none') < labHeaders.indexOf('g
 assert.ok(labHeaders.indexOf('stock_inv_control_reagents') < labHeaders.indexOf('confirm_sops_abo_blood_group_and_rh_testing'));
 assert.ok(labHeaders.indexOf('confirm_sops_via_testing') < labHeaders.indexOf('water_source'));
 assert.ok(labHeaders.indexOf('sharp_container_full') < labHeaders.indexOf('waiting_area8'));
-assert.strictEqual(labHeaders.slice(-15).join('|'),
-  'waiting_area8|working_tables8|chairs_staff8|safety_cabinents8|storage_shelves8|wash_basin8|well_lit8|well_ventilated|wall_clock|wall_thermometer|designated_spaces|special_area_samples|lockable_doors8|certification|access_disabled'
+assert.ok(labHeaders.indexOf('access_disabled') < labHeaders.indexOf('evidence8'));
+assert.strictEqual(labHeaders.slice(-16).join('|'),
+  'waiting_area8|working_tables8|chairs_staff8|safety_cabinents8|storage_shelves8|wash_basin8|well_lit8|well_ventilated|wall_clock|wall_thermometer|designated_spaces|special_area_samples|lockable_doors8|certification|access_disabled|evidence8'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

@@ -306,6 +306,7 @@ const LAB_GROUP_8_YES_NO_FIELDS = [
   'lockable_doors8',
   'certification',
   'access_disabled',
+  'evidence8',
 ];
 
 function labGroup2Map_(dest) {
