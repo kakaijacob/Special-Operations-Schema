@@ -451,6 +451,95 @@ const LAB_BLOOD_COUNT_MAP = {
   3: 'Full blood count not available in this unit',
 };
 
+/**
+ * group_10 select_one supplies. 1 Always available / 2 Sometimes available /
+ * 3 Never available. Names drop the group_10/ prefix.
+ */
+const LAB_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP = {
+  1: 'Always available',
+  2: 'Sometimes available',
+  3: 'Never available',
+};
+
+const LAB_GROUP_10_FIELDS = [
+  'portable_cool_boxes',
+  'stool_polypot',
+  'urine_container',
+  'pipettes',
+  'scalp_vein_set',
+  'pdt_test_blood',
+  'urine_strips',
+  'rota_adeno_virus',
+  'sat_antigen_test',
+  'h_pylori_antibody',
+  'h_pylori_antigen',
+  'malaria_antigen',
+  'vdrl_test_kit',
+  'hbsag_test_kit',
+  'plain_vacutainers',
+  'red_top_microcontainers',
+  'edta_vacutainer',
+  'edta_microtainers',
+  'glass_slides',
+  'alcohol_swabs',
+  'auto_tips',
+  'dri_biochem_test',
+  'vaginal_swab',
+  'yellow_blue_tips',
+  'latex_gloves',
+  'glucometer_test_strips',
+  'wright_parasite_stain',
+  'urine_ketone_bodies',
+  'filter_paper',
+  'cover_for_microscopy',
+  'malaria_diag_kit',
+  'syphillis_diag_kit',
+  'hiv_test_kit',
+  'urine_test_kit10',
+  'serum_electrolyete',
+  'gram_stains_available',
+  'cryptococcal_antigen',
+  'anti_a',
+  'anti_d',
+  'anti_b',
+  'anti_ab',
+  'agh_confirmation',
+  'creatinine',
+  'bun',
+  'electrolytes',
+  'reference_fluid',
+  'total_bilirubin',
+  'direct_bilirubin',
+  'got',
+  'gpt',
+  'ggt',
+  'alp',
+  'total_protein',
+  'albumin',
+  'calcium',
+  'inorganic_phosporous',
+  'crp',
+  'culture_bacteriology',
+  'bacterioscopy',
+  'blood_culture10',
+  'blood_glucose',
+  'rh_factor_tests',
+  'coagulation_test10',
+  'haemoglobin_det',
+  'hep_B_testing',
+  'random_blood_sugar',
+  'syphilis_tests',
+  'urinalysis',
+  'peripheral_blood_film',
+  'bacillus_aafb',
+  'grouping_crossmatch_bottles',
+  'packed_red_blood_cells',
+  'ffp_all_types',
+  'platlets_all_types',
+  'whole_all_types',
+  'type_o',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -517,6 +606,9 @@ const LAB_SOURCE_KEYS = (function () {
   keys['group_9/maint_contract_colo_hae'] = true;
   keys['group_9/sputum_smear'] = true;
   keys['group_9/blood_count'] = true;
+  LAB_GROUP_10_FIELDS.forEach(function (dest) {
+    keys['group_10/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -527,7 +619,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_9 codes. `_submission_time` is also retained as a
+   * group_1 through group_10 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -761,6 +853,13 @@ function transformLabRecord_(rec) {
     LAB_BLOOD_COUNT_MAP
   );
 
+  LAB_GROUP_10_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_10/' + dest],
+      LAB_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP
+    );
+  });
+
   return out;
 }
 
@@ -807,5 +906,6 @@ function labPreferredHeaders_() {
       return headers.concat(selectMultipleHeaders_(field.prefix, field.choices));
     }, []))
     .concat(LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS)
-    .concat(['maint_contract_colo_hae', 'sputum_smear', 'blood_count']);
+    .concat(['maint_contract_colo_hae', 'sputum_smear', 'blood_count'])
+    .concat(LAB_GROUP_10_FIELDS);
 }
