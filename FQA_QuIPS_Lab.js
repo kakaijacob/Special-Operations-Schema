@@ -87,8 +87,11 @@ const LAB_GROUP_2_FIELDS = [
   { source: 'group_2/via_monthly', dest: 'via_monthly' },
 ];
 
-/** group_3 register questions: 1 Yes / 0 No, names without the group_3/ prefix. */
-const LAB_GROUP_3_FIELDS = [
+/**
+ * group_3 Yes/No questions before the standard lab request multi.
+ * Names drop the group_3/ prefix. 1 Yes / 0 No.
+ */
+const LAB_GROUP_3_REGISTER_FIELDS = [
   'lab_register',
   'lab_register_used',
   'lab_summary_register',
@@ -100,6 +103,39 @@ const LAB_GROUP_3_FIELDS = [
   'referral_register',
   'request_form',
 ];
+
+/**
+ * select_multiple: group_3/standard_lab_request
+ * Columns: standard_lab_request_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_STANDARD_LAB_REQUEST_PREFIX = 'standard_lab_request';
+const LAB_STANDARD_LAB_REQUEST_CHOICES = [
+  { code: '1', slug: 'patient_name' },
+  { code: '2', slug: 'patient_age_date_of_birth' },
+  { code: '3', slug: 'patient_gender' },
+  { code: '4', slug: 'patient_location_contact_information' },
+  { code: '5', slug: 'name_or_unique_identifier_of_requesting_clinician' },
+  { code: '6', slug: 'date_and_time_of_sample_collection' },
+  { code: '7', slug: 'type_of_sample_collection_requested' },
+  { code: '8', slug: 'clinical_background' },
+  { code: '9', slug: 'urgency_classification' },
+  { code: '10', slug: 'none' },
+];
+
+/** group_3 Yes/No questions after the standard lab request multi. */
+const LAB_GROUP_3_FOLLOWUP_FIELDS = [
+  'sample_accpt_rej_form',
+  'temp_monitoring_form',
+  'chart_filled_daily',
+  'daily_rota',
+  'rota_filled_daily',
+  'qc_register',
+  'quality_control_freq',
+];
+
+function labGroup3YesNoFields_() {
+  return LAB_GROUP_3_REGISTER_FIELDS.concat(LAB_GROUP_3_FOLLOWUP_FIELDS);
+}
 
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
@@ -123,9 +159,10 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_2_FIELDS.forEach(function (field) {
     keys[field.source] = true;
   });
-  LAB_GROUP_3_FIELDS.forEach(function (dest) {
+  labGroup3YesNoFields_().forEach(function (dest) {
     keys['group_3/' + dest] = true;
   });
+  keys['group_3/standard_lab_request'] = true;
   return keys;
 })();
 
@@ -193,12 +230,19 @@ function transformLabRecord_(rec) {
     );
   });
 
-  LAB_GROUP_3_FIELDS.forEach(function (dest) {
+  labGroup3YesNoFields_().forEach(function (dest) {
     out[dest] = lookupCoded_(
       rec['group_3/' + dest],
       YES_NO_MAP
     );
   });
+
+  expandSelectMultiple_(
+    out,
+    rec['group_3/standard_lab_request'],
+    LAB_STANDARD_LAB_REQUEST_PREFIX,
+    LAB_STANDARD_LAB_REQUEST_CHOICES
+  );
 
   return out;
 }
@@ -218,5 +262,10 @@ function labPreferredHeaders_() {
     'units',
   ].concat(LAB_GROUP_2_FIELDS.map(function (field) {
     return field.dest;
-  })).concat(LAB_GROUP_3_FIELDS);
+  })).concat(LAB_GROUP_3_REGISTER_FIELDS)
+    .concat(selectMultipleHeaders_(
+      LAB_STANDARD_LAB_REQUEST_PREFIX,
+      LAB_STANDARD_LAB_REQUEST_CHOICES
+    ))
+    .concat(LAB_GROUP_3_FOLLOWUP_FIELDS);
 }

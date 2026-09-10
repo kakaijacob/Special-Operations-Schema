@@ -170,6 +170,10 @@ const lab = g('transformLabRecord_')({
   'group_3/lab_register': 1,
   'group_3/lab_register_used': 0,
   'group_3/request_form': 1,
+  'group_3/standard_lab_request': '1 3 10',
+  'group_3/sample_accpt_rej_form': 1,
+  'group_3/temp_monitoring_form': 0,
+  'group_3/quality_control_freq': 1,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -193,6 +197,15 @@ assert.strictEqual(lab.HPV_testing_monthly, 'Yes');
 assert.strictEqual(lab.lab_register, 'Yes');
 assert.strictEqual(lab.lab_register_used, 'No');
 assert.strictEqual(lab.request_form, 'Yes');
+assert.strictEqual(lab.standard_lab_request_patient_name, 'Yes');
+assert.strictEqual(lab.standard_lab_request_patient_age_date_of_birth, 'No');
+assert.strictEqual(lab.standard_lab_request_patient_gender, 'Yes');
+assert.strictEqual(lab.standard_lab_request_none, 'Yes');
+assert.strictEqual(lab.standard_lab_request_clinical_background, 'No');
+assert.strictEqual(lab.sample_accpt_rej_form, 'Yes');
+assert.strictEqual(lab.temp_monitoring_form, 'No');
+assert.strictEqual(lab.quality_control_freq, 'Yes');
+assert.strictEqual(lab['group_3/standard_lab_request'], undefined);
 assert.strictEqual(lab['group_3/lab_register'], undefined);
 assert.strictEqual(lab['group_1/county'], undefined);
 assert.strictEqual(lab['group_1/nam_contact'], undefined);
@@ -205,6 +218,9 @@ const labComprehensive = g('transformLabRecord_')({
   'group_1/units': 4,
 });
 assert.strictEqual(labComprehensive.units, 'Comprehensive laboratory services');
+assert.strictEqual(labComprehensive.standard_lab_request_patient_name, '');
+assert.strictEqual(labComprehensive.standard_lab_request_none, '');
+assert.strictEqual(labComprehensive.sample_accpt_rej_form, '');
 
 const labLegacy = g('transformLabRecord_')({
   _uuid: 'lab-legacy',
@@ -218,8 +234,10 @@ assert.strictEqual(
 );
 const labHeaders = g('labPreferredHeaders_')();
 assert.ok(labHeaders.indexOf('via_monthly') < labHeaders.indexOf('lab_register'));
-assert.strictEqual(labHeaders.slice(-10).join('|'),
-  'lab_register|lab_register_used|lab_summary_register|summary_reg_used|consumption_register|consumption_reg_used|hts_register|hts_reg_used|referral_register|request_form'
+assert.ok(labHeaders.indexOf('request_form') < labHeaders.indexOf('standard_lab_request_patient_name'));
+assert.ok(labHeaders.indexOf('standard_lab_request_none') < labHeaders.indexOf('sample_accpt_rej_form'));
+assert.strictEqual(labHeaders.slice(-18).join('|'),
+  'request_form|standard_lab_request_patient_name|standard_lab_request_patient_age_date_of_birth|standard_lab_request_patient_gender|standard_lab_request_patient_location_contact_information|standard_lab_request_name_or_unique_identifier_of_requesting_clinician|standard_lab_request_date_and_time_of_sample_collection|standard_lab_request_type_of_sample_collection_requested|standard_lab_request_clinical_background|standard_lab_request_urgency_classification|standard_lab_request_none|sample_accpt_rej_form|temp_monitoring_form|chart_filled_daily|daily_rota|rota_filled_daily|qc_register|quality_control_freq'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
