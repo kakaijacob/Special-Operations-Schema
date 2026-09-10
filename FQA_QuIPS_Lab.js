@@ -158,6 +158,12 @@ const LAB_GROUP_5_TRAINING_FIELDS = [
   'training_pro_testing_HIV',
 ];
 
+/** group_5 Yes/No questions. 1 Yes / 0 No. */
+const LAB_GROUP_5_YES_NO_FIELDS = [
+  'yearly_cpd',
+  'eqa',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -190,6 +196,9 @@ const LAB_SOURCE_KEYS = (function () {
   keys['group_4/personnel'] = true;
   keys['group_4/inadequate_staff'] = true;
   LAB_GROUP_5_TRAINING_FIELDS.forEach(function (dest) {
+    keys['group_5/' + dest] = true;
+  });
+  LAB_GROUP_5_YES_NO_FIELDS.forEach(function (dest) {
     keys['group_5/' + dest] = true;
   });
   return keys;
@@ -291,6 +300,13 @@ function transformLabRecord_(rec) {
     out[dest] = toIntegerOrBlank_(rec['group_5/' + dest]);
   });
 
+  LAB_GROUP_5_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_5/' + dest],
+      YES_NO_MAP
+    );
+  });
+
   return out;
 }
 
@@ -317,5 +333,6 @@ function labPreferredHeaders_() {
     .concat(LAB_GROUP_3_FOLLOWUP_FIELDS)
     .concat(LAB_GROUP_4_COUNT_FIELDS)
     .concat(['personnel', 'inadequate_staff'])
-    .concat(LAB_GROUP_5_TRAINING_FIELDS);
+    .concat(LAB_GROUP_5_TRAINING_FIELDS)
+    .concat(LAB_GROUP_5_YES_NO_FIELDS);
 }

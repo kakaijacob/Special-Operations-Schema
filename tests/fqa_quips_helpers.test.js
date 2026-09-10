@@ -183,6 +183,8 @@ const lab = g('transformLabRecord_')({
   'group_5/training_blood_safety': 2,
   'group_5/training_unit_biosafety': 0,
   'group_5/training_pro_testing_HIV': 1,
+  'group_5/yearly_cpd': 1,
+  'group_5/eqa': 0,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -223,6 +225,9 @@ assert.strictEqual(lab.inadequate_staff, 'No');
 assert.strictEqual(lab.training_blood_safety, 2);
 assert.strictEqual(lab.training_unit_biosafety, 0);
 assert.strictEqual(lab.training_pro_testing_HIV, 1);
+assert.strictEqual(lab.yearly_cpd, 'Yes');
+assert.strictEqual(lab.eqa, 'No');
+assert.strictEqual(lab['group_5/yearly_cpd'], undefined);
 assert.strictEqual(lab['group_5/training_blood_safety'], undefined);
 assert.strictEqual(lab['group_4/cert_lab_techs'], undefined);
 assert.strictEqual(lab['group_4/personnel'], undefined);
@@ -247,6 +252,8 @@ assert.strictEqual(labComprehensive.personnel, '');
 assert.strictEqual(labComprehensive.inadequate_staff, '');
 assert.strictEqual(labComprehensive.training_blood_safety, '');
 assert.strictEqual(labComprehensive.training_pro_testing_HIV, '');
+assert.strictEqual(labComprehensive.yearly_cpd, '');
+assert.strictEqual(labComprehensive.eqa, '');
 
 const labPersonnelMissing = g('transformLabRecord_')({
   _uuid: 'lab-personnel-0',
@@ -273,8 +280,9 @@ assert.ok(labHeaders.indexOf('request_form') < labHeaders.indexOf('standard_lab_
 assert.ok(labHeaders.indexOf('standard_lab_request_none') < labHeaders.indexOf('sample_accpt_rej_form'));
 assert.ok(labHeaders.indexOf('quality_control_freq') < labHeaders.indexOf('cert_lab_techs'));
 assert.ok(labHeaders.indexOf('inadequate_staff') < labHeaders.indexOf('training_blood_safety'));
-assert.strictEqual(labHeaders.slice(-3).join('|'),
-  'training_blood_safety|training_unit_biosafety|training_pro_testing_HIV'
+assert.ok(labHeaders.indexOf('training_pro_testing_HIV') < labHeaders.indexOf('yearly_cpd'));
+assert.strictEqual(labHeaders.slice(-5).join('|'),
+  'training_blood_safety|training_unit_biosafety|training_pro_testing_HIV|yearly_cpd|eqa'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
