@@ -205,6 +205,35 @@ assert.strictEqual(
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
+const fg = g('transformFacilityGeneralRecord_')({
+  _uuid: 'fg-1',
+  starttime: '2026-07-01T09:00:00',
+  endtime: '2026-07-01T10:00:00',
+  _submission_time: '2026-07-01T11:00:00',
+  'facility_profile/county': 5,
+  'facility_profile/facilities': 109,
+  'facility_profile/gazetted_facility': 4,
+  'facility_profile/contact': 3,
+  leftover_fg: 'keep',
+});
+assert.strictEqual(fg.county, "Murang'a");
+assert.strictEqual(fg.facility, "Murang'a County Referal Hospital");
+assert.strictEqual(fg.facility_level, 'Level 4');
+assert.strictEqual(fg.contact, 'Facility in charge');
+assert.strictEqual(fg.leftover_fg, 'keep');
+assert.strictEqual(fg['facility_profile/facilities'], undefined);
+
+const fgLegacy = g('transformFacilityGeneralRecord_')({
+  _uuid: 'fg-legacy',
+  _submission_time: '2025-06-01T08:00:00',
+  'facility_profile/facilities': 16,
+});
+assert.strictEqual(fgLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(
+  g('facilityGeneralPreferredHeaders_')().slice(0, 8).join('|'),
+  '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact'
+);
+
 let threw = false;
 try { g('transformRecordsForSheet_')('Unknown', []); } catch (e) { threw = true; }
 assert.ok(threw);
