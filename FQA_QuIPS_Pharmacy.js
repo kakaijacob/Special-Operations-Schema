@@ -131,6 +131,14 @@ const PHARMACY_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP = {
   3: 'Never available',
 };
 
+/** Section_10_Commodities/nutrition */
+const PHARMACY_NUTRITION_MAP = {
+  1: 'Always available',
+  2: 'Available in nutrition unit',
+  3: 'Sometimes available',
+  4: 'Never available',
+};
+
 const PHARMACY_COMMODITY_AVAIL_FIELDS = [
   'prescription',
   'latex',
@@ -421,6 +429,7 @@ const PHARMACY_SOURCE_KEYS = (function () {
   PHARMACY_COMMODITY_AVAIL_FIELDS.forEach(function (dest) {
     keys[pharmacyCommoditySource_(dest)] = true;
   });
+  keys['Section_10_Commodities/nutrition'] = true;
   PHARMACY_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
     keys[pharmacyCommoditySource_(dest)] = true;
   });
@@ -555,6 +564,11 @@ function transformPharmacyRecord_(rec) {
     );
   });
 
+  out.nutrition = lookupCoded_(
+    rec['Section_10_Commodities/nutrition'],
+    PHARMACY_NUTRITION_MAP
+  );
+
   PHARMACY_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
     const raw = rec[pharmacyCommoditySource_(dest)];
     if ((dest === 'dda_used' || dest === 'wall_clock') &&
@@ -593,5 +607,6 @@ function pharmacyPreferredHeaders_() {
     }))
     .concat(['fridge', 'cabinet', 'receipt'])
     .concat(PHARMACY_COMMODITY_AVAIL_FIELDS)
+    .concat(['nutrition'])
     .concat(PHARMACY_COMMODITY_YES_NO_FIELDS);
 }

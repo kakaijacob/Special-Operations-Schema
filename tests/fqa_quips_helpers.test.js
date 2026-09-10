@@ -577,6 +577,7 @@ const routed = g('transformRecordsForSheet_')('Pharmacy', [{
   'Section_10_Commodities/prescription': 1,
   'Section_10_Commodities/iron_tab': 2,
   'Section_10_Commodities/fe_condoms': 3,
+  'Section_10_Commodities/nutrition': 2,
   'Section_10_Commodities/chlorxidine': 1,
   'Section_10_Commodities/Iv_hydro_freq': 1,
   'Section_10_Commodities/iron_freq': 0,
@@ -630,6 +631,7 @@ assert.strictEqual(routed[0].receipt, 'Not applicable');
 assert.strictEqual(routed[0].prescription, 'Always available');
 assert.strictEqual(routed[0].iron_tab, 'Sometimes available');
 assert.strictEqual(routed[0].fe_condoms, 'Never available');
+assert.strictEqual(routed[0].nutrition, 'Available in nutrition unit');
 assert.strictEqual(routed[0].chlorxidine, 'Always available');
 assert.strictEqual(routed[0].latex, '');
 assert.strictEqual(routed[0].Iv_hydro_freq, 'Yes');
@@ -668,6 +670,7 @@ assert.strictEqual(phLegacy.maintained, '');
 assert.strictEqual(phLegacy.fridge, '');
 assert.strictEqual(phLegacy.cabinet, '');
 assert.strictEqual(phLegacy.receipt, '');
+assert.strictEqual(phLegacy.nutrition, '');
 assert.strictEqual(phLegacy.prescription, '');
 assert.strictEqual(phLegacy.iron_freq, '');
 assert.strictEqual(phLegacy.Iv_hydro_freq, '');
@@ -711,6 +714,30 @@ assert.strictEqual(
 assert.strictEqual(phAlias.fridge, 'Yes, non-functional');
 assert.strictEqual(phAlias.cabinet, 'Yes, cabinet locked today');
 assert.strictEqual(phAlias.receipt, 'No');
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-nutrition-4',
+    _submission_time: '2026-06-06T08:00:00',
+    'Section_10_Commodities/nutrition': 4,
+  }).nutrition,
+  'Never available'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-nutrition-3',
+    _submission_time: '2026-06-06T08:00:00',
+    'Section_10_Commodities/nutrition': 3,
+  }).nutrition,
+  'Sometimes available'
+);
+assert.strictEqual(
+  g('transformPharmacyRecord_')({
+    _uuid: 'ph-nutrition-1',
+    _submission_time: '2026-06-06T08:00:00',
+    'Section_10_Commodities/nutrition': 1,
+  }).nutrition,
+  'Always available'
+);
 assert.strictEqual(phAlias.artesunete, 'Sometimes available');
 assert.strictEqual(phAlias.pyrizimomide, 'Never available');
 assert.strictEqual(phAlias.dda_used, 'Yes');
@@ -771,7 +798,8 @@ assert.ok(phHeaders.indexOf('certification') < phHeaders.indexOf('privacy'));
 assert.ok(phHeaders.indexOf('privacy') < phHeaders.indexOf('computer'));
 assert.ok(phHeaders.indexOf('therm_readings') < phHeaders.indexOf('fridge'));
 assert.ok(phHeaders.indexOf('receipt') < phHeaders.indexOf('prescription'));
-assert.ok(phHeaders.indexOf('fe_condoms') < phHeaders.indexOf('iron_freq'));
+assert.ok(phHeaders.indexOf('fe_condoms') < phHeaders.indexOf('nutrition'));
+assert.ok(phHeaders.indexOf('nutrition') < phHeaders.indexOf('iron_freq'));
 assert.ok(phHeaders.indexOf('Iv_hydro_freq') < phHeaders.indexOf('oxy_store'));
 assert.strictEqual(phHeaders.slice(-3).join('|'),
   'depo_freq|cond_freq|fe_cond_freq'
