@@ -230,6 +230,12 @@ const lab = g('transformLabRecord_')({
   'group_10/inorganic_phosporous': 1,
   'group_10/platlets_all_types': 2,
   'group_10/type_o': 3,
+  'group_11/internal_control_iqc': 1,
+  'group_11/external_contrlol_eqc': 0,
+  'group_11/fridge_used11': 1,
+  'group_11/temp_record_monitor': 0,
+  'group_11/tincl_lab_report': '1 9',
+  'group_11/tblood_product_labels': '3 4',
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -330,8 +336,23 @@ assert.strictEqual(lab.serum_electrolyete, 'Never available');
 assert.strictEqual(lab.inorganic_phosporous, 'Always available');
 assert.strictEqual(lab.platlets_all_types, 'Sometimes available');
 assert.strictEqual(lab.type_o, 'Never available');
+assert.strictEqual(lab.internal_control_iqc, 'Yes');
+assert.strictEqual(lab.external_contrlol_eqc, 'No');
+assert.strictEqual(lab.fridge_used11, 'Yes');
+assert.strictEqual(lab.temp_record_monitor, 'No');
+assert.strictEqual(lab.tincl_lab_report_examination_performed, 'Yes');
+assert.strictEqual(lab.tincl_lab_report_patient_identification, 'No');
+assert.strictEqual(lab.tincl_lab_report_none, 'Yes');
+assert.strictEqual(lab.tblood_product_labels_name_of_the_blood_product, 'No');
+assert.strictEqual(lab.tblood_product_labels_blood_type_abo_and_rh_factor, 'Yes');
+assert.strictEqual(lab.tblood_product_labels_batch_number, 'Yes');
+assert.strictEqual(lab.tblood_product_labels_none, 'No');
+assert.strictEqual(lab.stand_lab_report, '');
 assert.strictEqual(lab.stool_polypot, '');
 assert.strictEqual(lab.ziehl_stain_bright_field_microscope, '');
+assert.strictEqual(lab['group_11/internal_control_iqc'], undefined);
+assert.strictEqual(lab['group_11/tincl_lab_report'], undefined);
+assert.strictEqual(lab['group_11/tblood_product_labels'], undefined);
 assert.strictEqual(lab['group_10/portable_cool_boxes'], undefined);
 assert.strictEqual(lab['group_10/type_o'], undefined);
 assert.strictEqual(lab['group_9/PPE_equipment'], undefined);
@@ -389,6 +410,10 @@ assert.strictEqual(labComprehensive.available_pipettes, '');
 assert.strictEqual(labComprehensive.blood_count, '');
 assert.strictEqual(labComprehensive.portable_cool_boxes, '');
 assert.strictEqual(labComprehensive.type_o, '');
+assert.strictEqual(labComprehensive.internal_control_iqc, '');
+assert.strictEqual(labComprehensive.external_contrlol_eqc, '');
+assert.strictEqual(labComprehensive.tincl_lab_report_none, '');
+assert.strictEqual(labComprehensive.tblood_product_labels_none, '');
 
 const labBloodCountNone = g('transformLabRecord_')({
   _uuid: 'lab-bc-3',
@@ -472,8 +497,11 @@ assert.ok(labHeaders.indexOf('blood_type_crossmatch_equi_none') < labHeaders.ind
 assert.ok(labHeaders.indexOf('vortex_mixer') < labHeaders.indexOf('maint_contract_colo_hae'));
 assert.ok(labHeaders.indexOf('blood_count') < labHeaders.indexOf('portable_cool_boxes'));
 assert.ok(labHeaders.indexOf('urine_test_kit10') < labHeaders.indexOf('serum_electrolyete'));
-assert.strictEqual(labHeaders.slice(-4).join('|'),
-  'ffp_all_types|platlets_all_types|whole_all_types|type_o'
+assert.ok(labHeaders.indexOf('type_o') < labHeaders.indexOf('internal_control_iqc'));
+assert.ok(labHeaders.indexOf('temp_record_monitor') < labHeaders.indexOf('tincl_lab_report_examination_performed'));
+assert.ok(labHeaders.indexOf('tincl_lab_report_none') < labHeaders.indexOf('tblood_product_labels_name_of_the_blood_product'));
+assert.strictEqual(labHeaders.slice(-3).join('|'),
+  'tblood_product_labels_blood_type_abo_and_rh_factor|tblood_product_labels_batch_number|tblood_product_labels_none'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{

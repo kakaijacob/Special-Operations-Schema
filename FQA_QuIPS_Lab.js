@@ -540,6 +540,64 @@ const LAB_GROUP_10_FIELDS = [
   'type_o',
 ];
 
+/** group_11 Yes/No questions. 1 Yes / 0 No. Names drop the group_11/ prefix. */
+const LAB_GROUP_11_YES_NO_FIELDS = [
+  'internal_control_iqc',
+  'external_contrlol_eqc',
+  'records_reagents_consumables',
+  'fefo_practice',
+  'stand_lab_report',
+  'secure_lab_reports',
+  'fridge_used11',
+  'whole_blood_temp',
+  'temp_record_monitor',
+];
+
+/**
+ * select_multiple: group_11/tincl_lab_report
+ * Columns: tincl_lab_report_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_TINCL_LAB_REPORT_PREFIX = 'tincl_lab_report';
+const LAB_TINCL_LAB_REPORT_CHOICES = [
+  { code: '1', slug: 'examination_performed' },
+  { code: '2', slug: 'patient_identification' },
+  { code: '3', slug: 'name_or_unique_identifier_of_the_requesting_person' },
+  { code: '4', slug: 'examination_results_reported_in_si_units_or_other_applicable_units' },
+  { code: '5', slug: 'biological_reference_intervals' },
+  { code: '6', slug: 'interpretation_of_results_as_appropriate' },
+  { code: '7', slug: 'identification_of_person_undertaking_the_examination' },
+  { code: '8', slug: 'identification_of_person_reviewing_the_results' },
+  { code: '9', slug: 'none' },
+];
+
+/**
+ * select_multiple: group_11/tblood_product_labels
+ * Columns: tblood_product_labels_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const LAB_TBLOOD_PRODUCT_LABELS_PREFIX = 'tblood_product_labels';
+const LAB_TBLOOD_PRODUCT_LABELS_CHOICES = [
+  { code: '1', slug: 'name_of_the_blood_product' },
+  { code: '2', slug: 'date_blood_was_drawn_and_expiration_date' },
+  { code: '3', slug: 'blood_type_abo_and_rh_factor' },
+  { code: '4', slug: 'batch_number' },
+  { code: '5', slug: 'none' },
+];
+
+function labGroup11SelectMultiples_() {
+  return [
+    {
+      source: 'group_11/tincl_lab_report',
+      prefix: LAB_TINCL_LAB_REPORT_PREFIX,
+      choices: LAB_TINCL_LAB_REPORT_CHOICES,
+    },
+    {
+      source: 'group_11/tblood_product_labels',
+      prefix: LAB_TBLOOD_PRODUCT_LABELS_PREFIX,
+      choices: LAB_TBLOOD_PRODUCT_LABELS_CHOICES,
+    },
+  ];
+}
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -609,6 +667,12 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_10_FIELDS.forEach(function (dest) {
     keys['group_10/' + dest] = true;
   });
+  LAB_GROUP_11_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_11/' + dest] = true;
+  });
+  labGroup11SelectMultiples_().forEach(function (field) {
+    keys[field.source] = true;
+  });
   return keys;
 })();
 
@@ -619,7 +683,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_10 codes. `_submission_time` is also retained as a
+   * group_1 through group_11 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -860,6 +924,22 @@ function transformLabRecord_(rec) {
     );
   });
 
+  LAB_GROUP_11_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_11/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  labGroup11SelectMultiples_().forEach(function (field) {
+    expandSelectMultiple_(
+      out,
+      rec[field.source],
+      field.prefix,
+      field.choices
+    );
+  });
+
   return out;
 }
 
@@ -907,5 +987,9 @@ function labPreferredHeaders_() {
     }, []))
     .concat(LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS)
     .concat(['maint_contract_colo_hae', 'sputum_smear', 'blood_count'])
-    .concat(LAB_GROUP_10_FIELDS);
+    .concat(LAB_GROUP_10_FIELDS)
+    .concat(LAB_GROUP_11_YES_NO_FIELDS)
+    .concat(labGroup11SelectMultiples_().reduce(function (headers, field) {
+      return headers.concat(selectMultipleHeaders_(field.prefix, field.choices));
+    }, []));
 }
