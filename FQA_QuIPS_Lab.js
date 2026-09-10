@@ -289,6 +289,25 @@ const LAB_GROUP_7_HEADERS = [
   'sharp_container_full',
 ];
 
+/** group_8 Yes/No questions. 1 Yes / 0 No. Names drop the group_8/ prefix. */
+const LAB_GROUP_8_YES_NO_FIELDS = [
+  'waiting_area8',
+  'working_tables8',
+  'chairs_staff8',
+  'safety_cabinents8',
+  'storage_shelves8',
+  'wash_basin8',
+  'well_lit8',
+  'well_ventilated',
+  'wall_clock',
+  'wall_thermometer',
+  'designated_spaces',
+  'special_area_samples',
+  'lockable_doors8',
+  'certification',
+  'access_disabled',
+];
+
 function labGroup2Map_(dest) {
   if (/monthly|_mon$/i.test(dest)) return YES_NO_MAP;
   return ALWAYS_SOMETIMES_NEVER_MAP;
@@ -340,6 +359,9 @@ const LAB_SOURCE_KEYS = (function () {
   LAB_GROUP_7_YES_NO_FIELDS.forEach(function (dest) {
     keys['group_7/' + dest] = true;
   });
+  LAB_GROUP_8_YES_NO_FIELDS.forEach(function (dest) {
+    keys['group_8/' + dest] = true;
+  });
   return keys;
 })();
 
@@ -350,7 +372,7 @@ function transformLabRecord_(rec) {
 
   /*
    * Preserve all fields except raw start/end fields and consumed
-   * group_1 through group_7 codes. `_submission_time` is also retained as a
+   * group_1 through group_8 codes. `_submission_time` is also retained as a
    * raw column.
    */
   assignPassthrough_(
@@ -539,6 +561,13 @@ function transformLabRecord_(rec) {
     YES_NO_MAP
   );
 
+  LAB_GROUP_8_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['group_8/' + dest],
+      YES_NO_MAP
+    );
+  });
+
   return out;
 }
 
@@ -578,5 +607,6 @@ function labPreferredHeaders_() {
       LAB_CONFIRM_SOPS_PREFIX,
       LAB_CONFIRM_SOPS_CHOICES
     ))
-    .concat(LAB_GROUP_7_HEADERS);
+    .concat(LAB_GROUP_7_HEADERS)
+    .concat(LAB_GROUP_8_YES_NO_FIELDS);
 }

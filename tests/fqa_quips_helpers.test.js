@@ -206,6 +206,11 @@ const lab = g('transformLabRecord_')({
   'group_7/toilet_handwashing_area': 0,
   'group_7/sharp_container': 1,
   'group_7/sharp_container_full': 0,
+  'group_8/waiting_area8': 1,
+  'group_8/working_tables8': 0,
+  'group_8/safety_cabinents8': 1,
+  'group_8/well_ventilated': 0,
+  'group_8/access_disabled': 1,
   extra_lab: 9,
 });
 assert.strictEqual(lab.extra_lab, 9);
@@ -277,6 +282,13 @@ assert.strictEqual(lab.functional_toilet, 'Yes');
 assert.strictEqual(lab.toilet_handwashing_area, 'No');
 assert.strictEqual(lab.sharp_container, 'Yes');
 assert.strictEqual(lab.sharp_container_full, 'No');
+assert.strictEqual(lab.waiting_area8, 'Yes');
+assert.strictEqual(lab.working_tables8, 'No');
+assert.strictEqual(lab.safety_cabinents8, 'Yes');
+assert.strictEqual(lab.well_ventilated, 'No');
+assert.strictEqual(lab.access_disabled, 'Yes');
+assert.strictEqual(lab.chairs_staff8, '');
+assert.strictEqual(lab['group_8/waiting_area8'], undefined);
 assert.strictEqual(lab['group_7/water_source'], undefined);
 assert.strictEqual(lab['group_7/soap_available'], undefined);
 assert.strictEqual(lab['group_6/sop'], undefined);
@@ -318,6 +330,8 @@ assert.strictEqual(labComprehensive.confirm_sops_via_testing, '');
 assert.strictEqual(labComprehensive.water_source, '');
 assert.strictEqual(labComprehensive.soap_available, '');
 assert.strictEqual(labComprehensive.sharp_container_full, '');
+assert.strictEqual(labComprehensive.waiting_area8, '');
+assert.strictEqual(labComprehensive.access_disabled, '');
 
 const labSoapNone = g('transformLabRecord_')({
   _uuid: 'lab-soap-3',
@@ -382,8 +396,9 @@ assert.ok(labHeaders.indexOf('sop_none') < labHeaders.indexOf('specimen_collecti
 assert.ok(labHeaders.indexOf('specimen_collection_none') < labHeaders.indexOf('guide_ref_critical_values'));
 assert.ok(labHeaders.indexOf('stock_inv_control_reagents') < labHeaders.indexOf('confirm_sops_abo_blood_group_and_rh_testing'));
 assert.ok(labHeaders.indexOf('confirm_sops_via_testing') < labHeaders.indexOf('water_source'));
-assert.strictEqual(labHeaders.slice(-11).join('|'),
-  'water_source|consistent_water|connected_drainage_system|soap_available|separate_sinks|waste_management_protocol|segregation_wastes|functional_toilet|toilet_handwashing_area|sharp_container|sharp_container_full'
+assert.ok(labHeaders.indexOf('sharp_container_full') < labHeaders.indexOf('waiting_area8'));
+assert.strictEqual(labHeaders.slice(-15).join('|'),
+  'waiting_area8|working_tables8|chairs_staff8|safety_cabinents8|storage_shelves8|wash_basin8|well_lit8|well_ventilated|wall_clock|wall_thermometer|designated_spaces|special_area_samples|lockable_doors8|certification|access_disabled'
 );
 
 const routed = g('transformRecordsForSheet_')('Pharmacy', [{
