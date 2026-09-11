@@ -871,7 +871,7 @@ assert.strictEqual(phHeaders.slice(-4).join('|'),
 );
 assert.strictEqual(g('preferredHeadersForSheet_')('Lab')[0], '_uuid');
 
-const fg = g('transformFacilityGeneralRecord_')({
+const routedFg = g('transformRecordsForSheet_')('Facility General', [{
   _uuid: 'fg-1',
   starttime: '2026-07-01T09:00:00',
   endtime: '2026-07-01T10:00:00',
@@ -882,8 +882,23 @@ const fg = g('transformFacilityGeneralRecord_')({
   'facility_profile/contact': 3,
   'group_1/nam_contact': 'Faith General',
   'group_1/phone_contact': '0733333333',
+  'facility_profile/units': '1 8 9',
+  'health_records_clients/data_collection_tools': 3,
+  'health_records_clients/unique_patient_identifer': 1,
+  'health_records_clients/responsible_person': 0,
+  'health_records_clients/storage_equipment': 1,
+  'health_records_clients/electronic_registry': 0,
+  'health_records_clients/data_storage_cap': 1,
+  'health_records_clients/written_collection_tools': 0,
+  'health_records_clients/secure_registers': '1 3',
+  'national_data_collection/upload_data2': 1,
+  'national_data_collection/record': '2 5 8',
+  'national_data_collection/mpdr_committee2': 5,
+  'national_data_collection/standard_hours': 0,
   leftover_fg: 'keep',
-});
+}]);
+assert.strictEqual(routedFg.length, 1);
+const fg = routedFg[0];
 assert.strictEqual(fg.county, "Murang'a");
 assert.strictEqual(fg.facility, "Murang'a County Referal Hospital");
 assert.strictEqual(fg.facility_level, 'Level 4');
@@ -891,7 +906,96 @@ assert.strictEqual(fg.contact, 'Facility in charge');
 assert.strictEqual(fg.contact_name, 'Faith General');
 assert.strictEqual(fg.phone_number, '0733333333');
 assert.strictEqual(fg.leftover_fg, 'keep');
+assert.strictEqual(fg.units_outpatient_mnh_services, 'Yes');
+assert.strictEqual(fg.units_central_store_non_pharm_commodities, 'Yes');
+assert.strictEqual(fg.units_rdt_testing_only, 'Yes');
+assert.strictEqual(fg.units_pharmacy_services, 'No');
+assert.strictEqual(fg.units_newborn_unit_services, 'No');
+assert.strictEqual(fg.data_collection_tools, 'Both');
+assert.strictEqual(fg.unique_patient_identifer, 'Yes');
+assert.strictEqual(fg.responsible_person, 'No');
+assert.strictEqual(fg.storage_equipment, 'Yes');
+assert.strictEqual(fg.electronic_registry, 'No');
+assert.strictEqual(fg.data_storage_cap, 'Yes');
+assert.strictEqual(fg.written_collection_tools, 'No');
+assert.strictEqual(fg.secure_registers_lockable_doors, 'Yes');
+assert.strictEqual(fg.secure_registers_grills, 'No');
+assert.strictEqual(fg.secure_registers_fireproof_cabinets, 'Yes');
+assert.strictEqual(fg.secure_registers_none, 'No');
+assert.strictEqual(fg.upload_data2, 'Yes');
+assert.strictEqual(fg.record_computer_storage_space, 'No');
+assert.strictEqual(fg.record_computers_with_passwords_designated_for_health_record_use, 'Yes');
+assert.strictEqual(fg.record_internet_connection_or_airtime, 'Yes');
+assert.strictEqual(fg.record_none, 'Yes');
+assert.strictEqual(fg.record_data_repository, 'No');
+assert.strictEqual(fg.mpdr_committee2, 'We do not have an MPDSR committee');
+assert.strictEqual(fg.standard_hours, 'No');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
+assert.strictEqual(fg['facility_profile/units'], undefined);
+assert.strictEqual(fg['health_records_clients/data_collection_tools'], undefined);
+assert.strictEqual(fg['health_records_clients/unique_patient_identifer'], undefined);
+assert.strictEqual(fg['health_records_clients/secure_registers'], undefined);
+assert.strictEqual(fg['national_data_collection/upload_data2'], undefined);
+assert.strictEqual(fg['national_data_collection/record'], undefined);
+assert.strictEqual(fg['national_data_collection/mpdr_committee2'], undefined);
+assert.strictEqual(fg['national_data_collection/standard_hours'], undefined);
+
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-tools-1',
+    _submission_time: '2026-07-02T08:00:00',
+    'health_records_clients/data_collection_tools': 1,
+  }).data_collection_tools,
+  'Paper based charting'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-tools-2',
+    _submission_time: '2026-07-02T08:00:00',
+    'health_records_clients/data_collection_tools': 2,
+  }).data_collection_tools,
+  'Electronic based charting'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-tools-4',
+    _submission_time: '2026-07-02T08:00:00',
+    'health_records_clients/data_collection_tools': 4,
+  }).data_collection_tools,
+  'Neither'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-mpdr-1',
+    _submission_time: '2026-07-03T08:00:00',
+    'national_data_collection/mpdr_committee2': 1,
+  }).mpdr_committee2,
+  'monthly (or more frequently)'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-mpdr-2',
+    _submission_time: '2026-07-03T08:00:00',
+    'national_data_collection/mpdr_committee2': 2,
+  }).mpdr_committee2,
+  '> monthly - quarterly'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-mpdr-3',
+    _submission_time: '2026-07-03T08:00:00',
+    'national_data_collection/mpdr_committee2': 3,
+  }).mpdr_committee2,
+  '> quarterly - biannually'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-mpdr-4',
+    _submission_time: '2026-07-03T08:00:00',
+    'national_data_collection/mpdr_committee2': 4,
+  }).mpdr_committee2,
+  '> biannually - yearly'
+);
 
 const fgLegacy = g('transformFacilityGeneralRecord_')({
   _uuid: 'fg-legacy',
@@ -899,9 +1003,31 @@ const fgLegacy = g('transformFacilityGeneralRecord_')({
   'facility_profile/facilities': 16,
 });
 assert.strictEqual(fgLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(fgLegacy.units_outpatient_mnh_services, '');
+assert.strictEqual(fgLegacy.units_rdt_testing_only, '');
+assert.strictEqual(fgLegacy.data_collection_tools, '');
+assert.strictEqual(fgLegacy.unique_patient_identifer, '');
+assert.strictEqual(fgLegacy.secure_registers_none, '');
+assert.strictEqual(fgLegacy.upload_data2, '');
+assert.strictEqual(fgLegacy.record_none, '');
+assert.strictEqual(fgLegacy.mpdr_committee2, '');
+assert.strictEqual(fgLegacy.standard_hours, '');
 assert.strictEqual(
   g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
+);
+const fgHeaders = g('facilityGeneralPreferredHeaders_')();
+assert.ok(fgHeaders.indexOf('phone_number') < fgHeaders.indexOf('units_outpatient_mnh_services'));
+assert.ok(fgHeaders.indexOf('units_central_store_non_pharm_commodities') < fgHeaders.indexOf('units_rdt_testing_only'));
+assert.ok(fgHeaders.indexOf('units_rdt_testing_only') < fgHeaders.indexOf('data_collection_tools'));
+assert.ok(fgHeaders.indexOf('data_collection_tools') < fgHeaders.indexOf('unique_patient_identifer'));
+assert.ok(fgHeaders.indexOf('written_collection_tools') < fgHeaders.indexOf('secure_registers_lockable_doors'));
+assert.ok(fgHeaders.indexOf('secure_registers_none') < fgHeaders.indexOf('upload_data2'));
+assert.ok(fgHeaders.indexOf('upload_data2') < fgHeaders.indexOf('record_computer_storage_space'));
+assert.ok(fgHeaders.indexOf('record_none') < fgHeaders.indexOf('mpdr_committee2'));
+assert.ok(fgHeaders.indexOf('mpdr_committee2') < fgHeaders.indexOf('standard_hours'));
+assert.strictEqual(fgHeaders.slice(-3).join('|'),
+  'record_none|mpdr_committee2|standard_hours'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({
