@@ -979,6 +979,7 @@ const routedCs = g('transformRecordsForSheet_')('Central Store', [{
   'commod/Penguine_stock': 0,
   'commod/ubt_kit': 1,
   'commod/wedge_stock': 0,
+  'hour/hours': 2,
   leftover_cs: 'keep',
 }]);
 assert.strictEqual(routedCs.length, 1);
@@ -1024,6 +1025,7 @@ assert.strictEqual(cs.syr2_stock, 'Yes');
 assert.strictEqual(cs.Penguine_stock, 'No');
 assert.strictEqual(cs.ubt_kit, 'Yes');
 assert.strictEqual(cs.wedge_stock, 'No');
+assert.strictEqual(cs.hours, 'Sometimes when the facility is open, but not always');
 assert.strictEqual(cs.airway_infant_sto, '');
 assert.strictEqual(cs['facility_profile/county'], undefined);
 assert.strictEqual(cs['health/designated_space'], undefined);
@@ -1038,6 +1040,7 @@ assert.strictEqual(cs['commod/cord'], undefined);
 assert.strictEqual(cs['commod/sry2'], undefined);
 assert.strictEqual(cs['commod/Penguine_stock'], undefined);
 assert.strictEqual(cs['commod/ubt_kit'], undefined);
+assert.strictEqual(cs['hour/hours'], undefined);
 
 assert.strictEqual(
   g('transformCentralStoreRecord_')({
@@ -1119,6 +1122,22 @@ assert.strictEqual(
   }).stock_orders,
   'Only when funds are available'
 );
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-hours-1',
+    _submission_time: '2026-09-05T08:00:00',
+    'hour/hours': 1,
+  }).hours,
+  'Accessible at all facility open times'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-hours-3',
+    _submission_time: '2026-09-05T08:00:00',
+    'hour/hours': 3,
+  }).hours,
+  'Rarely assessible (it is difficult to access non-pharm commodities in this facility)'
+);
 
 const csLegacy = g('transformCentralStoreRecord_')({
   _uuid: 'cs-legacy',
@@ -1139,6 +1158,7 @@ assert.strictEqual(csLegacy.penguine, '');
 assert.strictEqual(csLegacy.c_stock, '');
 assert.strictEqual(csLegacy.Penguine_stock, '');
 assert.strictEqual(csLegacy.ubt_kit, '');
+assert.strictEqual(csLegacy.hours, '');
 assert.strictEqual(
   g('centralStorePreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1161,8 +1181,9 @@ assert.ok(csHeaders.indexOf('wedge') < csHeaders.indexOf('c_stock'));
 assert.ok(csHeaders.indexOf('c_stock') < csHeaders.indexOf('scis_stock'));
 assert.ok(csHeaders.indexOf('ubt_kit') < csHeaders.indexOf('canscalp_stock'));
 assert.ok(csHeaders.indexOf('Penguine_stock') < csHeaders.indexOf('cling_film_stock'));
+assert.ok(csHeaders.indexOf('wedge_stock') < csHeaders.indexOf('hours'));
 assert.strictEqual(csHeaders.slice(-4).join('|'),
-  'patellar_stock|Penguine_stock|cling_film_stock|wedge_stock'
+  'Penguine_stock|cling_film_stock|wedge_stock|hours'
 );
 
 let threw = false;

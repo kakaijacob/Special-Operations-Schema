@@ -220,6 +220,13 @@ function centralStoreCommoditySource_(dest) {
   return 'commod/' + dest;
 }
 
+/** hour/hours */
+const CENTRAL_STORE_HOURS_MAP = {
+  1: 'Accessible at all facility open times',
+  2: 'Sometimes when the facility is open, but not always',
+  3: 'Rarely assessible (it is difficult to access non-pharm commodities in this facility)',
+};
+
 const CENTRAL_STORE_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -250,6 +257,7 @@ const CENTRAL_STORE_SOURCE_KEYS = (function () {
   CENTRAL_STORE_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
     keys[centralStoreCommoditySource_(dest)] = true;
   });
+  keys['hour/hours'] = true;
   return keys;
 })();
 
@@ -343,6 +351,11 @@ function transformCentralStoreRecord_(rec) {
     );
   });
 
+  out.hours = lookupCoded_(
+    rec['hour/hours'],
+    CENTRAL_STORE_HOURS_MAP
+  );
+
   return out;
 }
 
@@ -365,5 +378,6 @@ function centralStorePreferredHeaders_() {
       return field.dest;
     }))
     .concat(CENTRAL_STORE_COMMODITY_AVAIL_FIELDS)
-    .concat(CENTRAL_STORE_COMMODITY_YES_NO_FIELDS);
+    .concat(CENTRAL_STORE_COMMODITY_YES_NO_FIELDS)
+    .concat(['hours']);
 }
