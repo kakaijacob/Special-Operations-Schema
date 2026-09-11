@@ -66,6 +66,7 @@ const files = [
   'FQA_QuIPS_Pharmacy.js',
   'FQA_QuIPS_Central_Store.js',
   'FQA_QuIPS_Facility_General.js',
+  'FQA_QuIPS_Weighting.js',
   'FQA_QuIPS_Orchestrator.js',
 ];
 
@@ -2070,6 +2071,109 @@ assert.strictEqual(csHeaders.slice(-4).join('|'),
 let threw = false;
 try { g('transformRecordsForSheet_')('Unknown', []); } catch (e) { threw = true; }
 assert.ok(threw);
+
+assert.strictEqual(
+  g('FQA_WEIGHTING_SHEET_NAME'),
+  'FQA Weighting'
+);
+assert.strictEqual(
+  g('FQA_WEIGHTING_HEADERS').join('|'),
+  'Department/KOBO tool|variable|response|label|score'
+);
+
+const weightingTable = g('buildFqaWeightingTableRows_({})');
+assert.ok(weightingTable.length > 100, 'expected a full scored-column catalog');
+
+function weightingRowsFor(department, variable) {
+  return weightingTable.filter(function (row) {
+    return row[0] === department && row[1] === variable;
+  });
+}
+
+const routineCs = weightingRowsFor('Operating Theatre', 'routine_cs');
+assert.strictEqual(routineCs.length, 2);
+assert.strictEqual(routineCs[0].join('|'), 'Operating Theatre|routine_cs|1|Yes|1');
+assert.strictEqual(routineCs[1].join('|'), 'Operating Theatre|routine_cs|0|No|0');
+
+const csFormsAnesthesia = weightingRowsFor(
+  'Operating Theatre',
+  'cs_forms_anesthesia_charts'
+);
+assert.strictEqual(
+  csFormsAnesthesia.map(function (row) { return row.slice(2).join('|'); }).join(';'),
+  '1|Yes|1;0|No|0'
+);
+
+const lidocaine = weightingRowsFor('Operating Theatre', 'lidocaine');
+assert.strictEqual(lidocaine.length, 3);
+assert.strictEqual(lidocaine[0][3], 'Always');
+assert.strictEqual(lidocaine[1][3], 'Sometimes');
+assert.strictEqual(lidocaine[2][3], 'Never');
+assert.strictEqual(lidocaine[0][4], '');
+assert.strictEqual(lidocaine[1][4], '');
+assert.strictEqual(lidocaine[2][4], '');
+
+const weightingDepartments = [];
+weightingTable.forEach(function (row) {
+  if (weightingDepartments.indexOf(row[0]) === -1) {
+    weightingDepartments.push(row[0]);
+  }
+});
+assert.strictEqual(
+  weightingDepartments.join('|'),
+  'Newborn Unit|Inpatient Maternity|Outpatient|Lab|Operating Theatre|Pharmacy|Central Store|Facility General'
+);
+
+const excludedWeightingVars = {
+  _uuid: true,
+  date_started: true,
+  date_ended: true,
+  date_submitted: true,
+  county: true,
+  facility: true,
+  facility_level: true,
+  contact: true,
+  contact_name: true,
+  phone_number: true,
+  preop_beds: true,
+  surg_rooms: true,
+  postop_beds: true,
+};
+weightingTable.forEach(function (row) {
+  assert.ok(
+    !excludedWeightingVars[row[1]],
+    'non-scored column leaked into weighting table: ' + row[1]
+  );
+});
+
+const preserved = g(
+  'buildFqaWeightingTableRows_({"Operating Theatre\troutine_cs\t1": 9})'
+);
+const preservedRoutineYes = preserved.filter(function (row) {
+  return row[0] === 'Operating Theatre' && row[1] === 'routine_cs' && row[2] === 1;
+})[0];
+assert.strictEqual(preservedRoutineYes[4], 9);
+const preservedRoutineNo = preserved.filter(function (row) {
+  return row[0] === 'Operating Theatre' && row[1] === 'routine_cs' && row[2] === 0;
+})[0];
+assert.strictEqual(preservedRoutineNo[4], 0);
+
+const existingScores = g(
+  'readExistingWeightingScoresFromValues_([[' +
+    '"Department/KOBO tool","variable","response","label","score"],' +
+    '["Operating Theatre","routine_cs",1,"Yes",4],' +
+    '["Operating Theatre","routine_cs",0,"No",""]' +
+  '])'
+);
+assert.strictEqual(existingScores['Operating Theatre\troutine_cs\t1'], 4);
+assert.strictEqual(
+  Object.prototype.hasOwnProperty.call(existingScores, 'Operating Theatre\troutine_cs\t0'),
+  false
+);
+
+const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
+assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
+assert.ok(orchestrator.indexOf('FQA Weighting') === -1);
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');

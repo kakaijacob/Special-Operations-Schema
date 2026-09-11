@@ -17,6 +17,7 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Central_Store.js` | Central Store (dates + raw passthrough) |
 | `FQA_QuIPS_Facility_General.js` | Facility General (dates + raw passthrough) |
 | `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms` |
+| `FQA_QuIPS_Weighting.js` | Builds the `FQA Weighting` score catalog sheet |
 | `FQA_QuIPS_Token.example.js` | Template for a local token override |
 
 ## Setup
@@ -29,6 +30,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 4. Optionally run `createDailyTrigger` for a daily 6am incremental pull.
 5. Use `fullRefreshAllForms` to wipe tabs and reload. Fetch/transform runs
    **before** the sheet is cleared so a failed pull does not wipe good data.
+6. Run `writeFqaWeightingSheet` to create or refresh the `FQA Weighting`
+   sheet. It lists every coded transformed column that can carry a score
+   (`Department/KOBO tool`, `variable`, `response`, `label`, `score`).
+   Yes/No labels default to 1/0; other labels leave `score` blank so you
+   can fill them in later. Re-running the function keeps scores already
+   typed on the sheet. Do not wire this into the orchestrator.
 
 ## Tests
 
