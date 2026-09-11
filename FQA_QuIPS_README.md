@@ -12,7 +12,7 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Inpatient_Maternity.js` | Inpatient Maternity transform |
 | `FQA_QuIPS_Outpatient.js` | Outpatient transform |
 | `FQA_QuIPS_Lab.js` | Lab (dates + raw passthrough) |
-| `FQA_QuIPS_Operating_Theatre.js` | Operating Theatre (dates + raw passthrough) |
+| `FQA_QuIPS_Operating_Theatre.js` | Operating Theatre transform |
 | `FQA_QuIPS_Pharmacy.js` | Pharmacy (dates + raw passthrough) |
 | `FQA_QuIPS_Central_Store.js` | Central Store (dates + raw passthrough) |
 | `FQA_QuIPS_Facility_General.js` | Facility General (dates + raw passthrough) |

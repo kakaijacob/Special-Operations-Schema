@@ -1393,7 +1393,7 @@ assert.strictEqual(fgHeaders.slice(-4).join('|'),
   'run_out_fuel|uniforms_badges|pest_control|opening_hours'
 );
 
-const ot = g('transformOperatingTheatreRecord_')({
+const otProfile = g('transformOperatingTheatreRecord_')({
   _uuid: 'ot-1',
   start: '2026-08-01T08:00:00',
   end: '2026-08-01T09:00:00',
@@ -1405,13 +1405,13 @@ const ot = g('transformOperatingTheatreRecord_')({
   'group_1/nam_contact': 'Owen Theatre',
   'group_1/phone_contact': '0744444444',
 });
-assert.strictEqual(ot.county, 'Makueni');
-assert.strictEqual(ot.facility, 'Makueni County Referral Hospital');
-assert.strictEqual(ot.facility_level, 'Level 4');
-assert.strictEqual(ot.contact, 'Medical officer in charge');
-assert.strictEqual(ot.contact_name, 'Owen Theatre');
-assert.strictEqual(ot.phone_number, '0744444444');
-assert.strictEqual(ot['facility_profile/facility'], undefined);
+assert.strictEqual(otProfile.county, 'Makueni');
+assert.strictEqual(otProfile.facility, 'Makueni County Referral Hospital');
+assert.strictEqual(otProfile.facility_level, 'Level 4');
+assert.strictEqual(otProfile.contact, 'Medical officer in charge');
+assert.strictEqual(otProfile.contact_name, 'Owen Theatre');
+assert.strictEqual(otProfile.phone_number, '0744444444');
+assert.strictEqual(otProfile['facility_profile/facility'], undefined);
 
 const otLegacy = g('transformOperatingTheatreRecord_')({
   _uuid: 'ot-legacy',
@@ -1422,6 +1422,383 @@ assert.strictEqual(otLegacy.facility, 'Kasikeu Dispensary');
 assert.strictEqual(
   g('operatingTheatrePreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
+);
+
+const routedOt = g('transformRecordsForSheet_')('Operating Theatre', [{
+  _uuid: 'ot-full',
+  starttime: '2026-09-01T08:00:00',
+  endtime: '2026-09-01T09:00:00',
+  _submission_time: '2026-09-01T10:00:00',
+  'facility_profile/county': 2,
+  'facility_profile/facility': 58,
+  'facility_profile/gazetted_facility': 4,
+  'facility_profile/contact': 5,
+  'group_1/nam_contact': 'Owen Theatre',
+  'group_1/phone_contact': '0744444444',
+  'facility_profile/units': 1,
+  'services_offered/routine_cs': 1,
+  'services_offered/routine_cs_6m': 0,
+  'services_offered/emerg_cs': 1,
+  'services_offered/emerg_cs_6m': 1,
+  'services_offered/emerg_anaes': 1,
+  'services_offered/anaes_6m': 0,
+  'services_offered/tubal_lig': 1,
+  'services_offered/laparotomy': 0,
+  'services_offered/dnc': 1,
+  'services_offered/cystotomy': 0,
+  'services_offered/cs_hyst': 1,
+  'services_offered/eua': 0,
+  'services_offered/marsupial': 1,
+  'services_offered/cerclage': 0,
+  'services_offered/cerv_tear': 1,
+  'services_offered/incision_drain': 0,
+  'services_offered/sec_wound': 1,
+  'services_offered/blynch_sature': 0,
+  'hrh/county_anaesthes': '2',
+  'hrh/contract_anaesthes ': '3',
+  'hrh/county_co_anaest ': '4',
+  'hrh/contract_co_anaest': '1',
+  'hrh/county_nurse_anaest ': '5',
+  'hrh/contract_nurse_anaest': '0',
+  'hrh/county_theatre_nurse': '6',
+  'hrh/contract_theatre_nurse': '2',
+  'hrh/theatre_cleaners': '3',
+  'hrh/theatre_matron_patron': '1',
+  'hrh/anaesth_24hr': 1,
+  'hrh/anaesth_assist_24hr': 0,
+  'hrh/referral_no_anaesth': 1,
+  'hrh/obstetric_24hr': 0,
+  'hrh/surg_assist_24hr': 1,
+  'hrh/referral_no_surg': 0,
+  'hrh/team_leader_24hr': 1,
+  'hrh/scrub_nurse_24hr': 0,
+  'hrh/circulate_nurse_24hr': 1,
+  'hrh/baby_nurse_24hr': 0,
+  'hrh/referral_no_nurse': 1,
+  'hrh/pacu_nurse_24hr': 0,
+  'hrh/on_call_roster': 1,
+  'health_record/theatre_list': 1,
+  'health_record/delivery_reg': 0,
+  'health_record/reg_used': 1,
+  'health_record/theatre_reg': 0,
+  'health_record/theatre_reg_used': 1,
+  'health_record/cs_forms': '1 5 11',
+  'health_record/referral_forms': 1,
+  'privacy/preop_vis_priv': 1,
+  'privacy/postop_vis_priv': 2,
+  'privacy/preop_aud_priv': 3,
+  'privacy/postop_aud_priv': 1,
+  'privacy/files_sec': 0,
+  'training/last_train': '2024-06',
+  'training/cpd_required': '20 hours',
+  'sop/anaes_proto': 1,
+  'sop/referral_proto': 1,
+  'sop/ppe_radio_proto': 1,
+  'sop/recovery_proto': 2,
+  'sop/theatre_ppe': 1,
+  'sop/sedation_proto': 2,
+  'sop/clean_proto': 1,
+  'wash/water_access': 1,
+  'wash/water_1m': 1,
+  'wash/sep_sinks': 0,
+  'wash/drain_system': 1,
+  'wash/postop_sink': 2,
+  'wash/hand_hygiene': 3,
+  'wash/waste_proto': 1,
+  'wash/waste_bins_label': 1,
+  'wash/sharps_full': 0,
+  'wash/latrine': 1,
+  'wash/latrine_type': 7,
+  'wash/specify': 'compost pit',
+  'wash/handwash_station': 1,
+  'wash/clean_freq': 1,
+  'wash/clean_today': 0,
+  'wash/access_mobility': 1,
+  'wash/gender_sep': 0,
+  'wash/mens_hygiene': 1,
+  'wash/instr_cleaning': 0,
+  'infrastructure/theatre_space': '2 3',
+  'infrastructure/maintained': 1,
+  'infrastructure/exam_light': 0,
+  'infrastructure/exam_vent': 1,
+  'infrastructure/preop_area': 1,
+  'infrastructure/preop_beds': '4',
+  'infrastructure/preop_change': 0,
+  'infrastructure/surg_rooms': '2',
+  'infrastructure/intercom': 1,
+  'infrastructure/postop_beds': '6',
+  'infrastructure/bed_ref': 0,
+  'infrastructure/pharm_store': 1,
+  'infrastructure/sterile_store': 0,
+  'infrastructure/fire_ext': 1,
+  'infrastructure/signage': 0,
+  'infrastructure/charter': 1,
+  'infrastructure/nurse_station': 0,
+  'infrastructure/postop_access': 1,
+  'infrastructure/backup_power': 0,
+  'infrastructure/temp_ctrl': 1,
+  'infrastructure/staff_lounge': 0,
+  'infrastructure/ipd_dist': 1,
+  'equipment/op_table': 1,
+  'equipment/surg_lamp': 1,
+  'equipment/inf_scale': 0,
+  'equipment/chair': 1,
+  'equipment/cauter': 0,
+  'equipment/mayo': 1,
+  'equipment/instr_trol': 0,
+  'equipment/cs_sets': 2,
+  'equipment/resusc': 3,
+  'equipment/ster_date': 1,
+  'equipment/suction': 2,
+  'equipment/res_bag_mom': 1,
+  'equipment/res_bag_infant': 0,
+  'equipment/mack_apron': 1,
+  'equipment/eye_shield': 3,
+  'equipment/gum_boots': 2,
+  'equipment/anest_machine': 1,
+  'equipment/emerg_trol': 1,
+  'equipment/anest_maint': 0,
+  'equipment/stetho': 1,
+  'equipment/monitor': 2,
+  'equipment/spo2_probe': 1,
+  'equipment/bp_cuffs': '1 3',
+  'equipment/ecg_leads': 1,
+  'equipment/airways': 0,
+  'equipment/laryngo': 1,
+  'equipment/lary_blades': '1 2',
+  'equipment/ett_tubes': '6 8',
+  'equipment/magill': 1,
+  'equipment/fridge': 2,
+  'equipment/note2_pacu': 0,
+  'equipment/pacu_trol': '4 17',
+  'equipment/pacu_gluco': 1,
+  'equipment/pacu_lamp': 3,
+  'equipment/pacu_defib': 2,
+  'equipment/pacu_temp': 1,
+  'equipment/temp_18_24': 0,
+  'equipment/pacu_bp': 1,
+  'equipment/pacu_spo2': 1,
+  'equipment/pacu_ecg': 3,
+  'equipment/pacu_o2': 1,
+  'equipment/pacu_desk': 0,
+  'commodities/lidocaine': 1,
+  'commodities/povidine': 2,
+  'commodities/socks': 3,
+  'sec_12/clean_sched': 1,
+  'sec_12/expiry_check': 0,
+  'sec_12/anaest_serv': 1,
+  'sec_12/bed_serv': 4,
+  'sec_12/patient_id': 1,
+  'sec_12/pre_checks': '1 5',
+  'sec_12/ecg_mon': 2,
+  'sec_12/spo2_mon': 1,
+  'sec_12/bp_mon': 3,
+  'sec_12/surg_count': 1,
+  'sec_12/op_board': 2,
+  'sec_12/blood_spec': 1,
+  'sec_12/mortality_rev': 3,
+  'sec_12/anaest_rev': 1,
+  'sec_12/anaest_doc': '10',
+  'sec_12/anaest_chart': '4 13',
+  'sec_12/turnaround': 2,
+  'op/hrs_day': 3,
+  leftover_ot: 'keep',
+}]);
+assert.strictEqual(routedOt.length, 1);
+const ot = routedOt[0];
+assert.strictEqual(ot.county, 'Makueni');
+assert.strictEqual(ot.facility, 'Makueni County Referral Hospital');
+assert.strictEqual(ot.leftover_ot, 'keep');
+assert.strictEqual(ot.facility_unit, 'Yes');
+assert.strictEqual(ot.routine_cs, 'Yes');
+assert.strictEqual(ot.routine_cs_6months, 'No');
+assert.strictEqual(ot.emergency_cs, 'Yes');
+assert.strictEqual(ot.emergency_cs_6months, 'Yes');
+assert.strictEqual(ot.emergency_obstetric_anaesthesia, 'Yes');
+assert.strictEqual(ot.emergency_obstetric_anaesthesia_6m, 'No');
+assert.strictEqual(ot.tubal_ligation, 'Yes');
+assert.strictEqual(ot.dilation_curettage, 'Yes');
+assert.strictEqual(ot.cesarean_hysterectomy, 'Yes');
+assert.strictEqual(ot.exam_under_anesthesia, 'No');
+assert.strictEqual(ot.cervical_cerclage, 'No');
+assert.strictEqual(ot.cervical_tear_repair, 'Yes');
+assert.strictEqual(ot.secondary_wound_closure, 'Yes');
+assert.strictEqual(ot.blynch_sature, 'No');
+assert.strictEqual(ot.county_anaesthesiologists, 2);
+assert.strictEqual(ot.contract_anaesthesiologists, 3);
+assert.strictEqual(ot.county_co_anaesthetists, 4);
+assert.strictEqual(ot.contract_co_anaesthetists, 1);
+assert.strictEqual(ot.county_nurse_anaesthetists, 5);
+assert.strictEqual(ot.contract_nurse_anaesthetists, 0);
+assert.strictEqual(ot.county_theatre_nurse, 6);
+assert.strictEqual(ot.theatre_matron_patron, 1);
+assert.strictEqual(ot.anaesthetist_available_24hrs, 'Yes');
+assert.strictEqual(ot.anaesth_assist_24hr, 'No');
+assert.strictEqual(ot.on_call_roster, 'Yes');
+assert.strictEqual(ot.theatre_list, 'Yes');
+assert.strictEqual(ot.delivery_reg, 'No');
+assert.strictEqual(ot.theatre_reg_used, 'Yes');
+assert.strictEqual(ot.cs_forms_anesthesia_charts, 'Yes');
+assert.strictEqual(ot.cs_forms_safe_surgery_checklist, 'Yes');
+assert.strictEqual(ot.cs_forms_none, 'Yes');
+assert.strictEqual(ot.cs_forms_theatre_notes, 'No');
+assert.strictEqual(ot.cs_forms_doctors_admission_record, 'No');
+assert.strictEqual(ot.referral_forms, 'Always available');
+assert.strictEqual(ot.preop_vis_priv, 'All rooms');
+assert.strictEqual(ot.postop_vis_priv, 'Some rooms');
+assert.strictEqual(ot.preop_aud_priv, 'No rooms');
+assert.strictEqual(ot.files_sec, 'No');
+assert.strictEqual(ot.last_train, '2024-06');
+assert.strictEqual(ot.cpd_required, '20 hours');
+assert.strictEqual(ot.anaes_proto, 'Yes');
+assert.strictEqual(ot.referral_proto, 'They have displayed, up to date protocols');
+assert.strictEqual(ot.ppe_radio_proto, 'Yes (either written or displayed)');
+assert.strictEqual(ot.recovery_proto, 'No');
+assert.strictEqual(ot.water_access, 'Present, functional');
+assert.strictEqual(ot.postop_sink, 'Yes, non-functional');
+assert.strictEqual(ot.hand_hygiene, 'Present in no service areas');
+assert.strictEqual(ot.waste_proto, 'Present, well displayed');
+assert.strictEqual(ot.latrine_type, 'Other, specify');
+assert.strictEqual(ot.specify_latrine, 'compost pit');
+assert.strictEqual(ot.clean_freq, 'Daily AND as necessary');
+assert.strictEqual(ot.gender_seperation, 'No');
+assert.strictEqual(ot.theatre_space_anesthesia, 'Yes');
+assert.strictEqual(ot.theatre_space_surgery, 'Yes');
+assert.strictEqual(ot.theatre_space_reception, 'No');
+assert.strictEqual(ot.theatre_space_none, 'No');
+assert.strictEqual(ot.maintained, 'Yes');
+assert.strictEqual(ot.preop_beds, 4);
+assert.strictEqual(ot.surg_rooms, 2);
+assert.strictEqual(ot.postop_beds, 6);
+assert.strictEqual(ot.ipd_dist, 'Yes');
+assert.strictEqual(ot.op_table, 'Yes');
+assert.strictEqual(ot.surg_lamp, 'Yes, functional');
+assert.strictEqual(ot.cs_sets, 'Sometimes available');
+assert.strictEqual(ot.resusc, 'No');
+assert.strictEqual(ot.mack_apron, 'Always available');
+assert.strictEqual(ot.eye_shield, 'Never available');
+assert.strictEqual(ot.bp_cuffs_small, 'Yes');
+assert.strictEqual(ot.bp_cuffs_medium, 'No');
+assert.strictEqual(ot.bp_cuffs_large, 'Yes');
+assert.strictEqual(ot.bp_cuffs_none, 'No');
+assert.strictEqual(ot.lary_blades_size_0, 'Yes');
+assert.strictEqual(ot.lary_blades_size_1, 'Yes');
+assert.strictEqual(ot.lary_blades_none, 'No');
+assert.strictEqual(ot.ett_tubes_adult_size_7_0, 'Yes');
+assert.strictEqual(ot.ett_tubes_none, 'Yes');
+assert.strictEqual(ot.ett_tubes_newborn_size_2_5, 'No');
+assert.strictEqual(ot.pacu_trol_calcium_gluconamte, 'Yes');
+assert.strictEqual(ot.pacu_trol_no_trolley_for_emergency_drugs, 'Yes');
+assert.strictEqual(ot.pacu_trol_tramadol, 'No');
+assert.strictEqual(ot.pacu_lamp, 'No');
+assert.strictEqual(ot.pacu_temp, 'Yes');
+assert.strictEqual(ot.lidocaine, 'Always');
+assert.strictEqual(ot.povidine, 'Sometimes');
+assert.strictEqual(ot.socks, 'Never');
+assert.strictEqual(ot.clean_sched, 'Yes');
+assert.strictEqual(ot.anaest_serv, 'At least yearly and as needed');
+assert.strictEqual(ot.bed_serv, 'They are not serviced');
+assert.strictEqual(ot.patient_id, 'Always');
+assert.strictEqual(ot.pre_checks_preoperative_monitoring_of_vital_signs, 'Yes');
+assert.strictEqual(ot.pre_checks_none, 'Yes');
+assert.strictEqual(ot.pre_checks_last_oral_intake_is_verified, 'No');
+assert.strictEqual(ot.ecg_mon, 'Sometimes');
+assert.strictEqual(ot.spo2_mon, 'Always');
+assert.strictEqual(ot.bp_mon, 'Never');
+assert.strictEqual(ot.blood_spec, 'Yes');
+assert.strictEqual(ot.anaest_doc_no_documentation_provided, 'Yes');
+assert.strictEqual(
+  ot.anaest_doc_diagnosis_and_indication_for_surgery,
+  'No'
+);
+assert.strictEqual(ot.anaest_chart_diagnosis_and_planed_surgery, 'Yes');
+assert.strictEqual(ot.anaest_chart_none, 'Yes');
+assert.strictEqual(ot.anaest_chart_clients_name, 'No');
+assert.strictEqual(ot.turnaround, '31-45 minutes');
+assert.strictEqual(ot.hrs_day, 'Rarely assessible');
+assert.strictEqual(ot['facility_profile/units'], undefined);
+assert.strictEqual(ot['services_offered/routine_cs'], undefined);
+assert.strictEqual(ot['hrh/county_anaesthes'], undefined);
+assert.strictEqual(ot['hrh/contract_anaesthes '], undefined);
+assert.strictEqual(ot['health_record/cs_forms'], undefined);
+assert.strictEqual(ot['health_record/theatre_reg_used'], undefined);
+assert.strictEqual(ot['health_record/referral_forms'], undefined);
+assert.strictEqual(ot['privacy/preop_vis_priv'], undefined);
+assert.strictEqual(ot['training/last_train'], undefined);
+assert.strictEqual(ot['sop/referral_proto'], undefined);
+assert.strictEqual(ot['wash/specify'], undefined);
+assert.strictEqual(ot['infrastructure/theatre_space'], undefined);
+assert.strictEqual(ot['equipment/bp_cuffs'], undefined);
+assert.strictEqual(ot['equipment/pacu_trol'], undefined);
+assert.strictEqual(ot['equipment/pacu_lamp'], undefined);
+assert.strictEqual(ot['commodities/lidocaine'], undefined);
+assert.strictEqual(ot['sec_12/pre_checks'], undefined);
+assert.strictEqual(ot['sec_12/spo2_mon'], undefined);
+assert.strictEqual(ot['sec_12/anaest_doc'], undefined);
+assert.strictEqual(ot['sec_12/anaest_chart'], undefined);
+assert.strictEqual(ot['op/hrs_day'], undefined);
+
+const otHrhTrimmed = g('transformOperatingTheatreRecord_')({
+  _uuid: 'ot-hrh-trim',
+  _submission_time: '2026-09-01T10:00:00',
+  'hrh/contract_anaesthes': '7',
+  'hrh/county_co_anaest': '8',
+  'hrh/county_nurse_anaest': '9',
+});
+assert.strictEqual(otHrhTrimmed.contract_anaesthesiologists, 7);
+assert.strictEqual(otHrhTrimmed.county_co_anaesthetists, 8);
+assert.strictEqual(otHrhTrimmed.county_nurse_anaesthetists, 9);
+
+const otSkipped = g('transformOperatingTheatreRecord_')({
+  _uuid: 'ot-skip',
+  _submission_time: '2026-09-01T10:00:00',
+  'facility_profile/county': 2,
+});
+assert.strictEqual(otSkipped.cs_forms_anesthesia_charts, '');
+assert.strictEqual(otSkipped.theatre_space_surgery, '');
+assert.strictEqual(otSkipped.bp_cuffs_small, '');
+assert.strictEqual(otSkipped.lary_blades_size_0, '');
+assert.strictEqual(otSkipped.ett_tubes_none, '');
+assert.strictEqual(otSkipped.pacu_trol_tramadol, '');
+assert.strictEqual(otSkipped.pre_checks_none, '');
+assert.strictEqual(otSkipped.anaest_doc_no_documentation_provided, '');
+assert.strictEqual(otSkipped.anaest_chart_none, '');
+assert.strictEqual(otSkipped.facility_unit, '');
+assert.strictEqual(otSkipped.hrs_day, '');
+
+const otHeaders = g('operatingTheatrePreferredHeaders_')();
+assert.ok(otHeaders.indexOf('phone_number') < otHeaders.indexOf('facility_unit'));
+assert.ok(otHeaders.indexOf('facility_unit') < otHeaders.indexOf('routine_cs'));
+assert.ok(otHeaders.indexOf('routine_cs_6months') < otHeaders.indexOf('emergency_cs'));
+assert.ok(otHeaders.indexOf('blynch_sature') < otHeaders.indexOf('county_anaesthesiologists'));
+assert.ok(otHeaders.indexOf('theatre_matron_patron') < otHeaders.indexOf('anaesthetist_available_24hrs'));
+assert.ok(otHeaders.indexOf('on_call_roster') < otHeaders.indexOf('theatre_list'));
+assert.ok(otHeaders.indexOf('theatre_reg_used') < otHeaders.indexOf('cs_forms_anesthesia_charts'));
+assert.ok(otHeaders.indexOf('cs_forms_none') < otHeaders.indexOf('referral_forms'));
+assert.ok(otHeaders.indexOf('files_sec') < otHeaders.indexOf('last_train'));
+assert.ok(otHeaders.indexOf('cpd_required') < otHeaders.indexOf('anaes_proto'));
+assert.ok(otHeaders.indexOf('clean_proto') < otHeaders.indexOf('water_access'));
+assert.ok(otHeaders.indexOf('instr_cleaning') < otHeaders.indexOf('theatre_space_reception'));
+assert.ok(otHeaders.indexOf('theatre_space_none') < otHeaders.indexOf('maintained'));
+assert.ok(otHeaders.indexOf('ipd_dist') < otHeaders.indexOf('op_table'));
+assert.ok(otHeaders.indexOf('spo2_probe') < otHeaders.indexOf('bp_cuffs_small'));
+assert.ok(otHeaders.indexOf('bp_cuffs_none') < otHeaders.indexOf('ecg_leads'));
+assert.ok(otHeaders.indexOf('laryngo') < otHeaders.indexOf('lary_blades_size_0'));
+assert.ok(otHeaders.indexOf('lary_blades_none') < otHeaders.indexOf('ett_tubes_newborn_size_2_5'));
+assert.ok(otHeaders.indexOf('ett_tubes_none') < otHeaders.indexOf('magill'));
+assert.ok(otHeaders.indexOf('note2_pacu') < otHeaders.indexOf('pacu_trol_tramadol'));
+assert.ok(otHeaders.indexOf('pacu_trol_no_trolley_for_emergency_drugs') < otHeaders.indexOf('pacu_gluco'));
+assert.ok(otHeaders.indexOf('pacu_desk') < otHeaders.indexOf('lidocaine'));
+assert.ok(otHeaders.indexOf('socks') < otHeaders.indexOf('clean_sched'));
+assert.ok(otHeaders.indexOf('patient_id') < otHeaders.indexOf('pre_checks_preoperative_monitoring_of_vital_signs'));
+assert.ok(otHeaders.indexOf('pre_checks_none') < otHeaders.indexOf('ecg_mon'));
+assert.ok(otHeaders.indexOf('ecg_mon') < otHeaders.indexOf('spo2_mon'));
+assert.ok(otHeaders.indexOf('anaest_rev') < otHeaders.indexOf('anaest_doc_anaesthetic_processes_from_pre_anaesthetic_review_to_reversal_of_anaesthesia_including_any_incidents_that_may_have_occurred'));
+assert.ok(otHeaders.indexOf('anaest_doc_no_documentation_provided') < otHeaders.indexOf('anaest_chart_clients_name'));
+assert.ok(otHeaders.indexOf('anaest_chart_none') < otHeaders.indexOf('turnaround'));
+assert.ok(otHeaders.indexOf('turnaround') < otHeaders.indexOf('hrs_day'));
+assert.strictEqual(otHeaders.slice(-4).join('|'),
+  'anaest_chart_any_drugs_and_iv_fluids_given_during_the_period_they_are_under_anaesthesia|anaest_chart_none|turnaround|hrs_day'
 );
 
 const routedCs = g('transformRecordsForSheet_')('Central Store', [{
