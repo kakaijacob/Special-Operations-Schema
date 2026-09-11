@@ -289,6 +289,95 @@ const FACILITY_GENERAL_WASH_YES_NO_FIELDS = [
   'sche_bathrooms',
 ];
 
+function facilityGeneralInfraSource_(dest) {
+  return 'infrastructure/' + dest;
+}
+
+/**
+ * infrastructure/* Yes/No questions. 1 Yes / 0 No.
+ * Names drop the prefix. Keep maintencance_log spelling.
+ */
+const FACILITY_GENERAL_INFRA_YES_NO_FIELDS = [
+  'two_doors',
+  'access_ramp',
+  'access_via_road',
+  'service_charter',
+  'dis_charter',
+  'licence',
+  'other_primary_elec',
+  'elec_available',
+  'suff_sockets',
+  'maintenance_unit6',
+  'maintencance_log',
+  'working_machine',
+  'secure_storage6',
+  'feedback_mechanism',
+  'dedicated_office6',
+  'ethics_committee',
+  'cleaning_protocol',
+];
+
+/** infrastructure/vis_signage */
+const FACILITY_GENERAL_VIS_SIGNAGE_MAP = {
+  1: 'Yes, clear and visible',
+  2: 'Yes, but missing in some places or signs not clear',
+  3: 'No',
+};
+
+/** infrastructure/main_elec_source */
+const FACILITY_GENERAL_MAIN_ELEC_SOURCE_MAP = {
+  1: 'Central supply (KPLC)',
+  2: 'Generator (fuel or battery operated generator)',
+  3: 'Solar system',
+  4: 'Other, specify',
+};
+
+/** infrastructure/processed_linens */
+const FACILITY_GENERAL_PROCESSED_LINENS_MAP = {
+  1: 'With an onsite washing machine (Observe)',
+  2: 'They are processed offsite (Verify contract or MOU)',
+  3: 'Via manual washing at facility (Observe location where washing occurs)',
+  4: 'Not applicable for this facility',
+};
+
+/**
+ * select_multiple: infrastructure/sec_electricity
+ * Columns: sec_electricity_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_SEC_ELECTRICITY_PREFIX = 'sec_electricity';
+const FACILITY_GENERAL_SEC_ELECTRICITY_CHOICES = [
+  { code: '1', slug: 'generator' },
+  { code: '2', slug: 'solar_system' },
+  { code: '3', slug: 'other_specify' },
+];
+
+/**
+ * select_multiple: infrastructure/security_measures6
+ * Columns: security_measures6_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_SECURITY_MEASURES6_PREFIX = 'security_measures6';
+const FACILITY_GENERAL_SECURITY_MEASURES6_CHOICES = [
+  { code: '1', slug: 'security_guards_or_watchmen_at_all_times' },
+  { code: '2', slug: 'perimeter_wall_around_the_facility' },
+  { code: '3', slug: 'twenty_four_hours_surveillance_cctv' },
+  { code: '4', slug: 'none' },
+];
+
+/**
+ * select_multiple: infrastructure/housekeeping
+ * Columns: housekeeping_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_HOUSEKEEPING_PREFIX = 'housekeeping';
+const FACILITY_GENERAL_HOUSEKEEPING_CHOICES = [
+  { code: '1', slug: 'eyewear_or_goggles' },
+  { code: '2', slug: 'facemask' },
+  { code: '3', slug: 'utility_gloves' },
+  { code: '4', slug: 'plastic_apron' },
+  { code: '5', slug: 'gumboots' },
+  { code: '6', slug: 'head_gear' },
+  { code: '7', slug: 'none' },
+];
+
 const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -348,6 +437,17 @@ const FACILITY_GENERAL_SOURCE_KEYS = (function () {
     keys[facilityGeneralWashSource_(dest)] = true;
   });
   keys['wash_ipc/table_tops'] = true;
+  FACILITY_GENERAL_INFRA_YES_NO_FIELDS.forEach(function (dest) {
+    keys[facilityGeneralInfraSource_(dest)] = true;
+  });
+  keys['infrastructure/vis_signage'] = true;
+  keys['infrastructure/main_elec_source'] = true;
+  keys['infrastructure/elect_source'] = true;
+  keys['infrastructure/elect_sec'] = true;
+  keys['infrastructure/processed_linens'] = true;
+  keys['infrastructure/sec_electricity'] = true;
+  keys['infrastructure/security_measures6'] = true;
+  keys['infrastructure/housekeeping'] = true;
   return keys;
 })();
 
@@ -599,6 +699,51 @@ function transformFacilityGeneralRecord_(rec) {
     FACILITY_GENERAL_SURFACE_CLEAN_MAP
   );
 
+  FACILITY_GENERAL_INFRA_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[facilityGeneralInfraSource_(dest)],
+      YES_NO_MAP
+    );
+  });
+
+  out.vis_signage = lookupCoded_(
+    rec['infrastructure/vis_signage'],
+    FACILITY_GENERAL_VIS_SIGNAGE_MAP
+  );
+  out.main_elec_source = lookupCoded_(
+    rec['infrastructure/main_elec_source'],
+    FACILITY_GENERAL_MAIN_ELEC_SOURCE_MAP
+  );
+  out.elect_source = rec['infrastructure/elect_source'] == null || rec['infrastructure/elect_source'] === ''
+    ? ''
+    : flattenCell_(rec['infrastructure/elect_source']);
+  out.elect_sec = rec['infrastructure/elect_sec'] == null || rec['infrastructure/elect_sec'] === ''
+    ? ''
+    : flattenCell_(rec['infrastructure/elect_sec']);
+  out.processed_linens = lookupCoded_(
+    rec['infrastructure/processed_linens'],
+    FACILITY_GENERAL_PROCESSED_LINENS_MAP
+  );
+
+  expandSelectMultiple_(
+    out,
+    rec['infrastructure/sec_electricity'],
+    FACILITY_GENERAL_SEC_ELECTRICITY_PREFIX,
+    FACILITY_GENERAL_SEC_ELECTRICITY_CHOICES
+  );
+  expandSelectMultiple_(
+    out,
+    rec['infrastructure/security_measures6'],
+    FACILITY_GENERAL_SECURITY_MEASURES6_PREFIX,
+    FACILITY_GENERAL_SECURITY_MEASURES6_CHOICES
+  );
+  expandSelectMultiple_(
+    out,
+    rec['infrastructure/housekeeping'],
+    FACILITY_GENERAL_HOUSEKEEPING_PREFIX,
+    FACILITY_GENERAL_HOUSEKEEPING_CHOICES
+  );
+
   return out;
 }
 
@@ -671,5 +816,25 @@ function facilityGeneralPreferredHeaders_() {
       'contact_patient',
     ])
     .concat(FACILITY_GENERAL_SURFACE_CLEAN_FIELDS)
-    .concat(['sche_bathrooms', 'table_tops']);
+    .concat(['sche_bathrooms', 'table_tops'])
+    .concat(FACILITY_GENERAL_INFRA_YES_NO_FIELDS)
+    .concat([
+      'vis_signage',
+      'main_elec_source',
+      'elect_source',
+      'elect_sec',
+      'processed_linens',
+    ])
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_SEC_ELECTRICITY_PREFIX,
+      FACILITY_GENERAL_SEC_ELECTRICITY_CHOICES
+    ))
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_SECURITY_MEASURES6_PREFIX,
+      FACILITY_GENERAL_SECURITY_MEASURES6_CHOICES
+    ))
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_HOUSEKEEPING_PREFIX,
+      FACILITY_GENERAL_HOUSEKEEPING_CHOICES
+    ));
 }

@@ -938,6 +938,19 @@ const routedFg = g('transformRecordsForSheet_')('Facility General', [{
   'wash_ipc/bathrooms': 3,
   'wash_ipc/sche_bathrooms': 1,
   'wash_ipc/table_tops': 2,
+  'infrastructure/two_doors': 1,
+  'infrastructure/access_ramp': 0,
+  'infrastructure/licence': 1,
+  'infrastructure/maintencance_log': 0,
+  'infrastructure/cleaning_protocol': 1,
+  'infrastructure/vis_signage': 2,
+  'infrastructure/main_elec_source': 4,
+  'infrastructure/elect_source': 'Mini hydro',
+  'infrastructure/elect_sec': 'Shared solar',
+  'infrastructure/processed_linens': 1,
+  'infrastructure/sec_electricity': '1 3',
+  'infrastructure/security_measures6': '2 4',
+  'infrastructure/housekeeping': '1 7',
   leftover_fg: 'keep',
 }]);
 assert.strictEqual(routedFg.length, 1);
@@ -1027,6 +1040,26 @@ assert.strictEqual(fg.sinks, 'They are not cleaned routinely with disinfectant s
 assert.strictEqual(fg.bathrooms, 'ONLY when they are soiled');
 assert.strictEqual(fg.sche_bathrooms, 'Yes');
 assert.strictEqual(fg.table_tops, 'Daily');
+assert.strictEqual(fg.two_doors, 'Yes');
+assert.strictEqual(fg.access_ramp, 'No');
+assert.strictEqual(fg.licence, 'Yes');
+assert.strictEqual(fg.maintencance_log, 'No');
+assert.strictEqual(fg.cleaning_protocol, 'Yes');
+assert.strictEqual(fg.access_via_road, '');
+assert.strictEqual(fg.vis_signage, 'Yes, but missing in some places or signs not clear');
+assert.strictEqual(fg.main_elec_source, 'Other, specify');
+assert.strictEqual(fg.elect_source, 'Mini hydro');
+assert.strictEqual(fg.elect_sec, 'Shared solar');
+assert.strictEqual(fg.processed_linens, 'With an onsite washing machine (Observe)');
+assert.strictEqual(fg.sec_electricity_generator, 'Yes');
+assert.strictEqual(fg.sec_electricity_solar_system, 'No');
+assert.strictEqual(fg.sec_electricity_other_specify, 'Yes');
+assert.strictEqual(fg.security_measures6_security_guards_or_watchmen_at_all_times, 'No');
+assert.strictEqual(fg.security_measures6_perimeter_wall_around_the_facility, 'Yes');
+assert.strictEqual(fg.security_measures6_none, 'Yes');
+assert.strictEqual(fg.housekeeping_eyewear_or_goggles, 'Yes');
+assert.strictEqual(fg.housekeeping_facemask, 'No');
+assert.strictEqual(fg.housekeeping_none, 'Yes');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
 assert.strictEqual(fg['facility_profile/units'], undefined);
 assert.strictEqual(fg['health_records_clients/data_collection_tools'], undefined);
@@ -1046,6 +1079,11 @@ assert.strictEqual(fg['wash_ipc/sterlization_place'], undefined);
 assert.strictEqual(fg['wash_ipc/specify_main'], undefined);
 assert.strictEqual(fg['wash_ipc/oth_source'], undefined);
 assert.strictEqual(fg['wash_ipc/table_tops'], undefined);
+assert.strictEqual(fg['infrastructure/two_doors'], undefined);
+assert.strictEqual(fg['infrastructure/vis_signage'], undefined);
+assert.strictEqual(fg['infrastructure/elect_source'], undefined);
+assert.strictEqual(fg['infrastructure/sec_electricity'], undefined);
+assert.strictEqual(fg['infrastructure/housekeeping'], undefined);
 
 assert.strictEqual(
   g('transformFacilityGeneralRecord_')({
@@ -1183,6 +1221,46 @@ assert.strictEqual(
   }).contact_patient,
   'Cleaned with water only'
 );
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-sign-1',
+    _submission_time: '2026-07-06T08:00:00',
+    'infrastructure/vis_signage': 1,
+  }).vis_signage,
+  'Yes, clear and visible'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-sign-3',
+    _submission_time: '2026-07-06T08:00:00',
+    'infrastructure/vis_signage': 3,
+  }).vis_signage,
+  'No'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-elec-1',
+    _submission_time: '2026-07-06T08:00:00',
+    'infrastructure/main_elec_source': 1,
+  }).main_elec_source,
+  'Central supply (KPLC)'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-linen-2',
+    _submission_time: '2026-07-06T08:00:00',
+    'infrastructure/processed_linens': 2,
+  }).processed_linens,
+  'They are processed offsite (Verify contract or MOU)'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-linen-4',
+    _submission_time: '2026-07-06T08:00:00',
+    'infrastructure/processed_linens': 4,
+  }).processed_linens,
+  'Not applicable for this facility'
+);
 
 const fgLegacy = g('transformFacilityGeneralRecord_')({
   _uuid: 'fg-legacy',
@@ -1212,6 +1290,13 @@ assert.strictEqual(fgLegacy.sterlization_place_electric_autoclave, '');
 assert.strictEqual(fgLegacy.specify_main, '');
 assert.strictEqual(fgLegacy.oth_source_no_water_source, '');
 assert.strictEqual(fgLegacy.table_tops, '');
+assert.strictEqual(fgLegacy.two_doors, '');
+assert.strictEqual(fgLegacy.maintencance_log, '');
+assert.strictEqual(fgLegacy.vis_signage, '');
+assert.strictEqual(fgLegacy.elect_source, '');
+assert.strictEqual(fgLegacy.processed_linens, '');
+assert.strictEqual(fgLegacy.sec_electricity_generator, '');
+assert.strictEqual(fgLegacy.housekeeping_none, '');
 assert.strictEqual(
   g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1245,8 +1330,17 @@ assert.ok(fgHeaders.indexOf('specify_main') < fgHeaders.indexOf('oth_source_main
 assert.ok(fgHeaders.indexOf('oth_source_no_water_source') < fgHeaders.indexOf('specify_oth_source'));
 assert.ok(fgHeaders.indexOf('bathrooms') < fgHeaders.indexOf('sche_bathrooms'));
 assert.ok(fgHeaders.indexOf('sche_bathrooms') < fgHeaders.indexOf('table_tops'));
+assert.ok(fgHeaders.indexOf('table_tops') < fgHeaders.indexOf('two_doors'));
+assert.ok(fgHeaders.indexOf('two_doors') < fgHeaders.indexOf('access_ramp'));
+assert.ok(fgHeaders.indexOf('maintencance_log') < fgHeaders.indexOf('working_machine'));
+assert.ok(fgHeaders.indexOf('cleaning_protocol') < fgHeaders.indexOf('vis_signage'));
+assert.ok(fgHeaders.indexOf('vis_signage') < fgHeaders.indexOf('main_elec_source'));
+assert.ok(fgHeaders.indexOf('elect_source') < fgHeaders.indexOf('elect_sec'));
+assert.ok(fgHeaders.indexOf('processed_linens') < fgHeaders.indexOf('sec_electricity_generator'));
+assert.ok(fgHeaders.indexOf('sec_electricity_other_specify') < fgHeaders.indexOf('security_measures6_security_guards_or_watchmen_at_all_times'));
+assert.ok(fgHeaders.indexOf('security_measures6_none') < fgHeaders.indexOf('housekeeping_eyewear_or_goggles'));
 assert.strictEqual(fgHeaders.slice(-4).join('|'),
-  'sinks|bathrooms|sche_bathrooms|table_tops'
+  'housekeeping_plastic_apron|housekeeping_gumboots|housekeeping_head_gear|housekeeping_none'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({
