@@ -965,6 +965,7 @@ const OPERATING_THEATRE_SOURCE_KEYS = (function () {
     endtime: true,
     end: true,
     'facility_profile/county': true,
+    'facility_profile/facilities': true,
     'facility_profile/facility': true,
     'facility_profile/gazetted_facility': true,
     'facility_profile/contact': true,
@@ -1011,7 +1012,10 @@ function transformOperatingTheatreRecord_(rec) {
     ? FACILITY_MAP_FROM_2026
     : FACILITY_MAP_BEFORE_2026;
   out.facility = lookupCoded_(
-    rec['facility_profile/facility'],
+    firstValue_(rec, [
+      'facility_profile/facilities',
+      'facility_profile/facility',
+    ]),
     facilityMap
   );
 

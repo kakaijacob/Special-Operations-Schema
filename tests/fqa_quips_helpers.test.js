@@ -1399,7 +1399,7 @@ const otProfile = g('transformOperatingTheatreRecord_')({
   end: '2026-08-01T09:00:00',
   _submission_time: '2026-08-01T10:00:00',
   'facility_profile/county': 2,
-  'facility_profile/facility': 58,
+  'facility_profile/facilities': 58,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 5,
   'group_1/nam_contact': 'Owen Theatre',
@@ -1411,6 +1411,7 @@ assert.strictEqual(otProfile.facility_level, 'Level 4');
 assert.strictEqual(otProfile.contact, 'Medical officer in charge');
 assert.strictEqual(otProfile.contact_name, 'Owen Theatre');
 assert.strictEqual(otProfile.phone_number, '0744444444');
+assert.strictEqual(otProfile['facility_profile/facilities'], undefined);
 assert.strictEqual(otProfile['facility_profile/facility'], undefined);
 
 const otLegacy = g('transformOperatingTheatreRecord_')({
@@ -1430,7 +1431,7 @@ const routedOt = g('transformRecordsForSheet_')('Operating Theatre', [{
   endtime: '2026-09-01T09:00:00',
   _submission_time: '2026-09-01T10:00:00',
   'facility_profile/county': 2,
-  'facility_profile/facility': 58,
+  'facility_profile/facilities': 58,
   'facility_profile/gazetted_facility': 4,
   'facility_profile/contact': 5,
   'group_1/nam_contact': 'Owen Theatre',
@@ -1716,6 +1717,7 @@ assert.strictEqual(ot.anaest_chart_none, 'Yes');
 assert.strictEqual(ot.anaest_chart_clients_name, 'No');
 assert.strictEqual(ot.turnaround, '31-45 minutes');
 assert.strictEqual(ot.hrs_day, 'Rarely assessible');
+assert.strictEqual(ot['facility_profile/facilities'], undefined);
 assert.strictEqual(ot['facility_profile/units'], undefined);
 assert.strictEqual(ot['services_offered/routine_cs'], undefined);
 assert.strictEqual(ot['hrh/county_anaesthes'], undefined);
