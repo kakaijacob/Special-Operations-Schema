@@ -1,5 +1,20 @@
 /** Central Store transformation and preferred headers. */
 
+/**
+ * select_multiple: facility_profile/units
+ * Columns: units_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const CENTRAL_STORE_UNITS_PREFIX = 'units';
+const CENTRAL_STORE_UNITS_CHOICES = [
+  { code: '1', slug: 'outpatient_mnh_services' },
+  { code: '2', slug: 'pharmacy_services' },
+  { code: '3', slug: 'basic_laboratory_services' },
+  { code: '4', slug: 'comprehensive_laboratory_services' },
+  { code: '5', slug: 'inpatient_bemonc_services' },
+  { code: '6', slug: 'newborn_unit_services' },
+  { code: '7', slug: 'maternity_surgical_services_operating_theatre' },
+];
+
 /** health/designated_space */
 const CENTRAL_STORE_DESIGNATED_SPACE_MAP = {
   1: 'Yes (a designated central store room)',
@@ -241,6 +256,7 @@ const CENTRAL_STORE_SOURCE_KEYS = (function () {
     'group_1/phone_contact': true,
     'facility_profile/nam_contact': true,
     'facility_profile/phone_contact': true,
+    'facility_profile/units': true,
     'health/designated_space': true,
   };
   CENTRAL_STORE_HEALTH_YES_NO_FIELDS.forEach(function (dest) {
@@ -308,6 +324,13 @@ function transformCentralStoreRecord_(rec) {
   );
   assignContactNamePhone_(out, rec);
 
+  expandSelectMultiple_(
+    out,
+    rec['facility_profile/units'],
+    CENTRAL_STORE_UNITS_PREFIX,
+    CENTRAL_STORE_UNITS_CHOICES
+  );
+
   out.designated_space = lookupCoded_(
     rec['health/designated_space'],
     CENTRAL_STORE_DESIGNATED_SPACE_MAP
@@ -371,8 +394,9 @@ function centralStorePreferredHeaders_() {
     'contact',
     'contact_name',
     'phone_number',
-    'designated_space',
-  ].concat(CENTRAL_STORE_HEALTH_YES_NO_FIELDS)
+  ].concat(selectMultipleHeaders_(CENTRAL_STORE_UNITS_PREFIX, CENTRAL_STORE_UNITS_CHOICES))
+    .concat(['designated_space'])
+    .concat(CENTRAL_STORE_HEALTH_YES_NO_FIELDS)
     .concat(['odering_personnel', 'stock_orders'])
     .concat(CENTRAL_STORE_SOP_INFRA_EQUIP_YES_NO_FIELDS.map(function (field) {
       return field.dest;

@@ -946,6 +946,7 @@ const routedCs = g('transformRecordsForSheet_')('Central Store', [{
   'facility_profile/contact': 1,
   'group_1/nam_contact': 'Cora Store',
   'group_1/phone_contact': '0755555555',
+  'facility_profile/units': '2 7',
   'health/designated_space': 2,
   'health/inventory': 1,
   'health/tools': 0,
@@ -991,6 +992,13 @@ assert.strictEqual(cs.contact, 'Clinical officer in charge');
 assert.strictEqual(cs.contact_name, 'Cora Store');
 assert.strictEqual(cs.phone_number, '0755555555');
 assert.strictEqual(cs.leftover_cs, 'keep');
+assert.strictEqual(cs.units_pharmacy_services, 'Yes');
+assert.strictEqual(cs.units_maternity_surgical_services_operating_theatre, 'Yes');
+assert.strictEqual(cs.units_outpatient_mnh_services, 'No');
+assert.strictEqual(cs.units_basic_laboratory_services, 'No');
+assert.strictEqual(cs.units_comprehensive_laboratory_services, 'No');
+assert.strictEqual(cs.units_inpatient_bemonc_services, 'No');
+assert.strictEqual(cs.units_newborn_unit_services, 'No');
 assert.strictEqual(cs.designated_space, 'Yes (a designated area within the pharmacy)');
 assert.strictEqual(cs.inventory, 'Yes');
 assert.strictEqual(cs.tools, 'No');
@@ -1028,6 +1036,7 @@ assert.strictEqual(cs.wedge_stock, 'No');
 assert.strictEqual(cs.hours, 'Sometimes when the facility is open, but not always');
 assert.strictEqual(cs.airway_infant_sto, '');
 assert.strictEqual(cs['facility_profile/county'], undefined);
+assert.strictEqual(cs['facility_profile/units'], undefined);
 assert.strictEqual(cs['health/designated_space'], undefined);
 assert.strictEqual(cs['health/inventory'], undefined);
 assert.strictEqual(cs['sop/odering_personnel'], undefined);
@@ -1145,6 +1154,8 @@ const csLegacy = g('transformCentralStoreRecord_')({
   'facility_profile/facility': 16,
 });
 assert.strictEqual(csLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(csLegacy.units_pharmacy_services, '');
+assert.strictEqual(csLegacy.units_newborn_unit_services, '');
 assert.strictEqual(csLegacy.designated_space, '');
 assert.strictEqual(csLegacy.inventory, '');
 assert.strictEqual(csLegacy.bin_card_update, '');
@@ -1164,7 +1175,9 @@ assert.strictEqual(
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 const csHeaders = g('centralStorePreferredHeaders_')();
-assert.ok(csHeaders.indexOf('phone_number') < csHeaders.indexOf('designated_space'));
+assert.ok(csHeaders.indexOf('phone_number') < csHeaders.indexOf('units_outpatient_mnh_services'));
+assert.ok(csHeaders.indexOf('units_outpatient_mnh_services') < csHeaders.indexOf('units_pharmacy_services'));
+assert.ok(csHeaders.indexOf('units_maternity_surgical_services_operating_theatre') < csHeaders.indexOf('designated_space'));
 assert.ok(csHeaders.indexOf('designated_space') < csHeaders.indexOf('inventory'));
 assert.ok(csHeaders.indexOf('inventory') < csHeaders.indexOf('tools'));
 assert.ok(csHeaders.indexOf('bin_card') < csHeaders.indexOf('bin_card_update'));
