@@ -910,6 +910,34 @@ const routedFg = g('transformRecordsForSheet_')('Facility General', [{
   'human_resource_health/wit_meet': 5,
   'human_resource_health/have_sit': 1,
   'human_resource_health/sit_meet': 4,
+  'wash_ipc/ipc_committee': 1,
+  'wash_ipc/dis_sharps': 2,
+  'wash_ipc/inci_avail_funct': 0,
+  'wash_ipc/inci_petrol': 1,
+  'wash_ipc/dispose_medwast': 3,
+  'wash_ipc/designated_cleaning': 1,
+  'wash_ipc/control_traffic': 0,
+  'wash_ipc/three_bucket': 1,
+  'wash_ipc/sop_instrument': 0,
+  'wash_ipc/chlorine': 1,
+  'wash_ipc/enzymatic_sol': 2,
+  'wash_ipc/chlorine_exidine': 3,
+  'wash_ipc/central_steril': 1,
+  'wash_ipc/sterlization_place': '2 5',
+  'wash_ipc/safe_water': 1,
+  'wash_ipc/func_water_source': 0,
+  'wash_ipc/main_source': 10,
+  'wash_ipc/specify_main': 'Roof tank',
+  'wash_ipc/oth_source': '1 11',
+  'wash_ipc/specify_oth_source': 'Vendor jerry cans',
+  'wash_ipc/soiled_linen_pro': 3,
+  'wash_ipc/contact_patient': 1,
+  'wash_ipc/equipment_cleaned': 2,
+  'wash_ipc/floors': 1,
+  'wash_ipc/sinks': 4,
+  'wash_ipc/bathrooms': 3,
+  'wash_ipc/sche_bathrooms': 1,
+  'wash_ipc/table_tops': 2,
   leftover_fg: 'keep',
 }]);
 assert.strictEqual(routedFg.length, 1);
@@ -966,6 +994,39 @@ assert.strictEqual(fg.have_wit, 'No');
 assert.strictEqual(fg.wit_meet, 'The committee does not meet');
 assert.strictEqual(fg.have_sit, 'Yes');
 assert.strictEqual(fg.sit_meet, 'The committee does not meet');
+assert.strictEqual(fg.ipc_committee, 'Yes');
+assert.strictEqual(fg.dis_sharps, 'Electric powered burn incinerator.');
+assert.strictEqual(fg.inci_avail_funct, 'No');
+assert.strictEqual(fg.inci_petrol, 'Yes');
+assert.strictEqual(fg.dispose_medwast, 'Placenta macerator (Please observe)');
+assert.strictEqual(fg.designated_cleaning, 'Present');
+assert.strictEqual(fg.control_traffic, 'No');
+assert.strictEqual(fg.three_bucket, 'Yes');
+assert.strictEqual(fg.sop_instrument, 'No');
+assert.strictEqual(fg.chlorine, 'Always available');
+assert.strictEqual(fg.enzymatic_sol, 'Sometimes available');
+assert.strictEqual(fg.chlorine_exidine, 'Never available');
+assert.strictEqual(fg.alcohol, '');
+assert.strictEqual(fg.central_steril, 'Yes');
+assert.strictEqual(fg.sterlization_place_electric_autoclave, 'Yes');
+assert.strictEqual(fg.sterlization_place_containers_for_high_level_disinfection, 'No');
+assert.strictEqual(fg.sterlization_place_not_applicable_for_this_facility, 'Yes');
+assert.strictEqual(fg.safe_water, 'Yes');
+assert.strictEqual(fg.func_water_source, 'No');
+assert.strictEqual(fg.main_source, 'OTHER (SPECIFY)');
+assert.strictEqual(fg.specify_main, 'Roof tank');
+assert.strictEqual(fg.oth_source_main_public_supply, 'Yes');
+assert.strictEqual(fg.oth_source_no_water_source, 'Yes');
+assert.strictEqual(fg.oth_source_tanker_truck, 'No');
+assert.strictEqual(fg.specify_oth_source, 'Vendor jerry cans');
+assert.strictEqual(fg.soiled_linen_pro, 'Laundered without being disinfected');
+assert.strictEqual(fg.contact_patient, 'Wiped with disinfectant then cleaned with water');
+assert.strictEqual(fg.equipment_cleaned, 'Daily');
+assert.strictEqual(fg.floors, 'Daily AND anytime they are soiled');
+assert.strictEqual(fg.sinks, 'They are not cleaned routinely with disinfectant solution');
+assert.strictEqual(fg.bathrooms, 'ONLY when they are soiled');
+assert.strictEqual(fg.sche_bathrooms, 'Yes');
+assert.strictEqual(fg.table_tops, 'Daily');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
 assert.strictEqual(fg['facility_profile/units'], undefined);
 assert.strictEqual(fg['health_records_clients/data_collection_tools'], undefined);
@@ -979,6 +1040,12 @@ assert.strictEqual(fg['human_resource_health/medical_officer'], undefined);
 assert.strictEqual(fg['human_resource_health/facility_staff3'], undefined);
 assert.strictEqual(fg['human_resource_health/qit_meet'], undefined);
 assert.strictEqual(fg['human_resource_health/sit_meet'], undefined);
+assert.strictEqual(fg['wash_ipc/ipc_committee'], undefined);
+assert.strictEqual(fg['wash_ipc/dis_sharps'], undefined);
+assert.strictEqual(fg['wash_ipc/sterlization_place'], undefined);
+assert.strictEqual(fg['wash_ipc/specify_main'], undefined);
+assert.strictEqual(fg['wash_ipc/oth_source'], undefined);
+assert.strictEqual(fg['wash_ipc/table_tops'], undefined);
 
 assert.strictEqual(
   g('transformFacilityGeneralRecord_')({
@@ -1068,6 +1135,54 @@ assert.strictEqual(
   }).sit_meet,
   '> biannually - yearly'
 );
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-sharps-9',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/dis_sharps': 9,
+  }).dis_sharps,
+  'Not available or stored without destruction (Please observe)'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-waste-8',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/dispose_medwast': 8,
+  }).dispose_medwast,
+  'Compost or placenta pit which is free from pests, rodents, animals (Please observe)'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-clean-0',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/designated_cleaning': 0,
+  }).designated_cleaning,
+  'Not present'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-water-11',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/main_source': 11,
+  }).main_source,
+  'No water source'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-linen-1',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/soiled_linen_pro': 1,
+  }).soiled_linen_pro,
+  'Disinfected prior to being taken to laundry'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-contact-3',
+    _submission_time: '2026-07-05T08:00:00',
+    'wash_ipc/contact_patient': 3,
+  }).contact_patient,
+  'Cleaned with water only'
+);
 
 const fgLegacy = g('transformFacilityGeneralRecord_')({
   _uuid: 'fg-legacy',
@@ -1090,6 +1205,13 @@ assert.strictEqual(fgLegacy.facility_staff3_none, '');
 assert.strictEqual(fgLegacy.roster_displayed, '');
 assert.strictEqual(fgLegacy.qit_meet, '');
 assert.strictEqual(fgLegacy.sit_meet, '');
+assert.strictEqual(fgLegacy.ipc_committee, '');
+assert.strictEqual(fgLegacy.dis_sharps, '');
+assert.strictEqual(fgLegacy.chlorine, '');
+assert.strictEqual(fgLegacy.sterlization_place_electric_autoclave, '');
+assert.strictEqual(fgLegacy.specify_main, '');
+assert.strictEqual(fgLegacy.oth_source_no_water_source, '');
+assert.strictEqual(fgLegacy.table_tops, '');
 assert.strictEqual(
   g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1113,8 +1235,18 @@ assert.ok(fgHeaders.indexOf('eval_verify') < fgHeaders.indexOf('have_qit'));
 assert.ok(fgHeaders.indexOf('have_qit') < fgHeaders.indexOf('qit_meet'));
 assert.ok(fgHeaders.indexOf('have_wit') < fgHeaders.indexOf('wit_meet'));
 assert.ok(fgHeaders.indexOf('have_sit') < fgHeaders.indexOf('sit_meet'));
+assert.ok(fgHeaders.indexOf('sit_meet') < fgHeaders.indexOf('ipc_committee'));
+assert.ok(fgHeaders.indexOf('ipc_committee') < fgHeaders.indexOf('dis_sharps'));
+assert.ok(fgHeaders.indexOf('sop_instrument') < fgHeaders.indexOf('chlorine'));
+assert.ok(fgHeaders.indexOf('chlorine_exidine') < fgHeaders.indexOf('central_steril'));
+assert.ok(fgHeaders.indexOf('sterlization_place_not_applicable_for_this_facility') < fgHeaders.indexOf('safe_water'));
+assert.ok(fgHeaders.indexOf('main_source') < fgHeaders.indexOf('specify_main'));
+assert.ok(fgHeaders.indexOf('specify_main') < fgHeaders.indexOf('oth_source_main_public_supply'));
+assert.ok(fgHeaders.indexOf('oth_source_no_water_source') < fgHeaders.indexOf('specify_oth_source'));
+assert.ok(fgHeaders.indexOf('bathrooms') < fgHeaders.indexOf('sche_bathrooms'));
+assert.ok(fgHeaders.indexOf('sche_bathrooms') < fgHeaders.indexOf('table_tops'));
 assert.strictEqual(fgHeaders.slice(-4).join('|'),
-  'have_wit|wit_meet|have_sit|sit_meet'
+  'sinks|bathrooms|sche_bathrooms|table_tops'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({

@@ -144,6 +144,151 @@ function facilityGeneralHrhSource_(dest) {
   return 'human_resource_health/' + dest;
 }
 
+function facilityGeneralWashSource_(dest) {
+  return 'wash_ipc/' + dest;
+}
+
+/** wash_ipc/dis_sharps */
+const FACILITY_GENERAL_DIS_SHARPS_MAP = {
+  1: 'Fuel powered burn incinerator',
+  2: 'Electric powered burn incinerator.',
+  3: 'Open burning in a protected area (Observe)',
+  4: 'Open burning in a non-protected area (Observe)',
+  5: 'Dump without burning in a protected area (Observe)',
+  6: 'Dump without burning in a non-protected area (Observe)',
+  7: 'Outside contract/remove offsite with protected storage (Ask to see contract/MOU)',
+  8: 'Outside contract/remove offsite with non-protected storage (Ask to see contract/MOU)',
+  9: 'Not available or stored without destruction (Please observe)',
+};
+
+/** wash_ipc/dispose_medwast */
+const FACILITY_GENERAL_DISPOSE_MEDWAST_MAP = {
+  1: 'Fuel powered burn incinerator',
+  2: 'Electric powered burn incinerator.',
+  3: 'Placenta macerator (Please observe)',
+  4: 'Open burning in a protected area (Please observe)',
+  5: 'Open burning in a non-protected area (Please observe)',
+  6: 'Dump without burning in protected area (Please observe)',
+  7: 'Dump without burning in a non-protected area (Please observe)',
+  8: 'Compost or placenta pit which is free from pests, rodents, animals (Please observe)',
+  9: 'Microwave (Please observe)',
+  10: 'Remove offsite with protected storage (Check contract or MOU)',
+  11: 'Not available or stored without destruction (Please observe)',
+};
+
+/** wash_ipc/designated_cleaning */
+const FACILITY_GENERAL_PRESENT_MAP = {
+  1: 'Present',
+  0: 'Not present',
+};
+
+/** wash_ipc disinfectant availability. 1 Always / 2 Sometimes / 3 Never available. */
+const FACILITY_GENERAL_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP = {
+  1: 'Always available',
+  2: 'Sometimes available',
+  3: 'Never available',
+};
+
+const FACILITY_GENERAL_WASH_AVAIL_FIELDS = [
+  'chlorine',
+  'enzymatic_sol',
+  'glutaraldehyde',
+  'formaldehyde',
+  'ethylene_oxide',
+  'alcohol',
+  'chlorine_exidine',
+];
+
+/**
+ * select_multiple: wash_ipc/sterlization_place
+ * Columns: sterlization_place_<choice_slug>. Keep Kobo spelling.
+ */
+const FACILITY_GENERAL_STERLIZATION_PLACE_PREFIX = 'sterlization_place';
+const FACILITY_GENERAL_STERLIZATION_PLACE_CHOICES = [
+  { code: '1', slug: 'containers_for_high_level_disinfection' },
+  { code: '2', slug: 'electric_autoclave' },
+  { code: '3', slug: 'dry_heat_sterilizer' },
+  { code: '4', slug: 'eto_ethylene_oxide_sterilizer' },
+  { code: '5', slug: 'not_applicable_for_this_facility' },
+];
+
+/** wash_ipc/main_source and oth_source share these labels. */
+const FACILITY_GENERAL_WATER_SOURCE_MAP = {
+  1: 'Main public supply',
+  2: 'Tubewell or Borehole',
+  3: 'PROTECTED DUG WELL (has a lock)',
+  4: 'UNPROTECTED DUG WELL (does not have lock)',
+  5: 'Protected SPRING water',
+  6: 'RAINWATER COLLECTION',
+  7: 'CART W/SMALL TANK/DRUM',
+  8: 'TANKER TRUCK',
+  9: 'SURFACE WATER',
+  10: 'OTHER (SPECIFY)',
+  11: 'No water source',
+};
+
+/**
+ * select_multiple: wash_ipc/oth_source
+ * Columns: oth_source_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_OTH_SOURCE_PREFIX = 'oth_source';
+const FACILITY_GENERAL_OTH_SOURCE_CHOICES = [
+  { code: '1', slug: 'main_public_supply' },
+  { code: '2', slug: 'tubewell_or_borehole' },
+  { code: '3', slug: 'protected_dug_well' },
+  { code: '4', slug: 'unprotected_dug_well' },
+  { code: '5', slug: 'protected_spring_water' },
+  { code: '6', slug: 'rainwater_collection' },
+  { code: '7', slug: 'cart_w_small_tank_drum' },
+  { code: '8', slug: 'tanker_truck' },
+  { code: '9', slug: 'surface_water' },
+  { code: '10', slug: 'other_specify' },
+  { code: '11', slug: 'no_water_source' },
+];
+
+/** wash_ipc/soiled_linen_pro */
+const FACILITY_GENERAL_SOILED_LINEN_MAP = {
+  1: 'Disinfected prior to being taken to laundry',
+  2: 'Disinfected once taken to laundry unit',
+  3: 'Laundered without being disinfected',
+  4: 'Not applicable for this facility',
+};
+
+/** wash_ipc/contact_patient */
+const FACILITY_GENERAL_CONTACT_PATIENT_MAP = {
+  1: 'Wiped with disinfectant then cleaned with water',
+  2: 'Wiped with disinfectant only',
+  3: 'Cleaned with water only',
+};
+
+/** wash_ipc cleaning-frequency questions. */
+const FACILITY_GENERAL_SURFACE_CLEAN_MAP = {
+  1: 'Daily AND anytime they are soiled',
+  2: 'Daily',
+  3: 'ONLY when they are soiled',
+  4: 'They are not cleaned routinely with disinfectant solution',
+};
+
+const FACILITY_GENERAL_SURFACE_CLEAN_FIELDS = [
+  'equipment_cleaned',
+  'floors',
+  'sinks',
+  'bathrooms',
+];
+
+const FACILITY_GENERAL_WASH_YES_NO_FIELDS = [
+  'ipc_committee',
+  'inci_avail_funct',
+  'inci_petrol',
+  'control_traffic',
+  'three_bucket',
+  'sop_instrument',
+  'central_steril',
+  'safe_water',
+  'func_water_source',
+  'sche_bathrooms',
+];
+
 const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -183,6 +328,26 @@ const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   keys['human_resource_health/wit_meet'] = true;
   keys['human_resource_health/have_sit'] = true;
   keys['human_resource_health/sit_meet'] = true;
+  FACILITY_GENERAL_WASH_YES_NO_FIELDS.forEach(function (dest) {
+    keys[facilityGeneralWashSource_(dest)] = true;
+  });
+  keys['wash_ipc/dis_sharps'] = true;
+  keys['wash_ipc/dispose_medwast'] = true;
+  keys['wash_ipc/designated_cleaning'] = true;
+  FACILITY_GENERAL_WASH_AVAIL_FIELDS.forEach(function (dest) {
+    keys[facilityGeneralWashSource_(dest)] = true;
+  });
+  keys['wash_ipc/sterlization_place'] = true;
+  keys['wash_ipc/main_source'] = true;
+  keys['wash_ipc/specify_main'] = true;
+  keys['wash_ipc/oth_source'] = true;
+  keys['wash_ipc/specify_oth_source'] = true;
+  keys['wash_ipc/soiled_linen_pro'] = true;
+  keys['wash_ipc/contact_patient'] = true;
+  FACILITY_GENERAL_SURFACE_CLEAN_FIELDS.forEach(function (dest) {
+    keys[facilityGeneralWashSource_(dest)] = true;
+  });
+  keys['wash_ipc/table_tops'] = true;
   return keys;
 })();
 
@@ -327,6 +492,113 @@ function transformFacilityGeneralRecord_(rec) {
     FACILITY_GENERAL_SIT_MEET_MAP
   );
 
+  out.ipc_committee = lookupCoded_(
+    rec['wash_ipc/ipc_committee'],
+    YES_NO_MAP
+  );
+  out.dis_sharps = lookupCoded_(
+    rec['wash_ipc/dis_sharps'],
+    FACILITY_GENERAL_DIS_SHARPS_MAP
+  );
+  out.inci_avail_funct = lookupCoded_(
+    rec['wash_ipc/inci_avail_funct'],
+    YES_NO_MAP
+  );
+  out.inci_petrol = lookupCoded_(
+    rec['wash_ipc/inci_petrol'],
+    YES_NO_MAP
+  );
+  out.dispose_medwast = lookupCoded_(
+    rec['wash_ipc/dispose_medwast'],
+    FACILITY_GENERAL_DISPOSE_MEDWAST_MAP
+  );
+  out.designated_cleaning = lookupCoded_(
+    rec['wash_ipc/designated_cleaning'],
+    FACILITY_GENERAL_PRESENT_MAP
+  );
+  out.control_traffic = lookupCoded_(
+    rec['wash_ipc/control_traffic'],
+    YES_NO_MAP
+  );
+  out.three_bucket = lookupCoded_(
+    rec['wash_ipc/three_bucket'],
+    YES_NO_MAP
+  );
+  out.sop_instrument = lookupCoded_(
+    rec['wash_ipc/sop_instrument'],
+    YES_NO_MAP
+  );
+
+  FACILITY_GENERAL_WASH_AVAIL_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[facilityGeneralWashSource_(dest)],
+      FACILITY_GENERAL_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP
+    );
+  });
+
+  out.central_steril = lookupCoded_(
+    rec['wash_ipc/central_steril'],
+    YES_NO_MAP
+  );
+
+  expandSelectMultiple_(
+    out,
+    rec['wash_ipc/sterlization_place'],
+    FACILITY_GENERAL_STERLIZATION_PLACE_PREFIX,
+    FACILITY_GENERAL_STERLIZATION_PLACE_CHOICES
+  );
+
+  out.safe_water = lookupCoded_(
+    rec['wash_ipc/safe_water'],
+    YES_NO_MAP
+  );
+  out.func_water_source = lookupCoded_(
+    rec['wash_ipc/func_water_source'],
+    YES_NO_MAP
+  );
+  out.main_source = lookupCoded_(
+    rec['wash_ipc/main_source'],
+    FACILITY_GENERAL_WATER_SOURCE_MAP
+  );
+  out.specify_main = rec['wash_ipc/specify_main'] == null || rec['wash_ipc/specify_main'] === ''
+    ? ''
+    : flattenCell_(rec['wash_ipc/specify_main']);
+
+  expandSelectMultiple_(
+    out,
+    rec['wash_ipc/oth_source'],
+    FACILITY_GENERAL_OTH_SOURCE_PREFIX,
+    FACILITY_GENERAL_OTH_SOURCE_CHOICES
+  );
+
+  out.specify_oth_source = rec['wash_ipc/specify_oth_source'] == null || rec['wash_ipc/specify_oth_source'] === ''
+    ? ''
+    : flattenCell_(rec['wash_ipc/specify_oth_source']);
+  out.soiled_linen_pro = lookupCoded_(
+    rec['wash_ipc/soiled_linen_pro'],
+    FACILITY_GENERAL_SOILED_LINEN_MAP
+  );
+  out.contact_patient = lookupCoded_(
+    rec['wash_ipc/contact_patient'],
+    FACILITY_GENERAL_CONTACT_PATIENT_MAP
+  );
+
+  FACILITY_GENERAL_SURFACE_CLEAN_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[facilityGeneralWashSource_(dest)],
+      FACILITY_GENERAL_SURFACE_CLEAN_MAP
+    );
+  });
+
+  out.sche_bathrooms = lookupCoded_(
+    rec['wash_ipc/sche_bathrooms'],
+    YES_NO_MAP
+  );
+  out.table_tops = lookupCoded_(
+    rec['wash_ipc/table_tops'],
+    FACILITY_GENERAL_SURFACE_CLEAN_MAP
+  );
+
   return out;
 }
 
@@ -370,5 +642,34 @@ function facilityGeneralPreferredHeaders_() {
       'wit_meet',
       'have_sit',
       'sit_meet',
-    ]);
+    ])
+    .concat([
+      'ipc_committee',
+      'dis_sharps',
+      'inci_avail_funct',
+      'inci_petrol',
+      'dispose_medwast',
+      'designated_cleaning',
+      'control_traffic',
+      'three_bucket',
+      'sop_instrument',
+    ])
+    .concat(FACILITY_GENERAL_WASH_AVAIL_FIELDS)
+    .concat(['central_steril'])
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_STERLIZATION_PLACE_PREFIX,
+      FACILITY_GENERAL_STERLIZATION_PLACE_CHOICES
+    ))
+    .concat(['safe_water', 'func_water_source', 'main_source', 'specify_main'])
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_OTH_SOURCE_PREFIX,
+      FACILITY_GENERAL_OTH_SOURCE_CHOICES
+    ))
+    .concat([
+      'specify_oth_source',
+      'soiled_linen_pro',
+      'contact_patient',
+    ])
+    .concat(FACILITY_GENERAL_SURFACE_CLEAN_FIELDS)
+    .concat(['sche_bathrooms', 'table_tops']);
 }
