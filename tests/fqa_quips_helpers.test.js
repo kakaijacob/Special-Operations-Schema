@@ -2172,8 +2172,9 @@ assert.strictEqual(
 );
 
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
-assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
-assert.ok(orchestrator.indexOf('FQA Weighting') === -1);
+assert.ok(orchestrator.indexOf('writeFqaWeightingSheet()') !== -1);
+assert.ok(/function pullAllForms[\s\S]*refreshFqaWeightingSheet_\(\);/.test(orchestrator));
+assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaWeightingSheet_\(\);/.test(orchestrator));
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');

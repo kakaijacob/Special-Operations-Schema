@@ -1,7 +1,8 @@
 /**
  * FQA QuIPS Orchestrator
  *
- * Runs extraction and transformation for all 8 Kobo forms.
+ * Runs extraction and transformation for all 8 Kobo forms,
+ * then refreshes the FQA Weighting sheet.
  */
 
 const FORM_CONFIG = [
@@ -105,6 +106,8 @@ function pullAllForms() {
       Utilities.sleep(KOBO_FORM_PAUSE_MS);
     }
   });
+
+  refreshFqaWeightingSheet_();
 }
 
 /**
@@ -182,6 +185,26 @@ function fullRefreshAllForms() {
       Utilities.sleep(KOBO_FORM_PAUSE_MS);
     }
   });
+
+  refreshFqaWeightingSheet_();
+}
+
+/**
+ * Refresh the FQA Weighting catalog after form pulls.
+ * Failures are logged and do not throw, matching per-form error handling.
+ */
+function refreshFqaWeightingSheet_() {
+  try {
+    writeFqaWeightingSheet();
+  } catch (err) {
+    Logger.log(
+      'ERROR writing "' +
+      FQA_WEIGHTING_SHEET_NAME +
+      '": ' +
+      err.message +
+      (err.stack ? '\n' + err.stack : '')
+    );
+  }
 }
 
 /**
