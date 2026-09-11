@@ -968,6 +968,17 @@ const routedCs = g('transformRecordsForSheet_')('Central Store', [{
   'infras/room': 1,
   'infras/dust': 0,
   'equip/computer': 1,
+  'commod/cord': 1,
+  'commod/scissors': 2,
+  'commod/sry2': 3,
+  'commod/penguine': 1,
+  'commod/wedge': 2,
+  'commod/c_stock': 1,
+  'commod/scis_stock': 0,
+  'commod/syr2_stock': 1,
+  'commod/Penguine_stock': 0,
+  'commod/ubt_kit': 1,
+  'commod/wedge_stock': 0,
   leftover_cs: 'keep',
 }]);
 assert.strictEqual(routedCs.length, 1);
@@ -1001,6 +1012,19 @@ assert.strictEqual(cs.thermometer, 'No');
 assert.strictEqual(cs.room, 'Yes');
 assert.strictEqual(cs.dust, 'No');
 assert.strictEqual(cs.computer, 'Yes');
+assert.strictEqual(cs.cord, 'Always available');
+assert.strictEqual(cs.scissors, 'Sometimes available');
+assert.strictEqual(cs.sry2, 'Never available');
+assert.strictEqual(cs.penguine, 'Always available');
+assert.strictEqual(cs.wedge, 'Sometimes available');
+assert.strictEqual(cs.airway_adult, '');
+assert.strictEqual(cs.c_stock, 'Yes');
+assert.strictEqual(cs.scis_stock, 'No');
+assert.strictEqual(cs.syr2_stock, 'Yes');
+assert.strictEqual(cs.Penguine_stock, 'No');
+assert.strictEqual(cs.ubt_kit, 'Yes');
+assert.strictEqual(cs.wedge_stock, 'No');
+assert.strictEqual(cs.airway_infant_sto, '');
 assert.strictEqual(cs['facility_profile/county'], undefined);
 assert.strictEqual(cs['health/designated_space'], undefined);
 assert.strictEqual(cs['health/inventory'], undefined);
@@ -1010,6 +1034,10 @@ assert.strictEqual(cs['sop/supplies'], undefined);
 assert.strictEqual(cs['sanitation/hygiene'], undefined);
 assert.strictEqual(cs['infras/cabinets'], undefined);
 assert.strictEqual(cs['equip/computer'], undefined);
+assert.strictEqual(cs['commod/cord'], undefined);
+assert.strictEqual(cs['commod/sry2'], undefined);
+assert.strictEqual(cs['commod/Penguine_stock'], undefined);
+assert.strictEqual(cs['commod/ubt_kit'], undefined);
 
 assert.strictEqual(
   g('transformCentralStoreRecord_')({
@@ -1105,6 +1133,12 @@ assert.strictEqual(csLegacy.odering_personnel, '');
 assert.strictEqual(csLegacy.stock_orders, '');
 assert.strictEqual(csLegacy.supplies, '');
 assert.strictEqual(csLegacy.computer, '');
+assert.strictEqual(csLegacy.cord, '');
+assert.strictEqual(csLegacy.sry2, '');
+assert.strictEqual(csLegacy.penguine, '');
+assert.strictEqual(csLegacy.c_stock, '');
+assert.strictEqual(csLegacy.Penguine_stock, '');
+assert.strictEqual(csLegacy.ubt_kit, '');
 assert.strictEqual(
   g('centralStorePreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1120,8 +1154,15 @@ assert.ok(csHeaders.indexOf('stock_orders') < csHeaders.indexOf('supplies'));
 assert.ok(csHeaders.indexOf('fefo') < csHeaders.indexOf('hygiene'));
 assert.ok(csHeaders.indexOf('hygiene') < csHeaders.indexOf('structures'));
 assert.ok(csHeaders.indexOf('dust') < csHeaders.indexOf('computer'));
+assert.ok(csHeaders.indexOf('computer') < csHeaders.indexOf('cord'));
+assert.ok(csHeaders.indexOf('sry2') < csHeaders.indexOf('syr10'));
+assert.ok(csHeaders.indexOf('penguine') < csHeaders.indexOf('cling_film'));
+assert.ok(csHeaders.indexOf('wedge') < csHeaders.indexOf('c_stock'));
+assert.ok(csHeaders.indexOf('c_stock') < csHeaders.indexOf('scis_stock'));
+assert.ok(csHeaders.indexOf('ubt_kit') < csHeaders.indexOf('canscalp_stock'));
+assert.ok(csHeaders.indexOf('Penguine_stock') < csHeaders.indexOf('cling_film_stock'));
 assert.strictEqual(csHeaders.slice(-4).join('|'),
-  'thermometer|room|dust|computer'
+  'patellar_stock|Penguine_stock|cling_film_stock|wedge_stock'
 );
 
 let threw = false;

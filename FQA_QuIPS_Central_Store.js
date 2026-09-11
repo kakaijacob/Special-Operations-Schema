@@ -55,6 +55,171 @@ const CENTRAL_STORE_SOP_INFRA_EQUIP_YES_NO_FIELDS = [
   { source: 'equip/computer', dest: 'computer' },
 ];
 
+/** commod/* select_one. 1 Always / 2 Sometimes / 3 Never available. */
+const CENTRAL_STORE_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP = {
+  1: 'Always available',
+  2: 'Sometimes available',
+  3: 'Never available',
+};
+
+const CENTRAL_STORE_COMMODITY_AVAIL_FIELDS = [
+  'cord',
+  'scissors',
+  'airway_adult',
+  'airway_infant',
+  'del_set',
+  'cs_kit',
+  'tray',
+  'dnc',
+  'suture',
+  'gloves',
+  'gyna_glv',
+  'latex',
+  'ambu5',
+  'ambu2',
+  'ambu3',
+  'reserv_bag',
+  'mask1',
+  'mask00',
+  'mask0',
+  'mask2',
+  'torniq',
+  'rebreather',
+  'rebmask',
+  'oxyg',
+  'iv_kit',
+  'solusets',
+  'bld_sets',
+  'syr5',
+  'sry2',
+  'syr10',
+  'syr20',
+  'syr50',
+  'needle21',
+  'needle23',
+  'lbcann',
+  'strap',
+  'vepacks',
+  'trans_kit',
+  'spinal',
+  'lp_kit',
+  'guedel',
+  'spec',
+  'catheter',
+  'neocath',
+  'cath3',
+  'suction',
+  'ubt',
+  'canscalp',
+  'nasg',
+  'vd_kits',
+  'itn',
+  'caps',
+  'socks',
+  'diapers',
+  'cups',
+  'angt',
+  'ingt',
+  'aet',
+  'iet',
+  'pump',
+  'breast',
+  'sudsyr',
+  'dressing',
+  'cotton',
+  'blades',
+  'linen',
+  'towel',
+  'drape_jar',
+  'patellar',
+  'penguine',
+  'cling_film',
+  'wedge',
+];
+
+/**
+ * commod/* Yes/No questions. 1 Yes / 0 No.
+ * Names drop the commod/ prefix. Keep Kobo spellings (sry2, Penguine_stock).
+ */
+const CENTRAL_STORE_COMMODITY_YES_NO_FIELDS = [
+  'c_stock',
+  'scis_stock',
+  'airw_stock',
+  'airway_infant_sto',
+  'del_stock',
+  'cs_stock',
+  'tray_stock',
+  'dnc_stock',
+  'sut_stock',
+  'glov_stock',
+  'gyna_stock',
+  'latex_stock',
+  'ambu5_stock',
+  'ambu2_stock',
+  'ambu3_stock',
+  'bag_stock',
+  'mask1_stock',
+  'mask00_stock',
+  'mask0_stock',
+  'mask2_stock',
+  'torniq_stock',
+  'rebre_stock',
+  'rebmask_stock',
+  'oxytub_stock',
+  'iv_stock',
+  'solu_stock',
+  'bld_stock',
+  'syr5_stock',
+  'syr2_stock',
+  'syr10_stock',
+  'syr20_stock',
+  'syr50_stock',
+  'needle_stock',
+  'needle23_stock',
+  'lbcann_stock',
+  'strap_stock',
+  'vepack_stock',
+  'trans_stock',
+  'spinal_stock',
+  'lp_stock',
+  'guedel_stock',
+  'spec_stock',
+  'catheter_stock',
+  'neocath_stock',
+  'cath3_stock',
+  'suction_stock',
+  'ubt_kit',
+  'canscalp_stock',
+  'nasg_stock',
+  'vdkits_stock',
+  'itn_stock',
+  'caps_stock',
+  'sock_stock',
+  'diaper_stock',
+  'cup_stock',
+  'angt_stock',
+  'ingt_stock',
+  'aet_stock',
+  'iet_stock',
+  'pump_stock',
+  'breast_stock',
+  'sudsyr_stock',
+  'dressing_stock',
+  'cotton_stock',
+  'blades_stock',
+  'linen_stock',
+  'towel_stock',
+  'drape_jar_stock',
+  'patellar_stock',
+  'Penguine_stock',
+  'cling_film_stock',
+  'wedge_stock',
+];
+
+function centralStoreCommoditySource_(dest) {
+  return 'commod/' + dest;
+}
+
 const CENTRAL_STORE_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -78,6 +243,12 @@ const CENTRAL_STORE_SOURCE_KEYS = (function () {
   keys['sop/stock_orders'] = true;
   CENTRAL_STORE_SOP_INFRA_EQUIP_YES_NO_FIELDS.forEach(function (field) {
     keys[field.source] = true;
+  });
+  CENTRAL_STORE_COMMODITY_AVAIL_FIELDS.forEach(function (dest) {
+    keys[centralStoreCommoditySource_(dest)] = true;
+  });
+  CENTRAL_STORE_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
+    keys[centralStoreCommoditySource_(dest)] = true;
   });
   return keys;
 })();
@@ -158,6 +329,20 @@ function transformCentralStoreRecord_(rec) {
     );
   });
 
+  CENTRAL_STORE_COMMODITY_AVAIL_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[centralStoreCommoditySource_(dest)],
+      CENTRAL_STORE_ALWAYS_SOMETIMES_NEVER_AVAILABLE_MAP
+    );
+  });
+
+  CENTRAL_STORE_COMMODITY_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[centralStoreCommoditySource_(dest)],
+      YES_NO_MAP
+    );
+  });
+
   return out;
 }
 
@@ -178,5 +363,7 @@ function centralStorePreferredHeaders_() {
     .concat(['odering_personnel', 'stock_orders'])
     .concat(CENTRAL_STORE_SOP_INFRA_EQUIP_YES_NO_FIELDS.map(function (field) {
       return field.dest;
-    }));
+    }))
+    .concat(CENTRAL_STORE_COMMODITY_AVAIL_FIELDS)
+    .concat(CENTRAL_STORE_COMMODITY_YES_NO_FIELDS);
 }
