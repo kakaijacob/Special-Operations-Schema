@@ -2,7 +2,7 @@
  * FQA QuIPS Orchestrator
  *
  * Runs extraction and transformation for all 8 Kobo forms,
- * then refreshes the FQA Weighting and FQA Scores sheets.
+ * then refreshes the FQA Scores sheet.
  */
 
 const FORM_CONFIG = [
@@ -107,7 +107,7 @@ function pullAllForms() {
     }
   });
 
-  refreshFqaDerivedSheets_();
+  refreshFqaScoreTable_();
 }
 
 /**
@@ -186,36 +186,13 @@ function fullRefreshAllForms() {
     }
   });
 
-  refreshFqaDerivedSheets_();
-}
-
-/**
- * Refresh derived catalog sheets after form pulls.
- * Failures are logged and do not throw, matching per-form error handling.
- */
-function refreshFqaDerivedSheets_() {
-  refreshFqaWeightingSheet_();
   refreshFqaScoreTable_();
 }
 
 /**
- * Refresh the FQA Weighting catalog after form pulls.
+ * Refresh the FQA Scores totalling sheet after form pulls.
  * Failures are logged and do not throw, matching per-form error handling.
  */
-function refreshFqaWeightingSheet_() {
-  try {
-    writeFqaWeightingSheet();
-  } catch (err) {
-    Logger.log(
-      'ERROR writing "' +
-      FQA_WEIGHTING_SHEET_NAME +
-      '": ' +
-      err.message +
-      (err.stack ? '\n' + err.stack : '')
-    );
-  }
-}
-
 function refreshFqaScoreTable_() {
   try {
     writeFqaScoreTable();

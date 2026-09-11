@@ -5,8 +5,9 @@
  * scored attribute, using scores from the FQA Weighting sheet.
  * thematic_area is blank until the groupings are provided.
  *
- * Run writeFqaScoreTable after the department tabs and FQA Weighting
- * exist. pullAllForms / fullRefreshAllForms do this automatically.
+ * Run writeFqaScoreTable after the department tabs exist. It reads
+ * scores from the FQA Weighting sheet when that sheet is present.
+ * pullAllForms / fullRefreshAllForms refresh this table only.
  */
 
 const FQA_SCORE_SHEET_NAME = 'FQA Scores';

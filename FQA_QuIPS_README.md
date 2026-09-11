@@ -16,7 +16,7 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Pharmacy.js` | Pharmacy (dates + raw passthrough) |
 | `FQA_QuIPS_Central_Store.js` | Central Store (dates + raw passthrough) |
 | `FQA_QuIPS_Facility_General.js` | Facility General (dates + raw passthrough) |
-| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then weighting and scores |
+| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then `writeFqaScoreTable` |
 | `FQA_QuIPS_Weighting.js` | Builds the `FQA Weighting` score catalog sheet |
 | `FQA_QuIPS_Scores.js` | Builds the long-format `FQA Scores` totalling sheet |
 | `FQA_QuIPS_Token.example.js` | Template for a local token override |
@@ -31,17 +31,17 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 4. Optionally run `createDailyTrigger` for a daily 6am incremental pull.
 5. Use `fullRefreshAllForms` to wipe tabs and reload. Fetch/transform runs
    **before** the sheet is cleared so a failed pull does not wipe good data.
-6. `pullAllForms` and `fullRefreshAllForms` both finish by running
-   `writeFqaWeightingSheet`, then `writeFqaScoreTable`.
-   The `FQA Weighting` sheet lists every coded transformed column that can
-   carry a score (`Department/KOBO tool`, `variable`, `response`, `label`,
-   `score`). Yes/No labels default to 1/0; other labels leave `score` blank
-   so you can fill them in later. Re-running keeps scores already typed on
-   the weighting sheet.
-   The `FQA Scores` sheet is the totalling table: `county`, `facility`,
-   `facility_level`, `department`, `thematic_area`, `attribute`, `score`.
-   `thematic_area` is blank until those groupings are added. You can still
-   run `writeFqaWeightingSheet` or `writeFqaScoreTable` on their own.
+6. Run `writeFqaWeightingSheet` on its own to create or refresh the
+   `FQA Weighting` catalog (`Department/KOBO tool`, `variable`, `response`,
+   `label`, `score`). Yes/No labels default to 1/0; other labels leave
+   `score` blank so you can fill them in later. Re-running keeps scores
+   already typed on that sheet. The orchestrator does not rebuild it.
+7. `pullAllForms` and `fullRefreshAllForms` both finish by running
+   `writeFqaScoreTable`. The `FQA Scores` sheet is the totalling table:
+   `county`, `facility`, `facility_level`, `department`, `thematic_area`,
+   `attribute`, `score`. It reads scores from the existing FQA Weighting
+   sheet. `thematic_area` is blank until those groupings are added. You
+   can still run `writeFqaScoreTable` on its own.
 
 ## Tests
 

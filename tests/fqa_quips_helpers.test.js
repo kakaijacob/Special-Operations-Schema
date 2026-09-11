@@ -2243,15 +2243,10 @@ const customScoreTable = g(
 assert.strictEqual(customScoreTable[0][6], 9);
 
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
-assert.ok(orchestrator.indexOf('writeFqaWeightingSheet()') !== -1);
+assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
 assert.ok(orchestrator.indexOf('writeFqaScoreTable()') !== -1);
-assert.ok(/function pullAllForms[\s\S]*refreshFqaDerivedSheets_\(\);/.test(orchestrator));
-assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaDerivedSheets_\(\);/.test(orchestrator));
-assert.ok(
-  /function refreshFqaDerivedSheets_[\s\S]*refreshFqaWeightingSheet_\(\);[\s\S]*refreshFqaScoreTable_\(\);/.test(
-    orchestrator
-  )
-);
+assert.ok(/function pullAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
+assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');
