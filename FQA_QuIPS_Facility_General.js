@@ -84,6 +84,66 @@ const FACILITY_GENERAL_MPDR_COMMITTEE2_MAP = {
   5: 'We do not have an MPDSR committee',
 };
 
+/**
+ * human_resource_health staff counts and Yes/No questions, in form order.
+ * Integers stay integers. Yes/No is 1 Yes / 0 No.
+ */
+const FACILITY_GENERAL_HRH_STAFF_FIELDS = [
+  { dest: 'medical_officer', type: 'int' },
+  { dest: 'medical_officer3', type: 'yesno' },
+  { dest: 'clinical_officer', type: 'int' },
+  { dest: 'clinical_officer3', type: 'yesno' },
+  { dest: 'health_records', type: 'int' },
+  { dest: 'nutritionist', type: 'int' },
+  { dest: 'social_worker', type: 'int' },
+  { dest: 'public_health', type: 'int' },
+  { dest: 'health_promotion', type: 'int' },
+  { dest: 'cleaning_staff_employed', type: 'int' },
+  { dest: 'cleaning_staff_contract', type: 'int' },
+  { dest: 'maintenance_staff', type: 'int' },
+];
+
+/**
+ * select_multiple: human_resource_health/facility_staff3
+ * Columns: facility_staff3_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_FACILITY_STAFF3_PREFIX = 'facility_staff3';
+const FACILITY_GENERAL_FACILITY_STAFF3_CHOICES = [
+  { code: '1', slug: 'a_written_up_to_date_staffing_policy' },
+  { code: '2', slug: 'a_list_that_details_staff_numbers' },
+  { code: '3', slug: 'a_list_that_details_the_types_and_competence_of_staff' },
+  { code: '4', slug: 'none' },
+];
+
+/** human_resource_health Yes/No questions after facility_staff3. */
+const FACILITY_GENERAL_HRH_POLICY_YES_NO_FIELDS = [
+  'roster_displayed',
+  'clear_comm',
+  'annual_appraise',
+  'eval_verify',
+];
+
+/** human_resource_health/qit_meet and wit_meet */
+const FACILITY_GENERAL_COMMITTEE_MEET_MAP = {
+  1: 'monthly (or more frequently)',
+  2: '> monthly - quarterly',
+  3: '> quarterly - biannually',
+  4: '> biannually - yearly',
+  5: 'The committee does not meet',
+};
+
+/** human_resource_health/sit_meet — no monthly option. */
+const FACILITY_GENERAL_SIT_MEET_MAP = {
+  1: '> monthly - quarterly',
+  2: '> quarterly - biannually',
+  3: '> biannually - yearly',
+  4: 'The committee does not meet',
+};
+
+function facilityGeneralHrhSource_(dest) {
+  return 'human_resource_health/' + dest;
+}
+
 const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -110,6 +170,19 @@ const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   FACILITY_GENERAL_NATIONAL_DATA_YES_NO_FIELDS.forEach(function (dest) {
     keys['national_data_collection/' + dest] = true;
   });
+  FACILITY_GENERAL_HRH_STAFF_FIELDS.forEach(function (field) {
+    keys[facilityGeneralHrhSource_(field.dest)] = true;
+  });
+  keys['human_resource_health/facility_staff3'] = true;
+  FACILITY_GENERAL_HRH_POLICY_YES_NO_FIELDS.forEach(function (dest) {
+    keys[facilityGeneralHrhSource_(dest)] = true;
+  });
+  keys['human_resource_health/have_qit'] = true;
+  keys['human_resource_health/qit_meet'] = true;
+  keys['human_resource_health/have_wit'] = true;
+  keys['human_resource_health/wit_meet'] = true;
+  keys['human_resource_health/have_sit'] = true;
+  keys['human_resource_health/sit_meet'] = true;
   return keys;
 })();
 
@@ -208,6 +281,52 @@ function transformFacilityGeneralRecord_(rec) {
     YES_NO_MAP
   );
 
+  FACILITY_GENERAL_HRH_STAFF_FIELDS.forEach(function (field) {
+    const raw = rec[facilityGeneralHrhSource_(field.dest)];
+    out[field.dest] = field.type === 'int'
+      ? toIntegerOrBlank_(raw)
+      : lookupCoded_(raw, YES_NO_MAP);
+  });
+
+  expandSelectMultiple_(
+    out,
+    rec['human_resource_health/facility_staff3'],
+    FACILITY_GENERAL_FACILITY_STAFF3_PREFIX,
+    FACILITY_GENERAL_FACILITY_STAFF3_CHOICES
+  );
+
+  FACILITY_GENERAL_HRH_POLICY_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec[facilityGeneralHrhSource_(dest)],
+      YES_NO_MAP
+    );
+  });
+
+  out.have_qit = lookupCoded_(
+    rec['human_resource_health/have_qit'],
+    YES_NO_MAP
+  );
+  out.qit_meet = lookupCoded_(
+    rec['human_resource_health/qit_meet'],
+    FACILITY_GENERAL_COMMITTEE_MEET_MAP
+  );
+  out.have_wit = lookupCoded_(
+    rec['human_resource_health/have_wit'],
+    YES_NO_MAP
+  );
+  out.wit_meet = lookupCoded_(
+    rec['human_resource_health/wit_meet'],
+    FACILITY_GENERAL_COMMITTEE_MEET_MAP
+  );
+  out.have_sit = lookupCoded_(
+    rec['human_resource_health/have_sit'],
+    YES_NO_MAP
+  );
+  out.sit_meet = lookupCoded_(
+    rec['human_resource_health/sit_meet'],
+    FACILITY_GENERAL_SIT_MEET_MAP
+  );
+
   return out;
 }
 
@@ -235,5 +354,21 @@ function facilityGeneralPreferredHeaders_() {
       FACILITY_GENERAL_RECORD_PREFIX,
       FACILITY_GENERAL_RECORD_CHOICES
     ))
-    .concat(['mpdr_committee2', 'standard_hours']);
+    .concat(['mpdr_committee2', 'standard_hours'])
+    .concat(FACILITY_GENERAL_HRH_STAFF_FIELDS.map(function (field) {
+      return field.dest;
+    }))
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_FACILITY_STAFF3_PREFIX,
+      FACILITY_GENERAL_FACILITY_STAFF3_CHOICES
+    ))
+    .concat(FACILITY_GENERAL_HRH_POLICY_YES_NO_FIELDS)
+    .concat([
+      'have_qit',
+      'qit_meet',
+      'have_wit',
+      'wit_meet',
+      'have_sit',
+      'sit_meet',
+    ]);
 }

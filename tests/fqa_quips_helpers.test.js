@@ -895,6 +895,21 @@ const routedFg = g('transformRecordsForSheet_')('Facility General', [{
   'national_data_collection/record': '2 5 8',
   'national_data_collection/mpdr_committee2': 5,
   'national_data_collection/standard_hours': 0,
+  'human_resource_health/medical_officer': 3,
+  'human_resource_health/medical_officer3': 1,
+  'human_resource_health/clinical_officer': 0,
+  'human_resource_health/clinical_officer3': 0,
+  'human_resource_health/health_records': 2,
+  'human_resource_health/nutritionist': 1,
+  'human_resource_health/facility_staff3': '1 4',
+  'human_resource_health/roster_displayed': 1,
+  'human_resource_health/clear_comm': 0,
+  'human_resource_health/have_qit': 1,
+  'human_resource_health/qit_meet': 1,
+  'human_resource_health/have_wit': 0,
+  'human_resource_health/wit_meet': 5,
+  'human_resource_health/have_sit': 1,
+  'human_resource_health/sit_meet': 4,
   leftover_fg: 'keep',
 }]);
 assert.strictEqual(routedFg.length, 1);
@@ -930,6 +945,27 @@ assert.strictEqual(fg.record_none, 'Yes');
 assert.strictEqual(fg.record_data_repository, 'No');
 assert.strictEqual(fg.mpdr_committee2, 'We do not have an MPDSR committee');
 assert.strictEqual(fg.standard_hours, 'No');
+assert.strictEqual(fg.medical_officer, 3);
+assert.strictEqual(fg.medical_officer3, 'Yes');
+assert.strictEqual(fg.clinical_officer, 0);
+assert.strictEqual(fg.clinical_officer3, 'No');
+assert.strictEqual(fg.health_records, 2);
+assert.strictEqual(fg.nutritionist, 1);
+assert.strictEqual(fg.social_worker, '');
+assert.strictEqual(fg.maintenance_staff, '');
+assert.strictEqual(fg.facility_staff3_a_written_up_to_date_staffing_policy, 'Yes');
+assert.strictEqual(fg.facility_staff3_a_list_that_details_staff_numbers, 'No');
+assert.strictEqual(fg.facility_staff3_a_list_that_details_the_types_and_competence_of_staff, 'No');
+assert.strictEqual(fg.facility_staff3_none, 'Yes');
+assert.strictEqual(fg.roster_displayed, 'Yes');
+assert.strictEqual(fg.clear_comm, 'No');
+assert.strictEqual(fg.annual_appraise, '');
+assert.strictEqual(fg.have_qit, 'Yes');
+assert.strictEqual(fg.qit_meet, 'monthly (or more frequently)');
+assert.strictEqual(fg.have_wit, 'No');
+assert.strictEqual(fg.wit_meet, 'The committee does not meet');
+assert.strictEqual(fg.have_sit, 'Yes');
+assert.strictEqual(fg.sit_meet, 'The committee does not meet');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
 assert.strictEqual(fg['facility_profile/units'], undefined);
 assert.strictEqual(fg['health_records_clients/data_collection_tools'], undefined);
@@ -939,6 +975,10 @@ assert.strictEqual(fg['national_data_collection/upload_data2'], undefined);
 assert.strictEqual(fg['national_data_collection/record'], undefined);
 assert.strictEqual(fg['national_data_collection/mpdr_committee2'], undefined);
 assert.strictEqual(fg['national_data_collection/standard_hours'], undefined);
+assert.strictEqual(fg['human_resource_health/medical_officer'], undefined);
+assert.strictEqual(fg['human_resource_health/facility_staff3'], undefined);
+assert.strictEqual(fg['human_resource_health/qit_meet'], undefined);
+assert.strictEqual(fg['human_resource_health/sit_meet'], undefined);
 
 assert.strictEqual(
   g('transformFacilityGeneralRecord_')({
@@ -996,6 +1036,38 @@ assert.strictEqual(
   }).mpdr_committee2,
   '> biannually - yearly'
 );
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-qit-2',
+    _submission_time: '2026-07-04T08:00:00',
+    'human_resource_health/qit_meet': 2,
+  }).qit_meet,
+  '> monthly - quarterly'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-wit-3',
+    _submission_time: '2026-07-04T08:00:00',
+    'human_resource_health/wit_meet': 3,
+  }).wit_meet,
+  '> quarterly - biannually'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-sit-1',
+    _submission_time: '2026-07-04T08:00:00',
+    'human_resource_health/sit_meet': 1,
+  }).sit_meet,
+  '> monthly - quarterly'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-sit-3',
+    _submission_time: '2026-07-04T08:00:00',
+    'human_resource_health/sit_meet': 3,
+  }).sit_meet,
+  '> biannually - yearly'
+);
 
 const fgLegacy = g('transformFacilityGeneralRecord_')({
   _uuid: 'fg-legacy',
@@ -1012,6 +1084,12 @@ assert.strictEqual(fgLegacy.upload_data2, '');
 assert.strictEqual(fgLegacy.record_none, '');
 assert.strictEqual(fgLegacy.mpdr_committee2, '');
 assert.strictEqual(fgLegacy.standard_hours, '');
+assert.strictEqual(fgLegacy.medical_officer, '');
+assert.strictEqual(fgLegacy.medical_officer3, '');
+assert.strictEqual(fgLegacy.facility_staff3_none, '');
+assert.strictEqual(fgLegacy.roster_displayed, '');
+assert.strictEqual(fgLegacy.qit_meet, '');
+assert.strictEqual(fgLegacy.sit_meet, '');
 assert.strictEqual(
   g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1026,8 +1104,17 @@ assert.ok(fgHeaders.indexOf('secure_registers_none') < fgHeaders.indexOf('upload
 assert.ok(fgHeaders.indexOf('upload_data2') < fgHeaders.indexOf('record_computer_storage_space'));
 assert.ok(fgHeaders.indexOf('record_none') < fgHeaders.indexOf('mpdr_committee2'));
 assert.ok(fgHeaders.indexOf('mpdr_committee2') < fgHeaders.indexOf('standard_hours'));
-assert.strictEqual(fgHeaders.slice(-3).join('|'),
-  'record_none|mpdr_committee2|standard_hours'
+assert.ok(fgHeaders.indexOf('standard_hours') < fgHeaders.indexOf('medical_officer'));
+assert.ok(fgHeaders.indexOf('medical_officer') < fgHeaders.indexOf('medical_officer3'));
+assert.ok(fgHeaders.indexOf('clinical_officer') < fgHeaders.indexOf('clinical_officer3'));
+assert.ok(fgHeaders.indexOf('maintenance_staff') < fgHeaders.indexOf('facility_staff3_a_written_up_to_date_staffing_policy'));
+assert.ok(fgHeaders.indexOf('facility_staff3_none') < fgHeaders.indexOf('roster_displayed'));
+assert.ok(fgHeaders.indexOf('eval_verify') < fgHeaders.indexOf('have_qit'));
+assert.ok(fgHeaders.indexOf('have_qit') < fgHeaders.indexOf('qit_meet'));
+assert.ok(fgHeaders.indexOf('have_wit') < fgHeaders.indexOf('wit_meet'));
+assert.ok(fgHeaders.indexOf('have_sit') < fgHeaders.indexOf('sit_meet'));
+assert.strictEqual(fgHeaders.slice(-4).join('|'),
+  'have_wit|wit_meet|have_sit|sit_meet'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({
