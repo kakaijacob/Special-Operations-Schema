@@ -378,6 +378,42 @@ const FACILITY_GENERAL_HOUSEKEEPING_CHOICES = [
   { code: '7', slug: 'none' },
 ];
 
+/** services_offered/* Yes/No questions. 1 Yes / 0 No. */
+const FACILITY_GENERAL_SERVICES_YES_NO_FIELDS = [
+  'functional_ambulance',
+  'unable_to_transport',
+  'network_facility',
+  'standardized_forms',
+  'reliable_communication',
+  'formal_agreement',
+];
+
+/**
+ * select_multiple: services_offered/systems_place
+ * Columns: systems_place_<choice_slug> = Yes / No / '' (blank if skipped).
+ */
+const FACILITY_GENERAL_SYSTEMS_PLACE_PREFIX = 'systems_place';
+const FACILITY_GENERAL_SYSTEMS_PLACE_CHOICES = [
+  { code: '1', slug: 'clients_who_are_visually_impaired' },
+  { code: '2', slug: 'clients_who_are_speech_impaired' },
+  { code: '3', slug: 'clients_who_are_hearing_impaired' },
+  { code: '4', slug: 'clients_who_are_mentally_challenged' },
+  { code: '5', slug: 'none' },
+];
+
+/** adherence_best_practice/* Yes/No questions. 1 Yes / 0 No. */
+const FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS = [
+  'uniforms_badges',
+  'pest_control',
+];
+
+/** hours_operation/opening_hours */
+const FACILITY_GENERAL_OPENING_HOURS_MAP = {
+  1: '<8 hours',
+  2: '8-12 hours',
+  3: '24 hours',
+};
+
 const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   const keys = {
     starttime: true,
@@ -448,6 +484,15 @@ const FACILITY_GENERAL_SOURCE_KEYS = (function () {
   keys['infrastructure/sec_electricity'] = true;
   keys['infrastructure/security_measures6'] = true;
   keys['infrastructure/housekeeping'] = true;
+  FACILITY_GENERAL_SERVICES_YES_NO_FIELDS.forEach(function (dest) {
+    keys['services_offered/' + dest] = true;
+  });
+  keys['services_offered/systems_place'] = true;
+  keys['commodities/run_out_fuel'] = true;
+  FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS.forEach(function (dest) {
+    keys['adherence_best_practice/' + dest] = true;
+  });
+  keys['hours_operation/opening_hours'] = true;
   return keys;
 })();
 
@@ -744,6 +789,37 @@ function transformFacilityGeneralRecord_(rec) {
     FACILITY_GENERAL_HOUSEKEEPING_CHOICES
   );
 
+  FACILITY_GENERAL_SERVICES_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['services_offered/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  expandSelectMultiple_(
+    out,
+    rec['services_offered/systems_place'],
+    FACILITY_GENERAL_SYSTEMS_PLACE_PREFIX,
+    FACILITY_GENERAL_SYSTEMS_PLACE_CHOICES
+  );
+
+  out.run_out_fuel = lookupCoded_(
+    rec['commodities/run_out_fuel'],
+    YES_NO_MAP
+  );
+
+  FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS.forEach(function (dest) {
+    out[dest] = lookupCoded_(
+      rec['adherence_best_practice/' + dest],
+      YES_NO_MAP
+    );
+  });
+
+  out.opening_hours = lookupCoded_(
+    rec['hours_operation/opening_hours'],
+    FACILITY_GENERAL_OPENING_HOURS_MAP
+  );
+
   return out;
 }
 
@@ -836,5 +912,13 @@ function facilityGeneralPreferredHeaders_() {
     .concat(selectMultipleHeaders_(
       FACILITY_GENERAL_HOUSEKEEPING_PREFIX,
       FACILITY_GENERAL_HOUSEKEEPING_CHOICES
-    ));
+    ))
+    .concat(FACILITY_GENERAL_SERVICES_YES_NO_FIELDS)
+    .concat(selectMultipleHeaders_(
+      FACILITY_GENERAL_SYSTEMS_PLACE_PREFIX,
+      FACILITY_GENERAL_SYSTEMS_PLACE_CHOICES
+    ))
+    .concat(['run_out_fuel'])
+    .concat(FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS)
+    .concat(['opening_hours']);
 }

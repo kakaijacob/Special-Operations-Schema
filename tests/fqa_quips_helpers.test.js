@@ -951,6 +951,14 @@ const routedFg = g('transformRecordsForSheet_')('Facility General', [{
   'infrastructure/sec_electricity': '1 3',
   'infrastructure/security_measures6': '2 4',
   'infrastructure/housekeeping': '1 7',
+  'services_offered/functional_ambulance': 1,
+  'services_offered/unable_to_transport': 0,
+  'services_offered/formal_agreement': 1,
+  'services_offered/systems_place': '1 5',
+  'commodities/run_out_fuel': 0,
+  'adherence_best_practice/uniforms_badges': 1,
+  'adherence_best_practice/pest_control': 0,
+  'hours_operation/opening_hours': 2,
   leftover_fg: 'keep',
 }]);
 assert.strictEqual(routedFg.length, 1);
@@ -1060,6 +1068,17 @@ assert.strictEqual(fg.security_measures6_none, 'Yes');
 assert.strictEqual(fg.housekeeping_eyewear_or_goggles, 'Yes');
 assert.strictEqual(fg.housekeeping_facemask, 'No');
 assert.strictEqual(fg.housekeeping_none, 'Yes');
+assert.strictEqual(fg.functional_ambulance, 'Yes');
+assert.strictEqual(fg.unable_to_transport, 'No');
+assert.strictEqual(fg.formal_agreement, 'Yes');
+assert.strictEqual(fg.network_facility, '');
+assert.strictEqual(fg.systems_place_clients_who_are_visually_impaired, 'Yes');
+assert.strictEqual(fg.systems_place_clients_who_are_speech_impaired, 'No');
+assert.strictEqual(fg.systems_place_none, 'Yes');
+assert.strictEqual(fg.run_out_fuel, 'No');
+assert.strictEqual(fg.uniforms_badges, 'Yes');
+assert.strictEqual(fg.pest_control, 'No');
+assert.strictEqual(fg.opening_hours, '8-12 hours');
 assert.strictEqual(fg['facility_profile/facilities'], undefined);
 assert.strictEqual(fg['facility_profile/units'], undefined);
 assert.strictEqual(fg['health_records_clients/data_collection_tools'], undefined);
@@ -1084,6 +1103,11 @@ assert.strictEqual(fg['infrastructure/vis_signage'], undefined);
 assert.strictEqual(fg['infrastructure/elect_source'], undefined);
 assert.strictEqual(fg['infrastructure/sec_electricity'], undefined);
 assert.strictEqual(fg['infrastructure/housekeeping'], undefined);
+assert.strictEqual(fg['services_offered/functional_ambulance'], undefined);
+assert.strictEqual(fg['services_offered/systems_place'], undefined);
+assert.strictEqual(fg['commodities/run_out_fuel'], undefined);
+assert.strictEqual(fg['adherence_best_practice/uniforms_badges'], undefined);
+assert.strictEqual(fg['hours_operation/opening_hours'], undefined);
 
 assert.strictEqual(
   g('transformFacilityGeneralRecord_')({
@@ -1261,6 +1285,22 @@ assert.strictEqual(
   }).processed_linens,
   'Not applicable for this facility'
 );
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-hours-1',
+    _submission_time: '2026-07-07T08:00:00',
+    'hours_operation/opening_hours': 1,
+  }).opening_hours,
+  '<8 hours'
+);
+assert.strictEqual(
+  g('transformFacilityGeneralRecord_')({
+    _uuid: 'fg-hours-3',
+    _submission_time: '2026-07-07T08:00:00',
+    'hours_operation/opening_hours': 3,
+  }).opening_hours,
+  '24 hours'
+);
 
 const fgLegacy = g('transformFacilityGeneralRecord_')({
   _uuid: 'fg-legacy',
@@ -1297,6 +1337,11 @@ assert.strictEqual(fgLegacy.elect_source, '');
 assert.strictEqual(fgLegacy.processed_linens, '');
 assert.strictEqual(fgLegacy.sec_electricity_generator, '');
 assert.strictEqual(fgLegacy.housekeeping_none, '');
+assert.strictEqual(fgLegacy.functional_ambulance, '');
+assert.strictEqual(fgLegacy.systems_place_none, '');
+assert.strictEqual(fgLegacy.run_out_fuel, '');
+assert.strictEqual(fgLegacy.uniforms_badges, '');
+assert.strictEqual(fgLegacy.opening_hours, '');
 assert.strictEqual(
   g('facilityGeneralPreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
@@ -1339,8 +1384,13 @@ assert.ok(fgHeaders.indexOf('elect_source') < fgHeaders.indexOf('elect_sec'));
 assert.ok(fgHeaders.indexOf('processed_linens') < fgHeaders.indexOf('sec_electricity_generator'));
 assert.ok(fgHeaders.indexOf('sec_electricity_other_specify') < fgHeaders.indexOf('security_measures6_security_guards_or_watchmen_at_all_times'));
 assert.ok(fgHeaders.indexOf('security_measures6_none') < fgHeaders.indexOf('housekeeping_eyewear_or_goggles'));
+assert.ok(fgHeaders.indexOf('housekeeping_none') < fgHeaders.indexOf('functional_ambulance'));
+assert.ok(fgHeaders.indexOf('formal_agreement') < fgHeaders.indexOf('systems_place_clients_who_are_visually_impaired'));
+assert.ok(fgHeaders.indexOf('systems_place_none') < fgHeaders.indexOf('run_out_fuel'));
+assert.ok(fgHeaders.indexOf('run_out_fuel') < fgHeaders.indexOf('uniforms_badges'));
+assert.ok(fgHeaders.indexOf('pest_control') < fgHeaders.indexOf('opening_hours'));
 assert.strictEqual(fgHeaders.slice(-4).join('|'),
-  'housekeeping_plastic_apron|housekeeping_gumboots|housekeeping_head_gear|housekeeping_none'
+  'run_out_fuel|uniforms_badges|pest_control|opening_hours'
 );
 
 const ot = g('transformOperatingTheatreRecord_')({
