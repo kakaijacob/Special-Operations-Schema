@@ -935,7 +935,7 @@ assert.strictEqual(
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
 );
 
-const cs = g('transformCentralStoreRecord_')({
+const routedCs = g('transformRecordsForSheet_')('Central Store', [{
   _uuid: 'cs-1',
   starttime: '2026-09-01T08:00:00',
   endtime: '2026-09-01T09:00:00',
@@ -946,14 +946,151 @@ const cs = g('transformCentralStoreRecord_')({
   'facility_profile/contact': 1,
   'group_1/nam_contact': 'Cora Store',
   'group_1/phone_contact': '0755555555',
-});
+  'health/designated_space': 2,
+  'health/inventory': 1,
+  'health/tools': 0,
+  'health/logs': 1,
+  'health/temp_log': 0,
+  'health/chart': 1,
+  'health/chr_tool': 0,
+  'health/ctr_form': 1,
+  'health/ctr_use': 0,
+  'health/bin_card': 1,
+  'health/bin_card_update': 0,
+  'sop/odering_personnel': 4,
+  'sop/stock_orders': 1,
+  'sop/supplies': 1,
+  'sop/fefo': 0,
+  'sanitation/hygiene': 1,
+  'infras/structures': 0,
+  'infras/cabinets': 1,
+  'infras/thermometer': 0,
+  'infras/room': 1,
+  'infras/dust': 0,
+  'equip/computer': 1,
+  leftover_cs: 'keep',
+}]);
+assert.strictEqual(routedCs.length, 1);
+const cs = routedCs[0];
 assert.strictEqual(cs.county, 'Kakamega');
 assert.strictEqual(cs.facility, 'Kakamega County General Refferal Hospital');
 assert.strictEqual(cs.facility_level, 'Level 4');
 assert.strictEqual(cs.contact, 'Clinical officer in charge');
 assert.strictEqual(cs.contact_name, 'Cora Store');
 assert.strictEqual(cs.phone_number, '0755555555');
+assert.strictEqual(cs.leftover_cs, 'keep');
+assert.strictEqual(cs.designated_space, 'Yes (a designated area within the pharmacy)');
+assert.strictEqual(cs.inventory, 'Yes');
+assert.strictEqual(cs.tools, 'No');
+assert.strictEqual(cs.logs, 'Yes');
+assert.strictEqual(cs.temp_log, 'No');
+assert.strictEqual(cs.chart, 'Yes');
+assert.strictEqual(cs.chr_tool, 'No');
+assert.strictEqual(cs.ctr_form, 'Yes');
+assert.strictEqual(cs.ctr_use, 'No');
+assert.strictEqual(cs.bin_card, 'Yes');
+assert.strictEqual(cs.bin_card_update, 'No');
+assert.strictEqual(cs.odering_personnel, 'One person - central store manager');
+assert.strictEqual(cs.stock_orders, 'Quarterly or more often');
+assert.strictEqual(cs.supplies, 'Yes');
+assert.strictEqual(cs.fefo, 'No');
+assert.strictEqual(cs.hygiene, 'Yes');
+assert.strictEqual(cs.structures, 'No');
+assert.strictEqual(cs.cabinets, 'Yes');
+assert.strictEqual(cs.thermometer, 'No');
+assert.strictEqual(cs.room, 'Yes');
+assert.strictEqual(cs.dust, 'No');
+assert.strictEqual(cs.computer, 'Yes');
 assert.strictEqual(cs['facility_profile/county'], undefined);
+assert.strictEqual(cs['health/designated_space'], undefined);
+assert.strictEqual(cs['health/inventory'], undefined);
+assert.strictEqual(cs['sop/odering_personnel'], undefined);
+assert.strictEqual(cs['sop/stock_orders'], undefined);
+assert.strictEqual(cs['sop/supplies'], undefined);
+assert.strictEqual(cs['sanitation/hygiene'], undefined);
+assert.strictEqual(cs['infras/cabinets'], undefined);
+assert.strictEqual(cs['equip/computer'], undefined);
+
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-space-1',
+    _submission_time: '2026-09-02T08:00:00',
+    'health/designated_space': 1,
+  }).designated_space,
+  'Yes (a designated central store room)'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-space-3',
+    _submission_time: '2026-09-02T08:00:00',
+    'health/designated_space': 3,
+  }).designated_space,
+  'Yes (a designated area NOT located within the pharmacy)'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-space-4',
+    _submission_time: '2026-09-02T08:00:00',
+    'health/designated_space': 4,
+  }).designated_space,
+  'No, there is no designated space. Commodities can be found only in service delivery areas'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-order-1',
+    _submission_time: '2026-09-03T08:00:00',
+    'sop/odering_personnel': 1,
+  }).odering_personnel,
+  'One person - nurse in charge'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-order-2',
+    _submission_time: '2026-09-03T08:00:00',
+    'sop/odering_personnel': 2,
+  }).odering_personnel,
+  'One person - pharmacy staff'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-order-3',
+    _submission_time: '2026-09-03T08:00:00',
+    'sop/odering_personnel': 3,
+  }).odering_personnel,
+  'One person - laboratory staff'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-order-5',
+    _submission_time: '2026-09-03T08:00:00',
+    'sop/odering_personnel': 5,
+  }).odering_personnel,
+  'One person - other'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-order-6',
+    _submission_time: '2026-09-03T08:00:00',
+    'sop/odering_personnel': 6,
+  }).odering_personnel,
+  'More than one person is responsible for this task'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-stock-2',
+    _submission_time: '2026-09-04T08:00:00',
+    'sop/stock_orders': 2,
+  }).stock_orders,
+  'Biannually'
+);
+assert.strictEqual(
+  g('transformCentralStoreRecord_')({
+    _uuid: 'cs-stock-3',
+    _submission_time: '2026-09-04T08:00:00',
+    'sop/stock_orders': 3,
+  }).stock_orders,
+  'Only when funds are available'
+);
 
 const csLegacy = g('transformCentralStoreRecord_')({
   _uuid: 'cs-legacy',
@@ -961,9 +1098,30 @@ const csLegacy = g('transformCentralStoreRecord_')({
   'facility_profile/facility': 16,
 });
 assert.strictEqual(csLegacy.facility, 'Iyabe Sub County Hospital');
+assert.strictEqual(csLegacy.designated_space, '');
+assert.strictEqual(csLegacy.inventory, '');
+assert.strictEqual(csLegacy.bin_card_update, '');
+assert.strictEqual(csLegacy.odering_personnel, '');
+assert.strictEqual(csLegacy.stock_orders, '');
+assert.strictEqual(csLegacy.supplies, '');
+assert.strictEqual(csLegacy.computer, '');
 assert.strictEqual(
   g('centralStorePreferredHeaders_')().slice(0, 10).join('|'),
   '_uuid|date_started|date_ended|date_submitted|county|facility|facility_level|contact|contact_name|phone_number'
+);
+const csHeaders = g('centralStorePreferredHeaders_')();
+assert.ok(csHeaders.indexOf('phone_number') < csHeaders.indexOf('designated_space'));
+assert.ok(csHeaders.indexOf('designated_space') < csHeaders.indexOf('inventory'));
+assert.ok(csHeaders.indexOf('inventory') < csHeaders.indexOf('tools'));
+assert.ok(csHeaders.indexOf('bin_card') < csHeaders.indexOf('bin_card_update'));
+assert.ok(csHeaders.indexOf('bin_card_update') < csHeaders.indexOf('odering_personnel'));
+assert.ok(csHeaders.indexOf('odering_personnel') < csHeaders.indexOf('stock_orders'));
+assert.ok(csHeaders.indexOf('stock_orders') < csHeaders.indexOf('supplies'));
+assert.ok(csHeaders.indexOf('fefo') < csHeaders.indexOf('hygiene'));
+assert.ok(csHeaders.indexOf('hygiene') < csHeaders.indexOf('structures'));
+assert.ok(csHeaders.indexOf('dust') < csHeaders.indexOf('computer'));
+assert.strictEqual(csHeaders.slice(-4).join('|'),
+  'thermometer|room|dust|computer'
 );
 
 let threw = false;
