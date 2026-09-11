@@ -67,6 +67,7 @@ const files = [
   'FQA_QuIPS_Central_Store.js',
   'FQA_QuIPS_Facility_General.js',
   'FQA_QuIPS_Weighting.js',
+  'FQA_QuIPS_Scores.js',
   'FQA_QuIPS_Orchestrator.js',
 ];
 
@@ -2171,10 +2172,86 @@ assert.strictEqual(
   false
 );
 
+assert.strictEqual(g('FQA_SCORE_SHEET_NAME'), 'FQA Scores');
+assert.strictEqual(
+  g('FQA_SCORE_HEADERS').join('|'),
+  'county|facility|facility_level|department|thematic_area|attribute|score'
+);
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "unit")'), '');
+
+sandbox.__scoreWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
+  g('buildFqaWeightingTableRows_({})')
+);
+sandbox.__otScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['_uuid', 'county', 'facility', 'facility_level', 'routine_cs', 'lidocaine', 'preop_beds'],
+    ['ot-1', 'Kisii', 'Kitutu Chache South', 'Level 4', 'Yes', 'Always', 3],
+    ['ot-2', 'Nakuru', 'Naivasha', 'Level 4', 'No', '', ''],
+  ],
+}];
+const scoreTable = g('buildFqaScoreTableRows_(__otScoreSheets, __scoreWeighting)');
+assert.strictEqual(scoreTable.length, 3);
+assert.strictEqual(
+  scoreTable[0].join('|'),
+  'Kisii|Kitutu Chache South|Level 4|Operating Theatre||routine_cs|1'
+);
+assert.strictEqual(
+  scoreTable[1].join('|'),
+  'Kisii|Kitutu Chache South|Level 4|Operating Theatre||lidocaine|'
+);
+assert.strictEqual(
+  scoreTable[2].join('|'),
+  'Nakuru|Naivasha|Level 4|Operating Theatre||routine_cs|0'
+);
+
+sandbox.__opScoreSheets = [{
+  department: 'Outpatient',
+  values: [
+    ['_uuid', 'county', 'facility_level', 'unit'],
+    ['op-1', 'Mombasa', 'Level 3', 'Yes'],
+  ],
+}];
+const outpatientScoreTable = g(
+  'buildFqaScoreTableRows_(__opScoreSheets, __scoreWeighting)'
+);
+assert.strictEqual(
+  outpatientScoreTable[0].join('|'),
+  'Mombasa||Level 3|Outpatient||unit|1'
+);
+
+g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
+assert.strictEqual(
+  g('thematicAreaFor_("Operating Theatre", "routine_cs")'),
+  'Services'
+);
+g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = ""');
+
+sandbox.__customWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
+  g('buildFqaWeightingTableRows_({"Operating Theatre\troutine_cs\t1": 9})')
+);
+sandbox.__customScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Kitutu', 'Level 4', 'Yes'],
+  ],
+}];
+const customScoreTable = g(
+  'buildFqaScoreTableRows_(__customScoreSheets, __customWeighting)'
+);
+assert.strictEqual(customScoreTable[0][6], 9);
+
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
 assert.ok(orchestrator.indexOf('writeFqaWeightingSheet()') !== -1);
-assert.ok(/function pullAllForms[\s\S]*refreshFqaWeightingSheet_\(\);/.test(orchestrator));
-assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaWeightingSheet_\(\);/.test(orchestrator));
+assert.ok(orchestrator.indexOf('writeFqaScoreTable()') !== -1);
+assert.ok(/function pullAllForms[\s\S]*refreshFqaDerivedSheets_\(\);/.test(orchestrator));
+assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaDerivedSheets_\(\);/.test(orchestrator));
+assert.ok(
+  /function refreshFqaDerivedSheets_[\s\S]*refreshFqaWeightingSheet_\(\);[\s\S]*refreshFqaScoreTable_\(\);/.test(
+    orchestrator
+  )
+);
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');
