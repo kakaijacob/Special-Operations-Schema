@@ -40,9 +40,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `writeFqaScoreTable`. The `FQA Scores` sheet is the totalling table:
    `county`, `subcounty`, `facility`, `facility_code`, `facility_level`,
    `department`, `thematic_area`, `attribute`, `score`. It reads scores
-   from the existing FQA Weighting
-   sheet. `thematic_area` is blank until those groupings are added. You
-   can still run `writeFqaScoreTable` on its own.
+   from the existing FQA Weighting sheet. Missing `facility_code` and
+   `subcounty` are filled from the facility master spreadsheet when
+   county, facility name, and level match closely. The first run must
+   authorize access to that spreadsheet. `thematic_area` is blank until
+   those groupings are added. You can still run `writeFqaScoreTable`
+   on its own.
 
 ## Tests
 

@@ -2242,6 +2242,79 @@ const customScoreTable = g(
 );
 assert.strictEqual(customScoreTable[0][8], 9);
 
+assert.strictEqual(g('countyKey_("Kisii County")'), 'kisii');
+assert.strictEqual(g('facilityLevelKey_("Level 4")'), '4');
+assert.strictEqual(g('facilityLevelKey_(4)'), '4');
+assert.ok(g('facilityNameSimilarity_("Nyamache Sub-County Hospital", "Nyamache Sub County Hospital")') === 1);
+assert.ok(
+  g('facilityNameSimilarity_("Nyamache Sub County Hospital", "Nyamache Sub County Referral Hospital")') >= 0.86
+);
+assert.ok(
+  g('detectFacilityReferenceColumns_(["County","Sub County","Facility Name","MFL Code","Level"]).facility_code') === 3
+);
+
+sandbox.__facilityReference = [
+  ['County', 'Sub County', 'Facility Name', 'MFL Code', 'Level'],
+  ['Kisii', 'Nyamache', 'Nyamache Sub County Referral Hospital', '14080', 'Level 4'],
+  ['Nakuru', 'Naivasha', 'Naivasha County Referral Hospital', '14013', 'Level 4'],
+  ['Kisii', 'Bomachoge', 'Nyamache Mission Clinic', '99999', 'Level 2'],
+];
+sandbox.__otLookupSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes'],
+  ],
+}];
+const enrichedScores = g(
+  'buildFqaScoreTableRows_(__otLookupSheets, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(
+  enrichedScores[0].join('|'),
+  'Kisii|Nyamache|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||routine_cs|1'
+);
+assert.strictEqual(enrichedScores[1][1], 'Nyamache');
+assert.strictEqual(enrichedScores[1][3], '14080');
+
+sandbox.__keepExisting = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'subcounty', 'facility', 'facility_code', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Keep Me', 'Nyamache Sub County Hospital', 'KEEP', 'Level 4', 'Yes'],
+  ],
+}];
+const keptIdentity = g(
+  'buildFqaScoreTableRows_(__keepExisting, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(keptIdentity[0][1], 'Keep Me');
+assert.strictEqual(keptIdentity[0][3], 'KEEP');
+
+sandbox.__levelMismatch = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 2', 'Yes'],
+  ],
+}];
+const noLevelMatch = g(
+  'buildFqaScoreTableRows_(__levelMismatch, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(noLevelMatch[0][1], '');
+assert.strictEqual(noLevelMatch[0][3], '');
+
+sandbox.__weakName = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Hospital', 'Level 4', 'Yes'],
+  ],
+}];
+const weakMatch = g(
+  'buildFqaScoreTableRows_(__weakName, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(weakMatch[0][3], '');
+
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
 assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
 assert.ok(orchestrator.indexOf('writeFqaScoreTable()') !== -1);
