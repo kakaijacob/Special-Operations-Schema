@@ -197,6 +197,7 @@ function detectFacilityReferenceColumns_(headers) {
     subcounty: find(['subcounty', 'sub_county', 'sub_county_name']),
     facility: find(['facility_name', 'facility', 'name']),
     facility_code: find([
+      'dhis_code',
       'facility_code',
       'mfl_code',
       'mfl',

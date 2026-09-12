@@ -2252,9 +2252,12 @@ assert.ok(
 assert.ok(
   g('detectFacilityReferenceColumns_(["County","Sub County","Facility Name","MFL Code","Level"]).facility_code') === 3
 );
+assert.ok(
+  g('detectFacilityReferenceColumns_(["county","subcounty","facility","dhis_code","facility_level"]).facility_code') === 3
+);
 
 sandbox.__facilityReference = [
-  ['County', 'Sub County', 'Facility Name', 'MFL Code', 'Level'],
+  ['County', 'Sub County', 'Facility Name', 'dhis_code', 'Level'],
   ['Kisii', 'Nyamache', 'Nyamache Sub County Referral Hospital', '14080', 'Level 4'],
   ['Nakuru', 'Naivasha', 'Naivasha County Referral Hospital', '14013', 'Level 4'],
   ['Kisii', 'Bomachoge', 'Nyamache Mission Clinic', '99999', 'Level 2'],
