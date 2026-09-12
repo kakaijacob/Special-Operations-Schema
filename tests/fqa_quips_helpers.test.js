@@ -2243,6 +2243,10 @@ const customScoreTable = g(
 assert.strictEqual(customScoreTable[0][8], 9);
 
 assert.strictEqual(g('countyKey_("Kisii County")'), 'kisii');
+assert.strictEqual(g('countyKey_("Muranga")'), 'muranga');
+assert.strictEqual(g('countyKey_("Murang\'a")'), 'muranga');
+assert.strictEqual(g('countyKey_("Murang\'a County")'), 'muranga');
+assert.strictEqual(g('countyKey_("Muranga")'), g('countyKey_("Murang\'a")'));
 assert.strictEqual(g('facilityLevelKey_("Level 4")'), '4');
 assert.strictEqual(g('facilityLevelKey_(4)'), '4');
 assert.ok(g('facilityNameSimilarity_("Nyamache Sub-County Hospital", "Nyamache Sub County Hospital")') === 1);
@@ -2337,6 +2341,27 @@ const fuzzyTypo = g(
 );
 assert.strictEqual(fuzzyTypo[0][1], 'Nyamache');
 assert.strictEqual(fuzzyTypo[0][3], '14080');
+
+sandbox.__facilityReference.push([
+  'Muranga',
+  'Kiharu',
+  "Murang'a County Referral Hospital",
+  '12345',
+  'Level 4',
+]);
+sandbox.__murangaCounty = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ["Murang'a", "Murang'a County Referral Hospital", 'Level 4', 'Yes'],
+  ],
+}];
+const murangaMatch = g(
+  'buildFqaScoreTableRows_(__murangaCounty, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(murangaMatch[0][0], "Murang'a");
+assert.strictEqual(murangaMatch[0][1], 'Kiharu');
+assert.strictEqual(murangaMatch[0][3], '12345');
 
 sandbox.__missingCounty = [{
   department: 'Operating Theatre',

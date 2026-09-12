@@ -92,9 +92,12 @@ function normalizeMatchText_(value) {
 }
 
 function countyKey_(value) {
-  return normalizeMatchText_(value)
+  // Muranga, Murang'a, and Murang'a County are the same county.
+  return normalizeMatchText_(
+    String(value == null ? '' : value).replace(/['\u2018\u2019`]/g, '')
+  )
     .replace(/\bcounty\b/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, '')
     .trim();
 }
 
