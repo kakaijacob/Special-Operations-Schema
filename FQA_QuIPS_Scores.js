@@ -13,7 +13,9 @@
 const FQA_SCORE_SHEET_NAME = 'FQA Scores';
 const FQA_SCORE_HEADERS = [
   'county',
+  'subcounty',
   'facility',
+  'facility_code',
   'facility_level',
   'department',
   'thematic_area',
@@ -109,7 +111,9 @@ function appendFqaScoreRowsFromSheetValues_(
     return String(header);
   });
   const countyIdx = headerIndex_(headers, 'county');
+  const subcountyIdx = headerIndex_(headers, 'subcounty');
   const facilityIdx = headerIndex_(headers, 'facility');
+  const facilityCodeIdx = headerIndex_(headers, 'facility_code');
   const levelIdx = headerIndex_(headers, 'facility_level');
   const scoredCols = [];
   headers.forEach(function (header, idx) {
@@ -121,7 +125,9 @@ function appendFqaScoreRowsFromSheetValues_(
     const row = values[r];
     if (!row) continue;
     const county = cellAt_(row, countyIdx);
+    const subcounty = cellAt_(row, subcountyIdx);
     const facility = cellAt_(row, facilityIdx);
+    const facilityCode = cellAt_(row, facilityCodeIdx);
     const level = cellAt_(row, levelIdx);
     scoredCols.forEach(function (col) {
       const matched = lookupScoredAttribute_(
@@ -133,7 +139,9 @@ function appendFqaScoreRowsFromSheetValues_(
       if (!matched) return;
       rows.push([
         county,
+        subcounty,
         facility,
+        facilityCode,
         level,
         department,
         thematicAreaFor_(department, col.attribute),

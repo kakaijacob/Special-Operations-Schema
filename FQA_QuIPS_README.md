@@ -38,7 +38,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    already typed on that sheet. The orchestrator does not rebuild it.
 7. `pullAllForms` and `fullRefreshAllForms` both finish by running
    `writeFqaScoreTable`. The `FQA Scores` sheet is the totalling table:
-   `county`, `facility`, `facility_level`, `department`, `thematic_area`,
+   `county`, `subcounty`, `facility`, `facility_code`, `facility_level`,
+   `department`, `thematic_area`,
    `attribute`, `score`. It reads scores from the existing FQA Weighting
    sheet. `thematic_area` is blank until those groupings are added. You
    can still run `writeFqaScoreTable` on its own.

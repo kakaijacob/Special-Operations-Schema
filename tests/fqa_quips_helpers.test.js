@@ -2175,7 +2175,7 @@ assert.strictEqual(
 assert.strictEqual(g('FQA_SCORE_SHEET_NAME'), 'FQA Scores');
 assert.strictEqual(
   g('FQA_SCORE_HEADERS').join('|'),
-  'county|facility|facility_level|department|thematic_area|attribute|score'
+  'county|subcounty|facility|facility_code|facility_level|department|thematic_area|attribute|score'
 );
 assert.strictEqual(g('thematicAreaFor_("Outpatient", "unit")'), '');
 
@@ -2185,24 +2185,24 @@ sandbox.__scoreWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
 sandbox.__otScoreSheets = [{
   department: 'Operating Theatre',
   values: [
-    ['_uuid', 'county', 'facility', 'facility_level', 'routine_cs', 'lidocaine', 'preop_beds'],
-    ['ot-1', 'Kisii', 'Kitutu Chache South', 'Level 4', 'Yes', 'Always', 3],
-    ['ot-2', 'Nakuru', 'Naivasha', 'Level 4', 'No', '', ''],
+    ['_uuid', 'county', 'subcounty', 'facility', 'facility_code', 'facility_level', 'routine_cs', 'lidocaine', 'preop_beds'],
+    ['ot-1', 'Kisii', 'Kitutu Chache South', 'Nyamache Sub County Hospital', '14080', 'Level 4', 'Yes', 'Always', 3],
+    ['ot-2', 'Nakuru', 'Naivasha', 'Naivasha District Hospital', '14013', 'Level 4', 'No', '', ''],
   ],
 }];
 const scoreTable = g('buildFqaScoreTableRows_(__otScoreSheets, __scoreWeighting)');
 assert.strictEqual(scoreTable.length, 3);
 assert.strictEqual(
   scoreTable[0].join('|'),
-  'Kisii|Kitutu Chache South|Level 4|Operating Theatre||routine_cs|1'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||routine_cs|1'
 );
 assert.strictEqual(
   scoreTable[1].join('|'),
-  'Kisii|Kitutu Chache South|Level 4|Operating Theatre||lidocaine|'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||lidocaine|'
 );
 assert.strictEqual(
   scoreTable[2].join('|'),
-  'Nakuru|Naivasha|Level 4|Operating Theatre||routine_cs|0'
+  'Nakuru|Naivasha|Naivasha District Hospital|14013|Level 4|Operating Theatre||routine_cs|0'
 );
 
 sandbox.__opScoreSheets = [{
@@ -2217,7 +2217,7 @@ const outpatientScoreTable = g(
 );
 assert.strictEqual(
   outpatientScoreTable[0].join('|'),
-  'Mombasa||Level 3|Outpatient||unit|1'
+  'Mombasa||||Level 3|Outpatient||unit|1'
 );
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
@@ -2240,7 +2240,7 @@ sandbox.__customScoreSheets = [{
 const customScoreTable = g(
   'buildFqaScoreTableRows_(__customScoreSheets, __customWeighting)'
 );
-assert.strictEqual(customScoreTable[0][6], 9);
+assert.strictEqual(customScoreTable[0][8], 9);
 
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
 assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
