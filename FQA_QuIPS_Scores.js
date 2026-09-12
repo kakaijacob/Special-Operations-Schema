@@ -4,7 +4,8 @@
  * Long-format totalling table: one row per facility / department /
  * scored attribute, using scores from the FQA Weighting sheet.
  * Missing facility_code and subcounty are filled from the facility
- * master spreadsheet when county + facility + level match closely.
+ * master spreadsheet when county, level (facility_level), and a fuzzy
+ * facility-name match all agree. The master code column is dhis_code.
  * thematic_area is blank until the groupings are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
@@ -29,7 +30,22 @@ const FQA_FACILITY_REFERENCE_SPREADSHEET_ID =
   '1EEZJU-DNERkydsMIDtCu-19hzopurtAR7cN5cZ6bvFI';
 const FQA_FACILITY_REFERENCE_SHEET_GID = 0;
 const FQA_FACILITY_MATCH_MIN = 0.86;
-const FQA_FACILITY_MATCH_UNIQUE_NAME_MIN = 0.95;
+const FQA_FACILITY_CANONICAL_TOKENS = [
+  'hospital',
+  'referral',
+  'teaching',
+  'county',
+  'subcounty',
+  'health',
+  'centre',
+  'center',
+  'dispensary',
+  'clinic',
+  'medical',
+  'mission',
+  'district',
+  'maternity',
+];
 
 /**
  * Attribute → thematic area, by department sheet name.
@@ -90,11 +106,24 @@ function facilityLevelKey_(value) {
   return bare ? bare[1] : '';
 }
 
+function canonicalizeFacilityToken_(token) {
+  let best = token;
+  let bestSim = 0.8;
+  FQA_FACILITY_CANONICAL_TOKENS.forEach(function (canon) {
+    const similarity = levenshteinSimilarity_(token, canon);
+    if (similarity >= bestSim) {
+      best = canon;
+      bestSim = similarity;
+    }
+  });
+  return best;
+}
+
 function facilityTokens_(value) {
   const stop = { the: true, of: true, and: true, at: true };
   return normalizeMatchText_(value).split(' ').filter(function (token) {
     return token && !stop[token];
-  });
+  }).map(canonicalizeFacilityToken_);
 }
 
 function distinctiveFacilityTokens_(value) {
@@ -119,6 +148,39 @@ function distinctiveFacilityTokens_(value) {
   return facilityTokens_(value).filter(function (token) {
     return !generic[token] && !/^[0-9]+$/.test(token);
   });
+}
+
+function levenshteinDistance_(left, right) {
+  const a = String(left || '');
+  const b = String(right || '');
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const prev = [];
+  const curr = [];
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+      const insertion = curr[j - 1] + 1;
+      const deletion = prev[j] + 1;
+      const substitution = prev[j - 1] + cost;
+      curr[j] = Math.min(insertion, deletion, substitution);
+    }
+    for (let j = 0; j <= n; j++) prev[j] = curr[j];
+  }
+  return prev[n];
+}
+
+function levenshteinSimilarity_(left, right) {
+  const a = normalizeMatchText_(left);
+  const b = normalizeMatchText_(right);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const distance = levenshteinDistance_(a, b);
+  return 1 - distance / Math.max(a.length, b.length);
 }
 
 function tokenJaccard_(leftTokens, rightTokens) {
@@ -172,7 +234,7 @@ function facilityNameSimilarity_(left, right) {
       distinctive = tokenJaccard_(distinctiveLeft, distinctiveRight);
     }
   }
-  let score = Math.max(jaccard, distinctive);
+  let score = Math.max(jaccard, distinctive, levenshteinSimilarity_(left, right));
   if (
     (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) &&
     distinctiveLeft.length &&
@@ -236,11 +298,10 @@ function isHighFacilityMatch_(query, candidate, similarity) {
   if (similarity < FQA_FACILITY_MATCH_MIN) return false;
   const qCounty = countyKey_(query.county);
   const cCounty = countyKey_(candidate.county);
-  if (qCounty && cCounty && qCounty !== cCounty) return false;
+  if (!qCounty || !cCounty || qCounty !== cCounty) return false;
   const qLevel = facilityLevelKey_(query.facility_level);
   const cLevel = facilityLevelKey_(candidate.facility_level);
-  if (qLevel && cLevel && qLevel !== cLevel) return false;
-  if (!qCounty || !cCounty) return similarity >= FQA_FACILITY_MATCH_UNIQUE_NAME_MIN;
+  if (!qLevel || !cLevel || qLevel !== cLevel) return false;
   return true;
 }
 

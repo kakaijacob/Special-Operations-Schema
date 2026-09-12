@@ -2255,6 +2255,13 @@ assert.ok(
 assert.ok(
   g('detectFacilityReferenceColumns_(["county","subcounty","facility","dhis_code","facility_level"]).facility_code') === 3
 );
+assert.strictEqual(
+  g('detectFacilityReferenceColumns_(["county","facility","level","dhis_code","subcounty"]).facility_level'),
+  2
+);
+assert.ok(
+  g('facilityNameSimilarity_("Nyamache Sub County Hospitl", "Nyamache Sub County Referral Hospital")') >= 0.86
+);
 
 sandbox.__facilityReference = [
   ['County', 'Sub County', 'Facility Name', 'dhis_code', 'Level'],
@@ -2317,6 +2324,31 @@ const weakMatch = g(
   'buildFqaScoreTableRows_(__weakName, __scoreWeighting, __facilityReference)'
 );
 assert.strictEqual(weakMatch[0][3], '');
+
+sandbox.__fuzzyTypo = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs'],
+    ['Kisii', 'Nyamache Sub County Hospitl', '4', 'Yes'],
+  ],
+}];
+const fuzzyTypo = g(
+  'buildFqaScoreTableRows_(__fuzzyTypo, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(fuzzyTypo[0][1], 'Nyamache');
+assert.strictEqual(fuzzyTypo[0][3], '14080');
+
+sandbox.__missingCounty = [{
+  department: 'Operating Theatre',
+  values: [
+    ['facility', 'facility_level', 'routine_cs'],
+    ['Nyamache Sub County Hospital', 'Level 4', 'Yes'],
+  ],
+}];
+const noCountyMatch = g(
+  'buildFqaScoreTableRows_(__missingCounty, __scoreWeighting, __facilityReference)'
+);
+assert.strictEqual(noCountyMatch[0][3], '');
 
 const orchestrator = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_Orchestrator.js'), 'utf8');
 assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
