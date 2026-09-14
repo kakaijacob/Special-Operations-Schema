@@ -9,8 +9,9 @@
  * thematic_area is filled as groupings are provided. Newborn Unit
  * commodity columns are Commodities, equipment columns are Equipment,
  * adherence columns are Adherence to evidence based practice, and
- * records columns are Health Records for clients. hss_building_block
- * and attribute_name stay blank until those labels are provided.
+ * records columns are Health Records for clients, and hours of
+ * operation columns are Hours of operation. hss_building_block and
+ * attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -57,8 +58,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Attribute → thematic area, by department sheet name.
  * Newborn Unit commodity columns are Commodities, equipment columns
  * are Equipment, and adherence columns are Adherence to evidence
- * based practice, and records columns are Health Records for clients.
- * Other departments stay empty until their groupings are defined.
+ * based practice, records columns are Health Records for clients,
+ * and hours of operation columns are Hours of operation. Other
+ * departments stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -223,6 +225,14 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
 ].concat(
   selectMultipleAttributeNames_('patient_files', PATIENT_FILES_CHOICES)
 ), 'Health Records for clients');
+
+// lab_open → nbu_open
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  ['nbu_open'],
+  'Hours of operation'
+);
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

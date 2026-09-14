@@ -2205,7 +2205,8 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "condition_stable")'), 'A
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "gestation_34wks")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "paediatric_rco")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "specialized_care")'), 'Adherence to evidence based practice');
-assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nbu_open")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nbu_open")'), 'Hours of operation');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "functional_nbu")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2277,8 +2278,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'functional_nbu'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2297,7 +2298,10 @@ assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'death_register' && row[6] === 'Health Records for clients';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'nbu_open' && row[6] === '';
+  return row[8] === 'nbu_open' && row[6] === 'Hours of operation';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'functional_nbu' && row[6] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
