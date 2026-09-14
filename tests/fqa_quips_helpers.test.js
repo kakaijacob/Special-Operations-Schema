@@ -2191,7 +2191,21 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_materials_km
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_materials_none")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_suction_size_6")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_tubes_size_8")'), 'Commodities');
-assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "kmc_initiated")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "kmc_initiated")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "preterm_lowbirth")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "feeding_freq")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "express_milk")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "monitoring_plan")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "neonate_review")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "discharge_note")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "infact_referral")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "system_near_nbu")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "weight_gain")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "condition_stable")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "gestation_34wks")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "paediatric_rco")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "specialized_care")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nbu_open")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "phototherapy_lamp")'), 'Equipment');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "radiant_warmer")'), 'Equipment');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "wall_clock")'), 'Equipment');
@@ -2253,8 +2267,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'nbu_open'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', '24 hours per day'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2267,7 +2281,10 @@ assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'phototherapy_lamp' && row[6] === 'Equipment';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'kmc_initiated' && row[6] === '';
+  return row[8] === 'kmc_initiated' && row[6] === 'Adherence to evidence based practice';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'nbu_open' && row[6] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

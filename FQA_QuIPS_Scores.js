@@ -7,9 +7,10 @@
  * master spreadsheet when county, level (facility_level), and a fuzzy
  * facility-name match all agree. The master code column is dhis_code.
  * thematic_area is filled as groupings are provided. Newborn Unit
- * commodity columns are Commodities and equipment columns are
- * Equipment. hss_building_block and attribute_name stay blank until
- * those labels are provided.
+ * commodity columns are Commodities, equipment columns are Equipment,
+ * and adherence columns are Adherence to evidence based practice.
+ * hss_building_block and attribute_name stay blank until those labels
+ * are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -54,9 +55,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
 
 /**
  * Attribute → thematic area, by department sheet name.
- * Newborn Unit commodity columns are Commodities and equipment
- * columns are Equipment. Other departments stay empty until their
- * groupings are defined.
+ * Newborn Unit commodity columns are Commodities, equipment columns
+ * are Equipment, and adherence columns are Adherence to evidence
+ * based practice. Other departments stay empty until their groupings
+ * are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -179,6 +181,32 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   selectMultipleAttributeNames_('equip_oxy_source', OXY_SOURCE_CHOICES),
   selectMultipleAttributeNames_('equip_cannulae', CANNULAE_CHOICES)
 ), 'Equipment');
+
+// kmc2 → kmc_initiated, preterm → preterm_lowbirth, feeding → feeding_freq,
+// express → express_milk, plan → monitoring_plan, neonates → neonate_review,
+// disch_note → discharge_note, inf_refer → infact_referral,
+// system → system_near_nbu, weight → weight_gain, condition → condition_stable,
+// gestation → gestation_34wks, paediatric → paediatric_rco, care → specialized_care.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'kmc_initiated',
+  'preterm_lowbirth',
+  'feeding_freq',
+  'breastmilk',
+  'express_milk',
+  'monitoring_plan',
+  'neonate_review',
+  'discharge',
+  'discharge_note',
+  'infact_referral',
+  'system_near_nbu',
+  'caregiver',
+  'weight_gain',
+  'birth_weight',
+  'condition_stable',
+  'gestation_34wks',
+  'paediatric_rco',
+  'specialized_care',
+], 'Adherence to evidence based practice');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
