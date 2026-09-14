@@ -82,7 +82,10 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `specify_latrine` is text). Facility General adherence dests
    (`uniforms_badges`, `pest_control`) fill Adherence to evidence
    based practice / Leadership & Governance. Facility General
-   `run_out_fuel` fills Commodities / Commodities. Other `thematic_area`
+   `run_out_fuel` fills Commodities / Commodities. Facility General
+   records dests fill Health Records for clients / Health
+   Information System (`secure_registers` parent is not a dest).
+   Other `thematic_area`
    values, `hss_building_block`, and `attribute_name` stay blank
    until those labels are added. You can still run
    `writeFqaScoreTable` on its own.

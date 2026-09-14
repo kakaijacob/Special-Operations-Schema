@@ -20,8 +20,8 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General adherence and commodity dests also set those columns.
- * Remaining
+ * General adherence, commodity, and records dests also set those
+ * columns. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
@@ -82,8 +82,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Operating Theatre dests use the same thematic_area labels.
  * Facility General adherence dests use Adherence to evidence
  * based practice. Facility General commodity dests use
- * Commodities. Other departments stay empty until their
- * groupings are defined.
+ * Commodities. Facility General records dests use Health
+ * Records for clients. Other departments stay empty until
+ * their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -111,7 +112,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * training dests are Human Resource for Health. Operating
  * Theatre WASH dests are Service Delivery. Facility General
  * adherence dests are Leadership & Governance. Facility
- * General commodity dests are Commodities.
+ * General commodity dests are Commodities. Facility General
+ * records dests are Health Information System.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1624,6 +1626,46 @@ assignMappedLabels_(
 
 assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
   run_out_fuel: 'No fuel stockout past month',
+});
+
+// secure_registers parent is not a dest. unique_patient_identifer
+// keeps the form spelling.
+const FACILITY_GENERAL_RECORDS_EVIDENCE_DESTS = [
+  'data_collection_tools',
+].concat(
+  FACILITY_GENERAL_HEALTH_RECORDS_YES_NO_FIELDS,
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_SECURE_REGISTERS_PREFIX,
+    FACILITY_GENERAL_SECURE_REGISTERS_CHOICES
+  )
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_RECORDS_EVIDENCE_DESTS,
+  'Health Records for clients'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_RECORDS_EVIDENCE_DESTS,
+  'Health Information System'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  data_collection_tools: 'Tool type used at facility (paper / electronic / both / neither)',
+  unique_patient_identifer: 'Unique patient identifier system in use',
+  responsible_person: 'Records officer designated',
+  secure_registers_lockable_doors: 'Registry has lockable doors',
+  secure_registers_grills: 'Registry has security grills',
+  secure_registers_fireproof_cabinets: 'Registry has fireproof cabinets',
+  secure_registers_none: 'No security features present',
+  storage_equipment: 'Electronic storage equipment exists',
+  electronic_registry: 'Password-protected electronic registry',
+  data_storage_cap: 'No data-storage stockout in past month',
+  written_collection_tools: 'No paper-tool stockout in past month',
 });
 
 function thematicAreaFor_(department, attribute) {

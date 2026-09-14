@@ -2499,6 +2499,25 @@ assert.strictEqual(g('attributeNameFor_("Facility General", "pest_control")'), '
 assert.strictEqual(g('thematicAreaFor_("Facility General", "run_out_fuel")'), 'Commodities');
 assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "run_out_fuel")'), 'Commodities');
 assert.strictEqual(g('attributeNameFor_("Facility General", "run_out_fuel")'), 'No fuel stockout past month');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "data_collection_tools")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "unique_patient_identifer")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "secure_registers_lockable_doors")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "secure_registers_none")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "written_collection_tools")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "secure_registers")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "data_collection_tools")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "secure_registers_grills")'), 'Health Information System');
+assert.strictEqual(g('attributeNameFor_("Facility General", "data_collection_tools")'), 'Tool type used at facility (paper / electronic / both / neither)');
+assert.strictEqual(g('attributeNameFor_("Facility General", "unique_patient_identifer")'), 'Unique patient identifier system in use');
+assert.strictEqual(g('attributeNameFor_("Facility General", "responsible_person")'), 'Records officer designated');
+assert.strictEqual(g('attributeNameFor_("Facility General", "secure_registers_lockable_doors")'), 'Registry has lockable doors');
+assert.strictEqual(g('attributeNameFor_("Facility General", "secure_registers_grills")'), 'Registry has security grills');
+assert.strictEqual(g('attributeNameFor_("Facility General", "secure_registers_fireproof_cabinets")'), 'Registry has fireproof cabinets');
+assert.strictEqual(g('attributeNameFor_("Facility General", "secure_registers_none")'), 'No security features present');
+assert.strictEqual(g('attributeNameFor_("Facility General", "storage_equipment")'), 'Electronic storage equipment exists');
+assert.strictEqual(g('attributeNameFor_("Facility General", "electronic_registry")'), 'Password-protected electronic registry');
+assert.strictEqual(g('attributeNameFor_("Facility General", "data_storage_cap")'), 'No data-storage stockout in past month');
+assert.strictEqual(g('attributeNameFor_("Facility General", "written_collection_tools")'), 'No paper-tool stockout in past month');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3145,6 +3164,72 @@ assert.ok(fgCommodityScoreTable.some(function (row) {
     row[7] === 'Commodities' &&
     row[9] === 'No fuel stockout past month' &&
     row[10] === 0;
+}));
+
+sandbox.__fgRecordsScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'data_collection_tools',
+      'unique_patient_identifer',
+      'responsible_person',
+      'secure_registers_lockable_doors',
+      'secure_registers_none',
+      'storage_equipment',
+      'written_collection_tools',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Both',
+      'Yes',
+      'Yes',
+      'Yes',
+      'No',
+      'Yes',
+      'No',
+    ],
+  ],
+}];
+const fgRecordsScoreTable = g(
+  'buildFqaScoreTableRows_(__fgRecordsScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'data_collection_tools' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'Tool type used at facility (paper / electronic / both / neither)';
+}));
+assert.ok(fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'unique_patient_identifer' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'Unique patient identifier system in use' &&
+    row[10] === 1;
+}));
+assert.ok(fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'secure_registers_lockable_doors' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'Registry has lockable doors' &&
+    row[10] === 1;
+}));
+assert.ok(fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'secure_registers_none' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'No security features present' &&
+    row[10] === 0;
+}));
+assert.ok(fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'written_collection_tools' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'No paper-tool stockout in past month' &&
+    row[10] === 0;
+}));
+assert.ok(!fgRecordsScoreTable.some(function (row) {
+  return row[8] === 'secure_registers';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
