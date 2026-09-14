@@ -2436,6 +2436,28 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "tetra_eye")'), 'Te
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "needles_syringes")'), 'Needles & syringes (sizes)');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "spinal_packs")'), 'Sterile spinal packs');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "tranexamic")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "op_table")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "bp_cuffs_small")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "bp_cuffs_none")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lary_blades_size_0")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "ett_tubes_adult_size_7_0")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pacu_trol_calcium_gluconamte")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pacu_trol_no_trolley_for_emergency_drugs")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "temp_18_24")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "bp_cuffs")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lary_blades")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "ett_tubes")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pacu_trol")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "op_table")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "pacu_spo2")'), 'Equipment');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "op_table")'), 'Operating table functional');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "magill")'), 'Magill\'s forceps');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "temp_18_24")'), 'PACU temp 18–24°C');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pacu_spo2")'), 'PACU SpO₂ monitor');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pacu_trol_calcium_gluconamte")'), 'Calcium gluconate');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "bp_cuffs_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "lary_blades_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "ett_tubes_none")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2721,6 +2743,41 @@ assert.ok(otCommodityScoreTable.some(function (row) {
 }));
 assert.ok(otCommodityScoreTable.some(function (row) {
   return row[8] === 'tranexamic' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
+sandbox.__otEquipmentScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'op_table', 'surg_lamp', 'bp_cuffs_small', 'pacu_trol_no_trolley_for_emergency_drugs', 'temp_18_24'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Yes, functional', 'Yes', 'Yes', 'Yes'],
+  ],
+}];
+const otEquipmentScoreTable = g(
+  'buildFqaScoreTableRows_(__otEquipmentScoreSheets, __scoreWeighting)'
+);
+assert.ok(otEquipmentScoreTable.some(function (row) {
+  return row[8] === 'op_table' &&
+    row[6] === 'Equipment' &&
+    row[7] === 'Equipment' &&
+    row[9] === 'Operating table functional';
+}));
+assert.ok(otEquipmentScoreTable.some(function (row) {
+  return row[8] === 'surg_lamp' &&
+    row[6] === 'Equipment' &&
+    row[9] === 'Surg. lamp/theatre';
+}));
+assert.ok(otEquipmentScoreTable.some(function (row) {
+  return row[8] === 'bp_cuffs_small' &&
+    row[6] === 'Equipment' &&
+    row[9] === 'Small';
+}));
+assert.ok(otEquipmentScoreTable.some(function (row) {
+  return row[8] === 'pacu_trol_no_trolley_for_emergency_drugs' &&
+    row[9] === 'No trolley';
+}));
+assert.ok(otEquipmentScoreTable.some(function (row) {
+  return row[8] === 'temp_18_24' &&
+    row[9] === 'PACU temp 18–24°C';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

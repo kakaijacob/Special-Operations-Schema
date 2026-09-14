@@ -19,9 +19,10 @@
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
- * adherence and commodity dests also set hss_building_block and
- * attribute_name. Remaining hss_building_block and attribute_name
- * values stay blank until those labels are provided.
+ * adherence, commodity, and equipment dests also set
+ * hss_building_block and attribute_name. Remaining
+ * hss_building_block and attribute_name values stay blank until
+ * those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -77,9 +78,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity, Lab, and
- * Operating Theatre adherence and commodity dests use the same
- * thematic_area labels. Other departments stay empty until their
- * groupings are defined.
+ * Operating Theatre adherence, commodity, and equipment dests use
+ * the same thematic_area labels. Other departments stay empty
+ * until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -95,7 +96,8 @@ const FQA_THEMATIC_AREA_MAP = {
 /**
  * Attribute → HSS building block, by department sheet name.
  * Operating Theatre adherence dests are Leadership & Governance.
- * Operating Theatre commodity dests are Commodities.
+ * Operating Theatre commodity dests are Commodities. Operating
+ * Theatre equipment dests are Equipment.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -110,8 +112,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre adherence and commodity dests use the
- * provided labels.
+ * Operating Theatre adherence, commodity, and equipment dests
+ * use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1123,6 +1125,105 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   cord_clamp: 'Cord clamp',
   caps: 'Baby caps',
   socks: 'Infant socks',
+});
+
+// bp_cuffs, lary_blades, ett_tubes, and pacu_trol parents are not
+// dests. bp_cuffs/4, lary_blades/5, and ett_tubes/8 have no
+// attribute_name.
+const OT_EQUIPMENT_EVIDENCE_DESTS = OT_EQUIPMENT_FIELDS.reduce(function (names, field) {
+  if (field.type === 'multi') {
+    return names.concat(
+      selectMultipleAttributeNames_(field.prefix || field.dest, field.choices)
+    );
+  }
+  names.push(field.dest);
+  return names;
+}, []);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_EQUIPMENT_EVIDENCE_DESTS,
+  'Equipment'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_EQUIPMENT_EVIDENCE_DESTS,
+  'Equipment'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  op_table: 'Operating table functional',
+  surg_lamp: 'Surg. lamp/theatre',
+  inf_scale: 'Infant scale/theatre',
+  chair: 'Backless chair/theatre',
+  cauter: 'Cauterisation eqmt',
+  mayo: 'Mayo trolleys/theatre',
+  instr_trol: 'Instrument trolleys/thtr',
+  cs_sets: 'Full CS sets',
+  resusc: 'Resuscitaire/OR',
+  ster_date: 'Steril. date on CS packs',
+  suction: 'Suction apparatus/thtr',
+  res_bag_mom: 'Adult self-inflating bag',
+  res_bag_infant: 'Infant self-inflating bag',
+  mack_apron: 'Mackintosh aprons',
+  eye_shield: 'Eye shields',
+  gum_boots: 'Gum boots/clogs',
+  anest_machine: 'Anaes. machine/theatre',
+  emerg_trol: 'Anaes. emerg. trolley',
+  anest_maint: 'Anaes. machine maint. rec.',
+  stetho: 'Stethoscope/anaes. mach.',
+  monitor: 'Patient monitor/theatre',
+  spo2_probe: 'Pulse oximeter probe',
+  bp_cuffs_small: 'Small',
+  bp_cuffs_medium: 'Medium',
+  bp_cuffs_large: 'Large',
+  ecg_leads: 'ECG leads',
+  airways: 'Oropharyngeal airway',
+  laryngo: 'Laryngoscope (lights)',
+  lary_blades_size_0: 'Size 0',
+  lary_blades_size_1: 'Size 1',
+  lary_blades_size_4: 'Size 4',
+  lary_blades_size_5: 'Size 5',
+  ett_tubes_newborn_size_2_5: 'NB size 2.5',
+  ett_tubes_newborn_size_3_0: 'NB size 3.0',
+  ett_tubes_newborn_size_3_5: 'NB size 3.5',
+  ett_tubes_adult_size_6_0: 'Adult 6.0',
+  ett_tubes_adult_size_6_5: 'Adult 6.5',
+  ett_tubes_adult_size_7_0: 'Adult 7.0',
+  ett_tubes_adult_size_7_5: 'Adult 7.5',
+  magill: 'Magill\'s forceps',
+  fridge: 'Refrigerator',
+  note2_pacu: 'PACU wall clock working',
+  pacu_trol_tramadol: 'Tramadol',
+  pacu_trol_ketorolac: 'Ketorolac',
+  pacu_trol_ephedrine_or_adrenaline: 'Ephedrine/adrenaline',
+  pacu_trol_calcium_gluconamte: 'Calcium gluconate',
+  pacu_trol_mgso4: 'MgSO4',
+  pacu_trol_sodium_bicarb: 'Sodium bicarb',
+  pacu_trol_hydrocortisone: 'Hydrocortisone',
+  pacu_trol_oxytocin: 'Oxytocin',
+  pacu_trol_tranexamic_acid: 'Tranexamic acid',
+  pacu_trol_lasix: 'Lasix',
+  pacu_trol_misoprostol: 'Misoprostol',
+  pacu_trol_naloxone: 'Naloxone',
+  pacu_trol_flumazenil: 'Flumazenil',
+  pacu_trol_various_airways: 'Various airways',
+  pacu_trol_endotracheal_tubes: 'ETT',
+  pacu_trol_difficult_airway_kit: 'Difficult airway kit',
+  pacu_trol_no_trolley_for_emergency_drugs: 'No trolley',
+  pacu_gluco: 'PACU glucometer',
+  pacu_lamp: 'PACU procedure lamp',
+  pacu_defib: 'PACU defibrillator',
+  pacu_temp: 'PACU wall thermometer',
+  temp_18_24: 'PACU temp 18–24°C',
+  pacu_bp: 'PACU BP monitor',
+  pacu_spo2: 'PACU SpO₂ monitor',
+  pacu_ecg: 'PACU ECG monitor',
+  pacu_o2: 'PACU oxygen capability',
+  pacu_desk: 'PACU staff desk',
 });
 
 function thematicAreaFor_(department, attribute) {
