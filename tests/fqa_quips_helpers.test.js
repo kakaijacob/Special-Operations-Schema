@@ -2207,6 +2207,23 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "paediatric_rco")'), 'Adh
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "specialized_care")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nbu_open")'), 'Hours of operation');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "functional_nbu")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "maintenance_infrastructure")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "well_lit")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "changing_area")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "fire_extinguishers")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "clear_signage")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "clear_charter")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cots_incubator")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "private_room")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "counselling_room")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nurse_desk")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "space_sick_neonates")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "isolation_room")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "resuscitation_area")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sluice_room")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "temporary_storage")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "dust_evidence")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cctv")'), 'Infrastructure');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2278,8 +2295,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'functional_nbu'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'cctv', 'functional_nbu'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes', 'Yes'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2299,6 +2316,9 @@ assert.ok(nbuScoreTable.some(function (row) {
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'nbu_open' && row[6] === 'Hours of operation';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'cctv' && row[6] === 'Infrastructure';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'functional_nbu' && row[6] === '';

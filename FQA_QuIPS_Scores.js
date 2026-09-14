@@ -10,8 +10,9 @@
  * commodity columns are Commodities, equipment columns are Equipment,
  * adherence columns are Adherence to evidence based practice, and
  * records columns are Health Records for clients, and hours of
- * operation columns are Hours of operation. hss_building_block and
- * attribute_name stay blank until those labels are provided.
+ * operation columns are Hours of operation, and infrastructure
+ * columns are Infrastructure. hss_building_block and attribute_name
+ * stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -59,8 +60,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Newborn Unit commodity columns are Commodities, equipment columns
  * are Equipment, and adherence columns are Adherence to evidence
  * based practice, records columns are Health Records for clients,
- * and hours of operation columns are Hours of operation. Other
- * departments stay empty until their groupings are defined.
+ * hours of operation columns are Hours of operation, and
+ * infrastructure columns are Infrastructure. Other departments stay
+ * empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -233,6 +235,40 @@ assignMappedLabels_(
   ['nbu_open'],
   'Hours of operation'
 );
+
+// maintenance → maintenance_infrastructure, lighting → well_lit,
+// proc_rooms → procedure_rooms, chang_area → changing_area,
+// fire → fire_extinguishers, signs → clear_signage, charter → clear_charter,
+// cots → cots_incubator, priv_room → private_room, couns_room → counselling_room,
+// desk → nurse_desk, neo_space → space_sick_neonates, iso_room → isolation_room,
+// resus_area → resuscitation_area, sluice → sluice_room,
+// temp_store → temporary_storage, dust → dust_evidence.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'maintenance_infrastructure',
+  'well_lit',
+  'ventilation',
+  'procedure_rooms',
+  'changing_area',
+  'kitchionette',
+  'fire_extinguishers',
+  'clear_signage',
+  'clear_charter',
+  'cots_incubator',
+  'kmc_area',
+  'room_temp',
+  'draught',
+  'private_room',
+  'counselling_room',
+  'worktop',
+  'nurse_desk',
+  'space_sick_neonates',
+  'isolation_room',
+  'resuscitation_area',
+  'sluice_room',
+  'temporary_storage',
+  'cctv',
+  'dust_evidence',
+], 'Infrastructure');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
