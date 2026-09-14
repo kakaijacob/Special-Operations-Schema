@@ -2430,6 +2430,15 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaesth_assist_24hr
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "county_anaesthesiologists")'), 'Human Resource for Health');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "county_anaesthesiologists")'), 'Number of county-employed anaesthesiologists');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaesthetist_available_24hrs")'), 'Anaes. 24h avail.');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "maintained")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "preop_change")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "ipd_dist")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "changing_rooms")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "adequate_surg_rooms")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "theatre_space_surgery")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "maintained")'), 'Infrastructure');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "preop_change")'), 'Pre-op changing rooms');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "ipd_dist")'), 'Theatre–IPD ≤2 min');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2859,6 +2868,35 @@ assert.ok(otHrhScoreTable.some(function (row) {
 }));
 assert.ok(otHrhScoreTable.some(function (row) {
   return row[8] === 'anaesth_assist_24hr' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
+sandbox.__otInfraScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'maintained', 'preop_change', 'ipd_dist', 'theatre_space_surgery'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Yes', 'Yes', 'Yes'],
+  ],
+}];
+const otInfraScoreTable = g(
+  'buildFqaScoreTableRows_(__otInfraScoreSheets, __scoreWeighting)'
+);
+assert.ok(otInfraScoreTable.some(function (row) {
+  return row[8] === 'maintained' &&
+    row[6] === 'Infrastructure' &&
+    row[7] === 'Infrastructure' &&
+    row[9] === 'Unit physical maint.';
+}));
+assert.ok(otInfraScoreTable.some(function (row) {
+  return row[8] === 'preop_change' &&
+    row[6] === 'Infrastructure' &&
+    row[9] === 'Pre-op changing rooms';
+}));
+assert.ok(otInfraScoreTable.some(function (row) {
+  return row[8] === 'ipd_dist' &&
+    row[9] === 'Theatre–IPD ≤2 min';
+}));
+assert.ok(otInfraScoreTable.some(function (row) {
+  return row[8] === 'theatre_space_surgery' && row[6] === '' && row[7] === '' && row[9] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

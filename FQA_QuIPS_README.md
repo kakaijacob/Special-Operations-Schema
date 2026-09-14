@@ -68,7 +68,9 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    the provided `attribute_name` labels. `hrs_day` fills Hours of
    operation / Service Delivery / OT accessibility. Operating
    Theatre HRH dests fill HRH / Human Resource for Health and the
-   provided `attribute_name` labels. Other `thematic_area` values,
+   provided `attribute_name` labels. Operating Theatre
+   infrastructure dests fill Infrastructure and the provided
+   `attribute_name` labels. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 

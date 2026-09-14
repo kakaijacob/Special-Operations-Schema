@@ -100,7 +100,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Theatre equipment dests are Equipment. Operating Theatre
  * records dests are Health Information System. Operating Theatre
  * hours dests are Service Delivery. Operating Theatre HRH dests
- * are Human Resource for Health.
+ * are Human Resource for Health. Operating Theatre
+ * infrastructure dests are Infrastructure.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1360,6 +1361,50 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   referral_no_nurse: 'Nursing unavail referral 3m',
   pacu_nurse_24hr: 'PACU nurse 24h (1:2 beds)',
   on_call_roster: 'Emerg-surg on-call roster',
+});
+
+// changing_rooms → preop_change. adequate_surg_rooms is not a
+// dest. theatre_space/1-5 are dests but were not listed.
+const OT_INFRA_EVIDENCE_DESTS = OT_INFRA_FIELDS.map(function (field) {
+  return field.dest;
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  maintained: 'Unit physical maint.',
+  exam_light: 'Exam spaces lighting',
+  exam_vent: 'OT ventilation',
+  preop_area: 'Pre-op area',
+  preop_beds: 'Number of preoperative patient beds',
+  preop_change: 'Pre-op changing rooms',
+  surg_rooms: 'Number of operating rooms',
+  intercom: 'Anaes. phone/intercom',
+  postop_beds: 'Number of postoperative patient beds',
+  bed_ref: 'Bed-shortage refs (1m)',
+  pharm_store: 'Pharma/surg storage',
+  sterile_store: 'Sterilised mat. storage',
+  fire_ext: 'Fire-fighting apparatus',
+  signage: 'Visible signage',
+  charter: 'Visible service charter',
+  nurse_station: 'Post-op nursing desk',
+  postop_access: 'Post-op ≤1 min from OR',
+  backup_power: 'Theatre backup power',
+  temp_ctrl: 'Temperature control (AC)',
+  staff_lounge: 'Theatre staff lounge',
+  ipd_dist: 'Theatre–IPD ≤2 min',
 });
 
 function thematicAreaFor_(department, attribute) {
