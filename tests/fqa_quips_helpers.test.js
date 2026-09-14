@@ -2444,6 +2444,19 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "files_sec")'), 'Pri
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "files_storage")'), '');
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "preop_vis_priv")'), 'Service Delivery');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "files_sec")'), 'Files in secure cabinets');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "routine_cs")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "routine_cs_6months")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "emergency_cs")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "emergency_obstetric_anaesthesia")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "tubal_ligation")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "dilation_curettage")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "blynch_sature")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "marsupial")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "emerg_cs")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "routine_cs")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "routine_cs")'), 'Routine CS');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "routine_cs_6months")'), 'Routine CS — 6m');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "dilation_curettage")'), 'Dilation & curettage');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2537,7 +2550,7 @@ const scoreTable = g('buildFqaScoreTableRows_(__otScoreSheets, __scoreWeighting)
 assert.strictEqual(scoreTable.length, 3);
 assert.strictEqual(
   scoreTable[0].join('|'),
-  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||routine_cs||1'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|Services offered|Service Delivery|routine_cs|Routine CS|1'
 );
 assert.strictEqual(
   scoreTable[1].join('|'),
@@ -2545,7 +2558,7 @@ assert.strictEqual(
 );
 assert.strictEqual(
   scoreTable[2].join('|'),
-  'Nakuru|Naivasha|Naivasha District Hospital|14013|Level 4|Operating Theatre|||routine_cs||0'
+  'Nakuru|Naivasha|Naivasha District Hospital|14013|Level 4|Operating Theatre|Services offered|Service Delivery|routine_cs|Routine CS|0'
 );
 
 sandbox.__opScoreSheets = [{
@@ -2926,24 +2939,49 @@ assert.ok(otPrivacyScoreTable.some(function (row) {
     row[9] === 'Files in secure cabinets';
 }));
 
+sandbox.__otServicesScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'routine_cs', 'emergency_cs', 'marsupial'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Yes', 'Yes'],
+  ],
+}];
+const otServicesScoreTable = g(
+  'buildFqaScoreTableRows_(__otServicesScoreSheets, __scoreWeighting)'
+);
+assert.ok(otServicesScoreTable.some(function (row) {
+  return row[8] === 'routine_cs' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Routine CS';
+}));
+assert.ok(otServicesScoreTable.some(function (row) {
+  return row[8] === 'emergency_cs' &&
+    row[6] === 'Services offered' &&
+    row[9] === 'Emergency CS';
+}));
+assert.ok(otServicesScoreTable.some(function (row) {
+  return row[8] === 'marsupial' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
 assert.strictEqual(
   g('thematicAreaFor_("Operating Theatre", "routine_cs")'),
   'Services'
 );
-g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = ""');
+g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services offered"');
 g('FQA_HSS_BUILDING_BLOCK_MAP["Operating Theatre"].routine_cs = "Service delivery"');
 assert.strictEqual(
   g('hssBuildingBlockFor_("Operating Theatre", "routine_cs")'),
   'Service delivery'
 );
-g('FQA_HSS_BUILDING_BLOCK_MAP["Operating Theatre"].routine_cs = ""');
-g('FQA_ATTRIBUTE_NAME_MAP["Operating Theatre"].routine_cs = "Routine CS"');
+g('FQA_HSS_BUILDING_BLOCK_MAP["Operating Theatre"].routine_cs = "Service Delivery"');
+g('FQA_ATTRIBUTE_NAME_MAP["Operating Theatre"].routine_cs = "Routine CS override"');
 assert.strictEqual(
   g('attributeNameFor_("Operating Theatre", "routine_cs")'),
-  'Routine CS'
+  'Routine CS override'
 );
-g('FQA_ATTRIBUTE_NAME_MAP["Operating Theatre"].routine_cs = ""');
+g('FQA_ATTRIBUTE_NAME_MAP["Operating Theatre"].routine_cs = "Routine CS"');
 
 sandbox.__customWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
   g('buildFqaWeightingTableRows_({"Operating Theatre\troutine_cs\t1": 9})')
@@ -3004,7 +3042,7 @@ const enrichedScores = g(
 );
 assert.strictEqual(
   enrichedScores[0].join('|'),
-  'Kisii|Nyamache|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||routine_cs||1'
+  'Kisii|Nyamache|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|Services offered|Service Delivery|routine_cs|Routine CS|1'
 );
 assert.strictEqual(enrichedScores[1][1], 'Nyamache');
 assert.strictEqual(enrichedScores[1][3], '14080');

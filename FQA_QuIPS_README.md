@@ -72,7 +72,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    infrastructure dests fill Infrastructure and the provided
    `attribute_name` labels. Operating Theatre privacy dests fill
    Privacy/confidentiality / Service Delivery (`files_storage` →
-   `files_sec`). Other `thematic_area` values,
+   `files_sec`). Operating Theatre service dests fill Services
+   offered / Service Delivery. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 

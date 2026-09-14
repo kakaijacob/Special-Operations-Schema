@@ -102,7 +102,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * hours dests are Service Delivery. Operating Theatre HRH dests
  * are Human Resource for Health. Operating Theatre
  * infrastructure dests are Infrastructure. Operating Theatre
- * privacy dests are Service Delivery.
+ * privacy dests are Service Delivery. Operating Theatre
+ * service dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1437,6 +1438,55 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   preop_aud_priv: 'Pre-op auditory privacy',
   postop_aud_priv: 'Post-op auditory privacy',
   files_sec: 'Files in secure cabinets',
+});
+
+// routine_cs_6m → routine_cs_6months, emerg_cs → emergency_cs,
+// emerg_cs_6m → emergency_cs_6months, emerg_anaes →
+// emergency_obstetric_anaesthesia, anaes_6m →
+// emergency_obstetric_anaesthesia_6m, tubal_lig → tubal_ligation,
+// dnc → dilation_curettage, cs_hyst → cesarean_hysterectomy,
+// eua → exam_under_anesthesia, cerclage → cervical_cerclage,
+// cerv_tear → cervical_tear_repair, sec_wound →
+// secondary_wound_closure. blynch_sature keeps the form spelling.
+// marsupial is a dest but was not listed.
+const OT_SERVICES_EVIDENCE_DESTS = OT_SERVICES_FIELDS.map(function (field) {
+  return field.dest;
+}).filter(function (dest) {
+  return dest !== 'marsupial';
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_SERVICES_EVIDENCE_DESTS,
+  'Services offered'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_SERVICES_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  routine_cs: 'Routine CS',
+  routine_cs_6months: 'Routine CS — 6m',
+  emergency_cs: 'Emergency CS',
+  emergency_cs_6months: 'Emergency CS — 6m',
+  emergency_obstetric_anaesthesia: 'Emergency obstetric anaes.',
+  emergency_obstetric_anaesthesia_6m: 'Emerg. obs. anaes. — 6m',
+  tubal_ligation: 'Tubal ligation',
+  laparotomy: 'Exploratory laparotomy',
+  dilation_curettage: 'Dilation & curettage',
+  cystotomy: 'Cystotomy repair',
+  cesarean_hysterectomy: 'Caesarean hysterectomy',
+  exam_under_anesthesia: 'Exam under anaesthesia',
+  cervical_cerclage: 'Cervical cerclage',
+  cervical_tear_repair: 'Cervical tear repair',
+  incision_drain: 'Incision & drainage',
+  secondary_wound_closure: 'Secondary wound closure',
+  blynch_sature: 'B-Lynch/comp. suture',
 });
 
 function thematicAreaFor_(department, attribute) {
