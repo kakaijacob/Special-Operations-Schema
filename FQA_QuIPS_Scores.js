@@ -103,7 +103,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * are Human Resource for Health. Operating Theatre
  * infrastructure dests are Infrastructure. Operating Theatre
  * privacy dests are Service Delivery. Operating Theatre
- * service dests are Service Delivery.
+ * service dests are Service Delivery. Operating Theatre SOP
+ * dests are Leadership & Governance.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1487,6 +1488,34 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   incision_drain: 'Incision & drainage',
   secondary_wound_closure: 'Secondary wound closure',
   blynch_sature: 'B-Lynch/comp. suture',
+});
+
+const OT_SOP_EVIDENCE_DESTS = OT_SOP_FIELDS.map(function (field) {
+  return field.dest;
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_SOP_EVIDENCE_DESTS,
+  'Standard operating procedures/Protocols'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_SOP_EVIDENCE_DESTS,
+  'Leadership & Governance'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  anaes_proto: 'Anaes. machine check prot.',
+  referral_proto: 'Referral protocol display',
+  ppe_radio_proto: 'PPE in radiology prot.',
+  recovery_proto: 'PACU monitoring prot.',
+  theatre_ppe: 'Theatre clothing/PPE prot.',
+  sedation_proto: 'Anaes. mixtures prot.',
+  clean_proto: 'OT cleaning/disinfect prot.',
 });
 
 function thematicAreaFor_(department, attribute) {

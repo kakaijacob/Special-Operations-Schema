@@ -2457,6 +2457,12 @@ assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "routine_cs")'),
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "routine_cs")'), 'Routine CS');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "routine_cs_6months")'), 'Routine CS — 6m');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "dilation_curettage")'), 'Dilation & curettage');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaes_proto")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "referral_proto")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "clean_proto")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "anaes_proto")'), 'Leadership & Governance');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaes_proto")'), 'Anaes. machine check prot.');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "theatre_ppe")'), 'Theatre clothing/PPE prot.');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2962,6 +2968,28 @@ assert.ok(otServicesScoreTable.some(function (row) {
 }));
 assert.ok(otServicesScoreTable.some(function (row) {
   return row[8] === 'marsupial' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
+sandbox.__otSopScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'anaes_proto', 'referral_proto'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'They have displayed, up to date protocols'],
+  ],
+}];
+const otSopScoreTable = g(
+  'buildFqaScoreTableRows_(__otSopScoreSheets, __scoreWeighting)'
+);
+assert.ok(otSopScoreTable.some(function (row) {
+  return row[8] === 'anaes_proto' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Anaes. machine check prot.';
+}));
+assert.ok(otSopScoreTable.some(function (row) {
+  return row[8] === 'referral_proto' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[9] === 'Referral protocol display';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
