@@ -17,9 +17,9 @@
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
- * those same thematic_area labels. Inpatient Maternity groupings
- * use the same thematic_area labels. hss_building_block and
- * attribute_name stay blank until those labels are provided.
+ * those same thematic_area labels. Inpatient Maternity and Lab
+ * groupings use the same thematic_area labels. hss_building_block
+ * and attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -74,9 +74,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
- * those same thematic_area labels. Inpatient Maternity groupings
- * use the same thematic_area labels. Other departments stay empty
- * until their groupings are defined.
+ * those same thematic_area labels. Inpatient Maternity and Lab
+ * groupings use the same thematic_area labels. Other departments
+ * stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -805,6 +805,133 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'wash_no_toilets',
   'wash_labour',
 ], 'WASH (Water, Sanitation, Hygeine)/IPC');
+
+// incl_lab_report → tincl_lab_report_*, blood_product_labels →
+// tblood_product_labels_*. external_contrlol_eqc keeps the Kobo
+// spelling.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_11_YES_NO_FIELDS.concat(
+    selectMultipleAttributeNames_(
+      LAB_TINCL_LAB_REPORT_PREFIX,
+      LAB_TINCL_LAB_REPORT_CHOICES
+    ),
+    selectMultipleAttributeNames_(
+      LAB_TBLOOD_PRODUCT_LABELS_PREFIX,
+      LAB_TBLOOD_PRODUCT_LABELS_CHOICES
+    )
+  ),
+  'Adherence to evidence based practice'
+);
+
+// serum_elecrolyete → serum_electrolyete.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_10_FIELDS,
+  'Commodities'
+);
+
+// PPE_equipment, tb_diagnostic, ziehl_stain, auramine_stain,
+// genexpert, liver_function_equipment, bc_analyzer, bc_tools,
+// hiv_testing_equipment, and blood_type_crossmatch_equi are
+// select_multiple indicators.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_9_YES_NO_FIELDS.concat(
+    LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS,
+    ['maint_contract_colo_hae', 'sputum_smear', 'blood_count'],
+    labGroup9SelectMultiples_().reduce(function (names, field) {
+      return names.concat(
+        selectMultipleAttributeNames_(field.prefix, field.choices)
+      );
+    }, [])
+  ),
+  'Equipment'
+);
+
+// crossmatch_register, crossmatch_reg_used, and tb_register are
+// not transformed dests. standard_lab_request/1-10 are the
+// select_multiple indicators.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_3_REGISTER_FIELDS.concat(
+    selectMultipleAttributeNames_(
+      LAB_STANDARD_LAB_REQUEST_PREFIX,
+      LAB_STANDARD_LAB_REQUEST_CHOICES
+    ),
+    LAB_GROUP_3_FOLLOWUP_FIELDS
+  ),
+  'Health Records for clients'
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  ['on_laboratory_open'].concat(LAB_GROUP_12_YES_NO_FIELDS),
+  'Hours of operation'
+);
+
+// county_technologist and contract_technologist are not
+// transformed dests.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_4_COUNT_FIELDS.concat(['personnel', 'inadequate_staff']),
+  'HRH'
+);
+
+// abo_blood → blood_group_testing, via_test → perform_via.
+// dipstick_param, eid_hiv, sample_viral, and pap_smear_referral
+// are not transformed dests. Remaining group_2 dests
+// (perform_syphilis, glucose_dipstick, pap_smear_monthly,
+// per_hpylori and their monthly pairs) stay with this group.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_2_FIELDS.map(function (field) {
+    return field.dest;
+  }),
+  'Services offered'
+);
+
+// sop/1-16, specimen_collection/1-5, and confirm_sops/1-31 are
+// the select_multiple indicators. sop_total is not a dest.
+// have_quality_manual is a dest but was not listed.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  ['handwashing_protocol'].concat(
+    selectMultipleAttributeNames_(LAB_SOP_PREFIX, LAB_SOP_CHOICES),
+    selectMultipleAttributeNames_(
+      LAB_SPECIMEN_COLLECTION_PREFIX,
+      LAB_SPECIMEN_COLLECTION_CHOICES
+    ),
+    LAB_GROUP_6_YES_NO_FIELDS,
+    selectMultipleAttributeNames_(
+      LAB_CONFIRM_SOPS_PREFIX,
+      LAB_CONFIRM_SOPS_CHOICES
+    )
+  ),
+  'Standard operating procedures/Protocols'
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_5_TRAINING_FIELDS.concat(LAB_GROUP_5_YES_NO_FIELDS),
+  'Training'
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Lab',
+  LAB_GROUP_7_HEADERS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
