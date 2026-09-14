@@ -2518,6 +2518,9 @@ assert.strictEqual(g('attributeNameFor_("Facility General", "storage_equipment")
 assert.strictEqual(g('attributeNameFor_("Facility General", "electronic_registry")'), 'Password-protected electronic registry');
 assert.strictEqual(g('attributeNameFor_("Facility General", "data_storage_cap")'), 'No data-storage stockout in past month');
 assert.strictEqual(g('attributeNameFor_("Facility General", "written_collection_tools")'), 'No paper-tool stockout in past month');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "opening_hours")'), 'Hours of operation');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "opening_hours")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Facility General", "opening_hours")'), 'Operating-hours band');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3230,6 +3233,23 @@ assert.ok(fgRecordsScoreTable.some(function (row) {
 }));
 assert.ok(!fgRecordsScoreTable.some(function (row) {
   return row[8] === 'secure_registers';
+}));
+
+sandbox.__fgHoursScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    ['county', 'facility', 'facility_level', 'opening_hours'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', '8-12 hours'],
+  ],
+}];
+const fgHoursScoreTable = g(
+  'buildFqaScoreTableRows_(__fgHoursScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgHoursScoreTable.some(function (row) {
+  return row[8] === 'opening_hours' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Operating-hours band';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

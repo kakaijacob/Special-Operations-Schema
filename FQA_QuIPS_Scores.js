@@ -20,8 +20,8 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General adherence, commodity, and records dests also set those
- * columns. Remaining
+ * General adherence, commodity, records, and hours dests also
+ * set those columns. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
@@ -83,8 +83,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Facility General adherence dests use Adherence to evidence
  * based practice. Facility General commodity dests use
  * Commodities. Facility General records dests use Health
- * Records for clients. Other departments stay empty until
- * their groupings are defined.
+ * Records for clients. Facility General hours dests use Hours
+ * of operation. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -113,7 +114,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Theatre WASH dests are Service Delivery. Facility General
  * adherence dests are Leadership & Governance. Facility
  * General commodity dests are Commodities. Facility General
- * records dests are Health Information System.
+ * records dests are Health Information System. Facility
+ * General hours dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1666,6 +1668,24 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
   electronic_registry: 'Password-protected electronic registry',
   data_storage_cap: 'No data-storage stockout in past month',
   written_collection_tools: 'No paper-tool stockout in past month',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  ['opening_hours'],
+  'Hours of operation'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  ['opening_hours'],
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  opening_hours: 'Operating-hours band',
 });
 
 function thematicAreaFor_(department, attribute) {
