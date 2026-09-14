@@ -2469,6 +2469,27 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "last_train_score")'
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "last_train")'), 'Human Resource for Health');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "last_train")'), 'Training on management of obstetric emergencies');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "cpd_required")'), 'Anaes. CPD required');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "water_access")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "hand_hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "waste_proto")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "latrine")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "latrine_type")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "specify_latrine")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "clean_freq")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "gender_seperation")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "instr_cleaning")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "gender_sep")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "water_access")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "gender_seperation")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "water_access")'), 'Each OT — water source');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hand_hygiene")'), 'Hand hygiene coverage');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "waste_proto")'), 'Waste mgmt protocol');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "latrine")'), 'Sharps containers <3/4');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "latrine_type")'), 'Latrine type (JMP ladder)');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "specify_latrine")'), 'Latrine type (other)');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "clean_freq")'), 'Bathroom clean freq.');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "gender_seperation")'), 'Gender-sep sanitation');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "instr_cleaning")'), 'Instrument cleaning area');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2996,6 +3017,82 @@ assert.ok(otSopScoreTable.some(function (row) {
   return row[8] === 'referral_proto' &&
     row[6] === 'Standard operating procedures/Protocols' &&
     row[9] === 'Referral protocol display';
+}));
+
+sandbox.__otWashScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'water_access',
+      'hand_hygiene',
+      'waste_proto',
+      'latrine',
+      'latrine_type',
+      'specify_latrine',
+      'clean_freq',
+      'gender_seperation',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Present, functional',
+      'Present in no service areas',
+      'Present, well displayed',
+      'Yes',
+      'Other, specify',
+      'VIP latrine',
+      'Daily AND as necessary',
+      'Yes',
+    ],
+  ],
+}];
+const otWashScoreTable = g(
+  'buildFqaScoreTableRows_(__otWashScoreSheets, __scoreWeighting)'
+);
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'water_access' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Each OT — water source';
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'hand_hygiene' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Hand hygiene coverage';
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'waste_proto' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Waste mgmt protocol';
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'latrine' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Sharps containers <3/4' &&
+    row[10] === 1;
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'latrine_type' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Latrine type (JMP ladder)';
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'clean_freq' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Bathroom clean freq.';
+}));
+assert.ok(otWashScoreTable.some(function (row) {
+  return row[8] === 'gender_seperation' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Gender-sep sanitation' &&
+    row[10] === 1;
+}));
+assert.ok(!otWashScoreTable.some(function (row) {
+  return row[8] === 'specify_latrine';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

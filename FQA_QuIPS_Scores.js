@@ -19,8 +19,7 @@
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
- * adherence, commodity, equipment, and records dests also set
- * hss_building_block and attribute_name. Remaining
+ * dests also set hss_building_block and attribute_name. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
@@ -78,9 +77,8 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity, Lab, and
- * Operating Theatre adherence, commodity, equipment, and records
- * dests use the same thematic_area labels. Other departments stay
- * empty until their groupings are defined.
+ * Operating Theatre dests use the same thematic_area labels.
+ * Other departments stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -105,7 +103,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * privacy dests are Service Delivery. Operating Theatre
  * service dests are Service Delivery. Operating Theatre SOP
  * dests are Leadership & Governance. Operating Theatre
- * training dests are Human Resource for Health.
+ * training dests are Human Resource for Health. Operating
+ * Theatre WASH dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -120,8 +119,7 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre adherence, commodity, equipment, and
- * records dests use the provided labels.
+ * Operating Theatre dests use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1538,6 +1536,48 @@ assignMappedLabels_(
 assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   last_train: 'Training on management of obstetric emergencies',
   cpd_required: 'Anaes. CPD required',
+});
+
+// WASH dests from OT_WASH_FIELDS. gender_sep → gender_seperation.
+// specify_latrine is text (no FQA Scores rows).
+const OT_WASH_EVIDENCE_DESTS = OT_WASH_FIELDS.map(function (field) {
+  return field.dest;
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_WASH_EVIDENCE_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_WASH_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  water_access: 'Each OT — water source',
+  water_1m: 'Water consist. (1m)',
+  sep_sinks: 'Separate sinks HW/fluids',
+  drain_system: 'Drainage system',
+  postop_sink: 'Post-op water point',
+  hand_hygiene: 'Hand hygiene coverage',
+  waste_proto: 'Waste mgmt protocol',
+  waste_bins_label: 'Segregated waste bins',
+  sharps_full: 'Sharps containers in areas',
+  latrine: 'Sharps containers <3/4',
+  latrine_type: 'Latrine type (JMP ladder)',
+  specify_latrine: 'Latrine type (other)',
+  handwash_station: 'Sanitation HW station',
+  clean_freq: 'Bathroom clean freq.',
+  clean_today: 'Bathrooms clean today',
+  access_mobility: 'Sanitation accessibility',
+  gender_seperation: 'Gender-sep sanitation',
+  mens_hygiene: 'Menstrual hygiene mgmt',
+  instr_cleaning: 'Instrument cleaning area',
 });
 
 function thematicAreaFor_(department, attribute) {

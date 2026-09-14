@@ -76,7 +76,10 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    offered / Service Delivery. Operating Theatre SOP dests fill
    Standard operating procedures/Protocols / Leadership &
    Governance. Operating Theatre training dests fill Training /
-   Human Resource for Health. Other `thematic_area` values,
+   Human Resource for Health. Operating Theatre WASH dests from
+   `OT_WASH_FIELDS` fill WASH (Water, Sanitation, Hygeine)/IPC /
+   Service Delivery (`gender_sep` → `gender_seperation`;
+   `specify_latrine` is text). Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 
