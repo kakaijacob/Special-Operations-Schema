@@ -2496,6 +2496,9 @@ assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "uniforms_badges"
 assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "pest_control")'), 'Leadership & Governance');
 assert.strictEqual(g('attributeNameFor_("Facility General", "uniforms_badges")'), 'Staff uniforms & ID badges');
 assert.strictEqual(g('attributeNameFor_("Facility General", "pest_control")'), 'Pest-control mechanism');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "run_out_fuel")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "run_out_fuel")'), 'Commodities');
+assert.strictEqual(g('attributeNameFor_("Facility General", "run_out_fuel")'), 'No fuel stockout past month');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3123,6 +3126,24 @@ assert.ok(fgAdherenceScoreTable.some(function (row) {
     row[6] === 'Adherence to evidence based practice' &&
     row[7] === 'Leadership & Governance' &&
     row[9] === 'Pest-control mechanism' &&
+    row[10] === 0;
+}));
+
+sandbox.__fgCommodityScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    ['county', 'facility', 'facility_level', 'run_out_fuel'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'No'],
+  ],
+}];
+const fgCommodityScoreTable = g(
+  'buildFqaScoreTableRows_(__fgCommodityScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgCommodityScoreTable.some(function (row) {
+  return row[8] === 'run_out_fuel' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === 'No fuel stockout past month' &&
     row[10] === 0;
 }));
 

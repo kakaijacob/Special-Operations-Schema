@@ -80,7 +80,8 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * those same thematic_area labels. Inpatient Maternity, Lab, and
  * Operating Theatre dests use the same thematic_area labels.
  * Facility General adherence dests use Adherence to evidence
- * based practice. Other departments stay empty until their
+ * based practice. Facility General commodity dests use
+ * Commodities. Other departments stay empty until their
  * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
@@ -108,7 +109,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * dests are Leadership & Governance. Operating Theatre
  * training dests are Human Resource for Health. Operating
  * Theatre WASH dests are Service Delivery. Facility General
- * adherence dests are Leadership & Governance.
+ * adherence dests are Leadership & Governance. Facility
+ * General commodity dests are Commodities.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -123,8 +125,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre dests and Facility General adherence dests
- * use the provided labels.
+ * Operating Theatre dests and Facility General dests use the
+ * provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1603,6 +1605,24 @@ assignMappedLabels_(
 assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
   uniforms_badges: 'Staff uniforms & ID badges',
   pest_control: 'Pest-control mechanism',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  ['run_out_fuel'],
+  'Commodities'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  ['run_out_fuel'],
+  'Commodities'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  run_out_fuel: 'No fuel stockout past month',
 });
 
 function thematicAreaFor_(department, attribute) {
