@@ -11,7 +11,8 @@
  * adherence columns are Adherence to evidence based practice, and
  * records columns are Health Records for clients, and hours of
  * operation columns are Hours of operation, and infrastructure
- * columns are Infrastructure. hss_building_block and attribute_name
+ * columns are Infrastructure, and privacy columns are
+ * Privacy/confidentiality. hss_building_block and attribute_name
  * stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
@@ -61,8 +62,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * are Equipment, and adherence columns are Adherence to evidence
  * based practice, records columns are Health Records for clients,
  * hours of operation columns are Hours of operation, and
- * infrastructure columns are Infrastructure. Other departments stay
- * empty until their groupings are defined.
+ * infrastructure columns are Infrastructure, and privacy columns are
+ * Privacy/confidentiality. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -269,6 +271,11 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'cctv',
   'dust_evidence',
 ], 'Infrastructure');
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'visual_privacy',
+  'auditory_privacy',
+], 'Privacy/confidentiality');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

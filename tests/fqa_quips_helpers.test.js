@@ -2224,6 +2224,8 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sluice_room")'), 'Infras
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "temporary_storage")'), 'Infrastructure');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "dust_evidence")'), 'Infrastructure');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cctv")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "visual_privacy")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "auditory_privacy")'), 'Privacy/confidentiality');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
