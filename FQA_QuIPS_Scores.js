@@ -98,7 +98,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Operating Theatre adherence dests are Leadership & Governance.
  * Operating Theatre commodity dests are Commodities. Operating
  * Theatre equipment dests are Equipment. Operating Theatre
- * records dests are Health Information System.
+ * records dests are Health Information System. Operating Theatre
+ * hours dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1268,6 +1269,24 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   cs_forms_anesthesia_pre_op_checklist: 'Anaes. pre-op CL',
   cs_forms_surgical_consumption_report: 'Surg. consumption rpt',
   referral_forms: 'Blank referral forms',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  ['hrs_day'],
+  'Hours of operation'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  ['hrs_day'],
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  hrs_day: 'OT accessibility',
 });
 
 function thematicAreaFor_(department, attribute) {

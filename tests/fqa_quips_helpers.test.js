@@ -2407,11 +2407,11 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "turnaround")'), 'Ad
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pre_checks")'), '');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_doc")'), '');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_chart")'), '');
-assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "hrs_day")'), 'Hours of operation');
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "clean_sched")'), 'Leadership & Governance');
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "pre_checks_none")'), 'Leadership & Governance');
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "turnaround")'), 'Leadership & Governance');
-assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "hrs_day")'), 'Service Delivery');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "clean_sched")'), 'Cleaning schedule current');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "patient_id")'), 'Pre-sedation ID/consent');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "spo2_mon")'), 'Intra-op SpO₂ monitoring');
@@ -2420,7 +2420,7 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_diagn
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_date_and_time_of_start_and_end_of_surgery_and_anaesthesia")'), 'Surg/anaes start–end time');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pre_checks_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_none")'), '');
-assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hrs_day")'), 'OT accessibility');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2731,7 +2731,10 @@ assert.ok(otAdherenceScoreTable.some(function (row) {
     row[9] === 'Average theatre turnaround time';
 }));
 assert.ok(otAdherenceScoreTable.some(function (row) {
-  return row[8] === 'hrs_day' && row[6] === '' && row[7] === '' && row[9] === '';
+  return row[8] === 'hrs_day' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'OT accessibility';
 }));
 
 sandbox.__otCommodityScoreSheets = [{
