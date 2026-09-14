@@ -2226,6 +2226,39 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "dust_evidence")'), 'Infr
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cctv")'), 'Infrastructure');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "visual_privacy")'), 'Privacy/confidentiality');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "auditory_privacy")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sepsis_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "jaundice_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "hypoglycemia_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "neonatal_resuscitation_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "kmc_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "handwash_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "referral_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sop_policy_incubator_temperature_setting")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sop_policy_kmc")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sop_policy_none")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "water_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "water_available_consistently")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "drainage_system")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "separate_sink")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "hand_hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "waste_management")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "waste_segregation")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cleaning_register")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "decontamination_area")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "decontamination_checklist")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "utensil_cleaning_area")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "laundry")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "linen")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sharp_container")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sharp_full")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "latrine")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "latrine_clients")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "handwashing_station")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "disinfect_washrooms")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "clean_washroom")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "access_disability")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "menstrual_hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sharp3_4full")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2297,8 +2330,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'cctv', 'functional_nbu'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes', 'Yes'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'cctv', 'sepsis_sop', 'water_source', 'functional_nbu'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes', 'They have displayed, up to date protocols', 'Present, functional', 'Yes'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2321,6 +2354,12 @@ assert.ok(nbuScoreTable.some(function (row) {
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'cctv' && row[6] === 'Infrastructure';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'sepsis_sop' && row[6] === 'Standard operating procedures/Protocols';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'water_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'functional_nbu' && row[6] === '';

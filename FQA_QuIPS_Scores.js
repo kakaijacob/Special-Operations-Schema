@@ -11,8 +11,10 @@
  * adherence columns are Adherence to evidence based practice, and
  * records columns are Health Records for clients, and hours of
  * operation columns are Hours of operation, and infrastructure
- * columns are Infrastructure, and privacy columns are
- * Privacy/confidentiality. hss_building_block and attribute_name
+ * columns are Infrastructure, privacy columns are
+ * Privacy/confidentiality, SOP columns are Standard operating
+ * procedures/Protocols, and WASH/IPC columns are WASH (Water,
+ * Sanitation, Hygeine)/IPC. hss_building_block and attribute_name
  * stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
@@ -61,9 +63,11 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Newborn Unit commodity columns are Commodities, equipment columns
  * are Equipment, and adherence columns are Adherence to evidence
  * based practice, records columns are Health Records for clients,
- * hours of operation columns are Hours of operation, and
- * infrastructure columns are Infrastructure, and privacy columns are
- * Privacy/confidentiality. Other departments stay empty until their
+ * hours of operation columns are Hours of operation,
+ * infrastructure columns are Infrastructure, privacy columns are
+ * Privacy/confidentiality, SOP columns are Standard operating
+ * procedures/Protocols, and WASH/IPC columns are WASH (Water,
+ * Sanitation, Hygeine)/IPC. Other departments stay empty until their
  * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
@@ -276,6 +280,56 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'visual_privacy',
   'auditory_privacy',
 ], 'Privacy/confidentiality');
+
+// sepsis → sepsis_sop, jaundice → jaundice_sop, neo_resus →
+// neonatal_resuscitation_sop, kmc → kmc_sop, handwash → handwash_sop,
+// referral → referral_sop. policy/1-19 are the select_multiple
+// indicators (19 choices including none).
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'sepsis_sop',
+  'jaundice_sop',
+  'hypoglycemia_sop',
+  'neonatal_resuscitation_sop',
+  'kmc_sop',
+  'handwash_sop',
+  'referral_sop',
+].concat(
+  selectMultipleAttributeNames_('sop_policy', SOP_POLICY_CHOICES)
+), 'Standard operating procedures/Protocols');
+
+// wat_sour → water_source, wav_avail → water_available_consistently,
+// drainage → drainage_system, sinks → separate_sink, hand → hand_hygiene,
+// waste → waste_management, bins → waste_segregation,
+// clean_reg → cleaning_register, decontamination → decontamination_area,
+// checklist → decontamination_checklist, utensil → utensil_cleaning_area,
+// sharp → sharp_container, lat_client → latrine_clients,
+// station → handwashing_station, disinfect → disinfect_washrooms,
+// clean → clean_washroom, access → access_disability,
+// menstrual → menstrual_hygiene.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'water_source',
+  'water_available_consistently',
+  'drainage_system',
+  'separate_sink',
+  'hand_hygiene',
+  'waste_management',
+  'waste_segregation',
+  'cleaning_register',
+  'decontamination_area',
+  'decontamination_checklist',
+  'utensil_cleaning_area',
+  'laundry',
+  'linen',
+  'sharp_container',
+  'sharp_full',
+  'latrine',
+  'latrine_clients',
+  'handwashing_station',
+  'disinfect_washrooms',
+  'clean_washroom',
+  'access_disability',
+  'menstrual_hygiene',
+], 'WASH (Water, Sanitation, Hygeine)/IPC');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

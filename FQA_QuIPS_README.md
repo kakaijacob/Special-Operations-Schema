@@ -50,8 +50,10 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    adherence columns get Adherence to evidence based practice, and
    records columns get Health Records for clients, and hours of
    operation columns get Hours of operation, and infrastructure
-   columns get Infrastructure, and privacy columns get
-   Privacy/confidentiality. Other
+   columns get Infrastructure, privacy columns get
+   Privacy/confidentiality, SOP columns get Standard operating
+   procedures/Protocols, and WASH/IPC columns get WASH (Water,
+   Sanitation, Hygeine)/IPC. Other
    `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
