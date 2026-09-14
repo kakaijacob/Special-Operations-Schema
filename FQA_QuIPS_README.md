@@ -19,6 +19,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then `writeFqaScoreTable` |
 | `FQA_QuIPS_Weighting.js` | Builds the `FQA Weighting` score catalog sheet |
 | `FQA_QuIPS_Scores.js` | Builds the long-format `FQA Scores` totalling sheet |
+| `FQA_QuIPS_Insight_Crosswalk.js` | QuIPS observation ↔ FQA resource/protocol theme map + classifiers |
+| `FQA_QuIPS_Insight_Linkage.js` | Joins QuIPS Cleaned Data with FQA department tabs into insight sheets |
 | `FQA_QuIPS_Token.example.js` | Template for a local token override |
 
 ## Setup
@@ -36,7 +38,20 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `label`, `score`). Yes/No labels default to 1/0; other labels leave
    `score` blank so you can fill them in later. Re-running keeps scores
    already typed on that sheet. The orchestrator does not rebuild it.
-7. `pullAllForms` and `fullRefreshAllForms` both finish by running
+7. After QuIPS cleaned data and FQA department tabs are available in the
+   same spreadsheet, run `writeFqaQuipsInsightLinkage`. This builds:
+   - `FQA-QuIPS Crosswalk` — catalog of QuIPS delivery observations linked
+     to FQA resources / protocols / training (e.g. hand hygiene practice
+     ↔ WASH supplies, handwashing SOP, IPC training)
+   - `FQA-QuIPS Facility Insights` — facility × theme rows with QuIPS
+     practice rate, FQA readiness, and an insight quadrant:
+     Enabled & practiced / Practice gap / Adaptive practice / Structural gap
+   - `FQA-QuIPS Insight Summary` — theme-level counts of those quadrants  
+   Join key is `facility_code`. Themes cover hand hygiene, PPE, uterotonics,
+   newborn resuscitation readiness, essential newborn care, infection
+   prevention, maternal monitoring, labour monitoring, respectful care,
+   and avoidance of harmful practices.
+8. `pullAllForms` and `fullRefreshAllForms` both finish by running
    `writeFqaScoreTable`. The `FQA Scores` sheet is the totalling table:
    `county`, `subcounty`, `facility`, `facility_code`, `facility_level`,
    `department`, `thematic_area`, `hss_building_block`, `attribute`,

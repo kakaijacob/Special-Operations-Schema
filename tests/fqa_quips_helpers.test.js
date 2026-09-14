@@ -4369,4 +4369,143 @@ assert.ok(/KOBO_API_TOKEN_OVERRIDE = ''/.test(example));
 const ignore = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8');
 assert.ok(ignore.indexOf('FQA_QuIPS_Token.js') !== -1);
 
+// ---------- FQA ↔ QuIPS insight linkage ----------
+[
+  'FQA_QuIPS_Insight_Crosswalk.js',
+  'FQA_QuIPS_Insight_Linkage.js',
+].forEach(function (name) {
+  const code = fs.readFileSync(path.join(ROOT, name), 'utf8');
+  vm.runInContext(code, sandbox, { filename: name });
+});
+
+assert.ok(Array.isArray(g('FQA_QUIPS_INSIGHT_THEMES')));
+assert.ok(g('FQA_QUIPS_INSIGHT_THEMES').length >= 8);
+
+const handHygieneTheme = g(
+  "FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; })"
+);
+assert.ok(handHygieneTheme);
+assert.strictEqual(handHygieneTheme.quips_indicators[0].field, 'hand_hygiene');
+assert.ok(
+  handHygieneTheme.fqa_enablers.some(function (e) {
+    return e.attribute === 'wash_hand_washing';
+  })
+);
+assert.ok(
+  handHygieneTheme.fqa_enablers.some(function (e) {
+    return e.attribute === 'handwashing_sop';
+  })
+);
+
+assert.strictEqual(g("classifyFqaReadiness_('yes_no', 'Yes')"), 'ready');
+assert.strictEqual(g("classifyFqaReadiness_('yes_no', 'No')"), 'not_ready');
+assert.strictEqual(
+  g("classifyFqaReadiness_('hand_hygiene_coverage', 'Present in ALL service areas')"),
+  'ready'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('hand_hygiene_coverage', 'Present in some service areas')"),
+  'partial'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('water_source', 'Present, functional')"),
+  'ready'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('protocol', 'They have displayed, up to date protocols')"),
+  'ready'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('protocol', 'They have written up to date protocols, not displayed')"),
+  'partial'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('availability', 'Always available')"),
+  'ready'
+);
+assert.strictEqual(
+  g("classifyFqaReadiness_('has_value', '2025-06')"),
+  'ready'
+);
+
+const strongPractice = g(
+  "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
+    "{hand_hygiene:'Yes'},{hand_hygiene:'Yes'},{hand_hygiene:'Yes'}" +
+    '])'
+);
+assert.strictEqual(strongPractice.practice_level, 'strong');
+assert.strictEqual(strongPractice.practice_rate, 1);
+
+const weakPractice = g(
+  "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
+    "{hand_hygiene:'No'},{hand_hygiene:'No'},{hand_hygiene:'No'}" +
+    '])'
+);
+assert.strictEqual(weakPractice.practice_level, 'weak');
+
+assert.strictEqual(
+  g("classifyInsightQuadrant_('ready', 'strong')"),
+  'Enabled & practiced'
+);
+assert.strictEqual(
+  g("classifyInsightQuadrant_('ready', 'weak')"),
+  'Practice gap'
+);
+assert.strictEqual(
+  g("classifyInsightQuadrant_('not_ready', 'strong')"),
+  'Adaptive practice'
+);
+assert.strictEqual(
+  g("classifyInsightQuadrant_('not_ready', 'weak')"),
+  'Structural gap'
+);
+
+const catalog = g('buildCrosswalkCatalogRows_()');
+assert.ok(catalog.length > 20);
+assert.ok(
+  catalog.some(function (row) {
+    return (
+      row.theme_id === 'hand_hygiene' &&
+      row.fqa_attribute === 'wash_hand_washing' &&
+      row.quips_fields.indexOf('hand_hygiene') !== -1
+    );
+  })
+);
+
+const readyFqa = {};
+handHygieneTheme.fqa_enablers.forEach(function (enabler) {
+  const key = enabler.department + '::' + enabler.attribute;
+  if (enabler.readiness_kind === 'hand_hygiene_coverage') {
+    readyFqa[key] = 'Present in ALL service areas';
+  } else if (enabler.readiness_kind === 'water_source') {
+    readyFqa[key] = 'Present, functional';
+  } else if (enabler.readiness_kind === 'protocol') {
+    readyFqa[key] = 'They have displayed, up to date protocols';
+  } else if (enabler.readiness_kind === 'has_value') {
+    readyFqa[key] = '2025-06';
+  } else {
+    readyFqa[key] = 'Yes';
+  }
+});
+sandbox.__insightReadyFqa = readyFqa;
+sandbox.__insightTheme = handHygieneTheme;
+
+const insightRow = g(
+  "buildFacilityThemeInsight_(" +
+    "{county:'Nairobi',facility_code:'100',facility:'Demo Hospital'}," +
+    '__insightTheme,' +
+    "[{hand_hygiene:'Yes'},{hand_hygiene:'Yes'},{hand_hygiene:'Yes'}]," +
+    '__insightReadyFqa)'
+);
+assert.strictEqual(insightRow.insight_quadrant, 'Enabled & practiced');
+assert.strictEqual(insightRow.quips_practice_level, 'strong');
+assert.strictEqual(insightRow.fqa_readiness_level, 'ready');
+
+assert.strictEqual(typeof g('writeFqaQuipsInsightLinkage'), 'function');
+assert.ok(
+  fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_README.md'), 'utf8').indexOf(
+    'writeFqaQuipsInsightLinkage'
+  ) !== -1
+);
+
 console.log('fqa_quips_helpers.test.js: all assertions passed');
