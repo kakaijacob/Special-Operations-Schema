@@ -2299,6 +2299,31 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_reg_nurses")'),
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_co")'), 'HRH');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_co")'), 'HRH');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_co")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "designated_space")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "inventory")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "bin_card")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "bin_card_update")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "cord")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "c_stock")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "sry2")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "syr2_stock")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "needle23_stock")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "Penguine_stock")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "wedge")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "wedge_stock")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "hours")'), 'Hours of operation');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "computer")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "structures")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "cabinets")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "thermometer")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "room")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "dust")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "odering_personnel")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "stock_orders")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "supplies")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "fefo")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Central Store", "units_outpatient_mnh_services")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2409,6 +2434,41 @@ assert.ok(nbuScoreTable.some(function (row) {
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'functional_nbu' && row[6] === '';
+}));
+
+sandbox.__csScoreSheets = [{
+  department: 'Central Store',
+  values: [
+    ['county', 'facility', 'facility_level', 'designated_space', 'cord', 'hours', 'computer', 'structures', 'fefo', 'hygiene', 'units_outpatient_mnh_services'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes (a designated central store room)', 'Always available', 'Accessible at all facility open times', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes'],
+  ],
+}];
+const csScoreTable = g(
+  'buildFqaScoreTableRows_(__csScoreSheets, __scoreWeighting)'
+);
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'designated_space' && row[6] === 'Health Records for clients';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'cord' && row[6] === 'Commodities';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'hours' && row[6] === 'Hours of operation';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'computer' && row[6] === 'Equipment';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'structures' && row[6] === 'Infrastructure';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'fefo' && row[6] === 'Standard operating procedures/Protocols';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'hygiene' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+}));
+assert.ok(csScoreTable.some(function (row) {
+  return row[8] === 'units_outpatient_mnh_services' && row[6] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

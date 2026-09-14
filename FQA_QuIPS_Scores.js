@@ -15,8 +15,10 @@
  * Privacy/confidentiality, SOP columns are Standard operating
  * procedures/Protocols, WASH/IPC columns are WASH (Water,
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
- * and HRH columns are HRH. hss_building_block and attribute_name
- * stay blank until those labels are provided.
+ * and HRH columns are HRH. Central Store records, commodities,
+ * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
+ * those same thematic_area labels. hss_building_block and
+ * attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -69,8 +71,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Privacy/confidentiality, SOP columns are Standard operating
  * procedures/Protocols, WASH/IPC columns are WASH (Water,
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
- * and HRH columns are HRH. Other departments stay empty until their
- * groupings are defined.
+ * and HRH columns are HRH. Central Store records, commodities,
+ * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
+ * those same thematic_area labels. Other departments stay empty
+ * until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -395,6 +399,57 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'contract_co',
   'adequate_co',
 ], 'HRH');
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Central Store', [
+  'designated_space',
+].concat(CENTRAL_STORE_HEALTH_YES_NO_FIELDS), 'Health Records for clients');
+
+// needle_stock_001 → needle23_stock. Penguine_stock keeps the Kobo
+// spelling. sry2 is the 2ml syringe availability dest.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Central Store',
+  CENTRAL_STORE_COMMODITY_AVAIL_FIELDS.concat(
+    CENTRAL_STORE_COMMODITY_YES_NO_FIELDS
+  ),
+  'Commodities'
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Central Store',
+  ['hours'],
+  'Hours of operation'
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Central Store',
+  ['computer'],
+  'Equipment'
+);
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Central Store', [
+  'structures',
+  'cabinets',
+  'thermometer',
+  'room',
+  'dust',
+], 'Infrastructure');
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Central Store', [
+  'odering_personnel',
+  'stock_orders',
+  'supplies',
+  'fefo',
+], 'Standard operating procedures/Protocols');
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Central Store',
+  ['hygiene'],
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
