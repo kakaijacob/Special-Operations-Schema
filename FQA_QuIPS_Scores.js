@@ -6,8 +6,9 @@
  * Missing facility_code and subcounty are filled from the facility
  * master spreadsheet when county, level (facility_level), and a fuzzy
  * facility-name match all agree. The master code column is dhis_code.
- * thematic_area, hss_building_block, and attribute_name are blank
- * until those labels are provided.
+ * thematic_area is filled as groupings are provided. Newborn Unit
+ * commodity columns are Commodities. hss_building_block and
+ * attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -52,7 +53,8 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
 
 /**
  * Attribute → thematic area, by department sheet name.
- * Leave entries empty until the groupings are defined.
+ * Newborn Unit commodity columns are Commodities. Other departments
+ * stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -101,6 +103,43 @@ function lookupMappedLabel_(map, department, attribute) {
   const value = byDept[attribute];
   return value == null || value === '' ? '' : value;
 }
+
+function selectMultipleAttributeNames_(prefix, choices) {
+  return (choices || []).map(function (choice) {
+    return prefix + '_' + choice.slug;
+  });
+}
+
+function assignMappedLabels_(map, department, attributes, value) {
+  if (!map[department]) map[department] = {};
+  (attributes || []).forEach(function (attribute) {
+    if (attribute) map[department][attribute] = value;
+  });
+}
+
+// cups → feeding_cups, inf_form → infant_formula, syringes → syringe_sizes,
+// needles → needles_sizes. catheters/1-4, tubes/1-4, suction/1-4, and
+// materials/1-6 are the select_multiple indicators.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'tetraycline',
+  'chlorhexidine',
+  'iv_fluid',
+  'vitk',
+  'latex',
+  'sterile',
+  'soluset',
+  'infant_formula',
+  'feeding_cups',
+  'syringe_sizes',
+  'needles_sizes',
+  'microdrippers',
+  'iv_sets',
+].concat(
+  selectMultipleAttributeNames_('commodities_catheters', SIZE_4_6_8_CHOICES),
+  selectMultipleAttributeNames_('commodities_materials', MATERIALS_CHOICES),
+  selectMultipleAttributeNames_('commodities_suction', SIZE_4_6_8_CHOICES),
+  selectMultipleAttributeNames_('commodities_tubes', SIZE_4_6_8_CHOICES)
+), 'Commodities');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

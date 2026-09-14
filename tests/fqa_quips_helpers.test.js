@@ -2180,6 +2180,18 @@ assert.strictEqual(
 assert.strictEqual(g('thematicAreaFor_("Outpatient", "unit")'), '');
 assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "unit")'), '');
 assert.strictEqual(g('attributeNameFor_("Outpatient", "unit")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "tetraycline")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "feeding_cups")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "infant_formula")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "syringe_sizes")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "needles_sizes")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_catheters_size_4")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_catheters_none")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_materials_kmc")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_materials_none")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_suction_size_6")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_tubes_size_8")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "kmc_initiated")'), '');
 
 sandbox.__scoreWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
   g('buildFqaWeightingTableRows_({})')
@@ -2221,6 +2233,23 @@ assert.strictEqual(
   outpatientScoreTable[0].join('|'),
   'Mombasa||||Level 3|Outpatient|||unit||1'
 );
+
+sandbox.__nbuScoreSheets = [{
+  department: 'Newborn Unit',
+  values: [
+    ['county', 'facility', 'facility_level', 'tetraycline', 'kmc_initiated'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Always'],
+  ],
+}];
+const nbuScoreTable = g(
+  'buildFqaScoreTableRows_(__nbuScoreSheets, __scoreWeighting)'
+);
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'tetraycline' && row[6] === 'Commodities';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'kmc_initiated' && row[6] === '';
+}));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
 assert.strictEqual(
