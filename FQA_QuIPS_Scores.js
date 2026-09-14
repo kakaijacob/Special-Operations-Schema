@@ -21,9 +21,10 @@
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
  * General dests also set those columns. Pharmacy dests also set
- * those columns. units_* leftovers stay blank. Remaining
- * hss_building_block and attribute_name values stay blank until
- * those labels are provided.
+ * those columns. Newborn Unit dests also set those columns.
+ * units_* leftovers stay blank. Remaining hss_building_block and
+ * attribute_name values stay blank until those labels are
+ * provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -90,8 +91,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Facility General service dests use Services offered.
  * Facility General WASH dests use WASH (Water, Sanitation,
  * Hygeine)/IPC. Pharmacy dests use the same thematic_area
- * labels. Other departments stay empty until their groupings
- * are defined.
+ * labels. Newborn Unit dests also fill those same
+ * thematic_area labels, including Training. Other
+ * departments stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -136,7 +138,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * dests are Service Delivery. Pharmacy SOP dests are
  * Leadership & Governance. Pharmacy training dests are
  * Human Resource for Health. Pharmacy WASH dests are
- * Service Delivery.
+ * Service Delivery. Newborn Unit dests use those same
+ * HSS building-block labels.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -151,8 +154,9 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre dests, Facility General dests, and
- * Pharmacy dests use the provided labels.
+ * Operating Theatre dests, Facility General dests,
+ * Pharmacy dests, and Newborn Unit dests use the provided
+ * labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -196,8 +200,9 @@ function assignMappedLabelEntries_(map, department, entries) {
 
 // cups → feeding_cups, inf_form → infant_formula, syringes → syringe_sizes,
 // needles → needles_sizes. catheters/1-4, tubes/1-4, suction/1-4, and
-// materials/1-6 are the select_multiple indicators.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+// materials/1-6 are the select_multiple indicators. Parent count
+// names are not dests.
+const NEWBORN_UNIT_COMMODITY_DESTS = [
   'tetraycline',
   'chlorhexidine',
   'iv_fluid',
@@ -216,7 +221,38 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   selectMultipleAttributeNames_('commodities_materials', MATERIALS_CHOICES),
   selectMultipleAttributeNames_('commodities_suction', SIZE_4_6_8_CHOICES),
   selectMultipleAttributeNames_('commodities_tubes', SIZE_4_6_8_CHOICES)
-), 'Commodities');
+);
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', NEWBORN_UNIT_COMMODITY_DESTS, 'Commodities');
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Newborn Unit', NEWBORN_UNIT_COMMODITY_DESTS, 'Commodities');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  tetraycline: '1% tetracycline eye oint.',
+  chlorhexidine: '7.1% chlorhexidine cord',
+  iv_fluid: 'IV fluids',
+  vitk: 'Vitamin K',
+  latex: 'Clean latex gloves',
+  sterile: 'Sterile gloves',
+  soluset: 'Solusets',
+  infant_formula: 'Infant formula',
+  feeding_cups: 'Baby feeding cups',
+  syringe_sizes: 'Syringes (various)',
+  needles_sizes: 'Needles (various)',
+  microdrippers: 'Microdrippers',
+  iv_sets: 'IV giving sets',
+  commodities_catheters_size_4: 'Size 4',
+  commodities_catheters_size_6: 'Size 6',
+  commodities_catheters_size_8: 'Size 8',
+  commodities_tubes_size_4: 'Size 4',
+  commodities_tubes_size_6: 'Size 6',
+  commodities_tubes_size_8: 'Size 8',
+  commodities_suction_size_4: 'Size 4',
+  commodities_suction_size_6: 'Size 6',
+  commodities_suction_size_8: 'Size 8',
+  commodities_materials_kmc: 'KMC',
+  commodities_materials_breastfeeding: 'Breastfeeding',
+  commodities_materials_latching: 'Latching',
+  commodities_materials_neonatal_danger_signs: 'Neonatal danger signs',
+  commodities_materials_cord_care: 'Cord care',
+});
 
 // beds → baby_beds, resuscitaires → resuscitaires_nbu, lamp → phototherapy_lamp,
 // warmer → radiant_warmer, heat → heat_source, clock → wall_clock,
@@ -226,7 +262,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
 // glucometer → glucometer_nbu, pump → sunction_pump, bulbs → sunction_bulbs,
 // therm → thermometer_nbu, low_therm → thermometer_readings, scale → weighing_scale.
 // resus_equip/1-6, oxy_source/1-6, and cannulae/1-3 are select_multiple indicators.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_EQUIPMENT_DESTS = [
   'baby_beds',
   'resuscitaires_nbu',
   'bed_space',
@@ -253,14 +289,53 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   selectMultipleAttributeNames_('equip_resus_equip', RESUS_EQUIP_CHOICES),
   selectMultipleAttributeNames_('equip_oxy_source', OXY_SOURCE_CHOICES),
   selectMultipleAttributeNames_('equip_cannulae', CANNULAE_CHOICES)
-), 'Equipment');
+);
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', NEWBORN_UNIT_EQUIPMENT_DESTS, 'Equipment');
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Newborn Unit', NEWBORN_UNIT_EQUIPMENT_DESTS, 'Equipment');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  baby_beds: 'Number of baby cots/beds/incubators',
+  resuscitaires_nbu: 'Number of resuscitaires',
+  bed_space: 'Bed share/turn-away (3m)',
+  phototherapy_lamp: 'Phototherapy lamp',
+  radiant_warmer: 'Radiant warmer',
+  heat_source: 'Heat source',
+  wall_clock: 'Emergency wall clock',
+  wall_thermometer: 'Wall thermometer',
+  exam_light_available: 'Exam light',
+  equipment_cpap: 'CPAP system',
+  monitors: 'Multi-function monitors',
+  neonatal_bp: 'Neonatal BP cuffs',
+  oximeters_neonates: 'Pulse oximeter (neo)',
+  transfusion_kit: 'Exchange transfusion kit',
+  drip_stands: 'Drip stands',
+  stethoscopes_nbu: 'Stethoscopes',
+  glucometer_nbu: 'Glucometer',
+  sunction_pump: 'Electric suction pump',
+  sunction_bulbs: 'Suction bulbs/penguins',
+  thermometer_nbu: 'Thermometers',
+  thermometer_readings: 'Low-reading thermometers',
+  weighing_scale: 'Weighing scale',
+  equip_resus_equip_200ml_ambubag: '200mL ambu-bag',
+  equip_resus_equip_300ml_ambubag: '300mL ambu-bag',
+  equip_resus_equip_size_0_ambubag_masks: 'Size 0 ambu-mask',
+  equip_resus_equip_size_1_ambubag_masks: 'Size 1 ambu-mask',
+  equip_resus_equip_size_2_ambubag_masks: 'Size 2 ambu-mask',
+  equip_cannulae_size_24: 'Size 24',
+  equip_cannulae_size_26: 'Size 26',
+  equip_oxy_source_full_oxygen_cylinders_or_central_supply: 'O2 cylinders/central',
+  equip_oxy_source_oxygen_concentrator: 'O2 concentrator',
+  equip_oxy_source_oxygen_masks_different_sizes: 'O2 masks (sizes)',
+  equip_oxy_source_nasal_prongs_different_sizes: 'Nasal prongs (sizes)',
+  equip_oxy_source_nasal_prongs_for_continuous_positive_airway_pressure_cpap:
+    'Nasal prongs (CPAP)',
+});
 
 // kmc2 → kmc_initiated, preterm → preterm_lowbirth, feeding → feeding_freq,
 // express → express_milk, plan → monitoring_plan, neonates → neonate_review,
 // disch_note → discharge_note, inf_refer → infact_referral,
 // system → system_near_nbu, weight → weight_gain, condition → condition_stable,
 // gestation → gestation_34wks, paediatric → paediatric_rco, care → specialized_care.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_ADHERENCE_DESTS = [
   'kmc_initiated',
   'preterm_lowbirth',
   'feeding_freq',
@@ -279,13 +354,45 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'gestation_34wks',
   'paediatric_rco',
   'specialized_care',
-], 'Adherence to evidence based practice');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_ADHERENCE_DESTS,
+  'Adherence to evidence based practice'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_ADHERENCE_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  kmc_initiated: 'Early KMC (<2000g)',
+  preterm_lowbirth: 'Pre-term/LBW admitted',
+  feeding_freq: 'LBW ≥8 feeds/day',
+  breastmilk: 'Breastmilk primary',
+  express_milk: 'EBM by cup/NG',
+  monitoring_plan: 'Admission monitoring plan',
+  neonate_review: 'Daily MO/CO review 7d/wk',
+  discharge: 'Discharge follow-up',
+  discharge_note: 'Discharge note given',
+  infact_referral: 'Specialised referrals',
+  system_near_nbu: 'Mother–NBU proximity',
+  caregiver: 'Pre-disch. feeding chk',
+  weight_gain: 'Pre-disch. WG ≥15g/kg/d',
+  birth_weight: 'Pre-disch. BW ≥1800g',
+  condition_stable: 'Pre-disch. stability',
+  gestation_34wks: 'Pre-disch. Fe+VitD <34wk',
+  paediatric_rco: 'Pre-disch. wkly paed F/U',
+  specialized_care: 'Pre-disch. spec referrals',
+});
 
 // death_reg → death_register, consistent_use → deathreg_consistent_use,
 // integrated_rh_mch → summary_register, inpatient_neonatal_reg → neonatal_register,
 // nb_admission → newborn_admission. patient_files/1-13 are the
 // select_multiple indicators (the form has 13 choices, not 14).
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_RECORDS_DESTS = [
   'death_register',
   'deathreg_consistent_use',
   'summary_register',
@@ -295,15 +402,49 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'perinatal_review',
 ].concat(
   selectMultipleAttributeNames_('patient_files', PATIENT_FILES_CHOICES)
-), 'Health Records for clients');
-
-// lab_open → nbu_open
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Newborn Unit',
-  ['nbu_open'],
-  'Hours of operation'
+  NEWBORN_UNIT_RECORDS_DESTS,
+  'Health Records for clients'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_RECORDS_DESTS,
+  'Health Information System'
+);
+// patient_files dests follow form choice codes. The listed /1
+// "Patient file completeness" and parent count are not dests.
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  death_register: 'D1 death register',
+  deathreg_consistent_use: 'D1 consistent use',
+  summary_register: 'MOH711 RH/MCH summary',
+  neonatal_register: 'MOH373 inpt NB registry',
+  newborn_admission: 'NB admission forms',
+  perinatal_notification: 'Perinatal death notif.',
+  perinatal_review: 'Perinatal death review',
+  patient_files_observation_charts: 'Observation chart',
+  patient_files_treatment_sheet: 'Treatment sheet',
+  patient_files_weight_chart: 'Weight chart',
+  patient_files_medication_chart: 'Medication chart',
+  patient_files_ballard_scoring_sheet: 'Ballard score sheet',
+  patient_files_input_output_monitoring_chart: 'I/O monitoring chart',
+  patient_files_vital_signs_chart: 'Vital signs chart',
+  patient_files_care_plans: 'Care plans',
+  patient_files_discharge_summary: 'Discharge summary',
+  patient_files_consent_form: 'Consent form',
+  patient_files_pre_medication_notes: 'Pre-medication notes',
+  patient_files_continuation_sheet: 'Continuation sheet',
+});
+
+// lab_open → nbu_open
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', ['nbu_open'], 'Hours of operation');
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Newborn Unit', ['nbu_open'], 'Service Delivery');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  nbu_open: 'NBU daily hours (24h)',
+});
 
 // maintenance → maintenance_infrastructure, lighting → well_lit,
 // proc_rooms → procedure_rooms, chang_area → changing_area,
@@ -312,7 +453,7 @@ assignMappedLabels_(
 // desk → nurse_desk, neo_space → space_sick_neonates, iso_room → isolation_room,
 // resus_area → resuscitation_area, sluice → sluice_room,
 // temp_store → temporary_storage, dust → dust_evidence.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_INFRA_DESTS = [
   'maintenance_infrastructure',
   'well_lit',
   'ventilation',
@@ -337,18 +478,58 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'temporary_storage',
   'cctv',
   'dust_evidence',
-], 'Infrastructure');
+];
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', NEWBORN_UNIT_INFRA_DESTS, 'Infrastructure');
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Newborn Unit', NEWBORN_UNIT_INFRA_DESTS, 'Infrastructure');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  maintenance_infrastructure: 'Unit physical maint.',
+  well_lit: 'Exam spaces lighting',
+  ventilation: 'Exam spaces ventilation',
+  procedure_rooms: 'Number of patient procedure rooms',
+  changing_area: 'NBU changing area',
+  kitchionette: 'Kitchenette w/ fridge',
+  fire_extinguishers: 'Fire-fighting apparatus',
+  clear_signage: 'Visible signage',
+  clear_charter: 'Visible service charter',
+  cots_incubator: 'Cot/incubator spacing ≥2m',
+  kmc_area: 'KMC dedicated area',
+  room_temp: 'Room temp 25–28°C',
+  draught: 'No obvious draught',
+  private_room: 'Private BM expression',
+  counselling_room: 'Private counselling room',
+  worktop: 'Worktop for writing',
+  nurse_desk: 'Central nurse desk',
+  space_sick_neonates: 'Sick NB area separate',
+  isolation_room: 'Septic NB isolation',
+  resuscitation_area: 'Designated resus area',
+  sluice_room: 'Designated sluice room',
+  temporary_storage: 'Body storage space',
+  cctv: 'CCTV',
+  dust_evidence: 'Dust/blood/trash seen',
+});
 
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
-  'visual_privacy',
-  'auditory_privacy',
-], 'Privacy/confidentiality');
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  ['visual_privacy', 'auditory_privacy'],
+  'Privacy/confidentiality'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  ['visual_privacy', 'auditory_privacy'],
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  visual_privacy: 'Visual privacy (rooms)',
+  auditory_privacy: 'Auditory privacy (rooms)',
+});
 
 // sepsis → sepsis_sop, jaundice → jaundice_sop, neo_resus →
 // neonatal_resuscitation_sop, kmc → kmc_sop, handwash → handwash_sop,
 // referral → referral_sop. policy/1-19 are the select_multiple
 // indicators (19 choices including none).
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_SOP_DESTS = [
   'sepsis_sop',
   'jaundice_sop',
   'hypoglycemia_sop',
@@ -358,7 +539,49 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'referral_sop',
 ].concat(
   selectMultipleAttributeNames_('sop_policy', SOP_POLICY_CHOICES)
-), 'Standard operating procedures/Protocols');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_SOP_DESTS,
+  'Standard operating procedures/Protocols'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_SOP_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  sepsis_sop: 'Sepsis protocol displ.',
+  jaundice_sop: 'Jaundice protocol displ.',
+  hypoglycemia_sop: 'Hypoglyc. protocol displ.',
+  neonatal_resuscitation_sop: 'Resus protocol displayed',
+  kmc_sop: 'KMC protocol displayed',
+  handwash_sop: 'Handwashing prot. displ.',
+  referral_sop: 'Referral protocol displ.',
+  sop_policy_incubator_temperature_setting: 'Incubator temp setting',
+  sop_policy_gestational_age_assessment: 'Gestational age assess.',
+  sop_policy_essential_newborn_care: 'Essential NB care',
+  sop_policy_pre_maturity: 'Prematurity',
+  sop_policy_low_birth_weight: 'Low birth weight',
+  sop_policy_neonatal_convulsions: 'Convulsions',
+  sop_policy_neonatal_asphyxia: 'Asphyxia',
+  sop_policy_neonatal_infection_sepsis: 'Infection/sepsis',
+  sop_policy_congenital_malformations: 'Congenital malf.',
+  sop_policy_macrosomic_babies: 'Macrosomic babies',
+  sop_policy_breastfeeding: 'Breastfeeding',
+  sop_policy_handling_of_ebm: 'EBM handling',
+  sop_policy_assisted_feeding: 'Assisted feeding',
+  sop_policy_standard_infection_prevention_control_and_precautions_for_transmission:
+    'IPC standards',
+  sop_policy_pre_referral_stabilization_of_infants: 'Pre-referral stabilisation',
+  sop_policy_verbal_and_written_hand_over_of_newborns_at_shift_changes:
+    'Shift handover (NB)',
+  sop_policy_triage_and_waiting_times_for_emergency_and_non_emergency_consultations_and_treatment:
+    'Triage & wait times',
+  sop_policy_kmc: 'KMC',
+});
 
 // wat_sour → water_source, wav_avail → water_available_consistently,
 // drainage → drainage_system, sinks → separate_sink, hand → hand_hygiene,
@@ -369,7 +592,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
 // station → handwashing_station, disinfect → disinfect_washrooms,
 // clean → clean_washroom, access → access_disability,
 // menstrual → menstrual_hygiene.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_WASH_DESTS = [
   'water_source',
   'water_available_consistently',
   'drainage_system',
@@ -392,7 +615,43 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'clean_washroom',
   'access_disability',
   'menstrual_hygiene',
-], 'WASH (Water, Sanitation, Hygeine)/IPC');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_WASH_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_WASH_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  water_source: 'Water source funct.',
+  water_available_consistently: 'Water consist. (1m)',
+  drainage_system: 'Drainage system',
+  separate_sink: 'Separate sinks (HW/fluids)',
+  hand_hygiene: 'Hand hygiene coverage',
+  waste_management: 'Waste mgmt protocol',
+  waste_segregation: 'Segregated waste bins',
+  cleaning_register: 'Cleaning register',
+  decontamination_area: 'Decontam. area',
+  decontamination_checklist: 'Decontam. checklist',
+  utensil_cleaning_area: 'Baby utensil clean area',
+  laundry: 'Separate NBU laundry',
+  linen: 'Clean/dirty linen sep.',
+  sharp_container: 'Sharps containers in areas',
+  sharp_full: 'Sharps containers <3/4',
+  latrine: 'Staff-only latrine',
+  latrine_clients: 'Client-only latrine',
+  handwashing_station: 'Sanitation HW station',
+  disinfect_washrooms: 'Bathroom clean freq.',
+  clean_washroom: 'Bathrooms clean today',
+  access_disability: 'Sanitation accessibility',
+  menstrual_hygiene: 'Menstrual hygiene mgmt',
+});
 
 // Premature NB care → premature_care, Stable-infant referral wt →
 // referral_weight, Stable-baby nursing → nursing_care,
@@ -403,7 +662,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
 // creatinine, LFT → liver_function, Glucose (glucometer) →
 // glucose_tests, Bilirubin test → bilirubin_testing, HIV EID →
 // hiv_test, Imaging turnaround → imaging_time.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_SERVICES_DESTS = [
   'premature_care',
   'referral_weight',
   'nutritional_services',
@@ -430,7 +689,47 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'cranial_ultrasound',
   'x_ray',
   'imaging_time',
-], 'Services offered');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_SERVICES_DESTS,
+  'Services offered'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_SERVICES_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  premature_care: 'Premature NB care',
+  referral_weight: 'Stable-infant referral wt',
+  nutritional_services: 'Nutritional services',
+  nursing_care: 'Stable-baby nursing',
+  congenital_care: 'Congenital malf. care',
+  asphyxia_care: 'Asphyxia/meconium care',
+  blood_count: 'TBC/FHG capability',
+  malaria_test: 'Malaria test',
+  urine: 'Urinalysis',
+  urinalysis: 'Urinalysis',
+  blood_cultures: 'Blood cultures',
+  lumbar_puncture: 'Lumbar puncture',
+  coombs_testing: 'Coombs test',
+  bone_chemistry: 'Bone chemistry',
+  blood_group: 'Blood group/X-match',
+  crp_test: 'CRP test',
+  thyroid_test: 'TFT',
+  electrolyte: 'U&E/Creatinine',
+  creatinine: 'U&E/Creatinine',
+  liver_function: 'LFT',
+  glucose_tests: 'Glucose (glucometer)',
+  bilirubin_testing: 'Bilirubin test',
+  hiv_test: 'HIV EID',
+  cranial_ultrasound: 'Cranial ultrasound',
+  x_ray: 'X-ray',
+  imaging_time: 'Imaging turnaround',
+});
 
 // employed_paed → employed_paediatrician, contract_paed →
 // contracted_paediatrician, available_24hrs → neo_ped_24hrs,
@@ -440,7 +739,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
 // employed_cos → employed_co, contract_cos → contract_co,
 // adeq_cos → adequate_co. paed_score, neonatologists_score,
 // nurses_rn_score, and cos_score are not transformed dests.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+const NEWBORN_UNIT_HRH_DESTS = [
   'employed_neonatologists',
   'contract_neonatologists',
   'employed_paediatrician',
@@ -455,7 +754,69 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'employed_co',
   'contract_co',
   'adequate_co',
-], 'HRH');
+];
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', NEWBORN_UNIT_HRH_DESTS, 'HRH');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_HRH_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  employed_neonatologists: 'Number of county-employed neonatologists',
+  contract_neonatologists: 'Number of contracted neonatologists',
+  employed_paediatrician: 'Number of county-employed paediatricians',
+  contracted_paediatrician: 'Number of contracted paediatricians',
+  neo_ped_24hrs: 'Neo/paed 24h on-call',
+  employed_mo: 'Number of county-employed medical officers',
+  contract_mo: 'Number of contracted medical officers',
+  adequate_mo: 'MO adequacy',
+  employed_nurses: 'Number of county-employed nurses',
+  contract_nurses: 'Number of contracted nurses',
+  adequate_reg_nurses: 'Nurse adequacy',
+  employed_co: 'Number of county-employed clinical officers',
+  contract_co: 'Number of contracted clinical officers',
+  adequate_co: 'CO adequacy',
+});
+
+// newborn_cme → newborn_training, neonate_hiv → hiv_neonate_training,
+// sic → standard_infection_control, hypoglycemia → training_hypogycemia,
+// preterm_care → training_preterm, newborn_jaundice →
+// training_newborn_jaundice. Year-month dests get labels but no FQA
+// Scores rows. hypothermia and *_score columns are not dests.
+const NEWBORN_UNIT_TRAINING_DESTS = [
+  'newborn_training',
+  'nnr_training',
+  'breastfeeding_training',
+  'infections_training',
+  'hiv_neonate_training',
+  'kangaroo_training',
+  'standard_infection_control',
+  'training_hypogycemia',
+  'training_preterm',
+  'training_newborn_jaundice',
+  'comprehensive_training',
+];
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', NEWBORN_UNIT_TRAINING_DESTS, 'Training');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Newborn Unit',
+  NEWBORN_UNIT_TRAINING_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Newborn Unit', {
+  newborn_training: 'Training on care for sick and small newborns',
+  nnr_training: 'Training on neonatal resuscitation (NNR)',
+  breastfeeding_training: 'Training on neonatal nutrition and breastfeeding support',
+  infections_training: 'Training on recognition and management of newborn infections',
+  hiv_neonate_training: 'Training on HIV in the neonate',
+  kangaroo_training: 'Training on kangaroo mother care (KMC)',
+  standard_infection_control: 'Training on standard infection control and precautions (IPC)',
+  training_hypogycemia: 'Training on neonatal hypoglycaemia',
+  training_preterm: 'Training on care of preterm and low-birth-weight (LBW) babies',
+  training_newborn_jaundice: 'Training on jaundice in newborns',
+  comprehensive_training: 'Training on comprehensive newborn care',
+});
 
 assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Central Store', [
   'designated_space',
@@ -2510,6 +2871,8 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
 // Facility General leftovers (no thematic, HSS, or attribute name yet):
 // units_*.
 // Pharmacy leftovers (no thematic, HSS, or attribute name yet): units_*.
+// Newborn Unit leftovers (no thematic, HSS, or attribute name yet):
+// functional_nbu, newborn_admissions, sharp3_4full.
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

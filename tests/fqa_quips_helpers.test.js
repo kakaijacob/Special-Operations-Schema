@@ -2299,6 +2299,70 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_reg_nurses")'),
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_co")'), 'HRH');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_co")'), 'HRH');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_co")'), 'HRH');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "kmc_initiated")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "tetraycline")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "phototherapy_lamp")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "death_register")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "nbu_open")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "employed_neonatologists")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "maintenance_infrastructure")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "visual_privacy")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "premature_care")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "sepsis_sop")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "newborn_training")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "water_source")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "kmc_initiated")'), 'Early KMC (<2000g)');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "feeding_freq")'), 'LBW ≥8 feeds/day');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "system_near_nbu")'), 'Mother–NBU proximity');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "weight_gain")'), 'Pre-disch. WG ≥15g/kg/d');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "tetraycline")'), '1% tetracycline eye oint.');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "feeding_cups")'), 'Baby feeding cups');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "commodities_catheters_size_4")'), 'Size 4');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "commodities_catheters_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "commodities_materials_kmc")'), 'KMC');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "commodities_materials_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "baby_beds")'), 'Number of baby cots/beds/incubators');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "equip_resus_equip_200ml_ambubag")'), '200mL ambu-bag');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "equip_resus_equip_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "equip_oxy_source_oxygen_concentrator")'), 'O2 concentrator');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "equip_cannulae_size_24")'), 'Size 24');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "equip_cannulae_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "death_register")'), 'D1 death register');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "patient_files_observation_charts")'), 'Observation chart');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "patient_files_continuation_sheet")'), 'Continuation sheet');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "patient_files_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "nbu_open")'), 'NBU daily hours (24h)');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "employed_neonatologists")'), 'Number of county-employed neonatologists');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "neo_ped_24hrs")'), 'Neo/paed 24h on-call');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "cots_incubator")'), 'Cot/incubator spacing ≥2m');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "room_temp")'), 'Room temp 25–28°C');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "kitchionette")'), 'Kitchenette w/ fridge');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "visual_privacy")'), 'Visual privacy (rooms)');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "premature_care")'), 'Premature NB care');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "urine")'), 'Urinalysis');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "creatinine")'), 'U&E/Creatinine');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "hiv_test")'), 'HIV EID');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "sepsis_sop")'), 'Sepsis protocol displ.');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "sop_policy_incubator_temperature_setting")'), 'Incubator temp setting');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "sop_policy_kmc")'), 'KMC');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "sop_policy_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "water_source")'), 'Water source funct.');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "sharp_full")'), 'Sharps containers <3/4');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "newborn_training")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "training_hypogycemia")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "standard_infection_control")'), 'Training');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "newborn_training")'), 'Training on care for sick and small newborns');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "training_hypogycemia")'), 'Training on neonatal hypoglycaemia');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "newborn_score")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "paed_score")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "hypothermia")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "patient_files")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "catheters")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "functional_nbu")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "newborn_admissions")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sharp3_4full")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Newborn Unit", "functional_nbu")'), '');
+assert.strictEqual(g('attributeNameFor_("Newborn Unit", "functional_nbu")'), '');
 assert.strictEqual(g('thematicAreaFor_("Central Store", "designated_space")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Central Store", "inventory")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Central Store", "bin_card")'), 'Health Records for clients');
@@ -2777,37 +2841,74 @@ const nbuScoreTable = g(
   'buildFqaScoreTableRows_(__nbuScoreSheets, __scoreWeighting)'
 );
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'tetraycline' && row[6] === 'Commodities';
+  return row[8] === 'tetraycline' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === '1% tetracycline eye oint.';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'phototherapy_lamp' && row[6] === 'Equipment';
+  return row[8] === 'phototherapy_lamp' &&
+    row[6] === 'Equipment' &&
+    row[7] === 'Equipment' &&
+    row[9] === 'Phototherapy lamp';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'kmc_initiated' && row[6] === 'Adherence to evidence based practice';
+  return row[8] === 'kmc_initiated' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Early KMC (<2000g)';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'death_register' && row[6] === 'Health Records for clients';
+  return row[8] === 'death_register' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'D1 death register' &&
+    row[10] === 1;
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'nbu_open' && row[6] === 'Hours of operation';
+  return row[8] === 'nbu_open' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'NBU daily hours (24h)';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'cctv' && row[6] === 'Infrastructure';
+  return row[8] === 'cctv' &&
+    row[6] === 'Infrastructure' &&
+    row[7] === 'Infrastructure' &&
+    row[9] === 'CCTV' &&
+    row[10] === 1;
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'sepsis_sop' && row[6] === 'Standard operating procedures/Protocols';
+  return row[8] === 'sepsis_sop' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Sepsis protocol displ.';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'water_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+  return row[8] === 'water_source' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Water source funct.';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'premature_care' && row[6] === 'Services offered';
+  return row[8] === 'premature_care' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Premature NB care' &&
+    row[10] === 1;
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'neo_ped_24hrs' && row[6] === 'HRH';
+  return row[8] === 'neo_ped_24hrs' &&
+    row[6] === 'HRH' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'Neo/paed 24h on-call' &&
+    row[10] === 1;
 }));
 assert.ok(nbuScoreTable.some(function (row) {
-  return row[8] === 'functional_nbu' && row[6] === '';
+  return row[8] === 'functional_nbu' &&
+    row[6] === '' &&
+    row[7] === '' &&
+    row[9] === '';
 }));
 
 sandbox.__csScoreSheets = [{

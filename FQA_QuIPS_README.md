@@ -94,9 +94,16 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    Pharmacy dests fill `thematic_area`, `hss_building_block`, and
    `attribute_name` (`dda_used` stays Health Records;
    `wall_clock` stays Infrastructure; `units_*` leftovers stay
-   blank). Other `thematic_area` values, `hss_building_block`,
-   and `attribute_name` stay blank until those labels are added.
-   You can still run `writeFqaScoreTable` on its own.
+   blank). Newborn Unit dests now fill those same three columns,
+   including Training year-month dests (`hypothermia` and
+   `*_score` columns are not dests). Select-multiple parents and
+   listed count names are not dests. `patient_files` dests follow
+   form choice codes, not the listed /1 remumbering. Leftovers
+   stay blank: `functional_nbu`, `newborn_admissions`,
+   `sharp3_4full`. Other `thematic_area` values,
+   `hss_building_block`, and `attribute_name` stay blank until
+   those labels are added. You can still run
+   `writeFqaScoreTable` on its own.
 
 ## Tests
 
