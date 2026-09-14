@@ -16,7 +16,7 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Pharmacy.js` | Pharmacy (dates + raw passthrough) |
 | `FQA_QuIPS_Central_Store.js` | Central Store (dates + raw passthrough) |
 | `FQA_QuIPS_Facility_General.js` | Facility General (dates + raw passthrough) |
-| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then `writeFqaScoreTable` |
+| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then Scores + insight linkage |
 | `FQA_QuIPS_Weighting.js` | Builds the `FQA Weighting` score catalog sheet |
 | `FQA_QuIPS_Scores.js` | Builds the long-format `FQA Scores` totalling sheet |
 | `FQA_QuIPS_Insight_Crosswalk.js` | QuIPS observation ↔ FQA resource/protocol theme map + classifiers |

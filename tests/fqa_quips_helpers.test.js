@@ -4354,6 +4354,9 @@ assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
 assert.ok(orchestrator.indexOf('writeFqaScoreTable()') !== -1);
 assert.ok(/function pullAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
 assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
+assert.ok(/function pullAllForms[\s\S]*refreshFqaQuipsInsightLinkage_\(\);/.test(orchestrator));
+assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaQuipsInsightLinkage_\(\);/.test(orchestrator));
+assert.ok(orchestrator.indexOf('writeFqaQuipsInsightLinkage()') !== -1);
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');

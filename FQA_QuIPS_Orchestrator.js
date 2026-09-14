@@ -2,7 +2,7 @@
  * FQA QuIPS Orchestrator
  *
  * Runs extraction and transformation for all 8 Kobo forms,
- * then refreshes the FQA Scores sheet.
+ * then refreshes the FQA Scores sheet and FQA–QuIPS insight linkage.
  */
 
 const FORM_CONFIG = [
@@ -108,6 +108,7 @@ function pullAllForms() {
   });
 
   refreshFqaScoreTable_();
+  refreshFqaQuipsInsightLinkage_();
 }
 
 /**
@@ -187,6 +188,7 @@ function fullRefreshAllForms() {
   });
 
   refreshFqaScoreTable_();
+  refreshFqaQuipsInsightLinkage_();
 }
 
 /**
@@ -201,6 +203,23 @@ function refreshFqaScoreTable_() {
       'ERROR writing "' +
       FQA_SCORE_SHEET_NAME +
       '": ' +
+      err.message +
+      (err.stack ? '\n' + err.stack : '')
+    );
+  }
+}
+
+/**
+ * Refresh FQA–QuIPS insight sheets after Scores are updated.
+ * Requires FQA_QuIPS_Insight_Crosswalk.js and FQA_QuIPS_Insight_Linkage.js.
+ * Failures are logged and do not throw.
+ */
+function refreshFqaQuipsInsightLinkage_() {
+  try {
+    writeFqaQuipsInsightLinkage();
+  } catch (err) {
+    Logger.log(
+      'ERROR writing FQA–QuIPS insight linkage: ' +
       err.message +
       (err.stack ? '\n' + err.stack : '')
     );
