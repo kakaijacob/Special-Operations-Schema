@@ -2439,6 +2439,11 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "theatre_space_surge
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "maintained")'), 'Infrastructure');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "preop_change")'), 'Pre-op changing rooms');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "ipd_dist")'), 'Theatre–IPD ≤2 min');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "preop_vis_priv")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "files_sec")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "files_storage")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "preop_vis_priv")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "files_sec")'), 'Files in secure cabinets');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2897,6 +2902,28 @@ assert.ok(otInfraScoreTable.some(function (row) {
 }));
 assert.ok(otInfraScoreTable.some(function (row) {
   return row[8] === 'theatre_space_surgery' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
+sandbox.__otPrivacyScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'preop_vis_priv', 'files_sec'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'All rooms', 'Yes'],
+  ],
+}];
+const otPrivacyScoreTable = g(
+  'buildFqaScoreTableRows_(__otPrivacyScoreSheets, __scoreWeighting)'
+);
+assert.ok(otPrivacyScoreTable.some(function (row) {
+  return row[8] === 'preop_vis_priv' &&
+    row[6] === 'Privacy/confidentiality' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Pre-op visual privacy';
+}));
+assert.ok(otPrivacyScoreTable.some(function (row) {
+  return row[8] === 'files_sec' &&
+    row[6] === 'Privacy/confidentiality' &&
+    row[9] === 'Files in secure cabinets';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

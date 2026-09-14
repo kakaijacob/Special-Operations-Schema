@@ -101,7 +101,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * records dests are Health Information System. Operating Theatre
  * hours dests are Service Delivery. Operating Theatre HRH dests
  * are Human Resource for Health. Operating Theatre
- * infrastructure dests are Infrastructure.
+ * infrastructure dests are Infrastructure. Operating Theatre
+ * privacy dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1405,6 +1406,37 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   temp_ctrl: 'Temperature control (AC)',
   staff_lounge: 'Theatre staff lounge',
   ipd_dist: 'Theatre–IPD ≤2 min',
+});
+
+// files_storage → files_sec.
+const OT_PRIVACY_EVIDENCE_DESTS = [
+  'preop_vis_priv',
+  'postop_vis_priv',
+  'preop_aud_priv',
+  'postop_aud_priv',
+  'files_sec',
+];
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_PRIVACY_EVIDENCE_DESTS,
+  'Privacy/confidentiality'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_PRIVACY_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  preop_vis_priv: 'Pre-op visual privacy',
+  postop_vis_priv: 'Post-op visual privacy',
+  preop_aud_priv: 'Pre-op auditory privacy',
+  postop_aud_priv: 'Post-op auditory privacy',
+  files_sec: 'Files in secure cabinets',
 });
 
 function thematicAreaFor_(department, attribute) {
