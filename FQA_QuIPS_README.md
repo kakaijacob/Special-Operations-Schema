@@ -38,8 +38,11 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `label`, `score`). Yes/No labels default to 1/0; other labels leave
    `score` blank so you can fill them in later. Re-running keeps scores
    already typed on that sheet. The orchestrator does not rebuild it.
-7. After `QuIPS Cleaned Data` and `FQA Scores` are available in the same
-   spreadsheet, run `writeFqaQuipsInsightLinkage`. This builds:
+7. After `FQA Scores` is available, run `writeFqaQuipsInsightLinkage`.
+   QuIPS cleaned data is read from a local `QuIPS Cleaned Data` tab if
+   present; otherwise from the QuIPS workbook
+   `1CjK8cfDVR_Bb6rny4n_SYW2F6Ltx8kHRzP0A92bJtd4` (gid `1114469965`).
+   The first run must authorize access to that spreadsheet. This builds:
    - `FQA-QuIPS Crosswalk` — catalog of QuIPS delivery observations linked
      to FQA resources / protocols / training (e.g. hand hygiene practice
      ↔ WASH supplies, handwashing SOP, IPC training)
@@ -47,8 +50,9 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
      practice rate, FQA readiness, and an insight quadrant:
      Enabled & practiced / Practice gap / Adaptive practice / Structural gap
    - `FQA-QuIPS Insight Summary` — theme-level counts of those quadrants  
-   **Required sources:** `QuIPS Cleaned Data` + `FQA Scores` (join on
-   `facility_code`; facility identity and readiness come from Scores).
+   **Required sources:** QuIPS cleaned data (local tab or linked workbook)
+   + `FQA Scores` (join on `facility_code`; facility identity and readiness
+   come from Scores).
    **Optional detail:** `Inpatient Maternity`, `Facility General`, and
    `Newborn Unit` — when present, categorical responses overlay Scores for
    richer enabler/gap text. Themes cover hand hygiene, PPE, uterotonics,

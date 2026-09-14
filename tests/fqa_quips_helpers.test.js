@@ -4511,8 +4511,14 @@ assert.ok(
 // FQA Scores is the primary join source; department tabs are optional detail.
 assert.strictEqual(g('FQA_INSIGHT_SCORE_SHEET_NAME'), 'FQA Scores');
 assert.strictEqual(g('QUIPS_CLEANED_SHEET_NAME'), 'QuIPS Cleaned Data');
+assert.strictEqual(
+  g('QUIPS_CLEANED_SPREADSHEET_ID'),
+  '1CjK8cfDVR_Bb6rny4n_SYW2F6Ltx8kHRzP0A92bJtd4'
+);
+assert.strictEqual(g('QUIPS_CLEANED_SHEET_GID'), 1114469965);
 assert.ok(Array.isArray(g('FQA_INSIGHT_DEPARTMENT_SHEETS')));
 assert.ok(g('FQA_INSIGHT_DEPARTMENT_SHEETS').indexOf('Inpatient Maternity') !== -1);
+assert.strictEqual(typeof g('resolveQuipsCleanedSheet_'), 'function');
 
 assert.strictEqual(g("classifyFqaScoreValue_(1)"), 'ready');
 assert.strictEqual(g("classifyFqaScoreValue_(0)"), 'not_ready');

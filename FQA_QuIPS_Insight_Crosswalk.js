@@ -15,6 +15,13 @@
  */
 
 var QUIPS_CLEANED_SHEET_NAME = 'QuIPS Cleaned Data';
+/**
+ * External QuIPS cleaned-data workbook (from QuIPS transformation).
+ * Used when the active spreadsheet has no local QuIPS Cleaned Data tab.
+ */
+var QUIPS_CLEANED_SPREADSHEET_ID =
+  '1CjK8cfDVR_Bb6rny4n_SYW2F6Ltx8kHRzP0A92bJtd4';
+var QUIPS_CLEANED_SHEET_GID = 1114469965;
 /** Primary FQA join source for facility_code + readiness scores. */
 var FQA_INSIGHT_SCORE_SHEET_NAME = 'FQA Scores';
 var FQA_QUIPS_CROSSWALK_SHEET = 'FQA-QuIPS Crosswalk';

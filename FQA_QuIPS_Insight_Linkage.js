@@ -212,18 +212,60 @@ function buildAllFacilityThemeInsights_(ss) {
 }
 
 /**
+ * Resolve QuIPS Cleaned Data sheet.
+ * Prefer a local tab; otherwise open the external QuIPS workbook by ID/gid.
+ */
+function resolveQuipsCleanedSheet_(activeSs) {
+  var local = activeSs.getSheetByName(QUIPS_CLEANED_SHEET_NAME);
+  if (local) return local;
+
+  try {
+    var remoteSs = SpreadsheetApp.openById(QUIPS_CLEANED_SPREADSHEET_ID);
+    if (typeof sheetByGid_ === 'function') {
+      return sheetByGid_(remoteSs, QUIPS_CLEANED_SHEET_GID);
+    }
+    var sheets = remoteSs.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      if (String(sheets[i].getSheetId()) === String(QUIPS_CLEANED_SHEET_GID)) {
+        return sheets[i];
+      }
+    }
+    var byName = remoteSs.getSheetByName(QUIPS_CLEANED_SHEET_NAME);
+    return byName || sheets[0] || null;
+  } catch (err) {
+    Logger.log(
+      'Unable to open QuIPS cleaned workbook ' +
+        QUIPS_CLEANED_SPREADSHEET_ID +
+        ': ' +
+        err.message
+    );
+    return null;
+  }
+}
+
+/**
  * QuIPS cleaned rows grouped by facility_code.
  */
 function loadQuipsObservationsByFacility_(ss) {
-  var sheet = ss.getSheetByName(QUIPS_CLEANED_SHEET_NAME);
+  var sheet = resolveQuipsCleanedSheet_(ss);
   if (!sheet) {
     Logger.log(
-      'QuIPS sheet "' +
-        QUIPS_CLEANED_SHEET_NAME +
-        '" not found. Facility insights will use FQA-only facilities where available.'
+      'QuIPS cleaned data not found locally or in spreadsheet ' +
+        QUIPS_CLEANED_SPREADSHEET_ID +
+        ' (gid ' +
+        QUIPS_CLEANED_SHEET_GID +
+        '). Facility insights will use FQA-only facilities where available.'
     );
     return {};
   }
+
+  Logger.log(
+    'Reading QuIPS cleaned data from "' +
+      sheet.getParent().getName() +
+      '" / "' +
+      sheet.getName() +
+      '".'
+  );
 
   var objects = sheetToObjects_(sheet);
   var byFacility = {};
