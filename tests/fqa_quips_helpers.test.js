@@ -4354,9 +4354,20 @@ assert.ok(orchestrator.indexOf('writeFqaWeightingSheet') === -1);
 assert.ok(orchestrator.indexOf('writeFqaScoreTable()') !== -1);
 assert.ok(/function pullAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
 assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaScoreTable_\(\);/.test(orchestrator));
-assert.ok(/function pullAllForms[\s\S]*refreshFqaQuipsInsightLinkage_\(\);/.test(orchestrator));
-assert.ok(/function fullRefreshAllForms[\s\S]*refreshFqaQuipsInsightLinkage_\(\);/.test(orchestrator));
+assert.ok(orchestrator.indexOf('refreshFqaQuipsInsightLinkage_()') === -1);
+assert.ok(orchestrator.indexOf('function runFqaQuipsInsightLinkage()') !== -1);
 assert.ok(orchestrator.indexOf('writeFqaQuipsInsightLinkage()') !== -1);
+// Insight linkage must not run inside the form-pull entry points.
+const pullBody = orchestrator.match(
+  /function pullAllForms\(\) \{[\s\S]*?\n\}/
+)[0];
+const fullBody = orchestrator.match(
+  /function fullRefreshAllForms\(\) \{[\s\S]*?\n\}/
+)[0];
+assert.ok(pullBody.indexOf('writeFqaQuipsInsightLinkage') === -1);
+assert.ok(fullBody.indexOf('writeFqaQuipsInsightLinkage') === -1);
+assert.ok(pullBody.indexOf('runFqaQuipsInsightLinkage') === -1);
+assert.ok(fullBody.indexOf('runFqaQuipsInsightLinkage') === -1);
 
 files.concat(['FQA_QuIPS_Token.example.js', 'FQA_QuIPS_README.md', '.gitignore']).forEach(function (name) {
   const text = fs.readFileSync(path.join(ROOT, name), 'utf8');

@@ -2,7 +2,11 @@
  * FQA QuIPS Orchestrator
  *
  * Runs extraction and transformation for all 8 Kobo forms,
- * then refreshes the FQA Scores sheet and FQA–QuIPS insight linkage.
+ * then refreshes the FQA Scores sheet.
+ *
+ * FQA–QuIPS insight linkage is intentionally separate (can time out on
+ * large QuIPS workbooks). Run writeFqaQuipsInsightLinkage() on its own
+ * after Scores are ready.
  */
 
 const FORM_CONFIG = [
@@ -108,7 +112,6 @@ function pullAllForms() {
   });
 
   refreshFqaScoreTable_();
-  refreshFqaQuipsInsightLinkage_();
 }
 
 /**
@@ -188,7 +191,6 @@ function fullRefreshAllForms() {
   });
 
   refreshFqaScoreTable_();
-  refreshFqaQuipsInsightLinkage_();
 }
 
 /**
@@ -210,20 +212,19 @@ function refreshFqaScoreTable_() {
 }
 
 /**
- * Refresh FQA–QuIPS insight sheets after Scores are updated.
- * Requires FQA_QuIPS_Insight_Crosswalk.js and FQA_QuIPS_Insight_Linkage.js.
- * Failures are logged and do not throw.
+ * Manual entry point for FQA–QuIPS insight linkage.
+ *
+ * Kept separate from pullAllForms / fullRefreshAllForms so large QuIPS
+ * reads do not time out the form-pull run. Requires:
+ *   - FQA_QuIPS_Insight_Crosswalk.js
+ *   - FQA_QuIPS_Insight_Linkage.js
+ *   - FQA Scores in this spreadsheet
+ *   - QuIPS cleaned data (local tab or linked workbook)
+ *
+ * Also callable directly as writeFqaQuipsInsightLinkage().
  */
-function refreshFqaQuipsInsightLinkage_() {
-  try {
-    writeFqaQuipsInsightLinkage();
-  } catch (err) {
-    Logger.log(
-      'ERROR writing FQA–QuIPS insight linkage: ' +
-      err.message +
-      (err.stack ? '\n' + err.stack : '')
-    );
-  }
+function runFqaQuipsInsightLinkage() {
+  writeFqaQuipsInsightLinkage();
 }
 
 /**
