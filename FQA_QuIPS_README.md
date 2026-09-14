@@ -105,10 +105,19 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `.1` scores, and `eid` are not dests. Leftovers stay blank:
    `functional_maternity_unit`, `privacy_beds`,
    `labour_ward_beds`, `training_abortion_care`,
-   `understand_service`. Other `thematic_area` values,
-   `hss_building_block`, and `attribute_name` stay blank until
-   those labels are added. You can still run
-   `writeFqaScoreTable` on its own.
+   `understand_service`. Outpatient dests now fill those same
+   three columns, including Training year-month dests.
+   Select-multiple parents and listed count names are not dests.
+   `patient_id` → `patient_identification`; `referral` →
+   `referral_mechanism`; `hemocue` → `haemoglobinometer`
+   (Infrastructure). Training `.1` columns are not dests.
+   Leftovers stay blank: `unit`, `admission`,
+   `foetal_nonstress`, `services_via`, `infant_chart`,
+   `urine_glucose`, `vitamin_c_available`, `dipstick_urine`,
+   `training_date_crh`, `comments`, `data_quality`. Other
+   `thematic_area` values, `hss_building_block`, and
+   `attribute_name` stay blank until those labels are added.
+   You can still run `writeFqaScoreTable` on its own.
 
 ## Tests
 

@@ -22,10 +22,10 @@
  * dests also set hss_building_block and attribute_name. Facility
  * General dests also set those columns. Pharmacy dests also set
  * those columns. Newborn Unit dests also set those columns.
- * Inpatient Maternity dests also set those columns. units_*
- * leftovers stay blank. Remaining hss_building_block and
- * attribute_name values stay blank until those labels are
- * provided.
+ * Inpatient Maternity dests also set those columns. Outpatient
+ * dests also set those columns. units_* leftovers stay blank.
+ * Remaining hss_building_block and attribute_name values stay
+ * blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -95,8 +95,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * labels. Newborn Unit dests also fill those same
  * thematic_area labels, including Training. Inpatient
  * Maternity dests also fill those same thematic_area
- * labels. Other departments stay empty until their
- * groupings are defined.
+ * labels. Outpatient dests also fill those same
+ * thematic_area labels, including Training. Other
+ * departments stay empty until their groupings are
+ * defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -143,7 +145,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Human Resource for Health. Pharmacy WASH dests are
  * Service Delivery. Newborn Unit dests use those same
  * HSS building-block labels. Inpatient Maternity dests
- * use those same HSS building-block labels.
+ * use those same HSS building-block labels. Outpatient
+ * dests use those same HSS building-block labels.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -159,8 +162,9 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 /**
  * Attribute → display name, by department sheet name.
  * Operating Theatre dests, Facility General dests,
- * Pharmacy dests, Newborn Unit dests, and Inpatient
- * Maternity dests use the provided labels.
+ * Pharmacy dests, Newborn Unit dests, Inpatient
+ * Maternity dests, and Outpatient dests use the
+ * provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1752,6 +1756,855 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
   wash_menstrual: 'MHM provisions',
   wash_no_toilets: 'Number of patient latrines/toilets',
   wash_labour: 'Latrine for labouring women',
+});
+
+// patient_id → patient_identification, referral → referral_mechanism.
+// health_edu / anc_visit / third_trimester / postnatal_exam /
+// pnc_visit / preconception_visit parents and listed counts are
+// not dests. itns → insecticide_treated_nets_available,
+// latex_gloves → latex_gloves_available,
+// sterile_gloves → sterile_gloves_available, ppe → ppe_available,
+// glass_slides → glass_slides_available, tetanus → available_tetanus,
+// bcg → bcg_available, pentavlent → pentavlent_available,
+// hepb → hepb_available, rotavirus → available_rotavirus,
+// pneumococcal → available_pneumococcal,
+// sterile_drugs → available_sterile_drugs, ifas → available_ifas,
+// malaria_drugs → malaria_drugs_available,
+// deworming → deworming_available, vitamin_a → vit_a_available,
+// anaesthesia → available_anaesthesia, rutf → available_rutf,
+// zinc → available_zinc, hiv_rtk → available_hiv_rapid_test_kits,
+// dipstick_ketone → available_dipstick_ketone,
+// glucometer_strips → available_glucometer,
+// filter_paper → filter_paper_available, ors → available_ors.
+// exam_couches → numbers_examination_couches,
+// bp_apparatus → number_bp_apparatus,
+// thermometers → number_thermometers,
+// stethoscopes → number_stethoscopes,
+// fetal_doppler → number_fetal_doppler,
+// oximeter → number_oximeter, measuring_tape → number_measuring_tape,
+// stadiometre → number_stadiometre, inf_scale → infant_scale,
+// iud_trays → iud_trays_availlable,
+// implant_insertion → implant_insertion_available,
+// light_micros → light_microscope_available,
+// glucometer → glucometer_available,
+// refrigerator → refregerator_available,
+// fetal_doppler_adequate → fetal_dopper_adequate.
+// hemocue → haemoglobinometer (Infrastructure).
+// emergency_tray / resus_cart / materials_display / family_plan
+// parents and listed counts are not dests.
+// imm_register → immunization_register,
+// imm_sheet → immunization_sheet, imm_tally → immunization_tally,
+// prev_mtc → pmtct_register, fam_plan → family_planning_register,
+// gyna_files → gyna_outpatient_clinic_files,
+// mental_stat → mental_status_assessment_tool,
+// prc_form → post_rape_care_form, cvc_form → cancer_screening_form,
+// cvc_register → cervical_cancer_screening_register,
+// pac_register → post_abortion_care_register,
+// ptb_register → presumptive_tb_register.
+// medical_officers → hrh_medical_officer,
+// medical_officers3 → hrh_medical_officer3,
+// nurse_midwives → hrh_nurse_midwives,
+// nurse_midwives3 → hrh_nurse_midwives3,
+// clinical_officers → hrh_clinical_officers,
+// clinical_officers3 → hrh_clinical_officers3,
+// mhe_access → mental_health_expertise_access.
+// tidiness → waiting_area_well_maintained,
+// education_material → educational_material,
+// maintenance → wall_well_maintained, lighting → spaces_lighting,
+// exam_rooms → number_exam_rooms,
+// fire_extinguishers → fire_extinguisher,
+// facility_signs → facility_visible_signage,
+// service_charter → visible_service_charter,
+// edu_mat → education_material_specify (text).
+// patient_files → patient_filec_privacy.
+// registration → services_registration, ultrasound → ultrasound_services,
+// infant_imm → infant_immunization, gen_microscopy → general_microscopy,
+// hemogram → full_hemogram, urinalysis → perform_urinalysis.
+// Infertility_counsel keeps the Kobo spelling.
+// procument_protocols → procurement_protocol,
+// triage_protocols → triage_protocol,
+// fam_plan_guide → family_planning_guide,
+// fam_plan_protocols → family_planning_protocol,
+// cervical_cancer → sop_cervical_cancer,
+// pnc_protocols → sops_pnc_protocol, kepi_vaccine → sops_kepi_vaccine,
+// weaning_education → sops_weaning_education,
+// child_growth → sops_child_growth,
+// inf_diarrhea → sops_infant_diarrhea.
+// date_canc → training_date_canc, date_gbv → training_date_gbv,
+// date_prtc → training_date_prtc, date_rmc → training_date_rmc,
+// date_sicpti → training_date_ipc, date_pmtct → training_date_pmtct,
+// date_pnc → training_date_pnc,
+// date_clients → training_date_clients_support,
+// date_fam_plan → training_family_planning,
+// date_preconception → training_date_preconception,
+// date_asrh → training_date_adolescent_rh,
+// date_rhcs → training_date_rh_cancer_screening.
+// Training .1 columns are not dests.
+// water_source → wash_water_source,
+// water_availability → wash_water_availability,
+// drainage_system → wash_drainage, hand_hygiene → wash_hand_hygiene,
+// waste_mgt → wash_waste_management, waste_bins → wash_waste_bins,
+// functional_toilet → wash_functional_toilet,
+// handwash_area → was_handwash_area,
+// sharp_container → wash_sharp_container,
+// sharp_capacity → wash_sharp_capacity,
+// latrine_types → wash_latrine_type, other → wash_other_specify (text),
+// disinfectant → wash_bathrooms_disinfected,
+// cleanliness → wash_cleanliness, accessibility → wash_accessibility,
+// gender_separation → wash_gender_separation,
+// menstrual_hygiene → wash_menstrual_hygiene,
+// handwash_stations → wash_handwash_stations,
+// no_of_toilets → wash_number_toilets (integer).
+const OUTPATIENT_ADHERENCE_DESTS = [
+  'patient_identification',
+  'triage_process',
+  'triage_record',
+  'anc_defaulters',
+  'group_anc',
+  'referral_mechanism',
+  'male_chaperone',
+].concat(
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_health_edu',
+    OUTPATIENT_HEALTH_EDU_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_anc_visit',
+    OUTPATIENT_ANC_VISIT_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_third_trimester',
+    OUTPATIENT_THIRD_TRIMESTER_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_postnatal_exam',
+    OUTPATIENT_POSTNATAL_EXAM_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_pnc_visit',
+    OUTPATIENT_PNC_VISIT_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'adherance_to_ebp_preconception_visit',
+    OUTPATIENT_PRECONCEPTION_VISIT_CHOICES
+  )
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_ADHERENCE_DESTS,
+  'Adherence to evidence based practice'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_ADHERENCE_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  patient_identification: 'Designated triage staff',
+  triage_process: 'Fast-track triage process',
+  triage_record: 'Triage recording system',
+  adherance_to_ebp_health_edu_individual_birth_plan_ibp:
+    'Initial ANC health ed – Individual birth plan (IBP)',
+  adherance_to_ebp_health_edu_danger_signs: 'Initial ANC health ed – Danger signs',
+  adherance_to_ebp_health_edu_hygiene: 'Initial ANC health ed – Hygiene',
+  adherance_to_ebp_health_edu_nutrition: 'Initial ANC health ed – Nutrition',
+  adherance_to_ebp_health_edu_safer_sex: 'Initial ANC health ed – Safer sex',
+  adherance_to_ebp_health_edu_hiv_management_if_positive:
+    'Initial ANC health ed – HIV management if positive',
+  adherance_to_ebp_health_edu_wellness_in_pregnancy:
+    'Initial ANC health ed – Wellness in pregnancy',
+  adherance_to_ebp_health_edu_none: 'Initial ANC health ed – None',
+  adherance_to_ebp_health_edu_prep_risk_assessment_for_hiv_negative_mothers:
+    'PrEP risk assessment for HIV negative mothers',
+  adherance_to_ebp_anc_visit_confirmation_of_viability:
+    'Initial ANC activity – Confirmation of viability',
+  adherance_to_ebp_anc_visit_assignment_of_edd:
+    'Initial ANC activity – Assignment of EDD',
+  adherance_to_ebp_anc_visit_systematic_physical_exam:
+    'Initial ANC activity – Systematic physical exam',
+  adherance_to_ebp_anc_visit_antenatal_profile_including_hgb_hiv_testing_g_rh_hepatitis_b_syphilis_test_urine_dipstick_rbs:
+    'Initial ANC activity – Antenatal profile (Hgb, HIV, G&Rh, HepB, syphilis, urine dipstick, RBS)',
+  adherance_to_ebp_anc_visit_comprehensive_medical_obstetric_history_taken:
+    'Initial ANC activity – Comprehensive medical/obstetric history',
+  adherance_to_ebp_anc_visit_ultrasound_performed:
+    'Initial ANC activity – Ultrasound performed',
+  adherance_to_ebp_anc_visit_none: 'Initial ANC activity – None',
+  adherance_to_ebp_third_trimester_signs_of_labour:
+    '3rd trimester health ed – Signs of labour',
+  adherance_to_ebp_third_trimester_future_family_planning_options:
+    '3rd trimester health ed – Future family planning options',
+  adherance_to_ebp_third_trimester_newborn_care:
+    '3rd trimester health ed – Newborn care',
+  adherance_to_ebp_third_trimester_breastfeeding:
+    '3rd trimester health ed – Breastfeeding',
+  adherance_to_ebp_third_trimester_danger_signs:
+    '3rd trimester health ed – Danger signs',
+  adherance_to_ebp_third_trimester_none: '3rd trimester health ed – None',
+  adherance_to_ebp_third_trimester_birth_plan_and_nutrition:
+    'Birth plan and Nutrition',
+  anc_defaulters: 'ANC defaulter tracing mechanism',
+  group_anc: 'Group ANC (GANC) practice',
+  referral_mechanism: 'Referral mechanism for high-risk mums',
+  adherance_to_ebp_postnatal_exam_maternal_exam: 'Routine PNC exam – Maternal exam',
+  adherance_to_ebp_postnatal_exam_newborn_exam: 'Routine PNC exam – Newborn exam',
+  adherance_to_ebp_postnatal_exam_newborn_vaccinations_as_needed:
+    'Routine PNC exam – Newborn vaccinations as needed',
+  adherance_to_ebp_pnc_visit_ppfp_options: 'Routine PNC counseling – PPFP options',
+  adherance_to_ebp_pnc_visit_appropriate_birth_spacing:
+    'Routine PNC counseling – Appropriate birth spacing',
+  adherance_to_ebp_pnc_visit_return_to_intercourse:
+    'Routine PNC counseling – Return to intercourse',
+  adherance_to_ebp_pnc_visit_exclusive_breastfeeding:
+    'Routine PNC counseling – Exclusive breastfeeding',
+  adherance_to_ebp_pnc_visit_postnatal_danger_signs:
+    'Routine PNC counseling – Postnatal danger signs',
+  adherance_to_ebp_preconception_visit_hygiene:
+    'Preconception assessment – Hygiene',
+  adherance_to_ebp_preconception_visit_nutrition_and_supplementation_folic_acid:
+    'Preconception assessment – Nutrition and supplementation (folic acid)',
+  adherance_to_ebp_preconception_visit_exercise_promotion_of_exercises:
+    'Preconception assessment – Exercise/promotion of exercises',
+  adherance_to_ebp_preconception_visit_screening_for_pre_existing_medical_conditions_anemia_diabetes_mellitus_tb_stis_hiv_hypertension_asthma_cardiac_conditions:
+    'Preconception assessment – Screening for pre-existing conditions (anemia, DM, TB, STI/HIV, HTN, asthma, cardiac)',
+  adherance_to_ebp_preconception_visit_management_of_pre_existing_medical_conditions:
+    'Preconception assessment – Management of pre-existing medical conditions',
+  adherance_to_ebp_preconception_visit_maternal_immunization_status:
+    'Preconception assessment – Maternal immunization status',
+  adherance_to_ebp_preconception_visit_maternal_blood_type_and_screen:
+    'Preconception assessment – Maternal blood type and screen',
+  adherance_to_ebp_preconception_visit_genetic_conditions:
+    'Preconception assessment – Genetic conditions',
+  adherance_to_ebp_preconception_visit_medication_use:
+    'Preconception assessment – Medication use',
+  adherance_to_ebp_preconception_visit_drug_use:
+    'Preconception assessment – Drug use',
+  adherance_to_ebp_preconception_visit_intimate_partner_violence:
+    'Preconception assessment – Intimate partner violence',
+  adherance_to_ebp_preconception_visit_mental_status:
+    'Preconception assessment – Mental status',
+  adherance_to_ebp_preconception_visit_cervical_cancer_screening:
+    'Preconception assessment – Cervical cancer screening',
+  male_chaperone: 'Presence of male chaperone',
+});
+
+const OUTPATIENT_COMMODITY_DESTS = [
+  'malaria_zone',
+  'insecticide_treated_nets_available',
+  'glass_slides_available',
+  'latex_gloves_available',
+  'sterile_gloves_available',
+  'ppe_available',
+  'available_anaesthesia',
+  'available_tetanus',
+  'bcg_available',
+  'pentavlent_available',
+  'hepb_available',
+  'available_rotavirus',
+  'available_pneumococcal',
+  'available_sterile_drugs',
+  'available_ifas',
+  'malaria_drugs_available',
+  'deworming_available',
+  'vit_a_available',
+  'available_rutf',
+  'available_zinc',
+  'available_ors',
+  'malaria_diagnostic',
+  'syphilis_rdk',
+  'available_hiv_rapid_test_kits',
+  'urine_ptk',
+  'dipstick_protein',
+  'available_dipstick_ketone',
+  'available_glucometer',
+  'filter_paper_available',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_COMMODITY_DESTS,
+  'Commodities'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_COMMODITY_DESTS,
+  'Commodities'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  malaria_zone: 'Malaria-endemic zone',
+  insecticide_treated_nets_available: 'Commodity availability – Insecticide treated nets (ITNs)',
+  glass_slides_available: 'Commodity availability – Glass slides & cover slips (microscopy)',
+  latex_gloves_available: 'Commodity availability – Latex gloves',
+  sterile_gloves_available: 'Commodity availability – Sterile gloves',
+  ppe_available: 'Commodity availability – Gowns (PPE)',
+  available_anaesthesia: 'Commodity availability – Local anaesthesia medications',
+  available_tetanus: 'Commodity availability – Tetanus-diphtheria vaccine',
+  bcg_available: 'Commodity availability – BCG vaccine',
+  pentavlent_available: 'Commodity availability – Pentavalent vaccine',
+  hepb_available: 'Commodity availability – Hep B vaccine',
+  available_rotavirus: 'Commodity availability – Rotavirus vaccine',
+  available_pneumococcal: 'Commodity availability – Pneumococcal vaccine',
+  available_sterile_drugs: 'Commodity availability – Sterile dressings',
+  available_ifas: 'Commodity availability – IFAS (or MMS)',
+  malaria_drugs_available: 'Commodity availability – Malaria prevention medications',
+  deworming_available: 'Commodity availability – Deworming medications',
+  vit_a_available: 'Commodity availability – Vitamin A',
+  available_rutf: 'Commodity availability – RUTF / RUSF',
+  available_zinc: 'Commodity availability – Zinc supplements',
+  available_ors:
+    'Commodity availability – Malaria diagnostic capacity (RDT or smear+microscope+stain)',
+  malaria_diagnostic: 'Commodity availability – Syphilis rapid diagnostic kit',
+  syphilis_rdk: 'Commodity availability – HIV rapid test kits',
+  available_hiv_rapid_test_kits: 'Commodity availability – Urine pregnancy test kits',
+  urine_ptk: 'Commodity availability – Dipsticks – urine protein',
+  dipstick_protein: 'Commodity availability – Dipsticks – urine glucose',
+  available_dipstick_ketone: 'Commodity availability – Dipsticks – urine ketone bodies',
+  available_glucometer: 'Commodity availability – Glucometer test strips',
+  filter_paper_available: 'Commodity availability – Filter paper for DBS collection',
+});
+
+const OUTPATIENT_EQUIPMENT_DESTS = [
+  'numbers_examination_couches',
+  'number_bp_apparatus',
+  'bp_adequate',
+  'number_thermometers',
+  'thermometers_adequate',
+  'number_stethoscopes',
+  'stethoscopes_adequate',
+  'number_fetal_doppler',
+  'fetal_dopper_adequate',
+  'number_oximeter',
+  'number_measuring_tape',
+  'number_stadiometre',
+  'adult_scale',
+  'infant_scale',
+  'gestational_wheel',
+  'sterile_speculum',
+  'ultrasound_machine',
+  'light_source',
+  'vaccine_refrigerator',
+  'iud_trays_availlable',
+  'implant_insertion_available',
+  'light_microscope_available',
+  'glucometer_available',
+  'refregerator_available',
+].concat(
+  selectMultipleAttributeNames_(
+    'equipment_availability_emergency_tray',
+    OUTPATIENT_EMERGENCY_TRAY_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    'equipment_availability_resus_cart',
+    OUTPATIENT_RESUS_CART_CHOICES
+  )
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_EQUIPMENT_DESTS,
+  'Equipment'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_EQUIPMENT_DESTS,
+  'Equipment'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  numbers_examination_couches: 'Number of functional examination couches',
+  number_bp_apparatus: 'Number of functional blood pressure apparatuses',
+  bp_adequate: 'BP adequate for ANC volume',
+  number_thermometers: 'Number of functional thermometers',
+  thermometers_adequate: 'Thermometers adequate for ANC volume',
+  number_stethoscopes: 'Number of functional stethoscopes',
+  stethoscopes_adequate: 'Stethoscopes adequate for ANC volume',
+  number_fetal_doppler: 'Number of functional foetal dopplers/foetoscopes',
+  fetal_dopper_adequate: 'Doppler/fetoscope adequate for ANC volume',
+  number_oximeter: 'Pulse oximeter present & functional',
+  number_measuring_tape: 'Measuring tape present',
+  number_stadiometre: 'Stadiometer present',
+  adult_scale: 'Adult weighing scale',
+  infant_scale: 'Child/infant weighing scale',
+  gestational_wheel: 'Gestational age wheel',
+  sterile_speculum: 'Sterile speculum',
+  ultrasound_machine: 'Ultrasound machine',
+  light_source: 'Light source present',
+  vaccine_refrigerator: 'Vaccine refrigerator',
+  equipment_availability_emergency_tray_adrenaline_inj: 'Emergency tray – Adrenaline inj',
+  equipment_availability_emergency_tray_atropine: 'Emergency tray – Atropine',
+  equipment_availability_emergency_tray_ventolin_inh: 'Emergency tray – Ventolin inh',
+  equipment_availability_emergency_tray_hydrocortisone_inj:
+    'Emergency tray – Hydrocortisone inj',
+  equipment_availability_emergency_tray_diazepam_inj: 'Emergency tray – Diazepam inj',
+  equipment_availability_emergency_tray_calcium_gluconate_inj:
+    'Emergency tray – Calcium gluconate inj',
+  equipment_availability_emergency_tray_mgso4_inj: 'Emergency tray – MgSO4 inj',
+  equipment_availability_emergency_tray_labetalol_inj: 'Emergency tray – Labetalol inj',
+  equipment_availability_emergency_tray_phenobarbitol_inj:
+    'Emergency tray – Phenobarbital inj',
+  equipment_availability_emergency_tray_normal_saline: 'Emergency tray – Normal saline',
+  equipment_availability_emergency_tray_dextrose_50: 'Emergency tray – Dextrose 50%',
+  equipment_availability_emergency_tray_tranexamic_acid_inj:
+    'Emergency tray – Tranexamic acid inj',
+  equipment_availability_emergency_tray_phenytoin: 'Emergency tray – Phenytoin',
+  equipment_availability_emergency_tray_dextrose_10: 'Emergency tray – Dextrose 10%',
+  equipment_availability_emergency_tray_no_emergency_tray_available:
+    'Emergency tray – No emergency tray available',
+  equipment_availability_resus_cart_ambubag_or_bvm: 'Resus cart – Ambubag or BVM',
+  equipment_availability_resus_cart_reservoir: 'Resus cart – Reservoir',
+  equipment_availability_resus_cart_facemasks: 'Resus cart – Facemasks',
+  equipment_availability_resus_cart_airway: 'Resus cart – Airway',
+  equipment_availability_resus_cart_bulb_sucker: 'Resus cart – Bulb sucker',
+  equipment_availability_resus_cart_breathing_system: 'Resus cart – Breathing system',
+  equipment_availability_resus_cart_gyn_gloves: 'Resus cart – Gyn gloves',
+  equipment_availability_resus_cart_suture_pack: 'Resus cart – Suture pack',
+  equipment_availability_resus_cart_branulars: 'Resus cart – Branulars',
+  equipment_availability_resus_cart_syringes: 'Resus cart – Syringes',
+  equipment_availability_resus_cart_needles: 'Resus cart – Needles',
+  equipment_availability_resus_cart_alcohol_swabs: 'Resus cart – Alcohol swabs',
+  equipment_availability_resus_cart_water_for_injection:
+    'Resus cart – Water for injection',
+  equipment_availability_resus_cart_iv_giving_set: 'Resus cart – I.V. giving set',
+  equipment_availability_resus_cart_no_resuscitation_cart_available:
+    'Resus cart – No resuscitation cart available',
+  iud_trays_availlable: 'IUD packs available',
+  implant_insertion_available: 'Implant insertion/removal kits',
+  light_microscope_available: 'Light microscope present',
+  glucometer_available: 'Glucometer present',
+  refregerator_available: 'Drug refrigerator present',
+});
+
+const OUTPATIENT_RECORDS_DESTS = [
+  'mc_booklet',
+  'anc_register',
+  'pnc_register',
+  'immunization_register',
+  'immunization_sheet',
+  'immunization_tally',
+  'pmtct_register',
+  'family_planning_register',
+  'gyna_outpatient_clinic_files',
+  'mental_status_assessment_tool',
+  'aysrh_register',
+  'gbv_register',
+  'post_rape_care_form',
+  'cancer_screening_form',
+  'cervical_cancer_screening_register',
+  'post_abortion_care_register',
+  'presumptive_tb_register',
+  'cwc_register',
+  'opd_register',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_RECORDS_DESTS,
+  'Health Records for clients'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_RECORDS_DESTS,
+  'Health Information System'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  mc_booklet: 'Record availability – Mother-child booklet incl. growth charts',
+  anc_register: 'Record availability – ANC register (MOH 405)',
+  pnc_register: 'Record availability – Postnatal Care Register (MOH 406)',
+  immunization_register: 'Record availability – Immunization Register (MOH 510)',
+  immunization_sheet: 'Record availability – Immunization Summary Sheet (MOH 710)',
+  immunization_tally: 'Record availability – Immunization Tally Sheet (MOH 702)',
+  pmtct_register: 'Record availability – PMTCT register (MOH 731)',
+  family_planning_register: 'Record availability – Family planning register (MOH 512)',
+  gyna_outpatient_clinic_files: 'Record availability – Gynae outpatient clinic files',
+  mental_status_assessment_tool: 'Record availability – Mental status assessment tool',
+  aysrh_register: 'Record availability – AYSRH Register (MOH 514)',
+  gbv_register: 'Record availability – GBV register (MOH 365)',
+  post_rape_care_form: 'Record availability – Post rape care form',
+  cancer_screening_form: 'Record availability – Cervical cancer screening register (MOH 745)',
+  cervical_cancer_screening_register:
+    'Record availability – Cervical cancer screening summary tool',
+  post_abortion_care_register: 'Record availability – Post abortion care register (MOH 527)',
+  presumptive_tb_register: 'Record availability – Presumptive TB register (MOH 404)',
+  cwc_register: 'Record availability- Child Welfare Clinic Register (MOH 511)',
+  opd_register: 'Record availability - Outpatient Department (OPD) Register (MOH 204A)',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  ['opening_hours'],
+  'Hours of operation'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  ['opening_hours'],
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  opening_hours: 'Daily open hours',
+});
+
+const OUTPATIENT_HRH_DESTS = [
+  'consultation',
+  'hrh_medical_officer',
+  'hrh_medical_officer3',
+  'hrh_nurse_midwives',
+  'hrh_nurse_midwives3',
+  'hrh_clinical_officers',
+  'hrh_clinical_officers3',
+  'mental_health_expertise_access',
+  'staff_shortage',
+];
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Outpatient', OUTPATIENT_HRH_DESTS, 'HRH');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_HRH_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  consultation: 'OB/GYN available for consultation',
+  hrh_medical_officer: 'Number of medical officers',
+  hrh_medical_officer3: 'Medical officer always available',
+  hrh_nurse_midwives: 'Number of nurse midwives',
+  hrh_nurse_midwives3: 'Nurse midwife always available',
+  hrh_clinical_officers: 'Number of clinical officers',
+  hrh_clinical_officers3: 'Clinical officer always available',
+  mental_health_expertise_access: 'Access to psychiatrist/psychologist',
+  staff_shortage: 'Clients turned away due to staffing',
+});
+
+const OUTPATIENT_INFRA_DESTS = [
+  'waiting_area',
+  'chair_availability',
+  'ventilation',
+  'waiting_area_well_maintained',
+  'educational_material',
+  'wall_well_maintained',
+  'spaces_lighting',
+  'ventilation_exam',
+  'number_exam_rooms',
+  'fire_extinguisher',
+  'facility_visible_signage',
+  'visible_service_charter',
+  'education_material_specify',
+  'service_areas',
+  'haemoglobinometer',
+].concat(
+  selectMultipleAttributeNames_(
+    'overall_infrastructure_materials_display',
+    OUTPATIENT_MATERIALS_DISPLAY_CHOICES
+  )
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_INFRA_DESTS,
+  'Infrastructure'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_INFRA_DESTS,
+  'Infrastructure'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  waiting_area: 'Waiting area sufficient',
+  chair_availability: 'Enough waiting seats',
+  ventilation: 'Waiting area ventilated',
+  waiting_area_well_maintained: 'Waiting area clean & tidy',
+  educational_material: 'Patient education in waiting area',
+  wall_well_maintained: 'Building structure maintained',
+  spaces_lighting: 'Exam spaces well lit',
+  ventilation_exam: 'Exam spaces ventilated',
+  number_exam_rooms: 'Number of patient exam rooms',
+  fire_extinguisher: 'Fire extinguishers in place',
+  facility_visible_signage: 'Clear visible signage',
+  visible_service_charter: 'Service charter visible',
+  overall_infrastructure_materials_display_nutrition:
+    'Health ed material – Nutrition',
+  overall_infrastructure_materials_display_breast_examination:
+    'Health ed material – Breast examination',
+  overall_infrastructure_materials_display_stis_hiv_materials:
+    'Health ed material – STIs/HIV materials',
+  overall_infrastructure_materials_display_exercises:
+    'Health ed material – Exercises',
+  overall_infrastructure_materials_display_family_planning:
+    'Health ed material – Family planning',
+  overall_infrastructure_materials_display_other_specify:
+    'Health ed material – Other',
+  overall_infrastructure_materials_display_none_available:
+    'Health ed material – None available',
+  education_material_specify: 'Other education material specified',
+  service_areas: 'Dust/blood/trash/cobwebs observed',
+  haemoglobinometer: 'HemoCue/colorimeter present',
+});
+
+const OUTPATIENT_PRIVACY_DESTS = [
+  'visual_privacy',
+  'auditory_privacy',
+  'patient_filec_privacy',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_PRIVACY_DESTS,
+  'Privacy/confidentiality'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_PRIVACY_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  visual_privacy: 'Visual privacy in exam rooms',
+  auditory_privacy: 'Auditory privacy in exam rooms',
+  patient_filec_privacy: 'Patient files in locked cabinets',
+});
+
+const OUTPATIENT_SERVICE_DESTS = [
+  'preconception_service',
+  'gynecological_service',
+  'Infertility_counsel',
+  'referral_system',
+  'abortion_counseling',
+  'abortion_referral',
+  'anc_low_risk',
+  'anc_high_risk',
+  'services_registration',
+  'ultrasound_services',
+  'mothers_pnc',
+  'infants_pnc',
+  'infant_immunization',
+  'general_microscopy',
+  'full_hemogram',
+  'perform_urinalysis',
+  'urine_rapid',
+  'urine_protein',
+  'hiv_rapid',
+  'hiv_viral',
+  'syphilis_screening',
+  'blood_group',
+  'malaria_smear',
+  'malaria_bs',
+  'hepatitis_b',
+  'tb_test',
+  'blood_glucose',
+].concat(
+  selectMultipleAttributeNames_(
+    'general_services_family_plan',
+    OUTPATIENT_FAMILY_PLAN_CHOICES
+  )
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_SERVICE_DESTS,
+  'Services offered'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_SERVICE_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  preconception_service: 'Preconception services offered',
+  gynecological_service: 'Gynecological services offered',
+  Infertility_counsel: 'Infertility counseling offered',
+  referral_system: 'Referral system for infertility',
+  abortion_counseling: 'Habitual abortion counseling offered',
+  abortion_referral: 'Referral system for habitual abortion',
+  general_services_family_plan_intra_uterine_device_services:
+    'FP service available – Intra uterine device services',
+  general_services_family_plan_implant_services:
+    'FP service available – Implant services',
+  general_services_family_plan_oral_contraceptive_services:
+    'FP service available – Oral contraceptive services',
+  general_services_family_plan_injectable_contraceptive_services:
+    'FP service available – Injectable contraceptive services',
+  general_services_family_plan_surgical_methods_of_contraception_btl_or_vasectomy_planning:
+    'FP service available – Surgical methods (BTL or vasectomy) planning',
+  general_services_family_plan_condoms_male_or_female:
+    'FP service available – Condoms (male or female)',
+  general_services_family_plan_none: 'FP service available – None',
+  anc_low_risk: 'ANC for low-risk obstetric patients',
+  anc_high_risk: 'ANC for high-risk obstetric patients',
+  services_registration: 'SHA / national insurer registration offered',
+  ultrasound_services: 'Ultrasound services offered',
+  mothers_pnc: 'Routine PNC for mothers',
+  infants_pnc: 'Routine PNC for infants',
+  infant_immunization: 'Infant immunization services',
+  general_microscopy: 'Lab capacity – general microscopy/wet-mounts',
+  full_hemogram: 'Lab capacity – full Hemogram or Hgb',
+  perform_urinalysis: 'Lab capacity – Urinalysis',
+  urine_rapid: 'Lab capacity – Urine rapid pregnancy test',
+  urine_protein: 'Lab capacity – Urine protein dipstick',
+  hiv_rapid: 'Lab capacity – Urine glucose dipstick',
+  hiv_viral: 'Lab capacity – HIV rapid testing',
+  syphilis_screening: 'Lab capacity – DBS collection for HIV viral load',
+  blood_group: 'Lab capacity – RPR or VDRL (syphilis)',
+  malaria_smear: 'Lab capacity – Blood group and rhesus',
+  malaria_bs: 'Lab capacity – Malaria smear tests',
+  hepatitis_b: 'Lab capacity – Hepatitis B testing',
+  tb_test: 'Lab capacity – TB screening',
+  blood_glucose: 'Lab capacity – Blood glucose (glucometer)',
+});
+
+const OUTPATIENT_SOP_DESTS = [
+  'staffing_policy',
+  'procurement_protocol',
+  'triage_protocol',
+  'handwashing_protocols',
+  'preconception_protocols',
+  'family_planning_guide',
+  'family_planning_protocol',
+  'folic_acid',
+  'sop_cervical_cancer',
+  'anc_protocols',
+  'staff_sop_guide',
+  'complicated_pregnancy',
+  'sops_pnc_protocol',
+  'sops_kepi_vaccine',
+  'sops_weaning_education',
+  'sops_child_growth',
+  'child_immunization',
+  'sops_infant_diarrhea',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_SOP_DESTS,
+  'Standard operating procedures/Protocols'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_SOP_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  staffing_policy: 'Written staffing policy available',
+  procurement_protocol: 'Procurement protocols available',
+  triage_protocol: 'Triage & waiting-time protocols available',
+  handwashing_protocols: 'Handwashing protocols displayed',
+  preconception_protocols: 'Preconception protocols displayed',
+  family_planning_guide: 'FP written guideline book',
+  family_planning_protocol: 'FP method clinical protocols displayed',
+  folic_acid: 'Folic acid pre-conception protocols',
+  sop_cervical_cancer: 'Cervical cancer prevention protocols',
+  anc_protocols: 'ANC protocols displayed',
+  staff_sop_guide: 'SOPs for RDTs',
+  complicated_pregnancy: 'Complicated pregnancy protocols',
+  sops_pnc_protocol: 'PNC protocols displayed',
+  sops_kepi_vaccine: 'KEPI schedule displayed',
+  sops_weaning_education: 'Weaning/under-5 nutrition protocols',
+  sops_child_growth: 'Child growth monitoring protocols',
+  child_immunization: 'Infant immunization protocols',
+  sops_infant_diarrhea: 'Infant diarrhea management protocols',
+});
+
+const OUTPATIENT_TRAINING_DESTS = [
+  'training_date_canc',
+  'training_date_gbv',
+  'training_date_prtc',
+  'training_date_rmc',
+  'training_date_ipc',
+  'training_date_pmtct',
+  'training_date_pnc',
+  'training_date_clients_support',
+  'training_family_planning',
+  'training_date_preconception',
+  'training_date_adolescent_rh',
+  'training_date_rh_cancer_screening',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_TRAINING_DESTS,
+  'Training'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_TRAINING_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  training_date_canc: 'Training on comprehensive antenatal care (CANC) guidelines',
+  training_date_gbv: 'Training on gender-based violence',
+  training_date_prtc: 'Training on post-rape trauma counselling',
+  training_date_rmc: 'Training on respectful maternity care (RMC)',
+  training_date_ipc: 'Training on standard infection control and precautions (IPC)',
+  training_date_pmtct: 'Training on PMTCT (or EMTCT)',
+  training_date_pnc: 'Training on postnatal care (PNC) guidelines',
+  training_date_clients_support:
+    'Training on emotional support for clients and families (bereavement, postpartum depression)',
+  training_family_planning: 'Training on family planning',
+  training_date_preconception: 'Training on preconception care',
+  training_date_adolescent_rh: 'Training on adolescent sexual and reproductive health',
+  training_date_rh_cancer_screening:
+    'Training on reproductive cancer screening (cervix/breast)',
+});
+
+const OUTPATIENT_WASH_DESTS = [
+  'wash_water_source',
+  'wash_water_availability',
+  'wash_drainage',
+  'wash_hand_hygiene',
+  'wash_waste_management',
+  'wash_waste_bins',
+  'wash_functional_toilet',
+  'was_handwash_area',
+  'wash_sharp_container',
+  'wash_sharp_capacity',
+  'wash_latrine_type',
+  'wash_other_specify',
+  'wash_bathrooms_disinfected',
+  'wash_cleanliness',
+  'wash_accessibility',
+  'wash_gender_separation',
+  'wash_menstrual_hygiene',
+  'wash_handwash_stations',
+  'wash_number_toilets',
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Outpatient',
+  OUTPATIENT_WASH_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Outpatient',
+  OUTPATIENT_WASH_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
+  wash_water_source: 'Water source presence & functionality',
+  wash_water_availability: 'Consistent water past month',
+  wash_drainage: 'Connected drainage system',
+  wash_hand_hygiene: 'Hand hygiene supplies in service areas',
+  wash_waste_management: 'Waste management protocol displayed',
+  wash_waste_bins: '4-category waste bins available',
+  wash_functional_toilet: 'Functional toilet w/ running water',
+  was_handwash_area: 'Toilet has handwashing area',
+  wash_sharp_container: 'Sharps container in every service area',
+  wash_sharp_capacity: 'Sharps containers <3/4 full',
+  wash_latrine_type: 'Latrine type',
+  wash_other_specify: "Latrine 'Other' specified",
+  wash_bathrooms_disinfected: 'Improved sanitation facility (derived)',
+  wash_cleanliness: 'Toilet cleaning frequency',
+  wash_accessibility: 'Sanitation accessible (ramps/rails)',
+  wash_gender_separation: 'Gender-separated sanitation',
+  wash_menstrual_hygiene: 'MHM means available',
+  wash_handwash_stations: 'Handwash station near toilet',
+  wash_number_toilets: 'Number of patient latrines/toilets',
 });
 
 // incl_lab_report → tincl_lab_report_*, blood_product_labels →

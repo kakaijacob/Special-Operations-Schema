@@ -2180,6 +2180,71 @@ assert.strictEqual(
 assert.strictEqual(g('thematicAreaFor_("Outpatient", "unit")'), '');
 assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "unit")'), '');
 assert.strictEqual(g('attributeNameFor_("Outpatient", "unit")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "patient_identification")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "adherance_to_ebp_health_edu_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "adherance_to_ebp_anc_visit_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "adherance_to_ebp_third_trimester_birth_plan_and_nutrition")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "referral_mechanism")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "insecticide_treated_nets_available")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "available_ors")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "ultrasound_machine")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "equipment_availability_emergency_tray_no_emergency_tray_available")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "equipment_availability_resus_cart_no_resuscitation_cart_available")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "iud_trays_availlable")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "mc_booklet")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "opening_hours")'), 'Hours of operation');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "consultation")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "waiting_area")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "haemoglobinometer")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "overall_infrastructure_materials_display_none_available")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "visual_privacy")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "preconception_service")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "general_services_family_plan_condoms_male_or_female")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "Infertility_counsel")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "staffing_policy")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "training_date_canc")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "training_date_ipc")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "wash_water_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "was_handwash_area")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "admission")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "foetal_nonstress")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "services_via")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "infant_chart")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "urine_glucose")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "vitamin_c_available")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "dipstick_urine")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "training_date_crh")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "comments")'), '');
+assert.strictEqual(g('thematicAreaFor_("Outpatient", "data_quality")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "patient_identification")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "insecticide_treated_nets_available")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "ultrasound_machine")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "mc_booklet")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "opening_hours")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "consultation")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "waiting_area")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "haemoglobinometer")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "visual_privacy")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "preconception_service")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "staffing_policy")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "training_date_canc")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "wash_water_source")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "patient_identification")'), 'Designated triage staff');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "referral_mechanism")'), 'Referral mechanism for high-risk mums');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "adherance_to_ebp_health_edu_none")'), 'Initial ANC health ed – None');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "adherance_to_ebp_health_edu_prep_risk_assessment_for_hiv_negative_mothers")'), 'PrEP risk assessment for HIV negative mothers');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "available_ors")'), 'Commodity availability – Malaria diagnostic capacity (RDT or smear+microscope+stain)');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "hiv_rapid")'), 'Lab capacity – Urine glucose dipstick');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "haemoglobinometer")'), 'HemoCue/colorimeter present');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "iud_trays_availlable")'), 'IUD packs available');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "Infertility_counsel")'), 'Infertility counseling offered');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "training_date_ipc")'), 'Training on standard infection control and precautions (IPC)');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "equipment_availability_emergency_tray_phenobarbitol_inj")'), 'Emergency tray – Phenobarbital inj');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "cwc_register")'), 'Record availability- Child Welfare Clinic Register (MOH 511)');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "opd_register")'), 'Record availability - Outpatient Department (OPD) Register (MOH 204A)');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "unit")'), '');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "urine_glucose")'), '');
+assert.strictEqual(g('attributeNameFor_("Outpatient", "training_date_crh")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "tetraycline")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "feeding_cups")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "infant_formula")'), 'Commodities');
@@ -2885,17 +2950,48 @@ assert.strictEqual(
 sandbox.__opScoreSheets = [{
   department: 'Outpatient',
   values: [
-    ['_uuid', 'county', 'facility_level', 'unit'],
-    ['op-1', 'Mombasa', 'Level 3', 'Yes'],
+    ['_uuid', 'county', 'facility_level', 'unit', 'preconception_service', 'general_services_family_plan_condoms_male_or_female', 'patient_identification', 'opening_hours', 'hrh_medical_officer', 'numbers_examination_couches'],
+    ['op-1', 'Mombasa', 'Level 3', 'Yes', 'Yes', 'Yes', 'Always', '24 HOURS', 4, 2],
   ],
 }];
 const outpatientScoreTable = g(
   'buildFqaScoreTableRows_(__opScoreSheets, __scoreWeighting)'
 );
-assert.strictEqual(
-  outpatientScoreTable[0].join('|'),
-  'Mombasa||||Level 3|Outpatient|||unit||1'
-);
+assert.ok(outpatientScoreTable.some(function (row) {
+  return row.join('|') === 'Mombasa||||Level 3|Outpatient|||unit||1';
+}));
+assert.ok(outpatientScoreTable.some(function (row) {
+  return row[8] === 'preconception_service' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Preconception services offered' &&
+    row[10] === 1;
+}));
+assert.ok(outpatientScoreTable.some(function (row) {
+  return row[8] === 'general_services_family_plan_condoms_male_or_female' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'FP service available – Condoms (male or female)' &&
+    row[10] === 1;
+}));
+assert.ok(outpatientScoreTable.some(function (row) {
+  return row[8] === 'patient_identification' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Designated triage staff';
+}));
+assert.ok(outpatientScoreTable.some(function (row) {
+  return row[8] === 'opening_hours' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Daily open hours';
+}));
+assert.ok(!outpatientScoreTable.some(function (row) {
+  return row[8] === 'hrh_medical_officer';
+}));
+assert.ok(!outpatientScoreTable.some(function (row) {
+  return row[8] === 'numbers_examination_couches';
+}));
 
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
