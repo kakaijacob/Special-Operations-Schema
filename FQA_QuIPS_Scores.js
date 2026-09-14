@@ -104,7 +104,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * infrastructure dests are Infrastructure. Operating Theatre
  * privacy dests are Service Delivery. Operating Theatre
  * service dests are Service Delivery. Operating Theatre SOP
- * dests are Leadership & Governance.
+ * dests are Leadership & Governance. Operating Theatre
+ * training dests are Human Resource for Health.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1516,6 +1517,27 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   theatre_ppe: 'Theatre clothing/PPE prot.',
   sedation_proto: 'Anaes. mixtures prot.',
   clean_proto: 'OT cleaning/disinfect prot.',
+});
+
+// last_train_score is not a transformed dest. last_train and
+// cpd_required are text dests.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  ['last_train', 'cpd_required'],
+  'Training'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  ['last_train', 'cpd_required'],
+  'Human Resource for Health'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  last_train: 'Training on management of obstetric emergencies',
+  cpd_required: 'Anaes. CPD required',
 });
 
 function thematicAreaFor_(department, attribute) {

@@ -2463,6 +2463,12 @@ assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "clean_proto")'), 'S
 assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "anaes_proto")'), 'Leadership & Governance');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaes_proto")'), 'Anaes. machine check prot.');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "theatre_ppe")'), 'Theatre clothing/PPE prot.');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "last_train")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "cpd_required")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "last_train_score")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "last_train")'), 'Human Resource for Health');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "last_train")'), 'Training on management of obstetric emergencies');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "cpd_required")'), 'Anaes. CPD required');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
