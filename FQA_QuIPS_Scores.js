@@ -6,8 +6,8 @@
  * Missing facility_code and subcounty are filled from the facility
  * master spreadsheet when county, level (facility_level), and a fuzzy
  * facility-name match all agree. The master code column is dhis_code.
- * thematic_area and hss_building_block are blank until the
- * groupings are provided.
+ * thematic_area, hss_building_block, and attribute_name are blank
+ * until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -25,6 +25,7 @@ const FQA_SCORE_HEADERS = [
   'thematic_area',
   'hss_building_block',
   'attribute',
+  'attribute_name',
   'score',
 ];
 
@@ -79,6 +80,21 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Facility General': {},
 };
 
+/**
+ * Attribute → display name, by department sheet name.
+ * Leave entries empty until the names are defined.
+ */
+const FQA_ATTRIBUTE_NAME_MAP = {
+  'Newborn Unit': {},
+  'Inpatient Maternity': {},
+  'Outpatient': {},
+  'Lab': {},
+  'Operating Theatre': {},
+  'Pharmacy': {},
+  'Central Store': {},
+  'Facility General': {},
+};
+
 function lookupMappedLabel_(map, department, attribute) {
   const byDept = map[department];
   if (!byDept) return '';
@@ -92,6 +108,10 @@ function thematicAreaFor_(department, attribute) {
 
 function hssBuildingBlockFor_(department, attribute) {
   return lookupMappedLabel_(FQA_HSS_BUILDING_BLOCK_MAP, department, attribute);
+}
+
+function attributeNameFor_(department, attribute) {
+  return lookupMappedLabel_(FQA_ATTRIBUTE_NAME_MAP, department, attribute);
 }
 
 function isBlankScoreCell_(value) {
@@ -499,6 +519,7 @@ function appendFqaScoreRowsFromSheetValues_(
         thematicAreaFor_(department, col.attribute),
         hssBuildingBlockFor_(department, col.attribute),
         col.attribute,
+        attributeNameFor_(department, col.attribute),
         matched.score,
       ]);
     });
