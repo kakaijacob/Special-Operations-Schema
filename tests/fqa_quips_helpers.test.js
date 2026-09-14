@@ -2589,9 +2589,45 @@ assert.strictEqual(g('thematicAreaFor_("Lab", "yearly_cpd")'), 'Training');
 assert.strictEqual(g('thematicAreaFor_("Lab", "training_blood_safety")'), 'Training');
 assert.strictEqual(g('thematicAreaFor_("Lab", "water_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
 assert.strictEqual(g('thematicAreaFor_("Lab", "sharp_container")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Lab", "waiting_area8")'), 'Infrastructure');
 assert.strictEqual(g('thematicAreaFor_("Lab", "have_quality_manual")'), '');
-assert.strictEqual(g('thematicAreaFor_("Lab", "waiting_area8")'), '');
 assert.strictEqual(g('thematicAreaFor_("Lab", "units")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "internal_control_iqc")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "portable_cool_boxes")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "available_pipettes")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "lab_register")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "on_laboratory_open")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "personnel")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "waiting_area8")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "blood_group_testing")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "handwashing_protocol")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "yearly_cpd")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "water_source")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Lab", "have_quality_manual")'), '');
+assert.strictEqual(g('attributeNameFor_("Lab", "internal_control_iqc")'), 'IQC performed & recorded');
+assert.strictEqual(g('attributeNameFor_("Lab", "external_contrlol_eqc")'), 'EQC participation');
+assert.strictEqual(g('attributeNameFor_("Lab", "tincl_lab_report_none")'), 'No elements');
+assert.strictEqual(g('attributeNameFor_("Lab", "tblood_product_labels_none")'), 'No labels present');
+assert.strictEqual(g('attributeNameFor_("Lab", "serum_electrolyete")'), 'Availability: Serum electrolyte assay kit');
+assert.strictEqual(g('attributeNameFor_("Lab", "type_o")'), 'Availability: ≥2 units of O-negative blood for obstetric emergencies');
+assert.strictEqual(g('attributeNameFor_("Lab", "PPE_equipment_none")'), 'PPE available: None');
+assert.strictEqual(g('attributeNameFor_("Lab", "blood_type_crossmatch_equi_37c_incubator")'), 'Blood-typing eq: 37°C incubator (functional)');
+assert.strictEqual(g('attributeNameFor_("Lab", "blood_group_testing")'), 'Lab offers: ABO blood grouping & Rh testing');
+assert.strictEqual(g('attributeNameFor_("Lab", "perform_via")'), 'Lab offers VIA testing');
+assert.strictEqual(g('attributeNameFor_("Lab", "waiting_area8")'), 'Waiting area with bench/couch for clients');
+assert.strictEqual(g('attributeNameFor_("Lab", "safety_cabinents8")'), 'Safety cabinets');
+assert.strictEqual(g('attributeNameFor_("Lab", "sop_none")'), 'No SOPs present');
+assert.strictEqual(g('attributeNameFor_("Lab", "specimen_collection_none")'), 'No guideline content');
+assert.strictEqual(g('attributeNameFor_("Lab", "sharp_container_full")'), 'Sharps containers <¾ full');
+assert.strictEqual(g('attributeNameFor_("Lab", "glucose_dipstick")'), '');
+assert.strictEqual(g('attributeNameFor_("Lab", "perform_syphilis")'), '');
+assert.strictEqual(g('attributeNameFor_("Lab", "pap_smear_monthly")'), '');
+assert.strictEqual(g('attributeNameFor_("Lab", "have_quality_manual")'), '');
+assert.strictEqual(g('thematicAreaFor_("Lab", "glucose_dipstick")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Lab", "crossmatch_register")'), '');
+assert.strictEqual(g('thematicAreaFor_("Lab", "county_technologist")'), '');
+assert.strictEqual(g('thematicAreaFor_("Lab", "eid_hiv")'), '');
+assert.strictEqual(g('thematicAreaFor_("Lab", "sop_total")'), '');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "clean_sched")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "expiry_check")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pre_checks_preoperative_monitoring_of_vital_signs")'), 'Adherence to evidence based practice');
@@ -3179,37 +3215,70 @@ const labScoreTable = g(
   'buildFqaScoreTableRows_(__labScoreSheets, __scoreWeighting)'
 );
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'internal_control_iqc' && row[6] === 'Adherence to evidence based practice';
+  return row[8] === 'internal_control_iqc' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'IQC performed & recorded';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'portable_cool_boxes' && row[6] === 'Commodities';
+  return row[8] === 'portable_cool_boxes' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === 'Availability: Portable cool boxes';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'available_pipettes' && row[6] === 'Equipment';
+  return row[8] === 'available_pipettes' &&
+    row[6] === 'Equipment' &&
+    row[7] === 'Equipment' &&
+    row[9] === 'Equipment functional: Graduated pipettes available';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'lab_register' && row[6] === 'Health Records for clients';
+  return row[8] === 'lab_register' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'Register present: Laboratory register (MOH 240)';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'on_laboratory_open' && row[6] === 'Hours of operation';
+  return row[8] === 'on_laboratory_open' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Lab operating-hours band';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'personnel' && row[6] === 'HRH';
+  return row[8] === 'personnel' &&
+    row[6] === 'HRH' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'KMLTTB licensing evidence';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'blood_group_testing' && row[6] === 'Services offered';
+  return row[8] === 'blood_group_testing' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Lab offers: ABO blood grouping & Rh testing';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'handwashing_protocol' && row[6] === 'Standard operating procedures/Protocols';
+  return row[8] === 'handwashing_protocol' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Handwashing protocols status';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'yearly_cpd' && row[6] === 'Training';
+  return row[8] === 'yearly_cpd' &&
+    row[6] === 'Training' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'Yearly CPDs required';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'water_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+  return row[8] === 'water_source' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Water source status';
 }));
 assert.ok(labScoreTable.some(function (row) {
-  return row[8] === 'have_quality_manual' && row[6] === '';
+  return row[8] === 'have_quality_manual' &&
+    row[6] === '' &&
+    row[7] === '' &&
+    row[9] === '';
 }));
 
 sandbox.__otAdherenceScoreSheets = [{

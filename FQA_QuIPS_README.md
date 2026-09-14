@@ -114,10 +114,21 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    Leftovers stay blank: `unit`, `admission`,
    `foetal_nonstress`, `services_via`, `infant_chart`,
    `urine_glucose`, `vitamin_c_available`, `dipstick_urine`,
-   `training_date_crh`, `comments`, `data_quality`. Other
-   `thematic_area` values, `hss_building_block`, and
-   `attribute_name` stay blank until those labels are added.
-   You can still run `writeFqaScoreTable` on its own.
+   `training_date_crh`, `comments`, `data_quality`. Lab dests
+   now fill those same three columns, including Infrastructure.
+   Select-multiple parents and listed count names are not dests.
+   `incl_lab_report` → `tincl_lab_report_*`;
+   `blood_product_labels` → `tblood_product_labels_*`;
+   `abo_blood` → `blood_group_testing`; `via_test` →
+   `perform_via`; `serum_elecrolyete` → `serum_electrolyete`.
+   `crossmatch_register`, `tb_register`, `county_technologist`,
+   `contract_technologist`, `dipstick_param`, `eid_hiv`,
+   `sample_viral`, `pap_smear_referral`, and `sop_total` are
+   not dests. Leftovers stay blank: `have_quality_manual`,
+   `units`. Other `thematic_area` values,
+   `hss_building_block`, and `attribute_name` stay blank until
+   those labels are added. You can still run
+   `writeFqaScoreTable` on its own.
 
 ## Tests
 

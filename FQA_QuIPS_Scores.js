@@ -23,9 +23,10 @@
  * General dests also set those columns. Pharmacy dests also set
  * those columns. Newborn Unit dests also set those columns.
  * Inpatient Maternity dests also set those columns. Outpatient
- * dests also set those columns. units_* leftovers stay blank.
- * Remaining hss_building_block and attribute_name values stay
- * blank until those labels are provided.
+ * dests also set those columns. Lab dests also set those
+ * columns. units_* leftovers stay blank. Remaining
+ * hss_building_block and attribute_name values stay blank
+ * until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -96,9 +97,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * thematic_area labels, including Training. Inpatient
  * Maternity dests also fill those same thematic_area
  * labels. Outpatient dests also fill those same
- * thematic_area labels, including Training. Other
- * departments stay empty until their groupings are
- * defined.
+ * thematic_area labels, including Training. Lab dests
+ * also fill those same thematic_area labels, including
+ * Infrastructure. Other departments stay empty until
+ * their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -146,6 +148,7 @@ const FQA_THEMATIC_AREA_MAP = {
  * Service Delivery. Newborn Unit dests use those same
  * HSS building-block labels. Inpatient Maternity dests
  * use those same HSS building-block labels. Outpatient
+ * dests use those same HSS building-block labels. Lab
  * dests use those same HSS building-block labels.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
@@ -163,8 +166,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
  * Attribute → display name, by department sheet name.
  * Operating Theatre dests, Facility General dests,
  * Pharmacy dests, Newborn Unit dests, Inpatient
- * Maternity dests, and Outpatient dests use the
- * provided labels.
+ * Maternity dests, Outpatient dests, and Lab dests use
+ * the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -2609,22 +2612,63 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Outpatient', {
 
 // incl_lab_report → tincl_lab_report_*, blood_product_labels →
 // tblood_product_labels_*. external_contrlol_eqc keeps the Kobo
-// spelling.
+// spelling. Parents and listed counts are not dests.
+const LAB_ADHERENCE_DESTS = LAB_GROUP_11_YES_NO_FIELDS.concat(
+  selectMultipleAttributeNames_(
+    LAB_TINCL_LAB_REPORT_PREFIX,
+    LAB_TINCL_LAB_REPORT_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    LAB_TBLOOD_PRODUCT_LABELS_PREFIX,
+    LAB_TBLOOD_PRODUCT_LABELS_CHOICES
+  )
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_11_YES_NO_FIELDS.concat(
-    selectMultipleAttributeNames_(
-      LAB_TINCL_LAB_REPORT_PREFIX,
-      LAB_TINCL_LAB_REPORT_CHOICES
-    ),
-    selectMultipleAttributeNames_(
-      LAB_TBLOOD_PRODUCT_LABELS_PREFIX,
-      LAB_TBLOOD_PRODUCT_LABELS_CHOICES
-    )
-  ),
+  LAB_ADHERENCE_DESTS,
   'Adherence to evidence based practice'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_ADHERENCE_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  internal_control_iqc: 'IQC performed & recorded',
+  external_contrlol_eqc: 'EQC participation',
+  records_reagents_consumables: 'Reagent records & inventory',
+  fefo_practice: 'FEFO practice',
+  stand_lab_report: 'Standard report used',
+  tincl_lab_report_examination_performed: 'Lab report includes: Examination performed',
+  tincl_lab_report_patient_identification: 'Lab report includes: Patient identification',
+  tincl_lab_report_name_or_unique_identifier_of_the_requesting_person:
+    'Lab report includes: Name / identifier of requesting person',
+  tincl_lab_report_examination_results_reported_in_si_units_or_other_applicable_units:
+    'Lab report includes: Results in SI or other applicable units',
+  tincl_lab_report_biological_reference_intervals:
+    'Lab report includes: Biological reference intervals',
+  tincl_lab_report_interpretation_of_results_as_appropriate:
+    'Lab report includes: Interpretation of results',
+  tincl_lab_report_identification_of_person_undertaking_the_examination:
+    'Lab report includes: Identification of person undertaking examination',
+  tincl_lab_report_identification_of_person_reviewing_the_results:
+    'Lab report includes: Identification of person reviewing results',
+  tincl_lab_report_none: 'No elements',
+  secure_lab_reports: 'Secure archived results',
+  tblood_product_labels_name_of_the_blood_product:
+    'Blood-product label includes: Name of the blood product',
+  tblood_product_labels_date_blood_was_drawn_and_expiration_date:
+    'Blood-product label includes: Date drawn & expiration date',
+  tblood_product_labels_blood_type_abo_and_rh_factor:
+    'Blood-product label includes: Blood type (ABO) and RH factor',
+  tblood_product_labels_batch_number: 'Blood-product label includes: Batch number',
+  tblood_product_labels_none: 'No labels present',
+  fridge_used11: 'Fridge for blood use',
+  whole_blood_temp: 'Whole-blood cold chain',
+  temp_record_monitor: 'Blood-temp monitoring',
+});
 
 // serum_elecrolyete → serum_electrolyete.
 assignMappedLabels_(
@@ -2633,99 +2677,565 @@ assignMappedLabels_(
   LAB_GROUP_10_FIELDS,
   'Commodities'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_GROUP_10_FIELDS,
+  'Commodities'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  portable_cool_boxes: 'Availability: Portable cool boxes',
+  stool_polypot: 'Availability: Stool polypot',
+  urine_container: 'Availability: Urine container',
+  pipettes: 'Availability: Transfer pipettes',
+  scalp_vein_set: 'Availability: Scalp vein set',
+  pdt_test_blood: 'Availability: PDT serum (preg diag test – blood)',
+  urine_strips: 'Availability: Urine strips',
+  rota_adeno_virus: 'Availability: Rota / adeno strips',
+  sat_antigen_test: 'Availability: SAT (Salmonella antigen test)',
+  h_pylori_antibody: 'Availability: H. pylori antibody',
+  h_pylori_antigen: 'Availability: H. pylori antigen',
+  malaria_antigen: 'Availability: Malaria antigen',
+  vdrl_test_kit: 'Availability: VDRL test kit',
+  hbsag_test_kit: 'Availability: HbSAG test kit',
+  plain_vacutainers: 'Availability: Plain vacutainers (red & yellow)',
+  red_top_microcontainers: 'Availability: Red top microcontainers',
+  edta_vacutainer: 'Availability: EDTA vacutainer',
+  edta_microtainers: 'Availability: EDTA microtainers',
+  glass_slides: 'Availability: Glass slides',
+  alcohol_swabs: 'Availability: Alcohol swabs',
+  auto_tips: 'Availability: Auto tips',
+  dri_biochem_test: 'Availability: Dri-chem or plain/gel-separator tubes',
+  vaginal_swab: 'Availability: HVS – high vaginal swab',
+  yellow_blue_tips: 'Availability: Pipette tips (yellow & blue)',
+  latex_gloves: 'Availability: Latex gloves',
+  glucometer_test_strips: 'Availability: Glucometer test strips',
+  wright_parasite_stain: 'Availability: Wright-Giemsa stain (or other malaria stain)',
+  urine_ketone_bodies: 'Availability: Urine dipsticks (glucose, protein, ketones)',
+  filter_paper: 'Availability: Filter paper for DBS',
+  cover_for_microscopy: 'Availability: Cover slips for microscopy',
+  malaria_diag_kit: 'Availability: Malaria rapid diagnostic kit',
+  syphillis_diag_kit: 'Availability: Syphilis rapid diagnostic kit',
+  hiv_test_kit: 'Availability: HIV rapid test kit',
+  urine_test_kit10: 'Availability: Urine pregnancy test kit',
+  serum_electrolyete: 'Availability: Serum electrolyte assay kit',
+  gram_stains_available: 'Availability: Gram stains',
+  cryptococcal_antigen: 'Availability: Cryptococcal antigen test kit',
+  anti_a: 'Availability: Anti-A',
+  anti_d: 'Availability: Anti-D',
+  anti_b: 'Availability: Anti-B',
+  anti_ab: 'Availability: Anti-AB',
+  agh_confirmation: 'Availability: AGH – confirmation of anti-D',
+  creatinine: 'Availability: Creatinine (Jaffe / enzymatic)',
+  bun: 'Availability: BUN (urease reagent)',
+  electrolytes: 'Availability: Electrolytes (ISE / flame photometry / chloride reagent)',
+  reference_fluid: 'Availability: Reference fluid',
+  total_bilirubin: 'Availability: Total bilirubin (diazo reagent)',
+  direct_bilirubin: 'Availability: Direct bilirubin (methanol)',
+  got: 'Availability: GOT reagent with α-ketoglutarate',
+  gpt: 'Availability: GPT reagent with α-ketoglutarate',
+  ggt: 'Availability: GGT reagent',
+  alp: 'Availability: ALP substrate (p-nitrophenyl phosphate)',
+  total_protein: 'Availability: Total protein (biuret reagent)',
+  albumin: 'Availability: Albumin (BCG reagent)',
+  calcium: 'Availability: Calcium (Arsenazo III / O-Cresolphthalein)',
+  inorganic_phosporous: 'Availability: Inorganic phosphorus (ammonium molybdate)',
+  crp: 'Availability: CRP reagent',
+  culture_bacteriology: 'Availability: Reagents for Bacteriology (culture)',
+  bacterioscopy: 'Availability: Reagents for Bacterioscopy (smear)',
+  blood_culture10: 'Availability: Reagents for blood culture',
+  blood_glucose: 'Availability: Reagents for blood glucose (GOD-POD / hexokinase)',
+  rh_factor_tests: 'Availability: Reagents for RH factor tests',
+  coagulation_test10: 'Availability: Reagents for coagulation tests',
+  haemoglobin_det: 'Availability: Reagents for haemoglobin determination',
+  hep_B_testing: 'Availability: Reagents for Hepatitis-B testing',
+  random_blood_sugar: 'Availability: Reagents for random blood sugar',
+  syphilis_tests: 'Availability: Reagents for syphilis tests',
+  urinalysis: 'Availability: Reagents for urinalysis',
+  peripheral_blood_film: 'Availability: Reagents for peripheral blood film',
+  bacillus_aafb: 'Availability: Reagents for AAFB',
+  grouping_crossmatch_bottles: 'Availability: Grouping & cross-match bottles',
+  packed_red_blood_cells: 'Availability: Packed red blood cells – all types',
+  ffp_all_types: 'Availability: FFP – all types',
+  platlets_all_types: 'Availability: Platelets – all types',
+  whole_all_types: 'Availability: Whole blood – all types',
+  type_o: 'Availability: ≥2 units of O-negative blood for obstetric emergencies',
+});
 
 // PPE_equipment, tb_diagnostic, ziehl_stain, auramine_stain,
 // genexpert, liver_function_equipment, bc_analyzer, bc_tools,
 // hiv_testing_equipment, and blood_type_crossmatch_equi are
-// select_multiple indicators.
+// select_multiple indicators. Parents and listed counts are
+// not dests.
+const LAB_EQUIPMENT_DESTS = LAB_GROUP_9_YES_NO_FIELDS.concat(
+  LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS,
+  ['maint_contract_colo_hae', 'sputum_smear', 'blood_count'],
+  labGroup9SelectMultiples_().reduce(function (names, field) {
+    return names.concat(
+      selectMultipleAttributeNames_(field.prefix, field.choices)
+    );
+  }, [])
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_9_YES_NO_FIELDS.concat(
-    LAB_GROUP_9_EQUIP_FUNCTIONAL_FIELDS,
-    ['maint_contract_colo_hae', 'sputum_smear', 'blood_count'],
-    labGroup9SelectMultiples_().reduce(function (names, field) {
-      return names.concat(
-        selectMultipleAttributeNames_(field.prefix, field.choices)
-      );
-    }, [])
-  ),
+  LAB_EQUIPMENT_DESTS,
   'Equipment'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_EQUIPMENT_DESTS,
+  'Equipment'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  list_referral: 'Referral lab list',
+  PPE_equipment_gloves: 'PPE available: Gloves',
+  PPE_equipment_masks: 'PPE available: Masks',
+  PPE_equipment_lab_coats: 'PPE available: Lab coats',
+  PPE_equipment_eye_shields: 'PPE available: Eye shields',
+  PPE_equipment_none: 'PPE available: None',
+  available_pipettes: 'Equipment functional: Graduated pipettes available',
+  evidence_cal_pipettes: 'Calibration verified: Graduated pipettes available',
+  available_centrifuge: 'Equipment functional: Centrifuge available',
+  evidence_cal_centrifuge: 'Calibration verified: Centrifuge available',
+  centrifuge_maintenance: 'Centrifuge chart used',
+  available_balance: 'Equipment functional: Balance available',
+  evidence_cal_balance: 'Calibration verified: Balance available',
+  available_thermometer: 'Equipment functional: Thermometer(s) available',
+  evidence_cal_thermo: 'Calibration verified: Thermometer(s) available',
+  avail_light_microscope: 'Microscope functional',
+  maint_microscope_chart: 'Microscope chart used',
+  working_refrigerator: 'Fridge functional',
+  refrigerator_thermometer: 'Fridge thermometer present',
+  temp_monitor_chart: 'Fridge temp chart',
+  maintenance_refrigerator: 'Fridge maint schedule',
+  avail_glucometer: 'Equipment functional: Glucometer available',
+  cal_glucometer: 'Calibration verified: Glucometer available',
+  colorimeter_haemoglobin: 'Equipment functional: Colorimeter / haemoglobin meter available',
+  evid_colorimeter_haemoglobin:
+    'Calibration verified: Colorimeter / haemoglobin meter available',
+  maintenance_chart_colo_hae: 'Colorimeter chart',
+  maint_contract_colo_hae: 'Maintenance contract present',
+  tb_diagnostic_sputum_smear_microscopy: 'TB diagnostic method: Sputum Smear Microscopy',
+  tb_diagnostic_genexpert_mtb_rif_assay: 'TB diagnostic method: GeneXpert MTB/RIF Assay',
+  tb_diagnostic_none_available: 'TB diagnostic method: None available',
+  sputum_smear: 'Staining method used',
+  ziehl_stain_bright_field_microscope: 'Ziehl-Neelsen requires: Bright-field microscope',
+  ziehl_stain_carbol_fuchsin_primary_stain:
+    'Ziehl-Neelsen requires: Carbol Fuchsin (primary stain)',
+  ziehl_stain_acid_alcohol_decolorizer: 'Ziehl-Neelsen requires: Acid-Alcohol (decolorizer)',
+  ziehl_stain_methylene_blue_counterstain:
+    'Ziehl-Neelsen requires: Methylene Blue (counterstain)',
+  ziehl_stain_slides_and_coverslips: 'Ziehl-Neelsen requires: Slides and coverslips',
+  ziehl_stain_bunsen_burner_or_spirit_lamp_for_heat_fixation:
+    'Ziehl-Neelsen requires: Bunsen burner / spirit lamp',
+  ziehl_stain_immersion_oil_for_bright_field_microscopy:
+    'Ziehl-Neelsen requires: Immersion oil',
+  ziehl_stain_sputum_containers: 'Ziehl-Neelsen requires: Sputum containers',
+  auramine_stain_fluorescence_microscope: 'Auramine-O requires: Fluorescence microscope',
+  auramine_stain_auramine_o_primary_stain: 'Auramine-O requires: Auramine-O (primary stain)',
+  auramine_stain_potassium_permanganate_or_acridine_orange_counterstain:
+    'Auramine-O requires: Potassium permanganate / Acridine orange (counterstain)',
+  auramine_stain_slides_and_coverslips: 'Auramine-O requires: Slides and coverslips',
+  auramine_stain_bunsen_burner_or_spirit_lamp_for_heat_fixation:
+    'Auramine-O requires: Bunsen burner / spirit lamp',
+  auramine_stain_sputum_containers: 'Auramine-O requires: Sputum containers',
+  genexpert_genexpert_machine: 'GeneXpert requires: GeneXpert Machine',
+  genexpert_cartridges: 'GeneXpert requires: Cartridges',
+  genexpert_reliable_power_source: 'GeneXpert requires: Reliable power source',
+  liver_function_equipment_biochemistry_analyzer:
+    'Renal/liver eq: Biochemistry analyzer (functional)',
+  liver_function_equipment_specific_assay_kits_liver_function_test:
+    'Renal/liver eq: Specific assay kits – liver function test',
+  liver_function_equipment_specific_assay_kits_renal_function_test:
+    'Renal/liver eq: Specific assay kits – renal function test',
+  liver_function_equipment_none: 'Renal/liver eq: None',
+  blood_count: 'FBC method',
+  bc_analyzer_a_basic_3_part_or_5_part_hematology_analyzer:
+    'Automated FBC requires: 3-part or 5-part hematology analyzer',
+  bc_analyzer_diluent_reagents: 'Automated FBC requires: Diluent reagents',
+  bc_analyzer_lyse_reagents: 'Automated FBC requires: Lyse reagents',
+  bc_analyzer_cleaning_solutions: 'Automated FBC requires: Cleaning solutions',
+  bc_analyzer_control_samples_for_calibration_and_quality_control:
+    'Automated FBC requires: Control samples for QC / calibration',
+  bc_tools_light_microscope_with_100x_magnification_for_differential_wbc_count:
+    'Manual FBC requires: Light microscope with 100x magnification for differential WBC',
+  bc_tools_hemocytometer: 'Manual FBC requires: Hemocytometer',
+  bc_tools_cuvettes_or_tubes: 'Manual FBC requires: Cuvettes / tubes',
+  bc_tools_microhematocrit_centrifuge: 'Manual FBC requires: Microhematocrit centrifuge',
+  bc_tools_capillary_tubes: 'Manual FBC requires: Capillary tubes',
+  bc_tools_leishman_stain_or_wright_giemsa_stain:
+    "Manual FBC requires: Leishman / Wright-Giemsa stain",
+  bc_tools_drabkins_solution: "Manual FBC requires: Drabkin's solution",
+  bc_tools_edta_tubes_or_heparin: 'Manual FBC requires: EDTA tubes or heparin',
+  bc_tools_saline_solution: 'Manual FBC requires: Saline solution',
+  hiv_testing_equipment_cd4_count_testing_option:
+    'HIV eq: POC CD4 counters + pre-packaged cartridges',
+  hiv_testing_equipment_flow_cytometry_and_fluorescent_antibodies_for_cd4_identification:
+    'HIV eq: Flow cytometry + fluorescent antibodies for CD4',
+  hiv_testing_equipment_equipment_not_available: 'HIV eq: Equipment not available',
+  blood_type_crossmatch_equi_37c_incubator:
+    'Blood-typing eq: 37°C incubator (functional)',
+  blood_type_crossmatch_equi_water_bath_at_37c: 'Blood-typing eq: Water bath at 37°C',
+  blood_type_crossmatch_equi_grouping_sera: 'Blood-typing eq: Grouping sera',
+  blood_type_crossmatch_equi_none: 'Blood-typing eq: None',
+  fridge_blood_products: 'Blood-product fridge functional',
+  vortex_mixer: 'Vortex mixer functional',
+});
 
 // crossmatch_register, crossmatch_reg_used, and tb_register are
 // not transformed dests. standard_lab_request/1-10 are the
 // select_multiple indicators.
+const LAB_RECORDS_DESTS = LAB_GROUP_3_REGISTER_FIELDS.concat(
+  selectMultipleAttributeNames_(
+    LAB_STANDARD_LAB_REQUEST_PREFIX,
+    LAB_STANDARD_LAB_REQUEST_CHOICES
+  ),
+  LAB_GROUP_3_FOLLOWUP_FIELDS
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_3_REGISTER_FIELDS.concat(
-    selectMultipleAttributeNames_(
-      LAB_STANDARD_LAB_REQUEST_PREFIX,
-      LAB_STANDARD_LAB_REQUEST_CHOICES
-    ),
-    LAB_GROUP_3_FOLLOWUP_FIELDS
-  ),
+  LAB_RECORDS_DESTS,
   'Health Records for clients'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_RECORDS_DESTS,
+  'Health Information System'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  lab_register: 'Register present: Laboratory register (MOH 240)',
+  lab_register_used: 'Register used: Laboratory register (MOH 240)',
+  lab_summary_register: 'Register present: Lab services summary register (MOH 706)',
+  summary_reg_used: 'Register used: Lab services summary register (MOH 706)',
+  consumption_register:
+    'Register present: Facility consumption data report register (MOH 643)',
+  consumption_reg_used:
+    'Register used: Facility consumption data report register (MOH 643)',
+  hts_register: 'Register present: HTS register (MOH 362)',
+  hts_reg_used: 'Register used: HTS register (MOH 362)',
+  referral_register: 'Specimen referral register',
+  request_form: 'Lab request form present',
+  standard_lab_request_patient_name: 'Request form contains: Patient name',
+  standard_lab_request_patient_age_date_of_birth:
+    'Request form contains: Patient age / DOB',
+  standard_lab_request_patient_gender: 'Request form contains: Patient gender',
+  standard_lab_request_patient_location_contact_information:
+    'Request form contains: Patient location / contact information',
+  standard_lab_request_name_or_unique_identifier_of_requesting_clinician:
+    'Request form contains: Name or unique identifier of requesting clinician',
+  standard_lab_request_date_and_time_of_sample_collection:
+    'Request form contains: Date and time of sample collection',
+  standard_lab_request_type_of_sample_collection_requested:
+    'Request form contains: Type of sample requested',
+  standard_lab_request_clinical_background: 'Request form contains: Clinical background',
+  standard_lab_request_urgency_classification:
+    'Request form contains: Urgency classification',
+  standard_lab_request_none: 'No elements present',
+  sample_accpt_rej_form: 'Acceptance/rejection form',
+  temp_monitoring_form: 'Fridge temp log',
+  chart_filled_daily: 'Fridge log filled daily',
+  daily_rota: 'Bench cleaning rota',
+  rota_filled_daily: 'Bench rota filled',
+  qc_register: 'QC register present',
+  quality_control_freq: 'QC register filled',
+});
 
+const LAB_HOURS_DESTS = ['on_laboratory_open'].concat(LAB_GROUP_12_YES_NO_FIELDS);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  ['on_laboratory_open'].concat(LAB_GROUP_12_YES_NO_FIELDS),
+  LAB_HOURS_DESTS,
   'Hours of operation'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_HOURS_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  on_laboratory_open: 'Lab operating-hours band',
+  cross_match_24hours: 'Cross-match always available',
+  abo_rh_24hours: 'ABO/RH always available',
+});
 
 // county_technologist and contract_technologist are not
-// transformed dests.
+// transformed dests. Staff counts are integers (no FQA Scores
+// rows).
+const LAB_HRH_DESTS = LAB_GROUP_4_COUNT_FIELDS.concat([
+  'personnel',
+  'inadequate_staff',
+]);
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Lab', LAB_HRH_DESTS, 'HRH');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_HRH_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  cert_lab_techs: 'Number of county-certified lab technologists',
+  contract_lab_techs: 'Number of contracted certified lab technologists',
+  county_lab_tech_working: 'Number of county lab technicians',
+  contract_lab_techs_working: 'Number of contracted lab technicians',
+  personnel: 'KMLTTB licensing evidence',
+  inadequate_staff: 'No staffing inadequacy in past month',
+});
+
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_4_COUNT_FIELDS.concat(['personnel', 'inadequate_staff']),
-  'HRH'
+  LAB_GROUP_8_YES_NO_FIELDS,
+  'Infrastructure'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_GROUP_8_YES_NO_FIELDS,
+  'Infrastructure'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  waiting_area8: 'Waiting area with bench/couch for clients',
+  working_tables8: 'Work tables with flat, washable surfaces',
+  chairs_staff8: 'Chairs / stools for staff',
+  safety_cabinents8: 'Safety cabinets',
+  storage_shelves8: 'Storage shelves / cabinets',
+  wash_basin8: 'Wash basin with faucet (stopper)',
+  well_lit8: 'Space well lit',
+  well_ventilated: 'Space well ventilated',
+  wall_clock: 'Wall clock with second hand at each testing point',
+  wall_thermometer: 'Wall thermometer',
+  designated_spaces: 'Designated spaces for different test types (anti-contamination)',
+  special_area_samples: 'Special receiving area for samples & registration',
+  lockable_doors8: 'Lockable doors & cupboards for reagent storage',
+  certification: 'Displayed certification by Kenya Laboratory Board',
+  access_disabled: 'Access for disabled clients',
+  evidence8: 'No visible dust/blood/trash',
+});
 
 // abo_blood → blood_group_testing, via_test → perform_via.
 // dipstick_param, eid_hiv, sample_viral, and pap_smear_referral
 // are not transformed dests. Remaining group_2 dests
 // (perform_syphilis, glucose_dipstick, pap_smear_monthly,
 // per_hpylori and their monthly pairs) stay with this group.
+const LAB_SERVICE_DESTS = LAB_GROUP_2_FIELDS.map(function (field) {
+  return field.dest;
+});
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_2_FIELDS.map(function (field) {
-    return field.dest;
-  }),
+  LAB_SERVICE_DESTS,
   'Services offered'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_SERVICE_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  blood_group_testing: 'Lab offers: ABO blood grouping & Rh testing',
+  abo_monthly: 'Consistent provision past month: ABO blood grouping & Rh testing',
+  perform_hbsag: 'Lab offers: HBSAG (Hepatitis-B surface antigen)',
+  hbsag_monthly: 'Consistent provision past month: HBSAG (Hepatitis-B surface antigen)',
+  perform_rpr: 'Lab offers: RPR (Rapid Plasma Reagin)',
+  rpr_monthly: 'Consistent provision past month: RPR (Rapid Plasma Reagin)',
+  perform_vdrl: 'Lab offers: VDRL (Venereal Disease Research Lab)',
+  vdrl_monthly: 'Consistent provision past month: VDRL (Venereal Disease Research Lab)',
+  perform_microscopy: 'Lab offers: General microscopy / wet-mounts',
+  microscopy_monthly: 'Consistent provision past month: General microscopy / wet-mounts',
+  perform_hb: 'Lab offers: Full Hemogram or Hgb',
+  HB_monthly: 'Consistent provision past month: Full Hemogram or Hgb',
+  per_urinalyisis_micro: 'Lab offers: Urine for microscopy',
+  urinalyisis_micro_mon: 'Consistent provision past month: Urine for microscopy',
+  perform_urine_rapid: 'Lab offers: Urine rapid pregnancy test',
+  urine_rapid_monthly: 'Consistent provision past month: Urine rapid pregnancy test',
+  perform_urine_protein: 'Lab offers: Urine dipstick testing',
+  urine_protein_monthly: 'Consistent provision past month: Urine dipstick testing',
+  perform_hiv: 'Lab offers: HIV rapid testing (3-tier national algorithm)',
+  hivrapid_monthly:
+    'Consistent provision past month: HIV rapid testing (3-tier national algorithm)',
+  perform_malaria: 'Lab offers: Malaria smear / BS for malaria',
+  malaria_monthly: 'Consistent provision past month: Malaria smear / BS for malaria',
+  perform_tb: 'Lab offers: TB testing',
+  tb_monthly: 'Consistent provision past month: TB testing',
+  perform_blood_gluc: 'Lab offers: Blood glucose (glucometer)',
+  blood_gluc_monthly: 'Consistent provision past month: Blood glucose (glucometer)',
+  perform_vaginal_swab: 'Lab offers: High vaginal swab – gram stain & culture',
+  vaginal_swab_monthly:
+    'Consistent provision past month: High vaginal swab – gram stain & culture',
+  perform_esr: 'Lab offers: ESR (erythrocyte sedimentation rate)',
+  esr_monthly: 'Consistent provision past month: ESR (erythrocyte sedimentation rate)',
+  perform_thyroid: 'Lab offers: Thyroid function tests',
+  thyroid_monthly: 'Consistent provision past month: Thyroid function tests',
+  perform_hormone_prof: 'Lab offers: Hormone profiles (oestrogen/progesterone/LH/FSH)',
+  hormone_prof_monthly:
+    'Consistent provision past month: Hormone profiles (oestrogen/progesterone/LH/FSH)',
+  able_Hga1c: 'Lab offers: HbA1C',
+  Hga1c_monthly: 'Consistent provision past month: HbA1C',
+  perform_crp: 'Lab offers: CRP',
+  crp_monthly: 'Consistent provision past month: CRP',
+  perform_coombs: 'Lab offers: Coombs',
+  coombs_monthly: 'Consistent provision past month: Coombs',
+  offer_bloodtransfusion: 'Lab offers: Blood-transfusion services',
+  transfusion_monthly: 'Consistent provision past month: Blood-transfusion services',
+  perform_crossmatch:
+    'Lab offers: Cross-match (direct agglutination / indirect anti-globulin)',
+  crossmatch_monthly:
+    'Consistent provision past month: Cross-match (direct agglutination / indirect anti-globulin)',
+  perform_hepc: 'Lab offers: Hepatitis C (HCV)',
+  hepc_monthly: 'Consistent provision past month: Hepatitis C (HCV)',
+  per_urinalysis_culture: 'Lab offers: Urine for culture and sensitivity',
+  culture_monthly: 'Consistent provision past month: Urine for culture and sensitivity',
+  per_hiv_elisa: 'HIV-confirmation algorithm followed',
+  hiv_elisa_monthly: 'HIV algorithm consistent past month',
+  per_dbs: 'DBS for HIV viral load',
+  dbs_monthly: 'DBS consistent past month',
+  per_liver_tests: 'Lab offers: Liver function tests',
+  liver_tests_monthly: 'Consistent provision past month: Liver function tests',
+  per_urea_elec: 'Lab offers: Urea / electrolytes / creatinine',
+  urea_elec_monthly: 'Consistent provision past month: Urea / electrolytes / creatinine',
+  able_birirubin: 'Lab offers: Bilirubin levels',
+  birirubin_monthly: 'Consistent provision past month: Bilirubin levels',
+  per_uric_acid: 'Lab offers: Uric acid',
+  uric_acid_monthly: 'Consistent provision past month: Uric acid',
+  per_coagulation: 'Lab offers: Coagulation profile',
+  coagulation_monthly: 'Consistent provision past month: Coagulation profile',
+  per_blood_culture: 'Lab offers: Blood culture and sensitivity',
+  blood_culture_monthly: 'Consistent provision past month: Blood culture and sensitivity',
+  perform_pap_smear: 'Pap smear capability',
+  per_hpv_testing: 'Lab offers HPV testing',
+  HPV_testing_monthly: 'HPV testing consistent',
+  perform_via: 'Lab offers VIA testing',
+  via_monthly: 'VIA testing consistent',
+});
 
 // sop/1-16, specimen_collection/1-5, and confirm_sops/1-31 are
 // the select_multiple indicators. sop_total is not a dest.
 // have_quality_manual is a dest but was not listed.
+const LAB_SOP_DESTS = ['handwashing_protocol'].concat(
+  selectMultipleAttributeNames_(LAB_SOP_PREFIX, LAB_SOP_CHOICES),
+  selectMultipleAttributeNames_(
+    LAB_SPECIMEN_COLLECTION_PREFIX,
+    LAB_SPECIMEN_COLLECTION_CHOICES
+  ),
+  LAB_GROUP_6_YES_NO_FIELDS,
+  selectMultipleAttributeNames_(
+    LAB_CONFIRM_SOPS_PREFIX,
+    LAB_CONFIRM_SOPS_CHOICES
+  )
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  ['handwashing_protocol'].concat(
-    selectMultipleAttributeNames_(LAB_SOP_PREFIX, LAB_SOP_CHOICES),
-    selectMultipleAttributeNames_(
-      LAB_SPECIMEN_COLLECTION_PREFIX,
-      LAB_SPECIMEN_COLLECTION_CHOICES
-    ),
-    LAB_GROUP_6_YES_NO_FIELDS,
-    selectMultipleAttributeNames_(
-      LAB_CONFIRM_SOPS_PREFIX,
-      LAB_CONFIRM_SOPS_CHOICES
-    )
-  ),
+  LAB_SOP_DESTS,
   'Standard operating procedures/Protocols'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_SOP_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  handwashing_protocol: 'Handwashing protocols status',
+  sop_personal_protective_equipment_ppe_use: 'SOP present: PPE Use',
+  sop_handling_biological_specimens: 'SOP present: Handling biological specimens',
+  sop_chemical_safety: 'SOP present: Chemical safety',
+  sop_spill_management: 'SOP present: Spill management',
+  sop_emergency_preparedness: 'SOP present: Emergency preparedness',
+  sop_sharps_safety: 'SOP present: Sharps safety',
+  sop_equipment_preventive_maintenance: 'SOP present: Equipment preventive maintenance',
+  sop_equipment_calibration: 'SOP present: Equipment calibration',
+  sop_internal_quality_control: 'SOP present: Internal quality control',
+  sop_document_control:
+    'SOP present: Document control (creating, reviewing, updating SOPs)',
+  sop_error_reporting_and_corrective_actions:
+    'SOP present: Error reporting & corrective actions',
+  sop_sample_reception_and_handling: 'SOP present: Sample reception & handling',
+  sop_turnaround_time_monitoring: 'SOP present: Turnaround time monitoring',
+  sop_inventory_management: 'SOP present: Inventory management',
+  sop_logbook_use: 'SOP present: Logbook use',
+  sop_none: 'No SOPs present',
+  specimen_collection_labelling: 'Specimen-collection guideline includes: Labelling',
+  specimen_collection_patient_safety:
+    'Specimen-collection guideline includes: Patient safety',
+  specimen_collection_staff_safety: 'Specimen-collection guideline includes: Staff safety',
+  specimen_collection_transportation_to_persons_responsible_for_primary_sample_collection:
+    'Specimen-collection guideline includes: Transportation to primary sample collectors',
+  specimen_collection_none: 'No guideline content',
+  guide_ref_critical_values: 'Reference/critical values guidelines',
+  packaging_specimen: 'Specimen transport guidelines',
+  sop_lab: 'SOP manual exists',
+  confirm_sops_abo_blood_group_and_rh_testing:
+    'SOP available: ABO blood group and RH testing',
+  confirm_sops_hbsag_testing: 'SOP available: HBSAG testing',
+  confirm_sops_vdrl_or_rpr_testing: 'SOP available: VDRL or RPR testing',
+  confirm_sops_general_microscopy_wet_mounts:
+    'SOP available: General microscopy/wet mounts',
+  confirm_sops_full_haemogram_testing: 'SOP available: Full haemogram testing',
+  confirm_sops_urine_for_microscopy: 'SOP available: Urine for microscopy',
+  confirm_sops_urine_rapid_test_for_pregnancy:
+    'SOP available: Urine rapid test for pregnancy',
+  confirm_sops_urine_dipstick_testing: 'SOP available: Urine dipstick testing',
+  confirm_sops_hiv_rapid_testing: 'SOP available: HIV rapid testing',
+  confirm_sops_malaria_testing_giemsa_stain:
+    'SOP available: Malaria testing/Giemsa stain',
+  confirm_sops_tb_testing: 'SOP available: TB testing',
+  confirm_sops_blood_glucose_test: 'SOP available: Blood glucose test',
+  confirm_sops_high_vaginal_swab: 'SOP available: High vaginal swab',
+  confirm_sops_esr_testing: 'SOP available: ESR testing',
+  confirm_sops_thyroid_function_tests: 'SOP available: Thyroid function tests',
+  confirm_sops_hormone_profile_testing: 'SOP available: Hormone profile testing',
+  confirm_sops_hga1c_testing: 'SOP available: HgA1C testing',
+  confirm_sops_crp_testing: 'SOP available: CRP testing',
+  confirm_sops_coombs_ab_testing: 'SOP available: Coombs Ab testing',
+  confirm_sops_cross_match_testing: 'SOP available: Cross match testing',
+  confirm_sops_hcv_testing: 'SOP available: HCV testing',
+  confirm_sops_urinalysis_for_culture_and_sensitivity:
+    'SOP available: Urinalysis for culture and sensitivity',
+  confirm_sops_dbs_for_hiv_viral_load: 'SOP available: DBS for HIV viral load',
+  confirm_sops_liver_function_testing: 'SOP available: Liver function testing',
+  confirm_sops_urea_electrolytes_and_creatinine_testing:
+    'SOP available: Urea, electrolytes and creatinine testing',
+  confirm_sops_bilirubin_testing: 'SOP available: Bilirubin testing',
+  confirm_sops_uric_acid_level_testing: 'SOP available: Uric acid level testing',
+  confirm_sops_coagulation_profile_testing: 'SOP available: Coagulation profile testing',
+  confirm_sops_blood_culture_and_sensitivity:
+    'SOP available: Blood culture and sensitivity',
+  confirm_sops_hpv_testing: 'SOP available: HPV testing',
+  confirm_sops_via_testing: 'SOP available: VIA testing',
+  stock_inv_control_store: 'Main-store inventory control',
+  stock_inv_control_reagents: 'Fridge-reagent inventory control',
+});
 
+const LAB_TRAINING_DESTS = LAB_GROUP_5_TRAINING_FIELDS.concat(
+  LAB_GROUP_5_YES_NO_FIELDS
+);
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
   'Lab',
-  LAB_GROUP_5_TRAINING_FIELDS.concat(LAB_GROUP_5_YES_NO_FIELDS),
+  LAB_TRAINING_DESTS,
   'Training'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_TRAINING_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  training_blood_safety:
+    'Training on appropriate use of blood and safe transfusion practices',
+  training_unit_biosafety: 'Training on biosafety and biosecurity',
+  training_pro_testing_HIV: 'Training on proficiency testing for HIV',
+  yearly_cpd: 'Yearly CPDs required',
+  eqa: 'EQA + IQA performed',
+});
 
 assignMappedLabels_(
   FQA_THEMATIC_AREA_MAP,
@@ -2733,6 +3243,25 @@ assignMappedLabels_(
   LAB_GROUP_7_HEADERS,
   'WASH (Water, Sanitation, Hygeine)/IPC'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Lab',
+  LAB_GROUP_7_HEADERS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Lab', {
+  water_source: 'Water source status',
+  consistent_water: 'Consistent water past month',
+  connected_drainage_system: 'Drainage present',
+  soap_available: 'Hand-hygiene supplies coverage',
+  separate_sinks: 'Separate sinks',
+  waste_management_protocol: 'Waste protocol displayed',
+  segregation_wastes: '4-bin waste segregation',
+  functional_toilet: 'Toilet for samples available',
+  toilet_handwashing_area: 'Toilet handwashing',
+  sharp_container: 'Sharps containers ubiquitous',
+  sharp_container_full: 'Sharps containers <¾ full',
+});
 
 // pre_checks, anaest_doc, and anaest_chart parents are not dests.
 // pre_checks/1-5, anaest_doc/1-10, and anaest_chart/1-13 are the
