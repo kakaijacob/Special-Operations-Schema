@@ -2521,6 +2521,48 @@ assert.strictEqual(g('attributeNameFor_("Facility General", "written_collection_
 assert.strictEqual(g('thematicAreaFor_("Facility General", "opening_hours")'), 'Hours of operation');
 assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "opening_hours")'), 'Service Delivery');
 assert.strictEqual(g('attributeNameFor_("Facility General", "opening_hours")'), 'Operating-hours band');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "medical_officer3")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "facility_staff3_none")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "have_qit")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "facility_staff3")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "medical_officer3")'), 'Human Resource for Health');
+assert.strictEqual(g('attributeNameFor_("Facility General", "medical_officer")'), 'Number of county-employed medical officers');
+assert.strictEqual(g('attributeNameFor_("Facility General", "medical_officer3")'), 'MO availability during opening');
+assert.strictEqual(g('attributeNameFor_("Facility General", "facility_staff3_a_written_up_to_date_staffing_policy")'), 'Staffing doc: Written up-to-date staffing policy');
+assert.strictEqual(g('attributeNameFor_("Facility General", "qit_meet")'), 'QIT meeting frequency');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "two_doors")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "maintencance_log")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "sec_electricity_generator")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "housekeeping_none")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "sec_electricity")'), '');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "security_measures6")'), '');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "housekeeping")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "two_doors")'), 'Infrastructure');
+assert.strictEqual(g('attributeNameFor_("Facility General", "vis_signage")'), 'Quality of facility signage');
+assert.strictEqual(g('attributeNameFor_("Facility General", "maintencance_log")'), 'Maintenance log used');
+assert.strictEqual(g('attributeNameFor_("Facility General", "elect_source")'), 'Other – text');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "upload_data2")'), 'National data collection');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "record_none")'), 'National data collection');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "mpdr_committee2")'), 'National data collection');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "record")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "upload_data2")'), 'Health Information System');
+assert.strictEqual(g('attributeNameFor_("Facility General", "mpdr_committee2")'), 'How often MPDSR committee meets');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "functional_ambulance")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "systems_place_none")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "systems_place")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "functional_ambulance")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Facility General", "unable_to_transport")'), 'Transport never failed in past month');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "ipc_committee")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "sterlization_place_electric_autoclave")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "oth_source_tubewell_or_borehole")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "table_tops")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "sterlization_place")'), '');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "oth_source")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "ipc_committee")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Facility General", "designated_cleaning")'), 'Designated cleaning area exists');
+assert.strictEqual(g('attributeNameFor_("Facility General", "alcohol")'), 'Disinfectant availability: Alcohol (spirit) 60–90% availability');
+assert.strictEqual(g('attributeNameFor_("Facility General", "oth_source_tubewell_or_borehole")'), 'Other water source: Tubewell / borehole');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "units_pharmacy_services")'), '');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3250,6 +3292,262 @@ assert.ok(fgHoursScoreTable.some(function (row) {
     row[6] === 'Hours of operation' &&
     row[7] === 'Service Delivery' &&
     row[9] === 'Operating-hours band';
+}));
+
+sandbox.__fgHrhScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'medical_officer',
+      'medical_officer3',
+      'facility_staff3_a_written_up_to_date_staffing_policy',
+      'have_qit',
+      'qit_meet',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      3,
+      'Yes',
+      'Yes',
+      'Yes',
+      'monthly (or more frequently)',
+    ],
+  ],
+}];
+const fgHrhScoreTable = g(
+  'buildFqaScoreTableRows_(__fgHrhScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgHrhScoreTable.some(function (row) {
+  return row[8] === 'medical_officer3' &&
+    row[6] === 'HRH' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'MO availability during opening' &&
+    row[10] === 1;
+}));
+assert.ok(fgHrhScoreTable.some(function (row) {
+  return row[8] === 'facility_staff3_a_written_up_to_date_staffing_policy' &&
+    row[6] === 'HRH' &&
+    row[9] === 'Staffing doc: Written up-to-date staffing policy';
+}));
+assert.ok(fgHrhScoreTable.some(function (row) {
+  return row[8] === 'have_qit' &&
+    row[6] === 'HRH' &&
+    row[9] === 'QIT active' &&
+    row[10] === 1;
+}));
+assert.ok(fgHrhScoreTable.some(function (row) {
+  return row[8] === 'qit_meet' &&
+    row[6] === 'HRH' &&
+    row[9] === 'QIT meeting frequency';
+}));
+assert.ok(!fgHrhScoreTable.some(function (row) {
+  return row[8] === 'medical_officer';
+}));
+
+sandbox.__fgInfraScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'two_doors',
+      'vis_signage',
+      'maintencance_log',
+      'sec_electricity_generator',
+      'elect_source',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Yes',
+      'Yes, but missing in some places or signs not clear',
+      'No',
+      'Yes',
+      'Mini hydro',
+    ],
+  ],
+}];
+const fgInfraScoreTable = g(
+  'buildFqaScoreTableRows_(__fgInfraScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgInfraScoreTable.some(function (row) {
+  return row[8] === 'two_doors' &&
+    row[6] === 'Infrastructure' &&
+    row[7] === 'Infrastructure' &&
+    row[9] === 'Two doors present' &&
+    row[10] === 1;
+}));
+assert.ok(fgInfraScoreTable.some(function (row) {
+  return row[8] === 'vis_signage' &&
+    row[6] === 'Infrastructure' &&
+    row[9] === 'Quality of facility signage';
+}));
+assert.ok(fgInfraScoreTable.some(function (row) {
+  return row[8] === 'maintencance_log' &&
+    row[6] === 'Infrastructure' &&
+    row[9] === 'Maintenance log used' &&
+    row[10] === 0;
+}));
+assert.ok(fgInfraScoreTable.some(function (row) {
+  return row[8] === 'sec_electricity_generator' &&
+    row[6] === 'Infrastructure' &&
+    row[9] === 'Backup electrical: Generator (fuel or battery)';
+}));
+assert.ok(!fgInfraScoreTable.some(function (row) {
+  return row[8] === 'elect_source';
+}));
+
+sandbox.__fgNationalScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'upload_data2',
+      'mpdr_committee2',
+      'record_none',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Yes',
+      'We do not have an MPDSR committee',
+      'Yes',
+    ],
+  ],
+}];
+const fgNationalScoreTable = g(
+  'buildFqaScoreTableRows_(__fgNationalScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgNationalScoreTable.some(function (row) {
+  return row[8] === 'upload_data2' &&
+    row[6] === 'National data collection' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'KHIS upload capacity present' &&
+    row[10] === 1;
+}));
+assert.ok(fgNationalScoreTable.some(function (row) {
+  return row[8] === 'mpdr_committee2' &&
+    row[6] === 'National data collection' &&
+    row[9] === 'How often MPDSR committee meets';
+}));
+assert.ok(fgNationalScoreTable.some(function (row) {
+  return row[8] === 'record_none' &&
+    row[6] === 'National data collection' &&
+    row[9] === 'Data-protection component present: None';
+}));
+
+sandbox.__fgServicesScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'functional_ambulance',
+      'unable_to_transport',
+      'systems_place_clients_who_are_visually_impaired',
+    ],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'No', 'Yes'],
+  ],
+}];
+const fgServicesScoreTable = g(
+  'buildFqaScoreTableRows_(__fgServicesScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgServicesScoreTable.some(function (row) {
+  return row[8] === 'functional_ambulance' &&
+    row[6] === 'Services offered' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Emergency transport available' &&
+    row[10] === 1;
+}));
+assert.ok(fgServicesScoreTable.some(function (row) {
+  return row[8] === 'unable_to_transport' &&
+    row[6] === 'Services offered' &&
+    row[9] === 'Transport never failed in past month' &&
+    row[10] === 0;
+}));
+assert.ok(fgServicesScoreTable.some(function (row) {
+  return row[8] === 'systems_place_clients_who_are_visually_impaired' &&
+    row[6] === 'Services offered' &&
+    row[9] === 'Communication for: Clients who are visually impaired';
+}));
+
+sandbox.__fgWashMoreScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'ipc_committee',
+      'designated_cleaning',
+      'chlorine',
+      'sterlization_place_electric_autoclave',
+      'specify_main',
+      'oth_source_main_public_supply',
+      'table_tops',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Yes',
+      'Present',
+      'Always available',
+      'Yes',
+      'Roof tank',
+      'Yes',
+      'Daily',
+    ],
+  ],
+}];
+const fgWashMoreScoreTable = g(
+  'buildFqaScoreTableRows_(__fgWashMoreScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'ipc_committee' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'IPC committee functional' &&
+    row[10] === 1;
+}));
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'designated_cleaning' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Designated cleaning area exists';
+}));
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'chlorine' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Disinfectant availability: Chlorine availability';
+}));
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'sterlization_place_electric_autoclave' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Sterilization equipment: Electric autoclave (steam sterilizer)';
+}));
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'oth_source_main_public_supply' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Other water source: Main public supply';
+}));
+assert.ok(fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'table_tops' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Frequency of cleaning: Table tops & legs cleaning frequency';
+}));
+assert.ok(!fgWashMoreScoreTable.some(function (row) {
+  return row[8] === 'specify_main';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

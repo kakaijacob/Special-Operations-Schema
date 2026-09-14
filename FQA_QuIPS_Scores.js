@@ -20,8 +20,7 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General adherence, commodity, records, and hours dests also
- * set those columns. Remaining
+ * General dests also set those columns. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
@@ -84,7 +83,12 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * based practice. Facility General commodity dests use
  * Commodities. Facility General records dests use Health
  * Records for clients. Facility General hours dests use Hours
- * of operation. Other departments stay empty until their
+ * of operation. Facility General HRH dests use HRH. Facility
+ * General infrastructure dests use Infrastructure. Facility
+ * General national-data dests use National data collection.
+ * Facility General service dests use Services offered.
+ * Facility General WASH dests use WASH (Water, Sanitation,
+ * Hygeine)/IPC. Other departments stay empty until their
  * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
@@ -115,7 +119,12 @@ const FQA_THEMATIC_AREA_MAP = {
  * adherence dests are Leadership & Governance. Facility
  * General commodity dests are Commodities. Facility General
  * records dests are Health Information System. Facility
- * General hours dests are Service Delivery.
+ * General hours dests are Service Delivery. Facility General
+ * HRH dests are Human Resource for Health. Facility General
+ * infrastructure dests are Infrastructure. Facility General
+ * national-data dests are Health Information System. Facility
+ * General service dests are Service Delivery. Facility
+ * General WASH dests are Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1686,6 +1695,314 @@ assignMappedLabels_(
 
 assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
   opening_hours: 'Operating-hours band',
+});
+
+// facility_staff3 parent is not a dest. Staff counts are integers
+// (no FQA Scores rows).
+const FACILITY_GENERAL_HRH_EVIDENCE_DESTS = FACILITY_GENERAL_HRH_STAFF_FIELDS.map(function (field) {
+  return field.dest;
+}).concat(
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_FACILITY_STAFF3_PREFIX,
+    FACILITY_GENERAL_FACILITY_STAFF3_CHOICES
+  ),
+  FACILITY_GENERAL_HRH_POLICY_YES_NO_FIELDS,
+  ['have_qit', 'qit_meet', 'have_wit', 'wit_meet', 'have_sit', 'sit_meet']
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_HRH_EVIDENCE_DESTS,
+  'HRH'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_HRH_EVIDENCE_DESTS,
+  'Human Resource for Health'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  medical_officer: 'Number of county-employed medical officers',
+  medical_officer3: 'MO availability during opening',
+  clinical_officer: 'Number of clinical officers',
+  clinical_officer3: 'CO availability during opening',
+  health_records: 'Number of health records officers',
+  nutritionist: 'Number of nutritionists',
+  social_worker: 'Number of social workers',
+  public_health: 'Number of public health officers/technicians',
+  health_promotion: 'Number of health promotion officers',
+  cleaning_staff_employed: 'Number of permanent cleaning staff',
+  cleaning_staff_contract: 'Number of contracted cleaning staff',
+  maintenance_staff: 'Number of maintenance staff',
+  facility_staff3_a_written_up_to_date_staffing_policy:
+    'Staffing doc: Written up-to-date staffing policy',
+  facility_staff3_a_list_that_details_staff_numbers:
+    'Staffing doc: List with staff numbers',
+  facility_staff3_a_list_that_details_the_types_and_competence_of_staff:
+    'Staffing doc: List with staff types & competence',
+  facility_staff3_none: 'Staffing doc: None',
+  roster_displayed: 'Roster displayed',
+  clear_comm: 'Communication channels functional',
+  annual_appraise: 'Annual staff appraisal conducted',
+  eval_verify: 'Credential verification process',
+  have_qit: 'QIT active',
+  qit_meet: 'QIT meeting frequency',
+  have_wit: 'WIT active',
+  wit_meet: 'WIT meeting frequency',
+  have_sit: 'SIT active',
+  sit_meet: 'SIT meeting frequency',
+});
+
+// sec_electricity, security_measures6, and housekeeping parents
+// are not dests. elect_source and elect_sec are text (no FQA
+// Scores rows). maintencance_log keeps the form spelling.
+const FACILITY_GENERAL_INFRA_EVIDENCE_DESTS = FACILITY_GENERAL_INFRA_YES_NO_FIELDS.concat(
+  ['vis_signage', 'main_elec_source', 'elect_source', 'elect_sec', 'processed_linens'],
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_SEC_ELECTRICITY_PREFIX,
+    FACILITY_GENERAL_SEC_ELECTRICITY_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_SECURITY_MEASURES6_PREFIX,
+    FACILITY_GENERAL_SECURITY_MEASURES6_CHOICES
+  ),
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_HOUSEKEEPING_PREFIX,
+    FACILITY_GENERAL_HOUSEKEEPING_CHOICES
+  )
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  two_doors: 'Two doors present',
+  access_ramp: 'Ramp present',
+  access_via_road: 'Road-accessible',
+  service_charter: 'Service charter displayed',
+  dis_charter: 'GRM displayed',
+  vis_signage: 'Quality of facility signage',
+  licence: 'Licence current',
+  main_elec_source: 'Primary electricity source',
+  elect_source: 'Other – text',
+  other_primary_elec: 'Backup electricity present',
+  sec_electricity_generator: 'Backup electrical: Generator (fuel or battery)',
+  sec_electricity_solar_system: 'Backup electrical: Solar system',
+  sec_electricity_other_specify: 'Backup electrical: Other (specify)',
+  elect_sec: 'Other – text',
+  elec_available: 'Continuous electricity',
+  suff_sockets: 'Sockets adequate',
+  maintenance_unit6: 'Maintenance capacity',
+  maintencance_log: 'Maintenance log used',
+  processed_linens: 'Linen-processing method',
+  working_machine: 'Washing machine functional',
+  secure_storage6: 'Staff storage secure',
+  feedback_mechanism: 'Feedback mechanism functional',
+  dedicated_office6: 'Complaints office',
+  ethics_committee: 'Ethics committee active',
+  security_measures6_security_guards_or_watchmen_at_all_times:
+    'Security measure: Security guards / watchmen at all times',
+  security_measures6_perimeter_wall_around_the_facility:
+    'Security measure: Perimeter wall around the facility',
+  security_measures6_twenty_four_hours_surveillance_cctv:
+    'Security measure: 24-hour CCTV surveillance',
+  security_measures6_none: 'Security measure: None',
+  cleaning_protocol: 'Cleaning protocol known',
+  housekeeping_eyewear_or_goggles: 'Housekeeping PPE: Eyewear / goggles',
+  housekeeping_facemask: 'Housekeeping PPE: Facemask',
+  housekeeping_utility_gloves: 'Housekeeping PPE: Utility gloves',
+  housekeeping_plastic_apron: 'Housekeeping PPE: Plastic apron',
+  housekeeping_gumboots: 'Housekeeping PPE: Gumboots',
+  housekeeping_head_gear: 'Housekeeping PPE: Head gear',
+  housekeeping_none: 'Housekeeping PPE: None',
+});
+
+// record parent is not a dest.
+const FACILITY_GENERAL_NATIONAL_DATA_EVIDENCE_DESTS = FACILITY_GENERAL_NATIONAL_DATA_YES_NO_FIELDS.concat(
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_RECORD_PREFIX,
+    FACILITY_GENERAL_RECORD_CHOICES
+  ),
+  ['mpdr_committee2']
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_NATIONAL_DATA_EVIDENCE_DESTS,
+  'National data collection'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_NATIONAL_DATA_EVIDENCE_DESTS,
+  'Health Information System'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  upload_data2: 'KHIS upload capacity present',
+  record_computer_storage_space:
+    'Data-protection component present: Computer storage space',
+  record_computers_with_passwords_designated_for_health_record_use:
+    'Data-protection component present: Computers with passwords for health records',
+  record_inter_connectivity_inter_operability_system:
+    'Data-protection component present: Interoperability system',
+  record_data_repository:
+    'Data-protection component present: Data repository (centralised)',
+  record_internet_connection_or_airtime:
+    'Data-protection component present: Internet connection / airtime',
+  record_standard_operating_procedures:
+    'Data-protection component present: Standard operating procedures',
+  record_offline_capability_system_for_data_entry:
+    'Data-protection component present: Offline data-entry capability',
+  record_none: 'Data-protection component present: None',
+  mpdr_committee2: 'How often MPDSR committee meets',
+  standard_hours: 'Data-management SOPs present',
+});
+
+// systems_place parent is not a dest.
+const FACILITY_GENERAL_SERVICES_EVIDENCE_DESTS = FACILITY_GENERAL_SERVICES_YES_NO_FIELDS.concat(
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_SYSTEMS_PLACE_PREFIX,
+    FACILITY_GENERAL_SYSTEMS_PLACE_CHOICES
+  )
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_SERVICES_EVIDENCE_DESTS,
+  'Services offered'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_SERVICES_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  functional_ambulance: 'Emergency transport available',
+  unable_to_transport: 'Transport never failed in past month',
+  network_facility: 'Referral network list current',
+  standardized_forms: 'Standardised referral form',
+  reliable_communication: 'Communication functional',
+  formal_agreement: 'Referral protocols & feedback',
+  systems_place_clients_who_are_visually_impaired:
+    'Communication for: Clients who are visually impaired',
+  systems_place_clients_who_are_speech_impaired:
+    'Communication for: Clients who are speech impaired',
+  systems_place_clients_who_are_hearing_impaired:
+    'Communication for: Clients who are hearing impaired',
+  systems_place_clients_who_are_mentally_challenged:
+    'Communication for: Clients who are mentally challenged',
+  systems_place_none: 'Communication for: None',
+});
+
+// sterlization_place and oth_source parents are not dests.
+// specify_main and specify_oth_source are text (no FQA Scores
+// rows). oth_source dests follow form choice codes, not the
+// listed 10/11 remumbering.
+const FACILITY_GENERAL_WASH_EVIDENCE_DESTS = FACILITY_GENERAL_WASH_YES_NO_FIELDS.concat(
+  ['dis_sharps', 'dispose_medwast', 'designated_cleaning'],
+  FACILITY_GENERAL_WASH_AVAIL_FIELDS,
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_STERLIZATION_PLACE_PREFIX,
+    FACILITY_GENERAL_STERLIZATION_PLACE_CHOICES
+  ),
+  ['main_source', 'specify_main'],
+  selectMultipleAttributeNames_(
+    FACILITY_GENERAL_OTH_SOURCE_PREFIX,
+    FACILITY_GENERAL_OTH_SOURCE_CHOICES
+  ),
+  ['specify_oth_source', 'soiled_linen_pro', 'contact_patient'],
+  FACILITY_GENERAL_SURFACE_CLEAN_FIELDS,
+  ['table_tops']
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_WASH_EVIDENCE_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_WASH_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  ipc_committee: 'IPC committee functional',
+  dis_sharps: 'Method of sharps waste disposal',
+  inci_avail_funct: 'Incinerator functional today',
+  inci_petrol: 'Incinerator fuel available today',
+  dispose_medwast: 'Method of red/yellow waste disposal',
+  designated_cleaning: 'Designated cleaning area exists',
+  control_traffic: 'Traffic-flow mechanism present',
+  three_bucket: 'Three-bucket method possible',
+  sop_instrument: 'Instrument-processing SOP present',
+  chlorine: 'Disinfectant availability: Chlorine availability',
+  enzymatic_sol: 'Disinfectant availability: Enzymatic solution availability',
+  glutaraldehyde: 'Disinfectant availability: Glutaraldehyde (Cidex) availability',
+  formaldehyde: 'Disinfectant availability: Formaldehyde / formalin availability',
+  ethylene_oxide: 'Disinfectant availability: Ethylene oxide availability',
+  alcohol: 'Disinfectant availability: Alcohol (spirit) 60–90% availability',
+  chlorine_exidine:
+    'Disinfectant availability: Chlorhexidine gluconate / hibitane / iodine availability',
+  central_steril: 'CSSD present',
+  sterlization_place_containers_for_high_level_disinfection:
+    'Sterilization equipment: Containers for high-level disinfection',
+  sterlization_place_electric_autoclave:
+    'Sterilization equipment: Electric autoclave (steam sterilizer)',
+  sterlization_place_dry_heat_sterilizer:
+    'Sterilization equipment: Dry heat sterilizer (e.g. hot-air oven)',
+  sterlization_place_eto_ethylene_oxide_sterilizer:
+    'Sterilization equipment: E.T.O. (ethylene oxide) sterilizer',
+  sterlization_place_not_applicable_for_this_facility:
+    'Sterilization equipment: Not applicable',
+  safe_water: 'Safe drinking water available',
+  func_water_source: 'Non-drinking water source',
+  main_source: 'Primary water source type',
+  specify_main: 'Other main source – text',
+  oth_source_main_public_supply: 'Other water source: Main public supply',
+  oth_source_tubewell_or_borehole: 'Other water source: Tubewell / borehole',
+  oth_source_protected_dug_well: 'Other water source: Protected dug well',
+  oth_source_unprotected_dug_well: 'Other water source: Unprotected dug well',
+  oth_source_protected_spring_water: 'Other water source: Protected spring water',
+  oth_source_rainwater_collection: 'Other water source: Rainwater collection',
+  oth_source_cart_w_small_tank_drum: 'Other water source: Cart with small tank/drum',
+  oth_source_tanker_truck: 'Other water source: Tanker truck',
+  oth_source_surface_water: 'Other water source: Surface water',
+  oth_source_other_specify: 'Other water source: Other (specify)',
+  oth_source_no_water_source: 'Other water source: No water source',
+  specify_oth_source: 'Other water source – text',
+  soiled_linen_pro: 'How soiled linen is processed',
+  contact_patient: 'How patient-contact surfaces with body fluids are cleaned',
+  equipment_cleaned: 'How equipment is cleaned',
+  floors: 'Frequency of cleaning: Floors / hallways mopping frequency',
+  sinks: 'Frequency of cleaning: Sinks scrubbing frequency',
+  bathrooms: 'Frequency of cleaning: Bathrooms/toilets/latrines cleaning frequency',
+  sche_bathrooms: 'Cleaning schedule observed',
+  table_tops: 'Frequency of cleaning: Table tops & legs cleaning frequency',
 });
 
 function thematicAreaFor_(department, attribute) {

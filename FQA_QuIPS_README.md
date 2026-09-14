@@ -86,7 +86,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    records dests fill Health Records for clients / Health
    Information System (`secure_registers` parent is not a dest).
    Facility General `opening_hours` fills Hours of operation /
-   Service Delivery. Other `thematic_area`
+   Service Delivery. Facility General HRH, infrastructure,
+   national-data, service, and WASH dests fill those same three
+   columns (`facility_staff3`, `sec_electricity`,
+   `security_measures6`, `housekeeping`, `record`, `systems_place`,
+   `sterlization_place`, and `oth_source` parents are not dests).
+   Other `thematic_area`
    values, `hss_building_block`, and `attribute_name` stay blank
    until those labels are added. You can still run
    `writeFqaScoreTable` on its own.
