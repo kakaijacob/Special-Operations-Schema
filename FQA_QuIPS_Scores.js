@@ -20,9 +20,9 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General dests also set those columns. Remaining
- * hss_building_block and attribute_name values stay blank until
- * those labels are provided.
+ * General dests also set those columns. units_* leftovers stay
+ * blank. Remaining hss_building_block and attribute_name values
+ * stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
