@@ -17,7 +17,8 @@
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
- * those same thematic_area labels. hss_building_block and
+ * those same thematic_area labels. Inpatient Maternity groupings
+ * use the same thematic_area labels. hss_building_block and
  * attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
@@ -73,7 +74,8 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
- * those same thematic_area labels. Other departments stay empty
+ * those same thematic_area labels. Inpatient Maternity groupings
+ * use the same thematic_area labels. Other departments stay empty
  * until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
@@ -450,6 +452,359 @@ assignMappedLabels_(
   ['hygiene'],
   'WASH (Water, Sanitation, Hygeine)/IPC'
 );
+
+// ultrasound_maintenance → ultrasound_adherence, calibration →
+// equipment_calibration, consent_del → informed_consent,
+// data_review_meeting → staff_meeting, arrival → arrival_assessment,
+// guide → labour_care_guide, companion_labour → companion_support,
+// delivery_reg → delivery_practices, counselling → counselling_offered,
+// svd → svd_support, roaming → roaming_staff, support → labour_support,
+// pnc_48 → pnc_adherence, passage → passage_of_urine, system →
+// emergency_system. triage/1-10, charts/1-13, encourage/1-7, and
+// discharge/1-12 are the select_multiple indicators. sc_stay is not
+// a transformed dest.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'ultrasound_adherence',
+  'equipment_calibration',
+  'documentation_adherence',
+  'informed_consent',
+  'staff_meeting',
+  'arrival_assessment',
+  'labour_care_guide',
+  'pain_drugs',
+  'companion_support',
+  'delivery_practices',
+  'information_sharing',
+  'counselling_offered',
+  'svd_support',
+  'roaming_staff',
+  'labour_support',
+  'vital_signs_adherence',
+  'pnc_adherence',
+  'grief_support',
+  'examination_adherence',
+  'clinical_review',
+  'latching_support',
+  'passage_of_urine',
+  'register_complete',
+  'maternal_observation',
+  'feeding_adherence',
+  'emergency_system',
+].concat(
+  selectMultipleAttributeNames_('triage_assessment', MATERNITY_TRIAGE_ASSESSMENT_CHOICES),
+  selectMultipleAttributeNames_('labour_charts', MATERNITY_CHARTS_CHOICES),
+  selectMultipleAttributeNames_('labour_counselling', MATERNITY_LABOUR_COUNSELLING_CHOICES),
+  selectMultipleAttributeNames_('discharge_counselling', MATERNITY_DISCHARGE_COUNSELLING_CHOICES)
+), 'Adherence to evidence based practice');
+
+// latex → latex_gloves, sterile → sterile_gloves, iv → iv_cannulae,
+// bcg → bcg_availability, hepb → hepb_availability, protein →
+// protein_strips, glucose_dip → glucose_strips, ketone → ketone_strips,
+// glucometer_strip → glucometer_strips, hiv → hiv_test_kits,
+// syphilis → syphilis_test_kits. nasg and calibrated_drapes are not
+// transformed dests.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'tetracycline',
+  'chlorhexidine',
+  'vit_k',
+  'bcg_availability',
+  'hepb_availability',
+  'oxytocin',
+  'hsc',
+  'misoprostol',
+  'tranexamic',
+  'magnesium',
+  'calcium',
+  'hydralazine',
+  'saline',
+  'methyldopa',
+  'dexamethasone',
+  'latex_gloves',
+  'sterile_gloves',
+  'masks',
+  'aprons',
+  'iv_cannulae',
+  'malaria_rdt',
+  'syphilis_test_kits',
+  'hiv_test_kits',
+  'protein_strips',
+  'glucose_strips',
+  'ketone_strips',
+  'glucometer_strips',
+], 'Commodities');
+
+// obstetric → obstetric_kit, preclampsia → preeclampsia_kit,
+// pharyngeal → pharyngeal_airway, ultrasound_machine →
+// ultrasound_in_unit, vacuum → vacuum_extractor, beds_del →
+// delivery_beds, catheters → catheter_quantity, bulbs → suction_bulbs,
+// adult → adult_scale, infant → infant_scale, apparatus → bp_apparatus,
+// ctg_equip → ctg_machine, quantity → oxygen_quantity, oxygen →
+// oxygen_equipment, o2 → o2_source. supplies/1-6, em_tray/1-13, and
+// equipment/1-13 are select_multiple indicators. pphkits and
+// pre_eclampia are not transformed dests.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'incubators',
+  'ambubags',
+  'vd_kits',
+  'obstetric_kit',
+  'preeclampsia_kit',
+  'resus_kits',
+  'pharyngeal_airway',
+  'glucometer',
+  'fetoscopes',
+  'ultrasound_in_unit',
+  'doppler',
+  'oximeter',
+  'exam_light',
+  'vacuum_extractor',
+  'delivery_beds',
+  'suction',
+  'catheter_quantity',
+  'suction_bulbs',
+  'adult_scale',
+  'infant_scale',
+  'stadiometer',
+  'thermometers',
+  'stethoscopes',
+  'laryngoscope',
+  'bp_apparatus',
+  'ctg_machine',
+  'towels',
+  'oxygen_quantity',
+  'oxygen_equipment',
+  'o2_source',
+  'storage',
+  'milk_bank',
+  'refrigerator',
+  'resuscitaire',
+].concat(
+  selectMultipleAttributeNames_('equipment_supplies', MATERNITY_SUPPLIES_CHOICES),
+  selectMultipleAttributeNames_('equipment_em_tray', MATERNITY_EM_TRAY_CHOICES),
+  selectMultipleAttributeNames_('equipment_resus_cart', MATERNITY_RESUS_CART_CHOICES)
+), 'Equipment');
+
+// birth → birth_notification, bregister → birth_register, death →
+// death_notification, dregister → death_register, birth_death →
+// birth_death_notification, delivery → delivery_notes, dl_register →
+// delivery_register, postnatal → postnatal_register, pregister →
+// postnatal_register_alt, nutrition → nutrition_form, nregister →
+// nursing_register, kmc → kmc_chart, imf → inpatient_maternity_file,
+// newborn → newborn_file, maternal_death → maternal_death_notification,
+// perinatal_death → perinatal_death_notification, maternal_review →
+// maternal_death_review, perinatl_review → perinatal_death_review.
+// patient_file/1-12 are the select_multiple indicators.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'birth_notification',
+  'birth_register',
+  'death_notification',
+  'death_register',
+  'birth_death_notification',
+  'delivery_notes',
+  'delivery_register',
+  'postnatal_register',
+  'postnatal_register_alt',
+  'nutrition_form',
+  'newborn_register',
+  'nursing_register',
+  'kmc_chart',
+  'inpatient_maternity_file',
+  'newborn_file',
+  'maternal_death_notification',
+  'perinatal_death_notification',
+  'maternal_death_review',
+  'perinatal_death_review',
+  'autopsy_forms',
+].concat(
+  selectMultipleAttributeNames_('health_records_patient_file', MATERNITY_PATIENT_FILE_CHOICES)
+), 'Health Records for clients');
+
+// operation → caesarean_wait_hours
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  ['caesarean_wait_hours'],
+  'Hours of operation'
+);
+
+// rehab → rehab_staff. Other listed HRH names are not transformed dests.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  ['rehab_staff'],
+  'HRH'
+);
+
+// benches → waiting_benches, material → building_material, structures →
+// sound_structures, lighting → well_lit, rooms → exam_rooms, access →
+// disabled_access, isolate → isolation_space, extinguishers →
+// fire_extinguishers, signs → clear_signage, charter → service_charter,
+// labour_area → labour_area_privacy, childbirth_area →
+// childbirth_area_privacy, temperature → temperature_control,
+// draught → draught_free, dust → dust_evidence. education/1-7 are
+// select_multiple indicators. beds_share is not a transformed dest.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'triage_area',
+  'waiting_area',
+  'waiting_benches',
+  'ventilation',
+  'maintenance_infrastructure',
+  'building_material',
+  'sound_structures',
+  'well_lit',
+  'fan_available',
+  'exam_rooms',
+  'disabled_access',
+  'isolation_space',
+  'fire_extinguishers',
+  'cabinets',
+  'clear_signage',
+  'service_charter',
+  'labour_area_privacy',
+  'childbirth_area_privacy',
+  'recovery_room',
+  'resuscitation_area',
+  'temperature_control',
+  'draught_free',
+  'dust_evidence',
+].concat(
+  selectMultipleAttributeNames_('infrastructure_education', MATERNITY_EDUCATION_CHOICES)
+), 'Infrastructure');
+
+// visual → visual_privacy, auditory → auditory_privacy, files →
+// files_privacy, beds_space → bed_spacing, barrier → visual_barrier.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'visual_privacy',
+  'auditory_privacy',
+  'files_privacy',
+  'single_rooms',
+  'bed_spacing',
+  'visual_barrier',
+], 'Privacy/confidentiality');
+
+// pocus → pocus_service, ultrasound → ultrasound_service, xray →
+// xray_service, gestation → gestation_ultrasound, anomalies →
+// anomalies_service, ctg → ctg_service, uterotonics →
+// uterotonics_service, breastfeeding_counsel → breastfeeding_service,
+// newborn_care → newborn_care_service, immunization/1-4 are
+// select_multiple indicators. eid is not a transformed dest.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'pocus_service',
+  'ultrasound_service',
+  'xray_service',
+  'foetal_viability',
+  'no_foetuses',
+  'gestation_ultrasound',
+  'anomalies_service',
+  'placenta_det',
+  'ctg_service',
+  'uterotonics_service',
+  'uterotonics_alt',
+  'uterotonics_freq',
+  'antibiotics_service',
+  'antibiotics_freq',
+  'anticonvulsant_lab',
+  'anticonvulsant_freq',
+  'retained_placenta_service',
+  'retained_freq',
+  'placenta_service',
+  'placenta_freq',
+  'avd_service',
+  'avd_freq',
+  'resuscitation_service',
+  'resuscitation_freq',
+  'perineal_care',
+  'ppfp_service',
+  'breastfeeding_service',
+  'newborn_care_service',
+  'microscopy_lab',
+  'hgb_lab',
+  'urinalysis_lab',
+  'urine_rapid_lab',
+  'urine_protein_lab',
+  'urine_glucose_lab',
+  'hiv_rapid_lab',
+  'dbs_lab',
+  'rpr_vdrl',
+  'blood_group_lab',
+  'malaria_lab',
+  'bs_malaria_lab',
+  'hep_b_lab',
+  'tb_testing',
+  'glucose_lab',
+].concat(
+  selectMultipleAttributeNames_('services_immunization', MATERNITY_IMMUNIZATION_CHOICES)
+), 'Services offered');
+
+// pph → pph_sop, pre_eclampsia → pre_eclampsia_sop, sepsis →
+// sepsis_sop, newborn_mgt → newborn_mgt_sop, handwashing →
+// handwashing_sop, referral → referral_sop, procure →
+// procurement_protocol, sop → maternity_sop, checklist →
+// maternity_checklist. policy_a/1-11, policy_b/1-11, policy_c/1-11,
+// and policy_d/1-9 are the select_multiple indicators.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'intrapartum_sop',
+  'pph_sop',
+  'pre_eclampsia_sop',
+  'eclampsia_sop',
+  'sepsis_sop',
+  'newborn_mgt_sop',
+  'resuscitation_sop',
+  'handwashing_sop',
+  'referral_sop',
+  'procurement_protocol',
+  'maternity_sop',
+  'maternity_checklist',
+].concat(
+  selectMultipleAttributeNames_('sop_policy_a', MATERNITY_POLICY_A_CHOICES),
+  selectMultipleAttributeNames_('sop_policy_b', MATERNITY_POLICY_B_CHOICES),
+  selectMultipleAttributeNames_('sop_policy_c', MATERNITY_POLICY_C_CHOICES),
+  selectMultipleAttributeNames_('sop_policy_d', MATERNITY_POLICY_D_CHOICES)
+), 'Standard operating procedures/Protocols');
+
+// Date dests only. The .1 Kobo names are not separate dests.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'training_emonc_guidelines',
+  'training_support',
+  'training_nnr',
+  'training_pnc',
+  'training_ipc',
+  'training_newborn_infection',
+  'training_harmful_practices',
+  'training_communication',
+  'training_breastfeeding',
+  'training_companion',
+  'training_pain_relief',
+  'training_emotional_support',
+  'training_rmc',
+  'training_obstetric_care',
+  'training_newborn_care',
+  'training_family_planning',
+  'training_cardio',
+  'training_haemovigilance',
+  'training_stress_mgt',
+  'training_mpdsr',
+], 'Training');
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+  'wash_source',
+  'wash_water_freq',
+  'wash_hand_washing',
+  'wash_drainage',
+  'wash_disposable_towels',
+  'wash_disposal',
+  'wash_leak_proof',
+  'wash_sharp',
+  'wash_visible',
+  'wash_latrine',
+  'wash_station',
+  'wash_bathrooms',
+  'wash_clean',
+  'wash_accessible',
+  'wash_gender',
+  'wash_menstrual',
+  'wash_no_toilets',
+  'wash_labour',
+], 'WASH (Water, Sanitation, Hygeine)/IPC');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

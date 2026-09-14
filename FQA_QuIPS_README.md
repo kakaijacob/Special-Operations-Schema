@@ -56,7 +56,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    Sanitation, Hygeine)/IPC, service columns get Services offered,
    and HRH columns get HRH. Central Store records, commodities,
    hours, equipment, infrastructure, SOP, and WASH/IPC columns use
-   those same `thematic_area` labels. Other
+   those same `thematic_area` labels. Inpatient Maternity groupings
+   use the same `thematic_area` labels. Other
    `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.

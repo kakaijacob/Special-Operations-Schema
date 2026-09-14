@@ -2324,6 +2324,36 @@ assert.strictEqual(g('thematicAreaFor_("Central Store", "supplies")'), 'Standard
 assert.strictEqual(g('thematicAreaFor_("Central Store", "fefo")'), 'Standard operating procedures/Protocols');
 assert.strictEqual(g('thematicAreaFor_("Central Store", "hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
 assert.strictEqual(g('thematicAreaFor_("Central Store", "units_outpatient_mnh_services")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "informed_consent")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "staff_meeting")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "triage_assessment_danger_sign_evaluation")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "triage_assessment_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "labour_charts_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "labour_counselling_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "discharge_counselling_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "emergency_system")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "tetracycline")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "latex_gloves")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "bcg_availability")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "incubators")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "ultrasound_in_unit")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "equipment_em_tray_adrenaline_inj")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "equipment_resus_cart_no_resuscitation_cart_available")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "birth_notification")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "health_records_patient_file_partograph")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "caesarean_wait_hours")'), 'Hours of operation');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "rehab_staff")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "triage_area")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "infrastructure_education_breastfeeding")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "visual_privacy")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "visual_barrier")'), 'Privacy/confidentiality');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "pocus_service")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "services_immunization_bcg")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "intrapartum_sop")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "sop_policy_a_none")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "training_emonc_guidelines")'), 'Training');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "wash_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "functional_maternity_unit")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2469,6 +2499,41 @@ assert.ok(csScoreTable.some(function (row) {
 }));
 assert.ok(csScoreTable.some(function (row) {
   return row[8] === 'units_outpatient_mnh_services' && row[6] === '';
+}));
+
+sandbox.__imScoreSheets = [{
+  department: 'Inpatient Maternity',
+  values: [
+    ['county', 'facility', 'facility_level', 'birth_notification', 'tetracycline', 'incubators', 'informed_consent', 'caesarean_wait_hours', 'intrapartum_sop', 'wash_source', 'functional_maternity_unit'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Always available', 'At least one, functional', 'Always', '<8 HOURS', 'They have displayed, up to date protocols', 'Present, functional', 'Yes'],
+  ],
+}];
+const imScoreTable = g(
+  'buildFqaScoreTableRows_(__imScoreSheets, __scoreWeighting)'
+);
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'birth_notification' && row[6] === 'Health Records for clients';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'tetracycline' && row[6] === 'Commodities';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'incubators' && row[6] === 'Equipment';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'informed_consent' && row[6] === 'Adherence to evidence based practice';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'caesarean_wait_hours' && row[6] === 'Hours of operation';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'intrapartum_sop' && row[6] === 'Standard operating procedures/Protocols';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'wash_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+}));
+assert.ok(imScoreTable.some(function (row) {
+  return row[8] === 'functional_maternity_unit' && row[6] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
