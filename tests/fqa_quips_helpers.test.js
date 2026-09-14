@@ -2175,9 +2175,10 @@ assert.strictEqual(
 assert.strictEqual(g('FQA_SCORE_SHEET_NAME'), 'FQA Scores');
 assert.strictEqual(
   g('FQA_SCORE_HEADERS').join('|'),
-  'county|subcounty|facility|facility_code|facility_level|department|thematic_area|attribute|score'
+  'county|subcounty|facility|facility_code|facility_level|department|thematic_area|hss_building_block|attribute|score'
 );
 assert.strictEqual(g('thematicAreaFor_("Outpatient", "unit")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Outpatient", "unit")'), '');
 
 sandbox.__scoreWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
   g('buildFqaWeightingTableRows_({})')
@@ -2194,15 +2195,15 @@ const scoreTable = g('buildFqaScoreTableRows_(__otScoreSheets, __scoreWeighting)
 assert.strictEqual(scoreTable.length, 3);
 assert.strictEqual(
   scoreTable[0].join('|'),
-  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||routine_cs|1'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||routine_cs|1'
 );
 assert.strictEqual(
   scoreTable[1].join('|'),
-  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||lidocaine|'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||lidocaine|'
 );
 assert.strictEqual(
   scoreTable[2].join('|'),
-  'Nakuru|Naivasha|Naivasha District Hospital|14013|Level 4|Operating Theatre||routine_cs|0'
+  'Nakuru|Naivasha|Naivasha District Hospital|14013|Level 4|Operating Theatre|||routine_cs|0'
 );
 
 sandbox.__opScoreSheets = [{
@@ -2217,7 +2218,7 @@ const outpatientScoreTable = g(
 );
 assert.strictEqual(
   outpatientScoreTable[0].join('|'),
-  'Mombasa||||Level 3|Outpatient||unit|1'
+  'Mombasa||||Level 3|Outpatient|||unit|1'
 );
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');
@@ -2226,6 +2227,12 @@ assert.strictEqual(
   'Services'
 );
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = ""');
+g('FQA_HSS_BUILDING_BLOCK_MAP["Operating Theatre"].routine_cs = "Service delivery"');
+assert.strictEqual(
+  g('hssBuildingBlockFor_("Operating Theatre", "routine_cs")'),
+  'Service delivery'
+);
+g('FQA_HSS_BUILDING_BLOCK_MAP["Operating Theatre"].routine_cs = ""');
 
 sandbox.__customWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
   g('buildFqaWeightingTableRows_({"Operating Theatre\troutine_cs\t1": 9})')
@@ -2240,7 +2247,7 @@ sandbox.__customScoreSheets = [{
 const customScoreTable = g(
   'buildFqaScoreTableRows_(__customScoreSheets, __customWeighting)'
 );
-assert.strictEqual(customScoreTable[0][8], 9);
+assert.strictEqual(customScoreTable[0][9], 9);
 
 assert.strictEqual(g('countyKey_("Kisii County")'), 'kisii');
 assert.strictEqual(g('countyKey_("Muranga")'), 'muranga');
@@ -2286,7 +2293,7 @@ const enrichedScores = g(
 );
 assert.strictEqual(
   enrichedScores[0].join('|'),
-  'Kisii|Nyamache|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre||routine_cs|1'
+  'Kisii|Nyamache|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||routine_cs|1'
 );
 assert.strictEqual(enrichedScores[1][1], 'Nyamache');
 assert.strictEqual(enrichedScores[1][3], '14080');

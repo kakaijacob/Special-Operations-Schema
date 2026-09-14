@@ -6,7 +6,8 @@
  * Missing facility_code and subcounty are filled from the facility
  * master spreadsheet when county, level (facility_level), and a fuzzy
  * facility-name match all agree. The master code column is dhis_code.
- * thematic_area is blank until the groupings are provided.
+ * thematic_area and hss_building_block are blank until the
+ * groupings are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -22,6 +23,7 @@ const FQA_SCORE_HEADERS = [
   'facility_level',
   'department',
   'thematic_area',
+  'hss_building_block',
   'attribute',
   'score',
 ];
@@ -62,11 +64,34 @@ const FQA_THEMATIC_AREA_MAP = {
   'Facility General': {},
 };
 
-function thematicAreaFor_(department, attribute) {
-  const byDept = FQA_THEMATIC_AREA_MAP[department];
+/**
+ * Attribute → HSS building block, by department sheet name.
+ * Leave entries empty until the groupings are defined.
+ */
+const FQA_HSS_BUILDING_BLOCK_MAP = {
+  'Newborn Unit': {},
+  'Inpatient Maternity': {},
+  'Outpatient': {},
+  'Lab': {},
+  'Operating Theatre': {},
+  'Pharmacy': {},
+  'Central Store': {},
+  'Facility General': {},
+};
+
+function lookupMappedLabel_(map, department, attribute) {
+  const byDept = map[department];
   if (!byDept) return '';
-  const area = byDept[attribute];
-  return area == null || area === '' ? '' : area;
+  const value = byDept[attribute];
+  return value == null || value === '' ? '' : value;
+}
+
+function thematicAreaFor_(department, attribute) {
+  return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
+}
+
+function hssBuildingBlockFor_(department, attribute) {
+  return lookupMappedLabel_(FQA_HSS_BUILDING_BLOCK_MAP, department, attribute);
 }
 
 function isBlankScoreCell_(value) {
@@ -472,6 +497,7 @@ function appendFqaScoreRowsFromSheetValues_(
         identity.facility_level,
         department,
         thematicAreaFor_(department, col.attribute),
+        hssBuildingBlockFor_(department, col.attribute),
         col.attribute,
         matched.score,
       ]);
