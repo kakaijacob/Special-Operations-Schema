@@ -20,7 +20,8 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General adherence dests also set those columns. Remaining
+ * General adherence and commodity dests also set those columns.
+ * Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
