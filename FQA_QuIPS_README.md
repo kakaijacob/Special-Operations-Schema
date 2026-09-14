@@ -46,7 +46,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `facility_level`), and a fuzzy facility-name match all agree. The
    master code column is `dhis_code`. The first run must authorize
    access to that spreadsheet. Newborn Unit commodity columns get
-   `thematic_area` = Commodities. Other `thematic_area` values,
+   `thematic_area` = Commodities and equipment columns get Equipment.
+   Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 

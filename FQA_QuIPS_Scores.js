@@ -7,8 +7,9 @@
  * master spreadsheet when county, level (facility_level), and a fuzzy
  * facility-name match all agree. The master code column is dhis_code.
  * thematic_area is filled as groupings are provided. Newborn Unit
- * commodity columns are Commodities. hss_building_block and
- * attribute_name stay blank until those labels are provided.
+ * commodity columns are Commodities and equipment columns are
+ * Equipment. hss_building_block and attribute_name stay blank until
+ * those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -53,8 +54,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
 
 /**
  * Attribute → thematic area, by department sheet name.
- * Newborn Unit commodity columns are Commodities. Other departments
- * stay empty until their groupings are defined.
+ * Newborn Unit commodity columns are Commodities and equipment
+ * columns are Equipment. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -140,6 +142,43 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   selectMultipleAttributeNames_('commodities_suction', SIZE_4_6_8_CHOICES),
   selectMultipleAttributeNames_('commodities_tubes', SIZE_4_6_8_CHOICES)
 ), 'Commodities');
+
+// beds → baby_beds, resuscitaires → resuscitaires_nbu, lamp → phototherapy_lamp,
+// warmer → radiant_warmer, heat → heat_source, clock → wall_clock,
+// thermometer → wall_thermometer, exam_light → exam_light_available,
+// cpap → equipment_cpap, neobp → neonatal_bp, oximeters → oximeters_neonates,
+// trans_kit → transfusion_kit, stethoscopes → stethoscopes_nbu,
+// glucometer → glucometer_nbu, pump → sunction_pump, bulbs → sunction_bulbs,
+// therm → thermometer_nbu, low_therm → thermometer_readings, scale → weighing_scale.
+// resus_equip/1-6, oxy_source/1-6, and cannulae/1-3 are select_multiple indicators.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'baby_beds',
+  'resuscitaires_nbu',
+  'bed_space',
+  'phototherapy_lamp',
+  'radiant_warmer',
+  'heat_source',
+  'wall_clock',
+  'wall_thermometer',
+  'exam_light_available',
+  'equipment_cpap',
+  'monitors',
+  'neonatal_bp',
+  'oximeters_neonates',
+  'transfusion_kit',
+  'drip_stands',
+  'stethoscopes_nbu',
+  'glucometer_nbu',
+  'sunction_pump',
+  'sunction_bulbs',
+  'thermometer_nbu',
+  'thermometer_readings',
+  'weighing_scale',
+].concat(
+  selectMultipleAttributeNames_('equip_resus_equip', RESUS_EQUIP_CHOICES),
+  selectMultipleAttributeNames_('equip_oxy_source', OXY_SOURCE_CHOICES),
+  selectMultipleAttributeNames_('equip_cannulae', CANNULAE_CHOICES)
+), 'Equipment');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

@@ -2192,6 +2192,22 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_materials_no
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_suction_size_6")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "commodities_tubes_size_8")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "kmc_initiated")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "phototherapy_lamp")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "radiant_warmer")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "wall_clock")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "exam_light_available")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equipment_cpap")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "neonatal_bp")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "oximeters_neonates")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "transfusion_kit")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sunction_pump")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "thermometer_readings")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "weighing_scale")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equip_resus_equip_200ml_ambubag")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equip_resus_equip_none")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equip_oxy_source_oxygen_concentrator")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equip_cannulae_size_24")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "equip_cannulae_none")'), 'Equipment');
 
 sandbox.__scoreWeighting = [g('FQA_WEIGHTING_HEADERS')].concat(
   g('buildFqaWeightingTableRows_({})')
@@ -2237,8 +2253,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'kmc_initiated'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Always'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2246,6 +2262,9 @@ const nbuScoreTable = g(
 );
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'tetraycline' && row[6] === 'Commodities';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'phototherapy_lamp' && row[6] === 'Equipment';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'kmc_initiated' && row[6] === '';
