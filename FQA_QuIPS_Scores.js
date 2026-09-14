@@ -19,9 +19,9 @@
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
- * adherence dests also set hss_building_block and attribute_name.
- * Remaining hss_building_block and attribute_name values stay blank
- * until those labels are provided.
+ * adherence and commodity dests also set hss_building_block and
+ * attribute_name. Remaining hss_building_block and attribute_name
+ * values stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -77,9 +77,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity, Lab, and
- * Operating Theatre adherence dests use the same thematic_area
- * labels. Other departments stay empty until their groupings are
- * defined.
+ * Operating Theatre adherence and commodity dests use the same
+ * thematic_area labels. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -95,6 +95,7 @@ const FQA_THEMATIC_AREA_MAP = {
 /**
  * Attribute → HSS building block, by department sheet name.
  * Operating Theatre adherence dests are Leadership & Governance.
+ * Operating Theatre commodity dests are Commodities.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -109,7 +110,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre adherence dests use the provided labels.
+ * Operating Theatre adherence and commodity dests use the
+ * provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1039,6 +1041,88 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   anaest_chart_any_drugs_and_iv_fluids_given_during_the_period_they_are_under_anaesthesia:
     'Drugs/IV fluids given',
   turnaround: 'Average theatre turnaround time',
+});
+
+// bupi_0.5, spinalpacks, and spinalpacks/1-8 are not transformed
+// dests. tranexamic is a dest but was not listed.
+const OT_COMMODITY_EVIDENCE_DESTS = OT_COMMODITY_FIELDS.map(function (field) {
+  return field.dest;
+}).filter(function (dest) {
+  return dest !== 'tranexamic';
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_COMMODITY_EVIDENCE_DESTS,
+  'Commodities'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_COMMODITY_EVIDENCE_DESTS,
+  'Commodities'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  lidocaine: 'Plain lidocaine',
+  povidine: 'Povidone',
+  ephedrine: 'Ephedrine/phenylephrine',
+  iv_fluids: 'IV fluids',
+  mag_sulfate: 'Magnesium sulphate',
+  naloxone: 'Naloxone',
+  ceftriaxone: 'Ceftriaxone',
+  hydralazine: 'Hydralazine',
+  flumazenil: 'Flumazenil',
+  adrenaline: 'Adrenaline',
+  diazepam: 'Diazepam',
+  midazolam: 'Midazolam',
+  cal_gluconate: 'Calcium gluconate',
+  tranex_acid: 'Tranexamic acid',
+  lasix: 'Lasix',
+  antiemetic: 'Metoclopramide/ondansetron',
+  chlorphenir: 'Chlorpheniramine',
+  plasma_exp: 'Plasma/volume expanders',
+  nitrous: 'Nitrous oxide',
+  halothane: 'Halothane',
+  ketamine: 'Ketamine',
+  suxameth: 'Suxamethonium',
+  atropine: 'Atropine',
+  neostig_physio: 'Neostigmine/physostigmine',
+  esomep: 'Esomeprazole',
+  vit_k: 'Vitamin K',
+  chlorhex: 'Chlorhexidine',
+  tetra_eye: 'Tetracycline eye oint.',
+  oxytocin: 'Oxytocin',
+  misoprostol: 'Misoprostol',
+  paracetamol: 'Paracetamol IV',
+  carbetocin: 'Heat-stable carbetocin',
+  facemasks: 'Facemasks',
+  latex_gloves: 'Latex gloves',
+  sterile_gloves: 'Sterile gloves (sizes)',
+  spinal_packs: 'Sterile spinal packs',
+  sterile_sutures: 'Sterile sutures',
+  wound_dressing: 'Dressing/wound material',
+  sterile_drapes: 'Sterile drapes',
+  iv_sets: 'IV infusion sets',
+  blood_sets: 'Blood giving sets',
+  cannulae: 'Cannulae (sizes)',
+  needles_syringes: 'Needles & syringes (sizes)',
+  catheters: 'Urethral catheters',
+  urine_bags: 'Urine bags',
+  gauze: 'Sterile raytex gauze',
+  cotton_wool: 'Cotton wool',
+  cauter_tips: 'Cauterisation tips',
+  cauter_pad: 'Cautery grounding pad',
+  infant_id_bands: 'Infant ID bands',
+  pethidine: 'Pethidine',
+  morphine: 'Morphine',
+  nevirapine: 'Nevirapine',
+  azt: 'AZT (zidovudine)',
+  cord_clamp: 'Cord clamp',
+  caps: 'Baby caps',
+  socks: 'Infant socks',
 });
 
 function thematicAreaFor_(department, attribute) {

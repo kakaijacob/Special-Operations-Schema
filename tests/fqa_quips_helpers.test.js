@@ -2421,6 +2421,21 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_date_
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pre_checks_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "tranex_acid")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "bupi_0.5")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinalpacks")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "tranexamic")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "lidocaine")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "needles_syringes")'), 'Commodities');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "lidocaine")'), 'Plain lidocaine');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "povidine")'), 'Povidone');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "tetra_eye")'), 'Tetracycline eye oint.');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "needles_syringes")'), 'Needles & syringes (sizes)');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "spinal_packs")'), 'Sterile spinal packs');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "tranexamic")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2467,7 +2482,7 @@ assert.strictEqual(
 );
 assert.strictEqual(
   scoreTable[1].join('|'),
-  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|||lidocaine||'
+  'Kisii|Kitutu Chache South|Nyamache Sub County Hospital|14080|Level 4|Operating Theatre|Commodities|Commodities|lidocaine|Plain lidocaine|'
 );
 assert.strictEqual(
   scoreTable[2].join('|'),
@@ -2681,6 +2696,31 @@ assert.ok(otAdherenceScoreTable.some(function (row) {
 }));
 assert.ok(otAdherenceScoreTable.some(function (row) {
   return row[8] === 'hrs_day' && row[6] === '' && row[7] === '' && row[9] === '';
+}));
+
+sandbox.__otCommodityScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'lidocaine', 'socks', 'tranexamic'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always', 'Never', 'Sometimes'],
+  ],
+}];
+const otCommodityScoreTable = g(
+  'buildFqaScoreTableRows_(__otCommodityScoreSheets, __scoreWeighting)'
+);
+assert.ok(otCommodityScoreTable.some(function (row) {
+  return row[8] === 'lidocaine' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === 'Plain lidocaine';
+}));
+assert.ok(otCommodityScoreTable.some(function (row) {
+  return row[8] === 'socks' &&
+    row[6] === 'Commodities' &&
+    row[9] === 'Infant socks';
+}));
+assert.ok(otCommodityScoreTable.some(function (row) {
+  return row[8] === 'tranexamic' && row[6] === '' && row[7] === '' && row[9] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

@@ -59,7 +59,9 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    those same `thematic_area` labels. Inpatient Maternity and Lab
    groupings use the same `thematic_area` labels. Operating Theatre
    adherence dests also fill `hss_building_block` (Leadership &
-   Governance) and `attribute_name`. Other `thematic_area` values,
+   Governance) and `attribute_name`. Operating Theatre commodity
+   dests fill `thematic_area` and `hss_building_block` as Commodities
+   plus the provided `attribute_name` labels. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 
