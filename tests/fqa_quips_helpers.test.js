@@ -2421,6 +2421,15 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_date_
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pre_checks_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hrs_day")'), 'OT accessibility');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "county_anaesthesiologists")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaesthetist_available_24hrs")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "on_call_roster")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "county_anaesthes")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "Theater Nurses_score")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaesth_assist_24hr")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "county_anaesthesiologists")'), 'Human Resource for Health');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "county_anaesthesiologists")'), 'Number of county-employed anaesthesiologists');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaesthetist_available_24hrs")'), 'Anaes. 24h avail.');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -2825,6 +2834,31 @@ assert.ok(otRecordsScoreTable.some(function (row) {
 }));
 assert.ok(!otRecordsScoreTable.some(function (row) {
   return row[8] === 'anesthetic_reg';
+}));
+
+sandbox.__otHrhScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'on_call_roster', 'anaesthetist_available_24hrs', 'anaesth_assist_24hr'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Yes', 'Yes'],
+  ],
+}];
+const otHrhScoreTable = g(
+  'buildFqaScoreTableRows_(__otHrhScoreSheets, __scoreWeighting)'
+);
+assert.ok(otHrhScoreTable.some(function (row) {
+  return row[8] === 'on_call_roster' &&
+    row[6] === 'HRH' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'Emerg-surg on-call roster';
+}));
+assert.ok(otHrhScoreTable.some(function (row) {
+  return row[8] === 'anaesthetist_available_24hrs' &&
+    row[6] === 'HRH' &&
+    row[9] === 'Anaes. 24h avail.';
+}));
+assert.ok(otHrhScoreTable.some(function (row) {
+  return row[8] === 'anaesth_assist_24hr' && row[6] === '' && row[7] === '' && row[9] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

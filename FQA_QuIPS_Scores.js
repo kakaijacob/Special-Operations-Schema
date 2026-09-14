@@ -99,7 +99,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Operating Theatre commodity dests are Commodities. Operating
  * Theatre equipment dests are Equipment. Operating Theatre
  * records dests are Health Information System. Operating Theatre
- * hours dests are Service Delivery.
+ * hours dests are Service Delivery. Operating Theatre HRH dests
+ * are Human Resource for Health.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -1287,6 +1288,78 @@ assignMappedLabels_(
 
 assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   hrs_day: 'OT accessibility',
+});
+
+// county_anaesthes → county_anaesthesiologists,
+// contract_anaesthes → contract_anaesthesiologists,
+// county_co_anaest → county_co_anaesthetists,
+// contract_co_anaest → contract_co_anaesthetists,
+// county_nurse_anaest → county_nurse_anaesthetists,
+// contract_nurse_anaest → contract_nurse_anaesthetists,
+// anaesth_24hr → anaesthetist_available_24hrs.
+// Theater Nurses_score is not a transformed dest.
+// anaesth_assist_24hr and surg_assist_24hr are dests but were
+// not listed.
+const OT_HRH_EVIDENCE_DESTS = [
+  'county_anaesthesiologists',
+  'contract_anaesthesiologists',
+  'county_co_anaesthetists',
+  'contract_co_anaesthetists',
+  'county_nurse_anaesthetists',
+  'contract_nurse_anaesthetists',
+  'county_theatre_nurse',
+  'contract_theatre_nurse',
+  'theatre_cleaners',
+  'theatre_matron_patron',
+  'anaesthetist_available_24hrs',
+  'referral_no_anaesth',
+  'obstetric_24hr',
+  'referral_no_surg',
+  'team_leader_24hr',
+  'scrub_nurse_24hr',
+  'circulate_nurse_24hr',
+  'baby_nurse_24hr',
+  'referral_no_nurse',
+  'pacu_nurse_24hr',
+  'on_call_roster',
+];
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_HRH_EVIDENCE_DESTS,
+  'HRH'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_HRH_EVIDENCE_DESTS,
+  'Human Resource for Health'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  county_anaesthesiologists: 'Number of county-employed anaesthesiologists',
+  contract_anaesthesiologists: 'Number of contracted anaesthesiologists',
+  county_co_anaesthetists: 'Number of county-employed clinical officer anaesthetists',
+  contract_co_anaesthetists: 'Number of contracted clinical officer anaesthetists',
+  county_nurse_anaesthetists: 'Number of county-employed anaesthetist nurses',
+  contract_nurse_anaesthetists: 'Number of contracted anaesthetist nurses',
+  county_theatre_nurse: 'Number of county-employed theatre nurses',
+  contract_theatre_nurse: 'Number of contracted theatre nurses',
+  theatre_cleaners: 'Number of operating theatre cleaners',
+  theatre_matron_patron: 'Number of theatre matrons/patrons',
+  anaesthetist_available_24hrs: 'Anaes. 24h avail.',
+  referral_no_anaesth: 'Anaes. unavail referral 3m',
+  obstetric_24hr: 'Obstetrician/MO 24h CS',
+  referral_no_surg: 'Surg. unavail referral 3m',
+  team_leader_24hr: 'Team leader 24h avail.',
+  scrub_nurse_24hr: 'Scrub nurse 24h/theatre',
+  circulate_nurse_24hr: 'Circ. nurse 24h/theatre',
+  baby_nurse_24hr: 'Baby-receiving nurse 24h',
+  referral_no_nurse: 'Nursing unavail referral 3m',
+  pacu_nurse_24hr: 'PACU nurse 24h (1:2 beds)',
+  on_call_roster: 'Emerg-surg on-call roster',
 });
 
 function thematicAreaFor_(department, attribute) {
