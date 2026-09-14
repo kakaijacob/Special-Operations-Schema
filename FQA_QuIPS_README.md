@@ -47,7 +47,8 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    master code column is `dhis_code`. The first run must authorize
    access to that spreadsheet. Newborn Unit commodity columns get
    `thematic_area` = Commodities, equipment columns get Equipment, and
-   adherence columns get Adherence to evidence based practice. Other
+   adherence columns get Adherence to evidence based practice, and
+   records columns get Health Records for clients. Other
    `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.

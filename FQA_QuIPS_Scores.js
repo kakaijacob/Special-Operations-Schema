@@ -8,9 +8,9 @@
  * facility-name match all agree. The master code column is dhis_code.
  * thematic_area is filled as groupings are provided. Newborn Unit
  * commodity columns are Commodities, equipment columns are Equipment,
- * and adherence columns are Adherence to evidence based practice.
- * hss_building_block and attribute_name stay blank until those labels
- * are provided.
+ * adherence columns are Adherence to evidence based practice, and
+ * records columns are Health Records for clients. hss_building_block
+ * and attribute_name stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -57,8 +57,8 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Attribute → thematic area, by department sheet name.
  * Newborn Unit commodity columns are Commodities, equipment columns
  * are Equipment, and adherence columns are Adherence to evidence
- * based practice. Other departments stay empty until their groupings
- * are defined.
+ * based practice, and records columns are Health Records for clients.
+ * Other departments stay empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -207,6 +207,22 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'paediatric_rco',
   'specialized_care',
 ], 'Adherence to evidence based practice');
+
+// death_reg → death_register, consistent_use → deathreg_consistent_use,
+// integrated_rh_mch → summary_register, inpatient_neonatal_reg → neonatal_register,
+// nb_admission → newborn_admission. patient_files/1-13 are the
+// select_multiple indicators (the form has 13 choices, not 14).
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'death_register',
+  'deathreg_consistent_use',
+  'summary_register',
+  'neonatal_register',
+  'newborn_admission',
+  'perinatal_notification',
+  'perinatal_review',
+].concat(
+  selectMultipleAttributeNames_('patient_files', PATIENT_FILES_CHOICES)
+), 'Health Records for clients');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

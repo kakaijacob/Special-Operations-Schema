@@ -2206,6 +2206,16 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "gestation_34wks")'), 'Ad
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "paediatric_rco")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "specialized_care")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nbu_open")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "neonatal_register")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "newborn_admission")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "perinatal_notification")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "perinatal_review")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "patient_files_observation_charts")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "patient_files_continuation_sheet")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "patient_files_none")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "phototherapy_lamp")'), 'Equipment');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "radiant_warmer")'), 'Equipment');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "wall_clock")'), 'Equipment');
@@ -2267,8 +2277,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'nbu_open'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', '24 hours per day'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2282,6 +2292,9 @@ assert.ok(nbuScoreTable.some(function (row) {
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'kmc_initiated' && row[6] === 'Adherence to evidence based practice';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'death_register' && row[6] === 'Health Records for clients';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'nbu_open' && row[6] === '';
