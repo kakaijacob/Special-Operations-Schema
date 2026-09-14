@@ -2563,6 +2563,90 @@ assert.strictEqual(g('attributeNameFor_("Facility General", "designated_cleaning
 assert.strictEqual(g('attributeNameFor_("Facility General", "alcohol")'), 'Disinfectant availability: Alcohol (spirit) 60–90% availability');
 assert.strictEqual(g('attributeNameFor_("Facility General", "oth_source_tubewell_or_borehole")'), 'Other water source: Tubewell / borehole');
 assert.strictEqual(g('thematicAreaFor_("Facility General", "units_pharmacy_services")'), '');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "patient_info")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "authorized")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "secure")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "patient_info")'), 'Leadership & Governance');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "patient_info")'), 'Quick access to allergy/contra info');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "authorized")'), 'Prescription pad access restricted');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "secure")'), 'Secure prescription storage');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "prescription")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "nutrition")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "iron_freq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "Iv_hydro_freq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "oxy_store")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "chlorxidine")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "ampicilin")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "flucloxacilin")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "artesunete")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "pyrizimomide")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "salbutemol")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "iprapitm")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "diazapam")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "plasma_frq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "bcg_frq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "canco_freq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "sulbu_freq")'), 'Commodities');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "dda_used")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "wall_clock")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "prescription")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "dda_used")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "wall_clock")'), 'Infrastructure');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "prescription")'), 'Prescription pad availability');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "nutrition")'), 'Commodity availability – Nutritional supplements (RUTF/RUFS/CSB)');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "iron_freq")'), 'Stock-out (past month) – Iron tablets');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "Iv_hydro_freq")'), 'Stock-out (past month) – IV hydrocortisone');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "dextrose15")'), 'Commodity availability – 50% dextrose');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "oxy_store")'), 'Oxytocin in cold storage');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "dda_used")'), 'DDA register used consistently');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "wall_clock")'), 'Wall clock / timer');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "computer")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "fridge")'), 'Equipment');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "cabinet")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "fridge")'), 'Equipment');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "fridge")'), 'Refrigerator presence & functionality');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "fridge_temp")'), 'Refrigerator temp in range (2–8°C)');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "therm_readings")'), 'Room temp 25–27°C');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "activity_logs")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "dda_reg")'), 'Health Records for clients');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "activity_logs")'), 'Health Information System');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "activity_logs")'), 'Activity logs in use');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "opening")'), 'Hours of operation');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "opening")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "opening")'), 'Pharmacy accessibility during facility hours');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "pharmacist")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "prese")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "on_duty")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "avail_opening")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "Pharmacist score")'), '');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "Clinical Pharmacist score")'), '');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "Pharmaceutical tech score")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "pharmacist")'), 'Human Resource for Health');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "pharmacist")'), 'Number of county-employed pharmacists');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "prese")'), 'Licensing file present (pharmacy board)');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "maintained")'), 'Infrastructure');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "certification")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "maintained")'), 'Infrastructure');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "maintained")'), 'Building well maintained');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "privacy")'), 'Privacy/confidentiality');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "privacy")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "privacy")'), 'Dispensing privacy');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "handwashing")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "sop_dispensing")'), 'Standard operating procedures/Protocols');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "handwashing")'), 'Leadership & Governance');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "handwashing")'), 'Handwashing protocols displayed');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "cpds")'), 'Training');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "cpds")'), 'Human Resource for Health');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "cpds")'), 'Yearly CPDs required (verified)');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "water_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "soap_disp")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "visible_cont")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "water_source")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "water_source")'), 'Water source presence & functionality');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "visible_cont")'), 'Sharps containers <3/4 full');
+assert.strictEqual(g('thematicAreaFor_("Pharmacy", "units_pharmacy_services")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Pharmacy", "units_pharmacy_services")'), '');
+assert.strictEqual(g('attributeNameFor_("Pharmacy", "units_pharmacy_services")'), '');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3548,6 +3632,197 @@ assert.ok(fgWashMoreScoreTable.some(function (row) {
 }));
 assert.ok(!fgWashMoreScoreTable.some(function (row) {
   return row[8] === 'specify_main';
+}));
+
+sandbox.__phScoreSheets = [{
+  department: 'Pharmacy',
+  values: [
+    [
+      'county',
+      'facility',
+      'facility_level',
+      'patient_info',
+      'prescription',
+      'nutrition',
+      'iron_freq',
+      'Iv_hydro_freq',
+      'fridge',
+      'cabinet',
+      'activity_logs',
+      'dda_used',
+      'opening',
+      'pharmacist',
+      'prese',
+      'on_duty',
+      'maintained',
+      'wall_clock',
+      'privacy',
+      'handwashing',
+      'cpds',
+      'water_source',
+      'soap_disp',
+      'units_pharmacy_services',
+    ],
+    [
+      'Kisii',
+      'Nyamache Sub County Hospital',
+      'Level 4',
+      'Yes',
+      'Always available',
+      'Available in nutrition unit',
+      'No',
+      'Yes',
+      'Yes, functional',
+      'Yes, cabinet not locked today',
+      'Yes',
+      'Yes',
+      'Sometimes when the facility is open, but not always',
+      2,
+      'Present',
+      'Yes',
+      'Yes',
+      'Yes',
+      'No',
+      'They have written up to date protocols, not displayed',
+      'Yes',
+      'Present, functional',
+      'Present in some service areas',
+      'Yes',
+    ],
+  ],
+}];
+const phScoreTable = g(
+  'buildFqaScoreTableRows_(__phScoreSheets, __scoreWeighting)'
+);
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'patient_info' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Quick access to allergy/contra info' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'prescription' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === 'Prescription pad availability';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'nutrition' &&
+    row[6] === 'Commodities' &&
+    row[9] === 'Commodity availability – Nutritional supplements (RUTF/RUFS/CSB)';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'iron_freq' &&
+    row[6] === 'Commodities' &&
+    row[9] === 'Stock-out (past month) – Iron tablets' &&
+    row[10] === 0;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'Iv_hydro_freq' &&
+    row[6] === 'Commodities' &&
+    row[9] === 'Stock-out (past month) – IV hydrocortisone' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'fridge' &&
+    row[6] === 'Equipment' &&
+    row[7] === 'Equipment' &&
+    row[9] === 'Refrigerator presence & functionality';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'cabinet' &&
+    row[6] === 'Equipment' &&
+    row[9] === 'DDA controlled-substance cabinet';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'activity_logs' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'Activity logs in use' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'dda_used' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'DDA register used consistently' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'opening' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Pharmacy accessibility during facility hours';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'prese' &&
+    row[6] === 'HRH' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'Licensing file present (pharmacy board)';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'on_duty' &&
+    row[6] === 'HRH' &&
+    row[9] === 'Pharmacy uncovered any time past month' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'maintained' &&
+    row[6] === 'Infrastructure' &&
+    row[7] === 'Infrastructure' &&
+    row[9] === 'Building well maintained' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'wall_clock' &&
+    row[6] === 'Infrastructure' &&
+    row[7] === 'Infrastructure' &&
+    row[9] === 'Wall clock / timer' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'privacy' &&
+    row[6] === 'Privacy/confidentiality' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Dispensing privacy' &&
+    row[10] === 0;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'handwashing' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Handwashing protocols displayed';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'cpds' &&
+    row[6] === 'Training' &&
+    row[7] === 'Human Resource for Health' &&
+    row[9] === 'Yearly CPDs required (verified)' &&
+    row[10] === 1;
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'water_source' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Water source presence & functionality';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'soap_disp' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[9] === 'Hand hygiene supplies in service areas';
+}));
+assert.ok(phScoreTable.some(function (row) {
+  return row[8] === 'units_pharmacy_services' &&
+    row[6] === '' &&
+    row[7] === '' &&
+    row[9] === '';
+}));
+assert.ok(!phScoreTable.some(function (row) {
+  return row[8] === 'pharmacist';
+}));
+assert.ok(!phScoreTable.some(function (row) {
+  return row[8] === 'Pharmacist score';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

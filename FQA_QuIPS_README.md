@@ -91,10 +91,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    columns (`facility_staff3`, `sec_electricity`,
    `security_measures6`, `housekeeping`, `record`, `systems_place`,
    `sterlization_place`, and `oth_source` parents are not dests).
-   Other `thematic_area`
-   values, `hss_building_block`, and `attribute_name` stay blank
-   until those labels are added. You can still run
-   `writeFqaScoreTable` on its own.
+   Pharmacy dests fill `thematic_area`, `hss_building_block`, and
+   `attribute_name` (`dda_used` stays Health Records;
+   `wall_clock` stays Infrastructure; `units_*` leftovers stay
+   blank). Other `thematic_area` values, `hss_building_block`,
+   and `attribute_name` stay blank until those labels are added.
+   You can still run `writeFqaScoreTable` on its own.
 
 ## Tests
 

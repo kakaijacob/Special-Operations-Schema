@@ -20,9 +20,10 @@
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
  * dests also set hss_building_block and attribute_name. Facility
- * General dests also set those columns. units_* leftovers stay
- * blank. Remaining hss_building_block and attribute_name values
- * stay blank until those labels are provided.
+ * General dests also set those columns. Pharmacy dests also set
+ * those columns. units_* leftovers stay blank. Remaining
+ * hss_building_block and attribute_name values stay blank until
+ * those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -88,8 +89,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * General national-data dests use National data collection.
  * Facility General service dests use Services offered.
  * Facility General WASH dests use WASH (Water, Sanitation,
- * Hygeine)/IPC. Other departments stay empty until their
- * groupings are defined.
+ * Hygeine)/IPC. Pharmacy dests use the same thematic_area
+ * labels. Other departments stay empty until their groupings
+ * are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -124,7 +126,17 @@ const FQA_THEMATIC_AREA_MAP = {
  * infrastructure dests are Infrastructure. Facility General
  * national-data dests are Health Information System. Facility
  * General service dests are Service Delivery. Facility
- * General WASH dests are Service Delivery.
+ * General WASH dests are Service Delivery. Pharmacy adherence
+ * dests are Leadership & Governance. Pharmacy commodity dests
+ * are Commodities. Pharmacy equipment dests are Equipment.
+ * Pharmacy records dests are Health Information System.
+ * Pharmacy hours dests are Service Delivery. Pharmacy HRH
+ * dests are Human Resource for Health. Pharmacy
+ * infrastructure dests are Infrastructure. Pharmacy privacy
+ * dests are Service Delivery. Pharmacy SOP dests are
+ * Leadership & Governance. Pharmacy training dests are
+ * Human Resource for Health. Pharmacy WASH dests are
+ * Service Delivery.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -139,8 +151,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre dests and Facility General dests use the
- * provided labels.
+ * Operating Theatre dests, Facility General dests, and
+ * Pharmacy dests use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -2004,6 +2016,500 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
   sche_bathrooms: 'Cleaning schedule observed',
   table_tops: 'Frequency of cleaning: Table tops & legs cleaning frequency',
 });
+
+// dda_used and wall_clock also appear on PHARMACY_COMMODITY_YES_NO_FIELDS,
+// but those dests already belong to Health Records and Infrastructure.
+const PHARMACY_COMMODITY_EVIDENCE_DESTS = PHARMACY_COMMODITY_AVAIL_FIELDS.concat(
+  ['nutrition'],
+  PHARMACY_COMMODITY_YES_NO_FIELDS.filter(function (dest) {
+    return dest !== 'dda_used' && dest !== 'wall_clock';
+  })
+);
+const PHARMACY_EQUIPMENT_EVIDENCE_DESTS = [
+  'computer',
+  'fridge',
+  'fridge_temp',
+  'cabinet',
+  'lock_cabin',
+  'label',
+  'room_therm',
+  'therm_readings',
+  'receipt',
+];
+const PHARMACY_HRH_EVIDENCE_DESTS = PHARMACY_HRH_COUNT_FIELDS.concat(
+  PHARMACY_HRH_YES_NO_FIELDS,
+  ['prese']
+);
+const PHARMACY_INFRA_EVIDENCE_DESTS = [
+  'maintained',
+  'barrier',
+  'work_tables',
+  'chairs',
+  'cabinets',
+  'storage',
+  'wash_basin',
+  'well_lit',
+  'well_vent',
+  'wall_clock',
+  'certification',
+];
+const PHARMACY_SOP_EVIDENCE_DESTS = [
+  'handwashing',
+  'request',
+  'del_medication',
+  'sop_dispensing',
+  'sop_expiry',
+  'moni_temp',
+  'recording',
+];
+const PHARMACY_WASH_EVIDENCE_DESTS = [
+  'water_source',
+  'water_consistent',
+  'drainage',
+  'soap_disp',
+  'sharps',
+  'available_cont',
+  'visible_cont',
+];
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_BEST_PRACTICES_YES_NO_FIELDS,
+  'Adherence to evidence based practice'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_BEST_PRACTICES_YES_NO_FIELDS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  patient_info: 'Quick access to allergy/contra info',
+  authorized: 'Prescription pad access restricted',
+  secure: 'Secure prescription storage',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_COMMODITY_EVIDENCE_DESTS,
+  'Commodities'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_COMMODITY_EVIDENCE_DESTS,
+  'Commodities'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  prescription: 'Prescription pad availability',
+  latex: 'Latex glove availability',
+  iron_tab: 'Commodity availability – Iron tablets',
+  iron_freq: 'Stock-out (past month) – Iron tablets',
+  folic_acid: 'Commodity availability – Folic acid tablets',
+  folic_freq: 'Stock-out (past month) – Folic acid tablets',
+  ifas: 'Commodity availability – IFAS',
+  ifas_freq: 'Stock-out (past month) – IFAS',
+  calcium: 'Commodity availability – Calcium supplements',
+  cal_freq: 'Stock-out (past month) – Calcium supplements',
+  nutrition: 'Commodity availability – Nutritional supplements (RUTF/RUFS/CSB)',
+  nut_freq: 'Stock-out (past month) – Nutritional supplements (RUTF/RUFS/CSB)',
+  multivit: 'Commodity availability – Multivitamins',
+  multivit_freq: 'Stock-out (past month) – Multivitamins',
+  iron_syrup: 'Commodity availability – Iron / ferrous sulphate syrup',
+  syrup_freq: 'Stock-out (past month) – Iron / ferrous sulphate syrup',
+  vit_d: 'Commodity availability – Vitamin D',
+  vit_freq: 'Stock-out (past month) – Vitamin D',
+  vit_k: 'Commodity availability – Vitamin K',
+  vitk_freq: 'Stock-out (past month) – Vitamin K',
+  tetra: 'Commodity availability – Tetracycline eye ointment',
+  tetra_freq: 'Stock-out (past month) – Tetracycline eye ointment',
+  deworming: 'Commodity availability – Deworming (e.g., albendazole)',
+  deworm_freq: 'Stock-out (past month) – Deworming (e.g., albendazole)',
+  disinfectant: 'Commodity availability – Skin disinfectant',
+  dis_freq: 'Stock-out (past month) – Skin disinfectant',
+  lidocaine: 'Commodity availability – Lidocaine 2%',
+  lido_freq: 'Stock-out (past month) – Lidocaine 2%',
+  lidocaine1: 'Commodity availability – Lidocaine 1%',
+  lido_freq1: 'Stock-out (past month) – Lidocaine 1%',
+  dextrose10: 'Commodity availability – 10% dextrose',
+  dex_freq10: 'Stock-out (past month) – 10% dextrose',
+  dextrose5: 'Commodity availability – 5% dextrose',
+  dex_freq5: 'Stock-out (past month) – 5% dextrose',
+  dextrose15: 'Commodity availability – 50% dextrose',
+  dex_freq15: 'Stock-out (past month) – 50% dextrose',
+  water_inj: 'Commodity availability – Water for injection',
+  inj_freq: 'Stock-out (past month) – Water for injection',
+  saline_45: 'Commodity availability – 0.45% saline',
+  saline_freq45: 'Stock-out (past month) – 0.45% saline',
+  saline_90: 'Commodity availability – 0.90% saline',
+  saline_freq90: 'Stock-out (past month) – 0.90% saline',
+  saline3: 'Commodity availability – 3% saline',
+  saline_freq3: 'Stock-out (past month) – 3% saline',
+  potassium: 'Commodity availability – 15% Potassium chloride',
+  pota_freq: 'Stock-out (past month) – 15% Potassium chloride',
+  chlorxidine: 'Commodity availability – 7.1% chlorhexidine',
+  chlor_freq: 'Stock-out (past month) – 7.1% chlorhexidine',
+  anti_d: 'Commodity availability – Anti-D for rhesus',
+  anti_dfreq: 'Stock-out (past month) – Anti-D for rhesus',
+  plasma: 'Commodity availability – Plasma expander (Voluven/haemaccel)',
+  plasma_frq: 'Stock-out (past month) – Plasma expander (Voluven/haemaccel)',
+  ringers_lactate: "Commodity availability – Ringer's Lactate",
+  ringers_freq: "Stock-out (past month) – Ringer's Lactate",
+  lasix: 'Commodity availability – Lasix tab/IV',
+  lasix_freq: 'Stock-out (past month) – Lasix tab/IV',
+  esomeprazole: 'Commodity availability – Esomeprazole tab',
+  esome_freq: 'Stock-out (past month) – Esomeprazole tab',
+  esomeprazole_iv: 'Commodity availability – Esomeprazole IV',
+  esomeprazole_iv_freq: 'Stock-out (past month) – Esomeprazole IV',
+  para_tabs: 'Commodity availability – Paracetamol tabs',
+  tabs_freq: 'Stock-out (past month) – Paracetamol tabs',
+  para_suspe: 'Commodity availability – Paracetamol suspension',
+  suspe_freq: 'Stock-out (past month) – Paracetamol suspension',
+  para_iv: 'Commodity availability – Paracetamol IV',
+  iv_freq: 'Stock-out (past month) – Paracetamol IV',
+  morphine: 'Commodity availability – Morphine IV',
+  morph_freq: 'Stock-out (past month) – Morphine IV',
+  tramadol: 'Commodity availability – Tramadol IV',
+  trama_freq: 'Stock-out (past month) – Tramadol IV',
+  aspirin: 'Commodity availability – Aspirin tabs',
+  aspirin_freq: 'Stock-out (past month) – Aspirin tabs',
+  metform: 'Commodity availability – Metformin tab',
+  metform_freq: 'Stock-out (past month) – Metformin tab',
+  insulin: 'Commodity availability – Insulin injection',
+  insulin_freq: 'Stock-out (past month) – Insulin injection',
+  thyroxine: 'Commodity availability – Thyroxine tab',
+  thyro_freq: 'Stock-out (past month) – Thyroxine tab',
+  pyritone: 'Commodity availability – Piriton tab',
+  pyrit_freq: 'Stock-out (past month) – Piriton tab',
+  odt: 'Commodity availability – Ondansetron ODT/tab',
+  odt_freq: 'Stock-out (past month) – Ondansetron ODT/tab',
+  metroclo: 'Commodity availability – Metoclopramide tab/IV',
+  metro_freq: 'Stock-out (past month) – Metoclopramide tab/IV',
+  enoxaparin: 'Commodity availability – Enoxaparin injection',
+  enoxa_freq: 'Stock-out (past month) – Enoxaparin injection',
+  warfarin: 'Commodity availability – Warfarin tab',
+  warf_freq: 'Stock-out (past month) – Warfarin tab',
+  genta: 'Commodity availability – Gentamicin',
+  genta_freq: 'Stock-out (past month) – Gentamicin',
+  ampicilin: 'Commodity availability – Ampicillin OR crystalline penicillin',
+  ampi_freq: 'Stock-out (past month) – Ampicillin OR crystalline penicillin',
+  cephalo: 'Commodity availability – Cephalosporin (Ceftriaxone/cefixime/cefotaxime/ceftazidime)',
+  cepha_freq: 'Stock-out (past month) – Cephalosporin (Ceftriaxone/cefixime/cefotaxime/ceftazidime)',
+  flucloxacilin: 'Commodity availability – Flucloxacillin',
+  fluclo_freq: 'Stock-out (past month) – Flucloxacillin',
+  metra: 'Commodity availability – Metronidazole injection',
+  metra_freq: 'Stock-out (past month) – Metronidazole injection',
+  clindamycin: 'Commodity availability – Clindamycin',
+  clinda_freq: 'Stock-out (past month) – Clindamycin',
+  vancomycin: 'Commodity availability – Vancomycin',
+  canco_freq: 'Stock-out (past month) – Vancomycin',
+  amoxil: 'Commodity availability – Amoxicillin clavulanate',
+  amoxil_freq: 'Stock-out (past month) – Amoxicillin clavulanate',
+  benzathine: 'Commodity availability – Benzathine penicillin powder for inj.',
+  benza_freq: 'Stock-out (past month) – Benzathine penicillin powder for inj.',
+  amikacin: 'Commodity availability – Amikacin',
+  amika_freq: 'Stock-out (past month) – Amikacin',
+  ampiclox: 'Commodity availability – Ampiclox',
+  ampiclo_freq: 'Stock-out (past month) – Ampiclox',
+  aminophylin: 'Commodity availability – Aminophylline',
+  amino_freq: 'Stock-out (past month) – Aminophylline',
+  artemether: 'Commodity availability – Artemether/lumefantrine tab',
+  arte_freq: 'Stock-out (past month) – Artemether/lumefantrine tab',
+  sulfadoxine: 'Commodity availability – Sulfadoxine tab',
+  sulfa_freq: 'Stock-out (past month) – Sulfadoxine tab',
+  artesunete: 'Commodity availability – Artesunate injection',
+  artesu_freq: 'Stock-out (past month) – Artesunate injection',
+  isoniazid: 'Commodity availability – Isoniazid oral tablets',
+  ison_freq: 'Stock-out (past month) – Isoniazid oral tablets',
+  rifampicin: 'Commodity availability – Rifampicin oral tablets',
+  rifam_freq: 'Stock-out (past month) – Rifampicin oral tablets',
+  pyrizimomide: 'Commodity availability – Pyrazinamide oral tablets',
+  pyrizi_freq: 'Stock-out (past month) – Pyrazinamide oral tablets',
+  ethambutol: 'Commodity availability – Ethambutol oral tablets',
+  etham_freq: 'Stock-out (past month) – Ethambutol oral tablets',
+  vitB6: 'Commodity availability – Vitamin B6 (Pyridoxine)',
+  vitB6_freq: 'Stock-out (past month) – Vitamin B6 (Pyridoxine)',
+  acyclovir: 'Commodity availability – Acyclovir',
+  acyclo_freq: 'Stock-out (past month) – Acyclovir',
+  salbutemol: 'Commodity availability – Salbutamol injectable solution',
+  sulbu_freq: 'Stock-out (past month) – Salbutamol injectable solution',
+  salbutamol_oral: 'Commodity availability – Salbutamol oral tablets',
+  salbutamol_oral_freq: 'Stock-out (past month) – Salbutamol oral tablets',
+  salbutamol_inhaler: 'Commodity availability – Salbutamol inhalers',
+  salbutamol_inhaler_freq: 'Stock-out (past month) – Salbutamol inhalers',
+  iprapitm: 'Commodity availability – Ipratropium bromide',
+  iprap_freq: 'Stock-out (past month) – Ipratropium bromide',
+  nifedi: 'Commodity availability – Nifedipine cap/tab',
+  nifedi_freq: 'Stock-out (past month) – Nifedipine cap/tab',
+  hydralazine: 'Commodity availability – Hydralazine injectable',
+  hydra_freq: 'Stock-out (past month) – Hydralazine injectable',
+  hydralazine_oral: 'Commodity availability – Oral hydralazine tablets',
+  hydralazine_oral_freq: 'Stock-out (past month) – Oral hydralazine tablets',
+  methyl: 'Commodity availability – Methyldopa tab',
+  methyl_freq: 'Stock-out (past month) – Methyldopa tab',
+  labetalol: 'Commodity availability – Labetalol',
+  labe_freq: 'Stock-out (past month) – Labetalol',
+  calcium_inj: 'Commodity availability – Calcium gluconate injection',
+  cal_inj_freq: 'Stock-out (past month) – Calcium gluconate injection',
+  mgso4: 'Commodity availability – MgSO4 injectable',
+  mgso4_freq: 'Stock-out (past month) – MgSO4 injectable',
+  phenytoin: 'Commodity availability – Phenytoin',
+  pheny_freq: 'Stock-out (past month) – Phenytoin',
+  diazapam: 'Commodity availability – Diazepam',
+  diaza_freq: 'Stock-out (past month) – Diazepam',
+  midazolam: 'Commodity availability – Midazolam',
+  mida_freq: 'Stock-out (past month) – Midazolam',
+  phenobar: 'Commodity availability – Phenobarbitone',
+  pheno_freq: 'Stock-out (past month) – Phenobarbitone',
+  betametha: 'Commodity availability – Betamethasone or dexamethasone injection',
+  betame_freq: 'Stock-out (past month) – Betamethasone or dexamethasone injection',
+  iv_hydro: 'Commodity availability – IV hydrocortisone',
+  Iv_hydro_freq: 'Stock-out (past month) – IV hydrocortisone',
+  oral_hydro: 'Commodity availability – Oral hydrocortisone',
+  oral_freq: 'Stock-out (past month) – Oral hydrocortisone',
+  inj_oxytocin: 'Commodity availability – Injectable oxytocin',
+  oxyto_freq: 'Stock-out (past month) – Injectable oxytocin',
+  oxy_store: 'Oxytocin in cold storage',
+  carbetocin: 'Commodity availability – Heat-stable carbetocin',
+  carbe_freq: 'Stock-out (past month) – Heat-stable carbetocin',
+  tranexamic: 'Commodity availability – Tranexamic acid',
+  trane_freq: 'Stock-out (past month) – Tranexamic acid',
+  misoprostol: 'Commodity availability – Misoprostol',
+  miso_freq: 'Stock-out (past month) – Misoprostol',
+  ergometrine: 'Commodity availability – Ergometrine',
+  ergo_freq: 'Stock-out (past month) – Ergometrine',
+  nevirapine: 'Commodity availability – Nevirapine suspension',
+  nevira_freq: 'Stock-out (past month) – Nevirapine suspension',
+  nevirapine_tab: 'Commodity availability – AZT + 3TC + NVP',
+  nevirapine_tab_freq: 'Stock-out (past month) – AZT + 3TC + NVP',
+  azt: 'Commodity availability – AZT oral suspension',
+  azt_freq: 'Stock-out (past month) – AZT oral suspension',
+  abacavir_dtg: 'Commodity availability – ABC + 3TC + DTG',
+  abacavir_dtg_freq: 'Stock-out (past month) – ABC + 3TC + DTG',
+  tenofovir_alafenamide: 'Commodity availability – TAF + 3TC + DTG',
+  tenofovir_alafenamide_freq: 'Stock-out (past month) – TAF + 3TC + DTG',
+  dolutegravir: 'Commodity availability – Dolutegravir (DTG)',
+  dolutegravir_freq: 'Stock-out (past month) – Dolutegravir (DTG)',
+  abacavir_tdf: 'Commodity availability – DTG + 3TC + TDF',
+  abacavir_tdf_freq: 'Stock-out (past month) – DTG + 3TC + TDF',
+  naloxone: 'Commodity availability – Naloxone',
+  nalo_freq: 'Stock-out (past month) – Naloxone',
+  adrenaline: 'Commodity availability – Adrenaline (Epinephrine) 1:10,000',
+  adren_freq: 'Stock-out (past month) – Adrenaline (Epinephrine) 1:10,000',
+  atropine: 'Commodity availability – Atropine IV',
+  atropine_freq: 'Stock-out (past month) – Atropine IV',
+  amiodarone: 'Commodity availability – Amiodarone IV',
+  amiodarone_freq: 'Stock-out (past month) – Amiodarone IV',
+  caffeine: 'Commodity availability – Caffeine citrate',
+  caffe_freq: 'Stock-out (past month) – Caffeine citrate',
+  surfactant: 'Commodity availability – Surfactant',
+  surfa_freq: 'Stock-out (past month) – Surfactant',
+  bicarbonate: 'Commodity availability – Sodium bicarbonate',
+  biocar_freq: 'Stock-out (past month) – Sodium bicarbonate',
+  bcg_vaccine: 'Commodity availability – BCG vaccine',
+  bcg_frq: 'Stock-out (past month) – BCG vaccine',
+  polio: 'Commodity availability – Polio vaccine',
+  polio_freq: 'Stock-out (past month) – Polio vaccine',
+  hep_b: 'Commodity availability – Hep B vaccine',
+  hep_freq: 'Stock-out (past month) – Hep B vaccine',
+  formula: 'Commodity availability – Newborn formula',
+  formula_freq: 'Stock-out (past month) – Newborn formula',
+  progesterone: 'Commodity availability – Progesterone tabs',
+  proge_freq: 'Stock-out (past month) – Progesterone tabs',
+  e_contra: 'Commodity availability – Emergency contraception',
+  contra_freq: 'Stock-out (past month) – Emergency contraception',
+  progest_pills: 'Commodity availability – Progesterone only pills (POP)',
+  progest_freq: 'Stock-out (past month) – Progesterone only pills (POP)',
+  iud: 'Commodity availability – Hormonal IUD',
+  iud_freq: 'Stock-out (past month) – Hormonal IUD',
+  copper: 'Commodity availability – Non-hormonal (copper) IUD',
+  copper_freq: 'Stock-out (past month) – Non-hormonal (copper) IUD',
+  combined: 'Commodity availability – Combined oral contraceptives',
+  combined_freq: 'Stock-out (past month) – Combined oral contraceptives',
+  inj_implant: 'Commodity availability – Implant (Jadelle/Implanon/Levoplant)',
+  mplant_freq: 'Stock-out (past month) – Implant (Jadelle/Implanon/Levoplant)',
+  depo: 'Commodity availability – Inj. progesterone (Depo / Sayana press)',
+  depo_freq: 'Stock-out (past month) – Inj. progesterone (Depo / Sayana press)',
+  condoms: 'Commodity availability – Male condoms',
+  cond_freq: 'Stock-out (past month) – Male condoms',
+  fe_condoms: 'Commodity availability – Female condoms',
+  fe_cond_freq: 'Stock-out (past month) – Female condoms',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_EQUIPMENT_EVIDENCE_DESTS,
+  'Equipment'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_EQUIPMENT_EVIDENCE_DESTS,
+  'Equipment'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  computer: 'Computer for e-ordering',
+  fridge: 'Refrigerator presence & functionality',
+  fridge_temp: 'Refrigerator temp in range (2–8°C)',
+  cabinet: 'DDA controlled-substance cabinet',
+  lock_cabin: 'Other lockable cabinets',
+  label: 'Labelled medication shelves',
+  room_therm: 'Room thermometer visible',
+  therm_readings: 'Room temp 25–27°C',
+  receipt: 'Printed receipt capability',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_RECORD_YES_NO_FIELDS,
+  'Health Records for clients'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_RECORD_YES_NO_FIELDS,
+  'Health Information System'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  activity_logs: 'Activity logs in use',
+  activity_used: 'Activity logs used daily',
+  workload: 'Workload logs in use',
+  workload_used: 'Workload logs used daily',
+  auditing_report: 'Commodity audit reports present',
+  auditing_used: 'Audits used consistently',
+  inventory: 'Inventory tools (S11) present',
+  int_used: 'Inventory tools used consistently',
+  dda_reg: 'DDA register present',
+  dda_used: 'DDA register used consistently',
+});
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Pharmacy', ['opening'], 'Hours of operation');
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Pharmacy', ['opening'], 'Service Delivery');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  opening: 'Pharmacy accessibility during facility hours',
+});
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Pharmacy', PHARMACY_HRH_EVIDENCE_DESTS, 'HRH');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_HRH_EVIDENCE_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  pharmacist: 'Number of county-employed pharmacists',
+  contract_pharm: 'Number of contracted pharmacists',
+  clinical_pharm: 'Number of county-employed clinical pharmacists',
+  contract_pharm2: 'Number of contracted clinical pharmacists',
+  pharmce: 'Number of county-employed pharmaceutical technologists',
+  pharmtech: 'Number of contracted pharmaceutical technologists',
+  prese: 'Licensing file present (pharmacy board)',
+  on_duty: 'Pharmacy uncovered any time past month',
+  avail_opening: 'Pharmacy staff always available',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_INFRA_EVIDENCE_DESTS,
+  'Infrastructure'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  maintained: 'Building well maintained',
+  barrier: 'Pharmacy barrier from patients',
+  work_tables: 'Flat/washable work tables',
+  chairs: 'Chairs/stools for staff',
+  cabinets: 'Safety cabinets',
+  storage: 'Storage shelves/cabinets',
+  wash_basin: 'Wash basin with tap',
+  well_lit: 'Space well lit',
+  well_vent: 'Space well ventilated',
+  wall_clock: 'Wall clock / timer',
+  certification: 'Pharmacy board certification displayed',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  ['privacy'],
+  'Privacy/confidentiality'
+);
+assignMappedLabels_(FQA_HSS_BUILDING_BLOCK_MAP, 'Pharmacy', ['privacy'], 'Service Delivery');
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  privacy: 'Dispensing privacy',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_SOP_EVIDENCE_DESTS,
+  'Standard operating procedures/Protocols'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_SOP_EVIDENCE_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  handwashing: 'Handwashing protocols displayed',
+  request: 'Pharmacy request protocol/system',
+  del_medication: 'Standard med-instruction system',
+  sop_dispensing: 'Verify HCW instructions before dispensing',
+  sop_expiry: 'Expiry-tracking SOP',
+  moni_temp: 'Daily temp monitoring protocol',
+  recording: 'Med error/ADR reporting SOP',
+});
+
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Pharmacy', ['cpds'], 'Training');
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  ['cpds'],
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  cpds: 'Yearly CPDs required (verified)',
+});
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Pharmacy',
+  PHARMACY_WASH_EVIDENCE_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Pharmacy',
+  PHARMACY_WASH_EVIDENCE_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
+  water_source: 'Water source presence & functionality',
+  water_consistent: 'Consistent water past month',
+  drainage: 'Connected drainage',
+  soap_disp: 'Hand hygiene supplies in service areas',
+  sharps: 'Sharps used in pharmacy',
+  available_cont: 'Sharps container in every service area',
+  visible_cont: 'Sharps containers <3/4 full',
+});
+
+// Operating Theatre leftovers (no thematic, HSS, or attribute name yet):
+// facility_unit, theatre_space_*, tranexamic, anaesth_assist_24hr,
+// surg_assist_24hr, marsupial.
+// Facility General leftovers (no thematic, HSS, or attribute name yet):
+// units_*.
+// Pharmacy leftovers (no thematic, HSS, or attribute name yet): units_*.
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
