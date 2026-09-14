@@ -2490,6 +2490,12 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "specify_latrine")'
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "clean_freq")'), 'Bathroom clean freq.');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "gender_seperation")'), 'Gender-sep sanitation');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "instr_cleaning")'), 'Instrument cleaning area');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "uniforms_badges")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Facility General", "pest_control")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "uniforms_badges")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Facility General", "pest_control")'), 'Leadership & Governance');
+assert.strictEqual(g('attributeNameFor_("Facility General", "uniforms_badges")'), 'Staff uniforms & ID badges');
+assert.strictEqual(g('attributeNameFor_("Facility General", "pest_control")'), 'Pest-control mechanism');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "lidocaine")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "spinal_packs")'), 'Commodities');
 assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "socks")'), 'Commodities');
@@ -3093,6 +3099,31 @@ assert.ok(otWashScoreTable.some(function (row) {
 }));
 assert.ok(!otWashScoreTable.some(function (row) {
   return row[8] === 'specify_latrine';
+}));
+
+sandbox.__fgAdherenceScoreSheets = [{
+  department: 'Facility General',
+  values: [
+    ['county', 'facility', 'facility_level', 'uniforms_badges', 'pest_control'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'No'],
+  ],
+}];
+const fgAdherenceScoreTable = g(
+  'buildFqaScoreTableRows_(__fgAdherenceScoreSheets, __scoreWeighting)'
+);
+assert.ok(fgAdherenceScoreTable.some(function (row) {
+  return row[8] === 'uniforms_badges' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Staff uniforms & ID badges' &&
+    row[10] === 1;
+}));
+assert.ok(fgAdherenceScoreTable.some(function (row) {
+  return row[8] === 'pest_control' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Pest-control mechanism' &&
+    row[10] === 0;
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

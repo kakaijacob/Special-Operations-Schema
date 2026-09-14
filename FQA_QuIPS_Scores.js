@@ -19,7 +19,8 @@
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
- * dests also set hss_building_block and attribute_name. Remaining
+ * dests also set hss_building_block and attribute_name. Facility
+ * General adherence dests also set those columns. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
  *
@@ -78,7 +79,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity, Lab, and
  * Operating Theatre dests use the same thematic_area labels.
- * Other departments stay empty until their groupings are defined.
+ * Facility General adherence dests use Adherence to evidence
+ * based practice. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -104,7 +107,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * service dests are Service Delivery. Operating Theatre SOP
  * dests are Leadership & Governance. Operating Theatre
  * training dests are Human Resource for Health. Operating
- * Theatre WASH dests are Service Delivery.
+ * Theatre WASH dests are Service Delivery. Facility General
+ * adherence dests are Leadership & Governance.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -119,7 +123,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre dests use the provided labels.
+ * Operating Theatre dests and Facility General adherence dests
+ * use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1578,6 +1583,26 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   gender_seperation: 'Gender-sep sanitation',
   mens_hygiene: 'Menstrual hygiene mgmt',
   instr_cleaning: 'Instrument cleaning area',
+});
+
+// Facility General adherence dests from FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS.
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Facility General',
+  FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS,
+  'Adherence to evidence based practice'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Facility General',
+  FACILITY_GENERAL_ADHERENCE_YES_NO_FIELDS,
+  'Leadership & Governance'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Facility General', {
+  uniforms_badges: 'Staff uniforms & ID badges',
+  pest_control: 'Pest-control mechanism',
 });
 
 function thematicAreaFor_(department, attribute) {

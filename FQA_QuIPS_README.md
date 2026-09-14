@@ -79,9 +79,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    Human Resource for Health. Operating Theatre WASH dests from
    `OT_WASH_FIELDS` fill WASH (Water, Sanitation, Hygeine)/IPC /
    Service Delivery (`gender_sep` → `gender_seperation`;
-   `specify_latrine` is text). Other `thematic_area` values,
-   `hss_building_block`, and `attribute_name` stay blank until those
-   labels are added. You can still run `writeFqaScoreTable` on its own.
+   `specify_latrine` is text). Facility General adherence dests
+   (`uniforms_badges`, `pest_control`) fill Adherence to evidence
+   based practice / Leadership & Governance. Other `thematic_area`
+   values, `hss_building_block`, and `attribute_name` stay blank
+   until those labels are added. You can still run
+   `writeFqaScoreTable` on its own.
 
 ## Tests
 
