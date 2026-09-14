@@ -2259,6 +2259,46 @@ assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "clean_washroom")'), 'WAS
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "access_disability")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "menstrual_hygiene")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "sharp3_4full")'), '');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "premature_care")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "referral_weight")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nutritional_services")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "nursing_care")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "congenital_care")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "asphyxia_care")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "blood_count")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "malaria_test")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "urine")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "blood_cultures")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "lumbar_puncture")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "coombs_testing")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "bone_chemistry")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "blood_group")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "urinalysis")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "crp_test")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "thyroid_test")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "electrolyte")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "creatinine")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "liver_function")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "glucose_tests")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "bilirubin_testing")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "hiv_test")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "cranial_ultrasound")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "x_ray")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "imaging_time")'), 'Services offered');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_neonatologists")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_neonatologists")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_paediatrician")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contracted_paediatrician")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "neo_ped_24hrs")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_mo")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_mo")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_mo")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_nurses")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_nurses")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_reg_nurses")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "employed_co")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "contract_co")'), 'HRH');
+assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "adequate_co")'), 'HRH');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2330,8 +2370,8 @@ assert.strictEqual(
 sandbox.__nbuScoreSheets = [{
   department: 'Newborn Unit',
   values: [
-    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'cctv', 'sepsis_sop', 'water_source', 'functional_nbu'],
-    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes', 'They have displayed, up to date protocols', 'Present, functional', 'Yes'],
+    ['county', 'facility', 'facility_level', 'tetraycline', 'phototherapy_lamp', 'kmc_initiated', 'death_register', 'nbu_open', 'cctv', 'sepsis_sop', 'water_source', 'premature_care', 'neo_ped_24hrs', 'functional_nbu'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Always available', 'Yes, functional', 'Always', 'Yes', '24 hours per day', 'Yes', 'They have displayed, up to date protocols', 'Present, functional', 'Yes', 'Yes', 'Yes'],
   ],
 }];
 const nbuScoreTable = g(
@@ -2360,6 +2400,12 @@ assert.ok(nbuScoreTable.some(function (row) {
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'water_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'premature_care' && row[6] === 'Services offered';
+}));
+assert.ok(nbuScoreTable.some(function (row) {
+  return row[8] === 'neo_ped_24hrs' && row[6] === 'HRH';
 }));
 assert.ok(nbuScoreTable.some(function (row) {
   return row[8] === 'functional_nbu' && row[6] === '';

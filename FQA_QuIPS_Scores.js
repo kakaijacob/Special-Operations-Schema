@@ -13,8 +13,9 @@
  * operation columns are Hours of operation, and infrastructure
  * columns are Infrastructure, privacy columns are
  * Privacy/confidentiality, SOP columns are Standard operating
- * procedures/Protocols, and WASH/IPC columns are WASH (Water,
- * Sanitation, Hygeine)/IPC. hss_building_block and attribute_name
+ * procedures/Protocols, WASH/IPC columns are WASH (Water,
+ * Sanitation, Hygeine)/IPC, service columns are Services offered,
+ * and HRH columns are HRH. hss_building_block and attribute_name
  * stay blank until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
@@ -66,8 +67,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * hours of operation columns are Hours of operation,
  * infrastructure columns are Infrastructure, privacy columns are
  * Privacy/confidentiality, SOP columns are Standard operating
- * procedures/Protocols, and WASH/IPC columns are WASH (Water,
- * Sanitation, Hygeine)/IPC. Other departments stay empty until their
+ * procedures/Protocols, WASH/IPC columns are WASH (Water,
+ * Sanitation, Hygeine)/IPC, service columns are Services offered,
+ * and HRH columns are HRH. Other departments stay empty until their
  * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
@@ -330,6 +332,69 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
   'access_disability',
   'menstrual_hygiene',
 ], 'WASH (Water, Sanitation, Hygeine)/IPC');
+
+// Premature NB care → premature_care, Stable-infant referral wt →
+// referral_weight, Stable-baby nursing → nursing_care,
+// Congenital malf. care → congenital_care, Asphyxia/meconium care →
+// asphyxia_care, TBC/FHG capability → blood_count, Urinalysis → urine
+// and urinalysis, Coombs test → coombs_testing, Blood group/X-match →
+// blood_group, TFT → thyroid_test, U&E/Creatinine → electrolyte and
+// creatinine, LFT → liver_function, Glucose (glucometer) →
+// glucose_tests, Bilirubin test → bilirubin_testing, HIV EID →
+// hiv_test, Imaging turnaround → imaging_time.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'premature_care',
+  'referral_weight',
+  'nutritional_services',
+  'nursing_care',
+  'congenital_care',
+  'asphyxia_care',
+  'blood_count',
+  'malaria_test',
+  'urine',
+  'blood_cultures',
+  'lumbar_puncture',
+  'coombs_testing',
+  'bone_chemistry',
+  'blood_group',
+  'urinalysis',
+  'crp_test',
+  'thyroid_test',
+  'electrolyte',
+  'creatinine',
+  'liver_function',
+  'glucose_tests',
+  'bilirubin_testing',
+  'hiv_test',
+  'cranial_ultrasound',
+  'x_ray',
+  'imaging_time',
+], 'Services offered');
+
+// employed_paed → employed_paediatrician, contract_paed →
+// contracted_paediatrician, available_24hrs → neo_ped_24hrs,
+// employed_mos → employed_mo, contract_mos → contract_mo,
+// adeq_mos → adequate_mo, employed_rn → employed_nurses,
+// contract_rn → contract_nurses, adeq_rn → adequate_reg_nurses,
+// employed_cos → employed_co, contract_cos → contract_co,
+// adeq_cos → adequate_co. paed_score, neonatologists_score,
+// nurses_rn_score, and cos_score are not transformed dests.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Newborn Unit', [
+  'employed_neonatologists',
+  'contract_neonatologists',
+  'employed_paediatrician',
+  'contracted_paediatrician',
+  'neo_ped_24hrs',
+  'employed_mo',
+  'contract_mo',
+  'adequate_mo',
+  'employed_nurses',
+  'contract_nurses',
+  'adequate_reg_nurses',
+  'employed_co',
+  'contract_co',
+  'adequate_co',
+], 'HRH');
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);
