@@ -22,7 +22,8 @@
  * dests also set hss_building_block and attribute_name. Facility
  * General dests also set those columns. Pharmacy dests also set
  * those columns. Newborn Unit dests also set those columns.
- * units_* leftovers stay blank. Remaining hss_building_block and
+ * Inpatient Maternity dests also set those columns. units_*
+ * leftovers stay blank. Remaining hss_building_block and
  * attribute_name values stay blank until those labels are
  * provided.
  *
@@ -92,8 +93,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Facility General WASH dests use WASH (Water, Sanitation,
  * Hygeine)/IPC. Pharmacy dests use the same thematic_area
  * labels. Newborn Unit dests also fill those same
- * thematic_area labels, including Training. Other
- * departments stay empty until their groupings are defined.
+ * thematic_area labels, including Training. Inpatient
+ * Maternity dests also fill those same thematic_area
+ * labels. Other departments stay empty until their
+ * groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -139,7 +142,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Leadership & Governance. Pharmacy training dests are
  * Human Resource for Health. Pharmacy WASH dests are
  * Service Delivery. Newborn Unit dests use those same
- * HSS building-block labels.
+ * HSS building-block labels. Inpatient Maternity dests
+ * use those same HSS building-block labels.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -155,8 +159,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 /**
  * Attribute → display name, by department sheet name.
  * Operating Theatre dests, Facility General dests,
- * Pharmacy dests, and Newborn Unit dests use the provided
- * labels.
+ * Pharmacy dests, Newborn Unit dests, and Inpatient
+ * Maternity dests use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -879,7 +883,7 @@ assignMappedLabels_(
 // emergency_system. triage/1-10, charts/1-13, encourage/1-7, and
 // discharge/1-12 are the select_multiple indicators. sc_stay is not
 // a transformed dest.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_ADHERENCE_DESTS = [
   'ultrasound_adherence',
   'equipment_calibration',
   'documentation_adherence',
@@ -911,7 +915,86 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   selectMultipleAttributeNames_('labour_charts', MATERNITY_CHARTS_CHOICES),
   selectMultipleAttributeNames_('labour_counselling', MATERNITY_LABOUR_COUNSELLING_CHOICES),
   selectMultipleAttributeNames_('discharge_counselling', MATERNITY_DISCHARGE_COUNSELLING_CHOICES)
-), 'Adherence to evidence based practice');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_ADHERENCE_DESTS,
+  'Adherence to evidence based practice'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_ADHERENCE_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  ultrasound_adherence: 'US maintenance (per manual)',
+  equipment_calibration: 'US calibration (per manual)',
+  documentation_adherence: 'Shift handover documented',
+  informed_consent: 'Consent for non-essential attendees',
+  staff_meeting: 'Monthly QI meeting',
+  arrival_assessment: 'Triage within 30 min',
+  labour_care_guide: 'Partograph used (≥5cm)',
+  pain_drugs: 'Pain relief offered',
+  companion_support: 'Birth companions allowed',
+  delivery_practices: 'Client-preferred delivery position',
+  information_sharing: 'Labour progress info to client',
+  svd_support: 'Average length of stay after normal vaginal delivery (hours)',
+  roaming_staff: '24h rooming-in',
+  labour_support: 'Breastfeeding support (PP)',
+  vital_signs_adherence: 'PP vitals/lochia daily',
+  pnc_adherence: 'PNC check within 48h',
+  grief_support: 'Grief / bereavement support',
+  examination_adherence: 'Newborn head-to-toe <24h',
+  clinical_review: 'Daily newborn exam (pre-discharge)',
+  latching_support: 'Latching confirmed at discharge',
+  passage_of_urine: 'Urination/stool at discharge',
+  register_complete: 'Newborn in birth register',
+  maternal_observation: 'Newborn in maternal chart',
+  feeding_adherence: 'Alternative feeding arrangements',
+  emergency_system: 'Mothers near sick newborns',
+  triage_assessment_danger_sign_evaluation: 'Triage: Danger signs',
+  triage_assessment_vital_signs: 'Triage: Vital signs',
+  triage_assessment_foetal_hr: 'Triage: Foetal HR',
+  triage_assessment_rom_evaluation: 'Triage: ROM',
+  triage_assessment_contraction_evaluation: 'Triage: Contractions',
+  triage_assessment_cervical_dilation_checked_if_indicated: 'Triage: Cervical dilation',
+  triage_assessment_foetal_presentation_evaluation: 'Triage: Foetal presentation',
+  triage_assessment_foetal_descent_engagement: 'Triage: Foetal descent',
+  triage_assessment_edd_confirmed: 'Triage: EDD confirmed',
+  labour_charts_blood_pressure_recorded_every_4_hours: 'Partograph: BP q4h',
+  labour_charts_foetal_heart_rate_recorded_half_hourly: 'Partograph: FHR q30min',
+  labour_charts_uterine_contractions_recorded_every_half_hourly: 'Partograph: Contractions q30min',
+  labour_charts_cervical_dilatation_recorded_every_4_hours: 'Partograph: Cervical dilation q4h',
+  labour_charts_foetal_descent_recorded: 'Partograph: Foetal descent',
+  labour_charts_moulding_recorded: 'Partograph: Moulding',
+  labour_charts_state_of_membranes_or_colour_of_the_liquor_recorded: 'Partograph: Membranes/liquor',
+  labour_charts_outcome_of_the_baby_recorded: 'Partograph: Baby outcome',
+  labour_charts_medication_or_fluid_given_recorded: 'Partograph: Meds/fluids',
+  labour_charts_partograph_labour_care_guide_started_when_cervix_5cm: 'Partograph: Started at ≥5cm',
+  labour_charts_postpartum_estimated_blood_loss_recorded: 'Partograph: PP blood loss',
+  labour_charts_postpartum_perineal_status_recorded: 'Partograph: PP perineal status',
+  labour_charts_none: 'No partograph',
+  labour_counselling_encourage_mobility_in_labour: 'Labour counsel: Mobility',
+  labour_counselling_change_of_position: 'Labour counsel: Position changes',
+  labour_counselling_rest_between_contractions: 'Labour counsel: Rest',
+  labour_counselling_breathing_exercises: 'Labour counsel: Breathing',
+  labour_counselling_drinking_fluids_in_labour: 'Labour counsel: Fluids',
+  labour_counselling_bladder_care: 'Labour counsel: Bladder care',
+  labour_counselling_none: 'No labour counsel',
+  discharge_counselling_counseling_on_neonatal_danger_signs: 'Discharge: Neonatal danger signs',
+  discharge_counselling_counseling_on_maternal_pp_danger_signs: 'Discharge: PP danger signs',
+  discharge_counselling_counseling_on_when_to_return_for_postnatal_care: 'Discharge: Return for PNC',
+  discharge_counselling_pp_family_planning_counseling: 'Discharge: PP family planning',
+  discharge_counselling_breastfeeding_counseling: 'Discharge: Breastfeeding',
+  discharge_counselling_hygiene_for_infant_cord_care: 'Discharge: Infant hygiene',
+  discharge_counselling_hygiene_for_mum: 'Discharge: Maternal hygiene',
+  discharge_counselling_return_to_coitus_counseling: 'Discharge: Return to coitus',
+  discharge_counselling_counseling_on_nutrition: 'Discharge: Nutrition',
+  discharge_counselling_use_of_mosquito_nets: 'Discharge: Mosquito nets',
+  discharge_counselling_counseling_on_keeping_baby_warm: 'Discharge: Keep baby warm',
+});
 
 // latex → latex_gloves, sterile → sterile_gloves, iv → iv_cannulae,
 // bcg → bcg_availability, hepb → hepb_availability, protein →
@@ -919,7 +1002,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
 // glucometer_strip → glucometer_strips, hiv → hiv_test_kits,
 // syphilis → syphilis_test_kits. nasg and calibrated_drapes are not
 // transformed dests.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_COMMODITY_DESTS = [
   'tetracycline',
   'chlorhexidine',
   'vit_k',
@@ -947,7 +1030,48 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'glucose_strips',
   'ketone_strips',
   'glucometer_strips',
-], 'Commodities');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_COMMODITY_DESTS,
+  'Commodities'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_COMMODITY_DESTS,
+  'Commodities'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  tetracycline: 'Tetracycline eye ointment 1%',
+  chlorhexidine: 'Chlorhexidine 7.1% (cord)',
+  vit_k: 'Vitamin K injection',
+  bcg_availability: 'BCG vaccine',
+  hepb_availability: 'HepB vaccine',
+  oxytocin: 'Oxytocin',
+  hsc: 'Heat-stable Carbetocin',
+  misoprostol: 'Misoprostol',
+  tranexamic: 'Tranexamic acid',
+  magnesium: 'MgSO4',
+  calcium: 'Calcium gluconate',
+  hydralazine: 'Hydralazine',
+  saline: 'Normal saline',
+  methyldopa: 'Methyldopa',
+  dexamethasone: 'Injectable dexamethasone',
+  latex_gloves: 'Latex gloves',
+  sterile_gloves: 'Sterile gloves',
+  masks: 'Masks (PPE)',
+  aprons: 'Aprons',
+  iv_cannulae: 'IV giving sets',
+  malaria_rdt: 'Malaria RDT',
+  syphilis_test_kits: 'Syphilis RDT',
+  hiv_test_kits: 'HIV rapid test kit',
+  protein_strips: 'Urine protein dipsticks',
+  glucose_strips: 'Urine glucose dipsticks',
+  ketone_strips: 'Urine ketone dipsticks',
+  glucometer_strips: 'Glucometer test strips',
+});
 
 // obstetric → obstetric_kit, preclampsia → preeclampsia_kit,
 // pharyngeal → pharyngeal_airway, ultrasound_machine →
@@ -958,7 +1082,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
 // oxygen_equipment, o2 → o2_source. supplies/1-6, em_tray/1-13, and
 // equipment/1-13 are select_multiple indicators. pphkits and
 // pre_eclampia are not transformed dests.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_EQUIPMENT_DESTS = [
   'incubators',
   'ambubags',
   'vd_kits',
@@ -997,7 +1121,86 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   selectMultipleAttributeNames_('equipment_supplies', MATERNITY_SUPPLIES_CHOICES),
   selectMultipleAttributeNames_('equipment_em_tray', MATERNITY_EM_TRAY_CHOICES),
   selectMultipleAttributeNames_('equipment_resus_cart', MATERNITY_RESUS_CART_CHOICES)
-), 'Equipment');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_EQUIPMENT_DESTS,
+  'Equipment'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_EQUIPMENT_DESTS,
+  'Equipment'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  incubators: 'Portable incubator',
+  ambubags: 'Ambubags',
+  vd_kits: 'AVD kits',
+  obstetric_kit: 'OH kits / trolley',
+  preeclampsia_kit: 'Pre-eclampsia kits',
+  resus_kits: 'NNR kits / trays',
+  pharyngeal_airway: 'Oropharyngeal airways',
+  glucometer: 'Glucometer',
+  fetoscopes: 'Number of fetoscopes',
+  ultrasound_in_unit: 'Ultrasound (functional)',
+  doppler: 'Number of working foetal doppler machines',
+  oximeter: 'Pulse oximeter',
+  exam_light: 'Exam light',
+  vacuum_extractor: 'Manual vacuum extractor',
+  delivery_beds: 'Number of delivery beds',
+  suction: 'Suction pump',
+  catheter_quantity: 'Newborn suction catheters',
+  suction_bulbs: 'Suction bulbs',
+  adult_scale: 'Adult scale',
+  infant_scale: 'Infant scale (100g)',
+  stadiometer: 'Measuring tape/stadiometer',
+  thermometers: 'Thermometers',
+  stethoscopes: 'Stethoscopes',
+  laryngoscope: 'Laryngoscope',
+  bp_apparatus: 'BP apparatuses',
+  ctg_machine: 'CTG',
+  towels: 'Clean towels supply',
+  oxygen_quantity: 'No towel shortage (3mo)',
+  oxygen_equipment: 'Functional O2 source',
+  o2_source: 'O2 always available (3mo)',
+  storage: 'Breast-milk storage',
+  milk_bank: 'Milk bank access',
+  refrigerator: 'Functional refrigerator',
+  resuscitaire: 'Resuscitaire/radiant warmer',
+  equipment_supplies_full_oxygen_cylinders: 'O2: Cylinders/central',
+  equipment_supplies_oxygen_concentrator: 'O2: Concentrator',
+  equipment_supplies_oxygen_masks: 'O2: Masks (various sizes)',
+  equipment_supplies_non_rebreather_masks: 'O2: Non-rebreather masks',
+  equipment_supplies_nasal_prongs: 'O2: Nasal prongs',
+  equipment_em_tray_adrenaline_inj: 'Emergency drug: Adrenaline',
+  equipment_em_tray_atropine: 'Emergency drug: Atropine',
+  equipment_em_tray_ventolin_inh: 'Emergency drug: Ventolin',
+  equipment_em_tray_hydrocortisone_inj: 'Emergency drug: Hydrocortisone',
+  equipment_em_tray_diazepam_inj: 'Emergency drug: Diazepam',
+  equipment_em_tray_calcium_gluconate_inj: 'Emergency drug: Calcium gluconate',
+  equipment_em_tray_mgso4_inj: 'Emergency drug: MgSO4',
+  equipment_em_tray_labetalol_inj: 'Emergency drug: Labetalol',
+  equipment_em_tray_phenobarbitol_inj: 'Emergency drug: Phenobarbitone',
+  equipment_em_tray_misoprostol_tabs: 'Emergency drug: Misoprostol',
+  equipment_em_tray_normal_saline: 'Emergency drug: Normal saline',
+  equipment_em_tray_tranexamic_acid_inj: 'Emergency drug: TXA',
+  equipment_em_tray_no_emergency_tray_available: 'No emergency tray available',
+  equipment_resus_cart_ambubag_or_bvm: 'Resus cart: Ambubag/BVM',
+  equipment_resus_cart_reservoir_bag: 'Resus cart: Reservoir bag',
+  equipment_resus_cart_facemasks: 'Resus cart: Facemasks',
+  equipment_resus_cart_airway: 'Resus cart: Airway',
+  equipment_resus_cart_bulb_sucker: 'Resus cart: Bulb sucker',
+  equipment_resus_cart_gyn_gloves: 'Resus cart: Gyn gloves',
+  equipment_resus_cart_suture_pack: 'Resus cart: Suture pack',
+  equipment_resus_cart_branulars: 'Resus cart: Branulars',
+  equipment_resus_cart_syringes: 'Resus cart: Syringes',
+  equipment_resus_cart_needles: 'Resus cart: Needles',
+  equipment_resus_cart_alcohol_swabs: 'Resus cart: Alcohol swabs',
+  equipment_resus_cart_water_for_injection: 'Resus cart: Water for injection',
+  equipment_resus_cart_no_resuscitation_cart_available: 'No resuscitation cart available',
+});
 
 // birth → birth_notification, bregister → birth_register, death →
 // death_notification, dregister → death_register, birth_death →
@@ -1009,7 +1212,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
 // perinatal_death → perinatal_death_notification, maternal_review →
 // maternal_death_review, perinatl_review → perinatal_death_review.
 // patient_file/1-12 are the select_multiple indicators.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_RECORDS_DESTS = [
   'birth_notification',
   'birth_register',
   'death_notification',
@@ -1032,7 +1235,53 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'autopsy_forms',
 ].concat(
   selectMultipleAttributeNames_('health_records_patient_file', MATERNITY_PATIENT_FILE_CHOICES)
-), 'Health Records for clients');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_RECORDS_DESTS,
+  'Health Records for clients'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_RECORDS_DESTS,
+  'Health Information System'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  birth_notification: 'Birth register available',
+  birth_register: 'Birth register used',
+  death_notification: 'Death register available',
+  death_register: 'Death register used',
+  birth_death_notification: 'Delivery register available',
+  delivery_notes: 'Delivery register used',
+  delivery_register: 'Postnatal register available',
+  postnatal_register: 'Postnatal register used',
+  postnatal_register_alt: 'Newborn register available',
+  nutrition_form: 'Newborn register used',
+  newborn_register: 'Nutrition register available',
+  nursing_register: 'KMC register available',
+  kmc_chart: 'Civil registration linkage',
+  inpatient_maternity_file: 'Maternity file available',
+  newborn_file: 'Newborn file available',
+  maternal_death_notification: 'Maternal death notification (370)',
+  perinatal_death_notification: 'Perinatal death notification (369)',
+  maternal_death_review: 'Maternal death review (372)',
+  perinatal_death_review: 'Perinatal death review (371)',
+  autopsy_forms: 'Verbal autopsy forms',
+  health_records_patient_file_observation_charts: 'File: Observation charts',
+  health_records_patient_file_patient_cardex: 'File: Patient cardex',
+  health_records_patient_file_fluid_ins_outs_record: 'File: Fluid I/O record',
+  health_records_patient_file_partograph: 'File: Partograph',
+  health_records_patient_file_treatment_sheet: 'File: Treatment sheet',
+  health_records_patient_file_care_plans: 'File: Care plans',
+  health_records_patient_file_discharge_summary: 'File: Discharge summary',
+  health_records_patient_file_consent_form: 'File: Consent form',
+  health_records_patient_file_pre_medication_notes: 'File: Pre-medication notes',
+  health_records_patient_file_theatre_notes: 'File: Theatre notes',
+  health_records_patient_file_consultation_progress_notes: 'File: Progress notes',
+  health_records_patient_file_none: 'No impatient maternity file',
+});
 
 // operation → caesarean_wait_hours
 assignMappedLabels_(
@@ -1041,14 +1290,27 @@ assignMappedLabels_(
   ['caesarean_wait_hours'],
   'Hours of operation'
 );
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  ['caesarean_wait_hours'],
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  caesarean_wait_hours: 'Average hours open per day',
+});
 
 // rehab → rehab_staff. Other listed HRH names are not transformed dests.
+assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', ['rehab_staff'], 'HRH');
 assignMappedLabels_(
-  FQA_THEMATIC_AREA_MAP,
+  FQA_HSS_BUILDING_BLOCK_MAP,
   'Inpatient Maternity',
   ['rehab_staff'],
-  'HRH'
+  'Human Resource for Health'
 );
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  rehab_staff: 'Physiotherapy access',
+});
 
 // benches → waiting_benches, material → building_material, structures →
 // sound_structures, lighting → well_lit, rooms → exam_rooms, access →
@@ -1058,7 +1320,7 @@ assignMappedLabels_(
 // childbirth_area_privacy, temperature → temperature_control,
 // draught → draught_free, dust → dust_evidence. education/1-7 are
 // select_multiple indicators. beds_share is not a transformed dest.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_INFRA_DESTS = [
   'triage_area',
   'waiting_area',
   'waiting_benches',
@@ -1084,18 +1346,81 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'dust_evidence',
 ].concat(
   selectMultipleAttributeNames_('infrastructure_education', MATERNITY_EDUCATION_CHOICES)
-), 'Infrastructure');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_INFRA_DESTS,
+  'Infrastructure'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_INFRA_DESTS,
+  'Infrastructure'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  triage_area: 'Designated triage area',
+  waiting_area: 'Waiting area sufficient',
+  waiting_benches: 'Enough chairs/benches',
+  ventilation: 'Waiting area ventilated',
+  maintenance_infrastructure: 'Waiting area clean',
+  building_material: 'Patient ed in waiting area',
+  sound_structures: 'Unit well maintained',
+  well_lit: 'Exam spaces lit',
+  fan_available: 'Exam spaces ventilated',
+  exam_rooms: 'Number of patient exam rooms',
+  disabled_access: 'Nurse call system',
+  isolation_space: 'Isolation area',
+  fire_extinguishers: 'Fire extinguishers in place',
+  cabinets: 'Locked drug cabinets',
+  clear_signage: 'Facility signage',
+  service_charter: 'Service charter visible',
+  labour_area_privacy: 'Labour area private',
+  childbirth_area_privacy: 'Delivery area private',
+  recovery_room: 'Recovery area',
+  resuscitation_area: 'Newborn resus area in L&D',
+  temperature_control: 'Childbirth area ≥25°C',
+  draught_free: 'Childbirth area draught-free',
+  dust_evidence: 'No dust/blood/trash visible',
+  infrastructure_education_breastfeeding: 'Health ed: Breastfeeding',
+  infrastructure_education_neonatal_danger_signs: 'Health ed: Neonatal danger signs',
+  infrastructure_education_maternal_postpartum_danger_signs: 'Health ed: PP danger signs',
+  infrastructure_education_family_planning_options: 'Health ed: Family planning',
+  infrastructure_education_hygiene: 'Health ed: Hygiene',
+  infrastructure_education_immunization: 'Health ed: Immunization',
+});
 
 // visual → visual_privacy, auditory → auditory_privacy, files →
 // files_privacy, beds_space → bed_spacing, barrier → visual_barrier.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_PRIVACY_DESTS = [
   'visual_privacy',
   'auditory_privacy',
   'files_privacy',
   'single_rooms',
   'bed_spacing',
   'visual_barrier',
-], 'Privacy/confidentiality');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_PRIVACY_DESTS,
+  'Privacy/confidentiality'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_PRIVACY_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  visual_privacy: 'Exam room visual privacy',
+  auditory_privacy: 'Exam room auditory privacy',
+  files_privacy: 'Files in locked storage',
+  single_rooms: 'L&D privacy (rooms/curtains)',
+  bed_spacing: 'L&D beds ≥4ft apart',
+  visual_barrier: 'Visual barriers during exams',
+});
 
 // pocus → pocus_service, ultrasound → ultrasound_service, xray →
 // xray_service, gestation → gestation_ultrasound, anomalies →
@@ -1103,7 +1428,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
 // uterotonics_service, breastfeeding_counsel → breastfeeding_service,
 // newborn_care → newborn_care_service, immunization/1-4 are
 // select_multiple indicators. eid is not a transformed dest.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_SERVICES_DESTS = [
   'pocus_service',
   'ultrasound_service',
   'xray_service',
@@ -1149,7 +1474,65 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'glucose_lab',
 ].concat(
   selectMultipleAttributeNames_('services_immunization', MATERNITY_IMMUNIZATION_CHOICES)
-), 'Services offered');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_SERVICES_DESTS,
+  'Services offered'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_SERVICES_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  pocus_service: 'POCUS ultrasound offered',
+  ultrasound_service: 'Comprehensive ultrasound',
+  xray_service: 'X-ray on-site',
+  foetal_viability: 'US: Foetal viability',
+  no_foetuses: 'Ultrasound to determine number of foetuses offered',
+  gestation_ultrasound: 'US: Gestational age',
+  anomalies_service: 'US: Foetal anomalies',
+  placenta_det: 'US: Placental insufficiency',
+  ctg_service: 'CTG non-stress test',
+  uterotonics_service: 'Parenteral uterotonics',
+  uterotonics_freq: 'Parenteral uterotonics (6mo)',
+  antibiotics_service: 'Parenteral antibiotics',
+  antibiotics_freq: 'Parenteral antibiotics (6mo)',
+  anticonvulsant_lab: 'Anticonvulsants (HDP)',
+  anticonvulsant_freq: 'Anticonvulsants HDP (6mo)',
+  retained_placenta_service: 'Removal of retained products',
+  retained_freq: 'Removal retained products (6mo)',
+  placenta_service: 'Manual placenta removal',
+  placenta_freq: 'Manual placenta removal (6mo)',
+  avd_service: 'Assisted vaginal delivery',
+  avd_freq: 'AVD (6mo)',
+  resuscitation_service: 'Neonatal resuscitation',
+  resuscitation_freq: 'Neonatal resuscitation (6mo)',
+  perineal_care: 'Perineal care',
+  ppfp_service: 'PPFP counseling',
+  breastfeeding_service: 'Breastfeeding counseling',
+  newborn_care_service: 'Essential newborn care',
+  microscopy_lab: 'Microscopy/wet mounts',
+  hgb_lab: 'Full hemogram/Hgb',
+  urinalysis_lab: 'Urinalysis',
+  urine_rapid_lab: 'Urine pregnancy test',
+  urine_protein_lab: 'Urine protein dipstick',
+  urine_glucose_lab: 'Urine glucose dipstick',
+  hiv_rapid_lab: 'HIV rapid test',
+  dbs_lab: 'HIV DBS / VL',
+  rpr_vdrl: 'Syphilis (RPR/VDRL)',
+  blood_group_lab: 'Blood group & Rh',
+  malaria_lab: 'Malaria smear',
+  hep_b_lab: 'Hepatitis B test',
+  tb_testing: 'TB screening',
+  glucose_lab: 'Blood glucose (glucometer)',
+  services_immunization_bcg: 'BCG vaccine offered',
+  services_immunization_hep_b: 'HepB vaccine offered',
+  services_immunization_opv: 'OPV vaccine offered',
+});
 
 // pph → pph_sop, pre_eclampsia → pre_eclampsia_sop, sepsis →
 // sepsis_sop, newborn_mgt → newborn_mgt_sop, handwashing →
@@ -1157,7 +1540,7 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
 // procurement_protocol, sop → maternity_sop, checklist →
 // maternity_checklist. policy_a/1-11, policy_b/1-11, policy_c/1-11,
 // and policy_d/1-9 are the select_multiple indicators.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_SOP_DESTS = [
   'intrapartum_sop',
   'pph_sop',
   'pre_eclampsia_sop',
@@ -1175,10 +1558,90 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   selectMultipleAttributeNames_('sop_policy_b', MATERNITY_POLICY_B_CHOICES),
   selectMultipleAttributeNames_('sop_policy_c', MATERNITY_POLICY_C_CHOICES),
   selectMultipleAttributeNames_('sop_policy_d', MATERNITY_POLICY_D_CHOICES)
-), 'Standard operating procedures/Protocols');
+);
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_SOP_DESTS,
+  'Standard operating procedures/Protocols'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_SOP_DESTS,
+  'Leadership & Governance'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  intrapartum_sop: 'Intrapartum care protocol',
+  pph_sop: 'OH job-aid',
+  pre_eclampsia_sop: 'Pre-eclampsia job-aid',
+  eclampsia_sop: 'Eclampsia job-aid',
+  sepsis_sop: 'Maternal sepsis job-aid',
+  newborn_mgt_sop: 'NNR protocol displayed',
+  resuscitation_sop: 'Maternal resus protocol',
+  handwashing_sop: 'Handwashing protocol',
+  referral_sop: 'Referral protocol',
+  procurement_protocol: 'Procurement protocol',
+  maternity_sop: 'US operating SOP',
+  maternity_checklist: 'US recording SOP',
+  sop_policy_a_pain_management_in_labour: 'Protocol: Pain management',
+  sop_policy_a_breastfeeding: 'Protocol: Breastfeeding',
+  sop_policy_a_postnatal_care_in_the_maternity_and_or_postnatal_care_areas_of_the_maternity_unit:
+    'Protocol: PNC',
+  sop_policy_a_standard_infection_prevention_control_and_precautions_for_transmission:
+    'Protocol: IPC precautions',
+  sop_policy_a_harmful_practices_and_unnecessary_interventions_during_labour_childbirth_and_the_early_postnatal_period:
+    'Protocol: Harmful practices',
+  sop_policy_a_identification_pre_referral_management_and_referral_of_women_with_complications_related_to_pregnancy_labour_childbirth_and_postpartum_period:
+    'Protocol: Complications & referral',
+  sop_policy_a_obstetric_hemorrhage: 'Protocol: Obstetric hemorrhage',
+  sop_policy_a_premature_labour: 'Protocol: Premature labour',
+  sop_policy_a_pre_eclampsia_and_post_eclampsia: 'Protocol: PE / Eclampsia',
+  sop_policy_a_anaemia: 'Protocol: Anaemia',
+  sop_policy_a_none: 'No protocol- none (a)',
+  sop_policy_b_abnormal_lie_after_36_weeks: 'Protocol: Abnormal lie',
+  sop_policy_b_treatment_of_women_with_or_at_risk_for_infections_during_labour_childbirth_and_the_early_postnatal_period:
+    'Protocol: Intrapartum infections',
+  sop_policy_b_febrile_conditions: 'Protocol: Febrile conditions',
+  sop_policy_b_deep_venous_thrombosis: 'Protocol: DVT',
+  sop_policy_b_chronic_medical_conditions: 'Protocol: Chronic conditions',
+  sop_policy_b_prolonged_obstructed_labour: 'Protocol: Obstructed labour',
+  sop_policy_b_fetal_distress_cord_accidents: 'Protocol: Foetal distress',
+  sop_policy_b_maternal_sepsis: 'Protocol: Maternal sepsis',
+  sop_policy_b_maternal_resuscitation_cpr: 'Protocol: Maternal CPR',
+  sop_policy_b_post_partum_sepsis: 'Protocol: Postpartum sepsis',
+  sop_policy_b_none: 'No protocol- none (b)',
+  sop_policy_c_postpartum_psychosis: 'Protocol: PP psychosis',
+  sop_policy_c_essential_newborn_care: 'Protocol: ENC',
+  sop_policy_c_pre_maturity: 'Protocol: Prematurity',
+  sop_policy_c_low_birth_weight: 'Protocol: LBW',
+  sop_policy_c_neonatal_convulsions: 'Protocol: Neonatal convulsions',
+  sop_policy_c_neonatal_asphyxia: 'Protocol: Neonatal asphyxia',
+  sop_policy_c_neonatal_infection_sepsis: 'Protocol: Neonatal sepsis',
+  sop_policy_c_congenital_malformations: 'Protocol: Congenital malformations',
+  sop_policy_c_macrosomic_babies: 'Protocol: Macrosomia',
+  sop_policy_c_wound_care: 'Protocol: Wound care',
+  sop_policy_c_none: 'No protocol- none (c)',
+  sop_policy_d_how_to_deal_with_the_deceased: 'Policy: Deceased handling',
+  sop_policy_d_handling_and_processing_of_contaminated_materials_and_infectious_waste:
+    'Policy: Infectious waste',
+  sop_policy_d_triage_and_waiting_times_for_emergency_and_non_emergency_consultations_and_treatment:
+    'Policy: Triage & wait times',
+  sop_policy_d_verbal_and_written_hand_over_of_women_and_newborns_at_shift_changes:
+    'Policy: Shift handover',
+  sop_policy_d_against_inappropriate_use_of_social_media_by_health_workers:
+    'Policy: Social media use',
+  sop_policy_d_obtaining_informed_consent_before_examinations_and_procedures:
+    'Policy: Informed consent',
+  sop_policy_d_companion_of_choice_during_labour_childbirth_and_immediate_postnatal_period:
+    'Policy: Birth companion',
+  sop_policy_d_zero_tolerance_non_discriminatory_policy_against_mistreatment:
+    'Policy: Anti-mistreatment',
+  sop_policy_d_none: 'No protocol- none (c)',
+});
 
 // Date dests only. The .1 Kobo names are not separate dests.
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_TRAINING_DESTS = [
   'training_emonc_guidelines',
   'training_support',
   'training_nnr',
@@ -1199,9 +1662,46 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'training_haemovigilance',
   'training_stress_mgt',
   'training_mpdsr',
-], 'Training');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_TRAINING_DESTS,
+  'Training'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_TRAINING_DESTS,
+  'Human Resource for Health'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  training_emonc_guidelines: 'Annual EmONC training',
+  training_support: 'EmONC mentorship',
+  training_nnr: 'Training on neonatal resuscitation (NNR)',
+  training_pnc: 'Training on postnatal care',
+  training_ipc: 'Training on standard infection control and precautions (IPC)',
+  training_newborn_infection: 'Training on recognition and management of newborn infections',
+  training_harmful_practices: 'Training on harmful practices and unnecessary interventions',
+  training_communication: 'Training on interpersonal communication and counselling skills',
+  training_breastfeeding: 'Training on breastfeeding',
+  training_companion:
+    'Training on the role of a birth companion during labour, childbirth and postnatal period',
+  training_pain_relief:
+    'Training on pharmacological and non-pharmacological pain relief in labour',
+  training_emotional_support:
+    'Training on emotional support for clients and families (bereavement, postpartum depression)',
+  training_rmc: 'Training on respectful maternity care (RMC)',
+  training_obstetric_care: 'Training on essential obstetric care',
+  training_newborn_care: 'Training on essential newborn care',
+  training_family_planning: 'Training on family planning',
+  training_cardio: 'Training on cardiopulmonary resuscitation (CPR)',
+  training_haemovigilance: 'Training on haemovigilance',
+  training_stress_mgt: 'Training on work-related stress management',
+  training_mpdsr: 'Training on maternal and perinatal death surveillance and response (MPDSR)',
+});
 
-assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
+const INPATIENT_MATERNITY_WASH_DESTS = [
   'wash_source',
   'wash_water_freq',
   'wash_hand_washing',
@@ -1220,7 +1720,39 @@ assignMappedLabels_(FQA_THEMATIC_AREA_MAP, 'Inpatient Maternity', [
   'wash_menstrual',
   'wash_no_toilets',
   'wash_labour',
-], 'WASH (Water, Sanitation, Hygeine)/IPC');
+];
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_WASH_DESTS,
+  'WASH (Water, Sanitation, Hygeine)/IPC'
+);
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Inpatient Maternity',
+  INPATIENT_MATERNITY_WASH_DESTS,
+  'Service Delivery'
+);
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Inpatient Maternity', {
+  wash_source: 'Functional water source',
+  wash_water_freq: 'Water consistent (3mo)',
+  wash_hand_washing: 'Separate hand-wash sinks',
+  wash_drainage: 'Connected drainage',
+  wash_disposable_towels: 'Hand hygiene supplies (all areas)',
+  wash_disposal: 'Waste protocol displayed',
+  wash_leak_proof: '4-category waste bins',
+  wash_sharp: 'Sharps containers all areas',
+  wash_visible: 'Sharps containers <3/4 full',
+  wash_latrine: 'Latrine type (JMP ladder)',
+  wash_station: 'Hand-wash near latrines',
+  wash_bathrooms: 'Latrine cleaning frequency',
+  wash_clean: 'Latrines clean today',
+  wash_accessible: 'Accessible latrines',
+  wash_gender: 'Gender-separated latrines',
+  wash_menstrual: 'MHM provisions',
+  wash_no_toilets: 'Number of patient latrines/toilets',
+  wash_labour: 'Latrine for labouring women',
+});
 
 // incl_lab_report → tincl_lab_report_*, blood_product_labels →
 // tblood_product_labels_*. external_contrlol_eqc keeps the Kobo
@@ -2873,6 +3405,11 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Pharmacy', {
 // Pharmacy leftovers (no thematic, HSS, or attribute name yet): units_*.
 // Newborn Unit leftovers (no thematic, HSS, or attribute name yet):
 // functional_nbu, newborn_admissions, sharp3_4full.
+// Inpatient Maternity leftovers (no thematic, HSS, or attribute name
+// yet): functional_maternity_unit, privacy_beds, labour_ward_beds,
+// training_abortion_care, understand_service. counselling_offered,
+// uterotonics_alt, and bs_malaria_lab have thematic/HSS but no
+// attribute name.
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

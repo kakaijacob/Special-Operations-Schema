@@ -2418,6 +2418,73 @@ assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "sop_policy_a_none
 assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "training_emonc_guidelines")'), 'Training');
 assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "wash_source")'), 'WASH (Water, Sanitation, Hygeine)/IPC');
 assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "functional_maternity_unit")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "informed_consent")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "tetracycline")'), 'Commodities');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "incubators")'), 'Equipment');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "birth_notification")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "caesarean_wait_hours")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "rehab_staff")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "triage_area")'), 'Infrastructure');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "visual_privacy")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "pocus_service")'), 'Service Delivery');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "intrapartum_sop")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "training_emonc_guidelines")'), 'Human Resource for Health');
+assert.strictEqual(g('hssBuildingBlockFor_("Inpatient Maternity", "wash_source")'), 'Service Delivery');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "ultrasound_adherence")'), 'US maintenance (per manual)');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "informed_consent")'), 'Consent for non-essential attendees');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "labour_care_guide")'), 'Partograph used (≥5cm)');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "companion_support")'), 'Birth companions allowed');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "emergency_system")'), 'Mothers near sick newborns');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "triage_assessment_danger_sign_evaluation")'), 'Triage: Danger signs');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "triage_assessment_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "labour_charts_none")'), 'No partograph');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "labour_counselling_encourage_mobility_in_labour")'), 'Labour counsel: Mobility');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "labour_counselling_none")'), 'No labour counsel');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "discharge_counselling_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "counselling_offered")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "tetracycline")'), 'Tetracycline eye ointment 1%');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "latex_gloves")'), 'Latex gloves');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "nasg")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "calibrated_drapes")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "incubators")'), 'Portable incubator');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "equipment_em_tray_adrenaline_inj")'), 'Emergency drug: Adrenaline');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "equipment_resus_cart_no_resuscitation_cart_available")'), 'No resuscitation cart available');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "pphkits")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "pre_eclampia")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "birth_notification")'), 'Birth register available');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "health_records_patient_file_partograph")'), 'File: Partograph');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "health_records_patient_file_none")'), 'No impatient maternity file');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "caesarean_wait_hours")'), 'Average hours open per day');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "rehab_staff")'), 'Physiotherapy access');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "obgyn")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "nurse_midwives")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "triage_area")'), 'Designated triage area');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "temperature_control")'), 'Childbirth area ≥25°C');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "infrastructure_education_breastfeeding")'), 'Health ed: Breastfeeding');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "infrastructure_education_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "visual_privacy")'), 'Exam room visual privacy');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "bed_spacing")'), 'L&D beds ≥4ft apart');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "pocus_service")'), 'POCUS ultrasound offered');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "no_foetuses")'), 'Ultrasound to determine number of foetuses offered');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "malaria_lab")'), 'Malaria smear');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "services_immunization_bcg")'), 'BCG vaccine offered');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "services_immunization_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "eid")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "uterotonics_alt")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "intrapartum_sop")'), 'Intrapartum care protocol');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "sop_policy_a_pain_management_in_labour")'), 'Protocol: Pain management');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "sop_policy_a_none")'), 'No protocol- none (a)');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "sop_policy_d_none")'), 'No protocol- none (c)');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "training_emonc_guidelines")'), 'Annual EmONC training');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "training_companion")'), 'Training on the role of a birth companion during labour, childbirth and postnatal period');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "training_abortion_care")'), '');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "wash_source")'), 'Functional water source');
+assert.strictEqual(g('attributeNameFor_("Inpatient Maternity", "wash_visible")'), 'Sharps containers <3/4 full');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "sc_stay")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "beds_share")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "privacy_beds")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "labour_ward_beds")'), '');
+assert.strictEqual(g('thematicAreaFor_("Inpatient Maternity", "understand_service")'), '');
 assert.strictEqual(g('thematicAreaFor_("Lab", "internal_control_iqc")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Lab", "external_contrlol_eqc")'), 'Adherence to evidence based practice');
 assert.strictEqual(g('thematicAreaFor_("Lab", "tincl_lab_report_examination_performed")'), 'Adherence to evidence based practice');
@@ -2957,28 +3024,52 @@ const imScoreTable = g(
   'buildFqaScoreTableRows_(__imScoreSheets, __scoreWeighting)'
 );
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'birth_notification' && row[6] === 'Health Records for clients';
+  return row[8] === 'birth_notification' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'Birth register available';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'tetracycline' && row[6] === 'Commodities';
+  return row[8] === 'tetracycline' &&
+    row[6] === 'Commodities' &&
+    row[7] === 'Commodities' &&
+    row[9] === 'Tetracycline eye ointment 1%';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'incubators' && row[6] === 'Equipment';
+  return row[8] === 'incubators' &&
+    row[6] === 'Equipment' &&
+    row[7] === 'Equipment' &&
+    row[9] === 'Portable incubator';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'informed_consent' && row[6] === 'Adherence to evidence based practice';
+  return row[8] === 'informed_consent' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Consent for non-essential attendees';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'caesarean_wait_hours' && row[6] === 'Hours of operation';
+  return row[8] === 'caesarean_wait_hours' &&
+    row[6] === 'Hours of operation' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Average hours open per day';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'intrapartum_sop' && row[6] === 'Standard operating procedures/Protocols';
+  return row[8] === 'intrapartum_sop' &&
+    row[6] === 'Standard operating procedures/Protocols' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Intrapartum care protocol';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'wash_source' && row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC';
+  return row[8] === 'wash_source' &&
+    row[6] === 'WASH (Water, Sanitation, Hygeine)/IPC' &&
+    row[7] === 'Service Delivery' &&
+    row[9] === 'Functional water source';
 }));
 assert.ok(imScoreTable.some(function (row) {
-  return row[8] === 'functional_maternity_unit' && row[6] === '';
+  return row[8] === 'functional_maternity_unit' &&
+    row[6] === '' &&
+    row[7] === '' &&
+    row[9] === '';
 }));
 
 sandbox.__labScoreSheets = [{

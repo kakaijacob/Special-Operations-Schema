@@ -100,7 +100,12 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    listed count names are not dests. `patient_files` dests follow
    form choice codes, not the listed /1 remumbering. Leftovers
    stay blank: `functional_nbu`, `newborn_admissions`,
-   `sharp3_4full`. Other `thematic_area` values,
+   `sharp3_4full`. Inpatient Maternity dests now fill those same
+   three columns. Parent counts, `pphkits`, `pre_eclampia`, HRH
+   `.1` scores, and `eid` are not dests. Leftovers stay blank:
+   `functional_maternity_unit`, `privacy_beds`,
+   `labour_ward_beds`, `training_abortion_care`,
+   `understand_service`. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until
    those labels are added. You can still run
    `writeFqaScoreTable` on its own.
