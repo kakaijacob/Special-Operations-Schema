@@ -1,14 +1,19 @@
 /**
  * FQA ↔ QuIPS insight linkage runner (Google Apps Script)
  *
- * Reads:
- *   - QuIPS Cleaned Data (from QuIPS_data_transformation.md)
- *   - FQA department tabs (Inpatient Maternity, Facility General, Newborn Unit)
+ * Required sources:
+ *   - QuIPS Cleaned Data  (practice observations)
+ *   - FQA Scores          (facility_code join + readiness scores)
+ *
+ * Optional detail:
+ *   - Inpatient Maternity / Facility General / Newborn Unit
+ *     Used only to enrich enabler text with categorical responses.
+ *     When present, categorical values override scores for that attribute.
  *
  * Writes:
- *   - FQA-QuIPS Crosswalk          (theme ↔ indicator catalog)
- *   - FQA-QuIPS Facility Insights  (facility × theme quadrants)
- *   - FQA-QuIPS Insight Summary    (theme-level quadrant counts)
+ *   - FQA-QuIPS Crosswalk
+ *   - FQA-QuIPS Facility Insights
+ *   - FQA-QuIPS Insight Summary
  *
  * Join key: facility_code
  *
@@ -152,11 +157,13 @@ function writeInsightSummarySheet_(ss, insightRows) {
 }
 
 /**
- * Build facility × theme insights from QuIPS + FQA sheets.
+ * Build facility × theme insights from QuIPS + FQA Scores (+ optional tabs).
  */
 function buildAllFacilityThemeInsights_(ss) {
   var quipsByFacility = loadQuipsObservationsByFacility_(ss);
-  var fqaByFacility = loadFqaEnablersByFacility_(ss);
+  var fqaBundle = loadFqaInsightInputsByFacility_(ss);
+  var fqaByFacility = fqaBundle.values;
+  var fqaMetaByFacility = fqaBundle.meta;
 
   var facilityCodes = {};
   Object.keys(quipsByFacility).forEach(function (code) {
@@ -174,12 +181,25 @@ function buildAllFacilityThemeInsights_(ss) {
         meta: { facility_code: code, facility: '', county: '' },
         rows: [],
       };
+      var fqaMeta = fqaMetaByFacility[code] || {};
+      // Prefer FQA Scores facility identity for linkage details.
+      var meta = {
+        facility_code: code,
+        facility:
+          fqaMeta.facility ||
+          quipsBundle.meta.facility ||
+          '',
+        county:
+          fqaMeta.county ||
+          quipsBundle.meta.county ||
+          '',
+      };
       var fqaValues = fqaByFacility[code] || {};
 
       FQA_QUIPS_INSIGHT_THEMES.forEach(function (theme) {
         insights.push(
           buildFacilityThemeInsight_(
-            quipsBundle.meta,
+            meta,
             theme,
             quipsBundle.rows,
             fqaValues
@@ -236,16 +256,96 @@ function loadQuipsObservationsByFacility_(ss) {
 }
 
 /**
- * Latest FQA department-row values keyed as "Department::attribute".
+ * Load FQA insight inputs by facility_code.
+ *
+ * Primary: FQA Scores (facility identity + numeric readiness).
+ * Optional: department tabs overlay categorical detail when present.
+ *
+ * Returns { values, meta } where values[code]["Department::attribute"] = value.
  */
-function loadFqaEnablersByFacility_(ss) {
+function loadFqaInsightInputsByFacility_(ss) {
   var needed = collectNeededFqaAttributes_();
-  var byFacility = {};
+  var valuesByFacility = {};
+  var metaByFacility = {};
 
+  loadFqaScoresIntoInsightInputs_(ss, needed, valuesByFacility, metaByFacility);
+  overlayFqaDepartmentDetail_(ss, needed, valuesByFacility);
+
+  return { values: valuesByFacility, meta: metaByFacility };
+}
+
+/**
+ * Primary path: read FQA Scores long rows into Department::attribute values.
+ */
+function loadFqaScoresIntoInsightInputs_(
+  ss,
+  needed,
+  valuesByFacility,
+  metaByFacility
+) {
+  var sheetName =
+    typeof FQA_SCORE_SHEET_NAME !== 'undefined'
+      ? FQA_SCORE_SHEET_NAME
+      : FQA_INSIGHT_SCORE_SHEET_NAME;
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    Logger.log(
+      'FQA Scores sheet "' +
+        sheetName +
+        '" not found. Insight linkage needs FQA Scores as the primary join source.'
+    );
+    return;
+  }
+
+  var objects = sheetToObjects_(sheet);
+  objects.forEach(function (row) {
+    var code = String(row.facility_code || '').trim();
+    if (!code) return;
+
+    if (!metaByFacility[code]) {
+      metaByFacility[code] = {
+        facility_code: code,
+        facility: row.facility || '',
+        county: row.county || '',
+      };
+    } else {
+      if (!metaByFacility[code].facility && row.facility) {
+        metaByFacility[code].facility = row.facility;
+      }
+      if (!metaByFacility[code].county && row.county) {
+        metaByFacility[code].county = row.county;
+      }
+    }
+
+    var department = String(row.department || '').trim();
+    var attribute = String(row.attribute || '').trim();
+    if (!department || !attribute) return;
+
+    var neededAttrs = needed[department];
+    if (!neededAttrs || neededAttrs.indexOf(attribute) === -1) return;
+
+    if (!valuesByFacility[code]) valuesByFacility[code] = {};
+    var key = department + '::' + attribute;
+    // Keep the last non-empty score for the attribute.
+    if (row.score !== '' && row.score !== null && row.score !== undefined) {
+      valuesByFacility[code][key] = row.score;
+    }
+  });
+}
+
+/**
+ * Optional path: overlay department-tab categorical responses when available.
+ * Categorical detail replaces the numeric score for that attribute.
+ */
+function overlayFqaDepartmentDetail_(ss, needed, valuesByFacility) {
   FQA_INSIGHT_DEPARTMENT_SHEETS.forEach(function (department) {
     var sheet = ss.getSheetByName(department);
     if (!sheet) {
-      Logger.log('FQA department sheet "' + department + '" not found.');
+      Logger.log(
+        'Optional FQA department sheet "' +
+          department +
+          '" not found; continuing with FQA Scores only for that department.'
+      );
       return;
     }
 
@@ -261,18 +361,20 @@ function loadFqaEnablersByFacility_(ss) {
     });
 
     Object.keys(latestByCode).forEach(function (code) {
-      if (!byFacility[code]) byFacility[code] = {};
+      if (!valuesByFacility[code]) valuesByFacility[code] = {};
       var row = latestByCode[code];
       attrs.forEach(function (attribute) {
         var key = department + '::' + attribute;
-        if (row[attribute] !== undefined && row[attribute] !== null) {
-          byFacility[code][key] = row[attribute];
+        if (
+          row[attribute] !== undefined &&
+          row[attribute] !== null &&
+          row[attribute] !== ''
+        ) {
+          valuesByFacility[code][key] = row[attribute];
         }
       });
     });
   });
-
-  return byFacility;
 }
 
 /**

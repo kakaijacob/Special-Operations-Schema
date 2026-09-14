@@ -15,6 +15,8 @@
  */
 
 var QUIPS_CLEANED_SHEET_NAME = 'QuIPS Cleaned Data';
+/** Primary FQA join source for facility_code + readiness scores. */
+var FQA_INSIGHT_SCORE_SHEET_NAME = 'FQA Scores';
 var FQA_QUIPS_CROSSWALK_SHEET = 'FQA-QuIPS Crosswalk';
 var FQA_QUIPS_FACILITY_INSIGHTS_SHEET = 'FQA-QuIPS Facility Insights';
 var FQA_QUIPS_INSIGHT_SUMMARY_SHEET = 'FQA-QuIPS Insight Summary';
@@ -780,7 +782,33 @@ function aggregateQuipsPractice_(theme, rows) {
   };
 }
 
+/**
+ * Map an FQA Scores numeric cell to a readiness level.
+ * score > 0 → ready, score === 0 → not_ready, blank/invalid → unknown.
+ */
+function classifyFqaScoreValue_(value) {
+  if (value === null || value === undefined || value === '') return 'unknown';
+  if (typeof value === 'number' && !isNaN(value)) {
+    if (value > 0) return 'ready';
+    if (value === 0) return 'not_ready';
+    return 'unknown';
+  }
+  var raw = String(value).trim();
+  if (!raw) return 'unknown';
+  // Plain numeric strings from Sheets.
+  if (/^-?\d+(\.\d+)?$/.test(raw)) {
+    var n = Number(raw);
+    if (n > 0) return 'ready';
+    if (n === 0) return 'not_ready';
+    return 'unknown';
+  }
+  return null; // not a score — fall through to categorical rules
+}
+
 function classifyFqaReadiness_(readinessKind, value) {
+  var fromScore = classifyFqaScoreValue_(value);
+  if (fromScore) return fromScore;
+
   var v = normalizeInsightText_(value);
   if (!v) return 'unknown';
 

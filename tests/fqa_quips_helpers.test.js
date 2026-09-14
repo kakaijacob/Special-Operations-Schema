@@ -4508,4 +4508,46 @@ assert.ok(
   ) !== -1
 );
 
+// FQA Scores is the primary join source; department tabs are optional detail.
+assert.strictEqual(g('FQA_INSIGHT_SCORE_SHEET_NAME'), 'FQA Scores');
+assert.strictEqual(g('QUIPS_CLEANED_SHEET_NAME'), 'QuIPS Cleaned Data');
+assert.ok(Array.isArray(g('FQA_INSIGHT_DEPARTMENT_SHEETS')));
+assert.ok(g('FQA_INSIGHT_DEPARTMENT_SHEETS').indexOf('Inpatient Maternity') !== -1);
+
+assert.strictEqual(g("classifyFqaScoreValue_(1)"), 'ready');
+assert.strictEqual(g("classifyFqaScoreValue_(0)"), 'not_ready');
+assert.strictEqual(g("classifyFqaScoreValue_('')"), 'unknown');
+assert.strictEqual(g("classifyFqaScoreValue_('Always available')"), null);
+assert.strictEqual(g("classifyFqaReadiness_('yes_no', 1)"), 'ready');
+assert.strictEqual(g("classifyFqaReadiness_('yes_no', 0)"), 'not_ready');
+assert.strictEqual(
+  g("classifyFqaReadiness_('hand_hygiene_coverage', 'Present in some service areas')"),
+  'partial'
+);
+
+// Score-only readiness, then categorical overlay wins for that attribute.
+const scoreOnlyFqa = {};
+handHygieneTheme.fqa_enablers.forEach(function (enabler) {
+  scoreOnlyFqa[enabler.department + '::' + enabler.attribute] = 1;
+});
+sandbox.__scoreOnlyFqa = scoreOnlyFqa;
+const scoreReady = g('aggregateFqaReadiness_(__insightTheme, __scoreOnlyFqa)');
+assert.strictEqual(scoreReady.readiness_level, 'ready');
+assert.strictEqual(scoreReady.ready_count, handHygieneTheme.fqa_enablers.length);
+
+const overlaidFqa = Object.assign({}, scoreOnlyFqa);
+overlaidFqa['Inpatient Maternity::wash_hand_washing'] =
+  'Present in some service areas';
+sandbox.__overlaidFqa = overlaidFqa;
+const overlaid = g('aggregateFqaReadiness_(__insightTheme, __overlaidFqa)');
+const washDetail = overlaid.details.filter(function (d) {
+  return d.attribute === 'wash_hand_washing';
+})[0];
+assert.strictEqual(washDetail.readiness, 'partial');
+assert.strictEqual(washDetail.value, 'Present in some service areas');
+
+const readme = fs.readFileSync(path.join(ROOT, 'FQA_QuIPS_README.md'), 'utf8');
+assert.ok(readme.indexOf('FQA Scores') !== -1);
+assert.ok(readme.indexOf('Optional detail') !== -1);
+
 console.log('fqa_quips_helpers.test.js: all assertions passed');
