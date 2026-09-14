@@ -2396,6 +2396,31 @@ assert.strictEqual(g('thematicAreaFor_("Lab", "sharp_container")'), 'WASH (Water
 assert.strictEqual(g('thematicAreaFor_("Lab", "have_quality_manual")'), '');
 assert.strictEqual(g('thematicAreaFor_("Lab", "waiting_area8")'), '');
 assert.strictEqual(g('thematicAreaFor_("Lab", "units")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "clean_sched")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "expiry_check")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pre_checks_preoperative_monitoring_of_vital_signs")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pre_checks_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_doc_no_documentation_provided")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_chart_clients_name")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_chart_none")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "turnaround")'), 'Adherence to evidence based practice');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "pre_checks")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_doc")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anaest_chart")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "clean_sched")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "pre_checks_none")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "turnaround")'), 'Leadership & Governance');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "hrs_day")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "clean_sched")'), 'Cleaning schedule current');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "patient_id")'), 'Pre-sedation ID/consent');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "spo2_mon")'), 'Intra-op SpO₂ monitoring');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pre_checks_last_oral_intake_is_verified")'), 'NPO verified');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_diagnosis_and_planed_surgery")'), 'Diagnosis/planned surgery');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_date_and_time_of_start_and_end_of_surgery_and_anaesthesia")'), 'Surg/anaes start–end time');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pre_checks_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "anaest_chart_none")'), '');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "hrs_day")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2620,6 +2645,42 @@ assert.ok(labScoreTable.some(function (row) {
 }));
 assert.ok(labScoreTable.some(function (row) {
   return row[8] === 'have_quality_manual' && row[6] === '';
+}));
+
+sandbox.__otAdherenceScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'clean_sched', 'spo2_mon', 'pre_checks_preoperative_monitoring_of_vital_signs', 'turnaround', 'hrs_day'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Always', 'Yes', '31-45 minutes', 'Rarely assessible'],
+  ],
+}];
+const otAdherenceScoreTable = g(
+  'buildFqaScoreTableRows_(__otAdherenceScoreSheets, __scoreWeighting)'
+);
+assert.ok(otAdherenceScoreTable.some(function (row) {
+  return row[8] === 'clean_sched' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Cleaning schedule current';
+}));
+assert.ok(otAdherenceScoreTable.some(function (row) {
+  return row[8] === 'spo2_mon' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[7] === 'Leadership & Governance' &&
+    row[9] === 'Intra-op SpO₂ monitoring';
+}));
+assert.ok(otAdherenceScoreTable.some(function (row) {
+  return row[8] === 'pre_checks_preoperative_monitoring_of_vital_signs' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[9] === 'Pre-op vitals monitoring';
+}));
+assert.ok(otAdherenceScoreTable.some(function (row) {
+  return row[8] === 'turnaround' &&
+    row[6] === 'Adherence to evidence based practice' &&
+    row[9] === 'Average theatre turnaround time';
+}));
+assert.ok(otAdherenceScoreTable.some(function (row) {
+  return row[8] === 'hrs_day' && row[6] === '' && row[7] === '' && row[9] === '';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

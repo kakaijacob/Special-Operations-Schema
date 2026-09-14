@@ -18,8 +18,10 @@
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
- * groupings use the same thematic_area labels. hss_building_block
- * and attribute_name stay blank until those labels are provided.
+ * groupings use the same thematic_area labels. Operating Theatre
+ * adherence dests also set hss_building_block and attribute_name.
+ * Remaining hss_building_block and attribute_name values stay blank
+ * until those labels are provided.
  *
  * Run writeFqaScoreTable after the department tabs exist. It reads
  * scores from the FQA Weighting sheet when that sheet is present.
@@ -74,9 +76,10 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * Sanitation, Hygeine)/IPC, service columns are Services offered,
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
- * those same thematic_area labels. Inpatient Maternity and Lab
- * groupings use the same thematic_area labels. Other departments
- * stay empty until their groupings are defined.
+ * those same thematic_area labels. Inpatient Maternity, Lab, and
+ * Operating Theatre adherence dests use the same thematic_area
+ * labels. Other departments stay empty until their groupings are
+ * defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -91,7 +94,7 @@ const FQA_THEMATIC_AREA_MAP = {
 
 /**
  * Attribute → HSS building block, by department sheet name.
- * Leave entries empty until the groupings are defined.
+ * Operating Theatre adherence dests are Leadership & Governance.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -106,7 +109,7 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Leave entries empty until the names are defined.
+ * Operating Theatre adherence dests use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -136,6 +139,15 @@ function assignMappedLabels_(map, department, attributes, value) {
   if (!map[department]) map[department] = {};
   (attributes || []).forEach(function (attribute) {
     if (attribute) map[department][attribute] = value;
+  });
+}
+
+function assignMappedLabelEntries_(map, department, entries) {
+  if (!map[department]) map[department] = {};
+  Object.keys(entries || {}).forEach(function (attribute) {
+    if (attribute && entries[attribute] !== '' && entries[attribute] != null) {
+      map[department][attribute] = entries[attribute];
+    }
   });
 }
 
@@ -932,6 +944,102 @@ assignMappedLabels_(
   LAB_GROUP_7_HEADERS,
   'WASH (Water, Sanitation, Hygeine)/IPC'
 );
+
+// pre_checks, anaest_doc, and anaest_chart parents are not dests.
+// pre_checks/1-5, anaest_doc/1-10, and anaest_chart/1-13 are the
+// select_multiple indicators. pre_checks/5 and anaest_chart/13
+// have no attribute_name.
+const OT_ADHERENCE_EVIDENCE_DESTS = [
+  'clean_sched',
+  'expiry_check',
+  'anaest_serv',
+  'bed_serv',
+  'patient_id',
+].concat(
+  selectMultipleAttributeNames_(OT_PRE_CHECKS_PREFIX, OT_PRE_CHECKS_CHOICES),
+  [
+    'ecg_mon',
+    'spo2_mon',
+    'bp_mon',
+    'surg_count',
+    'op_board',
+    'blood_spec',
+    'mortality_rev',
+    'anaest_rev',
+  ],
+  selectMultipleAttributeNames_(OT_ANAEST_DOC_PREFIX, OT_ANAEST_DOC_CHOICES),
+  selectMultipleAttributeNames_(OT_ANAEST_CHART_PREFIX, OT_ANAEST_CHART_CHOICES),
+  ['turnaround']
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_ADHERENCE_EVIDENCE_DESTS,
+  'Adherence to evidence based practice'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_ADHERENCE_EVIDENCE_DESTS,
+  'Leadership & Governance'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  clean_sched: 'Cleaning schedule current',
+  expiry_check: 'Expiry checked regularly',
+  anaest_serv: 'Routine servicing of anaesthetic machines',
+  bed_serv: 'Routine servicing of operating beds',
+  patient_id: 'Pre-sedation ID/consent',
+  pre_checks_preoperative_monitoring_of_vital_signs: 'Pre-op vitals monitoring',
+  pre_checks_any_allergies_and_administered_preoperative_medication_verified:
+    'Allergies/meds verified',
+  pre_checks_last_oral_intake_is_verified: 'NPO verified',
+  pre_checks_a_designated_nurse_nurse_in_charge_completes_a_checklist_to_ensure_all_staff_and_equipment_is_ready_for_surgery:
+    'Nurse CL completed',
+  ecg_mon: 'Intra-op ECG monitoring',
+  spo2_mon: 'Intra-op SpO₂ monitoring',
+  bp_mon: 'Intra-op BP monitoring',
+  surg_count: 'Surgical count performed before incision and closure',
+  op_board: 'Operation details board',
+  blood_spec: 'Blood/specimen workflow',
+  mortality_rev: 'M&M reviews conducted',
+  anaest_rev: 'Pre-op anaes. review',
+  anaest_doc_anaesthetic_processes_from_pre_anaesthetic_review_to_reversal_of_anaesthesia_including_any_incidents_that_may_have_occurred:
+    'Anaes. process & incidents',
+  anaest_doc_diagnosis_and_indication_for_surgery: 'Diagnosis & indication',
+  anaest_doc_baseline_vital_signs_measurement_blood_pressure_pulse_respiratory_rate:
+    'Baseline vitals',
+  anaest_doc_results_of_pre_op_investigations_done: 'Pre-op investigations',
+  anaest_doc_comprehensive_pre_op_physical_examination: 'Pre-op physical exam',
+  anaest_doc_previous_anaesthetic_exposure_and_surgical_history:
+    'Prev. anaes./surg. hx',
+  anaest_doc_medical_history_presence_of_allergies_chronic_illness_or_regular_drug_use:
+    'Med hx (allergies/illness)',
+  anaest_doc_airway_assessment_and_examination_assesses_adequacy_of_mouth_chin_jaw_and_neck_for_endotracheal_intubation_if_needed:
+    'Airway assessment',
+  anaest_doc_the_anaesthesia_impression_which_includes_the_asa_classification_and_proposed_anaesthetic_technique_to_be_used:
+    'Anaes. impression & ASA',
+  anaest_doc_no_documentation_provided: 'No documentation',
+  anaest_chart_clients_name: 'Client name',
+  anaest_chart_client_age_or_date_of_birth: 'Client age/DOB',
+  anaest_chart_client_hospital_number: 'Hospital number',
+  anaest_chart_diagnosis_and_planed_surgery: 'Diagnosis/planned surgery',
+  anaest_chart_name_of_surgeon_anaesthetist_assistant_surgeon_and_scrub_nurse:
+    'Surgeon/anaes/asst/scrub',
+  anaest_chart_date_and_time_of_start_and_end_of_surgery_and_anaesthesia:
+    'Surg/anaes start–end time',
+  anaest_chart_type_of_anaesthesia_given: 'Anaesthesia type',
+  anaest_chart_maternal_vitals_maternal_pulse_blood_pressure_and_spo2_every_15_minutes:
+    'Maternal vitals q15min',
+  anaest_chart_estimated_blood_loss: 'Estimated blood loss',
+  anaest_chart_reversal_procedure: 'Reversal procedure',
+  anaest_chart_immediate_post_operative_management: 'Immediate post-op mgmt',
+  anaest_chart_any_drugs_and_iv_fluids_given_during_the_period_they_are_under_anaesthesia:
+    'Drugs/IV fluids given',
+  turnaround: 'Average theatre turnaround time',
+});
 
 function thematicAreaFor_(department, attribute) {
   return lookupMappedLabel_(FQA_THEMATIC_AREA_MAP, department, attribute);

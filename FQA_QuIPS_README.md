@@ -57,8 +57,9 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    and HRH columns get HRH. Central Store records, commodities,
    hours, equipment, infrastructure, SOP, and WASH/IPC columns use
    those same `thematic_area` labels. Inpatient Maternity and Lab
-   groupings use the same `thematic_area` labels. Other
-   `thematic_area` values,
+   groupings use the same `thematic_area` labels. Operating Theatre
+   adherence dests also fill `hss_building_block` (Leadership &
+   Governance) and `attribute_name`. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 
