@@ -2458,6 +2458,20 @@ assert.strictEqual(g('attributeNameFor_("Operating Theatre", "pacu_trol_calcium_
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "bp_cuffs_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "lary_blades_none")'), '');
 assert.strictEqual(g('attributeNameFor_("Operating Theatre", "ett_tubes_none")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "theatre_list")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "delivery_reg")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "cs_forms_anesthesia_charts")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "cs_forms_none")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "referral_forms")'), 'Health Records for clients');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "cs_forms")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "anesthetic_reg")'), '');
+assert.strictEqual(g('thematicAreaFor_("Operating Theatre", "safety_checklist")'), '');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "theatre_list")'), 'Health Information System');
+assert.strictEqual(g('hssBuildingBlockFor_("Operating Theatre", "cs_forms_none")'), 'Health Information System');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "theatre_list")'), 'Theatre list (E+E)');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "reg_used")'), 'Delivery reg. used cons.');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "cs_forms_safe_surgery_checklist")'), 'Safe surgery CL');
+assert.strictEqual(g('attributeNameFor_("Operating Theatre", "cs_forms_none")'), '');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "death_register")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "deathreg_consistent_use")'), 'Health Records for clients');
 assert.strictEqual(g('thematicAreaFor_("Newborn Unit", "summary_register")'), 'Health Records for clients');
@@ -2778,6 +2792,36 @@ assert.ok(otEquipmentScoreTable.some(function (row) {
 assert.ok(otEquipmentScoreTable.some(function (row) {
   return row[8] === 'temp_18_24' &&
     row[9] === 'PACU temp 18–24°C';
+}));
+
+sandbox.__otRecordsScoreSheets = [{
+  department: 'Operating Theatre',
+  values: [
+    ['county', 'facility', 'facility_level', 'theatre_list', 'cs_forms_anesthesia_charts', 'referral_forms', 'anesthetic_reg'],
+    ['Kisii', 'Nyamache Sub County Hospital', 'Level 4', 'Yes', 'Yes', 'Always available', 'Yes'],
+  ],
+}];
+const otRecordsScoreTable = g(
+  'buildFqaScoreTableRows_(__otRecordsScoreSheets, __scoreWeighting)'
+);
+assert.ok(otRecordsScoreTable.some(function (row) {
+  return row[8] === 'theatre_list' &&
+    row[6] === 'Health Records for clients' &&
+    row[7] === 'Health Information System' &&
+    row[9] === 'Theatre list (E+E)';
+}));
+assert.ok(otRecordsScoreTable.some(function (row) {
+  return row[8] === 'cs_forms_anesthesia_charts' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'Anaesthesia chart';
+}));
+assert.ok(otRecordsScoreTable.some(function (row) {
+  return row[8] === 'referral_forms' &&
+    row[6] === 'Health Records for clients' &&
+    row[9] === 'Blank referral forms';
+}));
+assert.ok(!otRecordsScoreTable.some(function (row) {
+  return row[8] === 'anesthetic_reg';
 }));
 
 g('FQA_THEMATIC_AREA_MAP["Operating Theatre"].routine_cs = "Services"');

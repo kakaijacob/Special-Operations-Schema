@@ -19,7 +19,7 @@
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity and Lab
  * groupings use the same thematic_area labels. Operating Theatre
- * adherence, commodity, and equipment dests also set
+ * adherence, commodity, equipment, and records dests also set
  * hss_building_block and attribute_name. Remaining
  * hss_building_block and attribute_name values stay blank until
  * those labels are provided.
@@ -78,9 +78,9 @@ const FQA_FACILITY_CANONICAL_TOKENS = [
  * and HRH columns are HRH. Central Store records, commodities,
  * hours, equipment, infrastructure, SOP, and WASH/IPC columns use
  * those same thematic_area labels. Inpatient Maternity, Lab, and
- * Operating Theatre adherence, commodity, and equipment dests use
- * the same thematic_area labels. Other departments stay empty
- * until their groupings are defined.
+ * Operating Theatre adherence, commodity, equipment, and records
+ * dests use the same thematic_area labels. Other departments stay
+ * empty until their groupings are defined.
  */
 const FQA_THEMATIC_AREA_MAP = {
   'Newborn Unit': {},
@@ -97,7 +97,8 @@ const FQA_THEMATIC_AREA_MAP = {
  * Attribute → HSS building block, by department sheet name.
  * Operating Theatre adherence dests are Leadership & Governance.
  * Operating Theatre commodity dests are Commodities. Operating
- * Theatre equipment dests are Equipment.
+ * Theatre equipment dests are Equipment. Operating Theatre
+ * records dests are Health Information System.
  */
 const FQA_HSS_BUILDING_BLOCK_MAP = {
   'Newborn Unit': {},
@@ -112,8 +113,8 @@ const FQA_HSS_BUILDING_BLOCK_MAP = {
 
 /**
  * Attribute → display name, by department sheet name.
- * Operating Theatre adherence, commodity, and equipment dests
- * use the provided labels.
+ * Operating Theatre adherence, commodity, equipment, and
+ * records dests use the provided labels.
  */
 const FQA_ATTRIBUTE_NAME_MAP = {
   'Newborn Unit': {},
@@ -1224,6 +1225,49 @@ assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
   pacu_ecg: 'PACU ECG monitor',
   pacu_o2: 'PACU oxygen capability',
   pacu_desk: 'PACU staff desk',
+});
+
+// anesthetic_reg, anesthetic_reg_used, safety_checklist, and
+// safety_checklist_used are not transformed dests. cs_forms
+// parent is not a dest. cs_forms/11 has no attribute_name.
+const OT_RECORDS_EVIDENCE_DESTS = OT_HEALTH_RECORD_YES_NO_FIELDS.map(function (field) {
+  return field.dest;
+}).concat(
+  selectMultipleAttributeNames_(OT_CS_FORMS_PREFIX, OT_CS_FORMS_CHOICES),
+  ['referral_forms']
+);
+
+assignMappedLabels_(
+  FQA_THEMATIC_AREA_MAP,
+  'Operating Theatre',
+  OT_RECORDS_EVIDENCE_DESTS,
+  'Health Records for clients'
+);
+
+assignMappedLabels_(
+  FQA_HSS_BUILDING_BLOCK_MAP,
+  'Operating Theatre',
+  OT_RECORDS_EVIDENCE_DESTS,
+  'Health Information System'
+);
+
+assignMappedLabelEntries_(FQA_ATTRIBUTE_NAME_MAP, 'Operating Theatre', {
+  theatre_list: 'Theatre list (E+E)',
+  delivery_reg: 'MOH333 delivery register',
+  reg_used: 'Delivery reg. used cons.',
+  theatre_reg: 'Theatre operative register',
+  theatre_reg_used: 'Theatre op reg used cons.',
+  cs_forms_anesthesia_charts: 'Anaesthesia chart',
+  cs_forms_pacu_monitoring_charts: 'PACU monitoring chart',
+  cs_forms_patient_consent_forms: 'Consent form',
+  cs_forms_post_operative_record: 'Post-op record',
+  cs_forms_safe_surgery_checklist: 'Safe surgery CL',
+  cs_forms_theatre_notes: 'Theatre notes',
+  cs_forms_doctors_admission_record: 'Doctor admission rec.',
+  cs_forms_post_cs_order_form: 'Post-CS order form',
+  cs_forms_anesthesia_pre_op_checklist: 'Anaes. pre-op CL',
+  cs_forms_surgical_consumption_report: 'Surg. consumption rpt',
+  referral_forms: 'Blank referral forms',
 });
 
 function thematicAreaFor_(department, attribute) {

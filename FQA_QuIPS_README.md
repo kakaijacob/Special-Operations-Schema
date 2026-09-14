@@ -62,7 +62,10 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    Governance) and `attribute_name`. Operating Theatre commodity
    dests fill `thematic_area` and `hss_building_block` as Commodities
    plus the provided `attribute_name` labels. Operating Theatre
-   equipment dests fill those same columns as Equipment. Other `thematic_area` values,
+   equipment dests fill those same columns as Equipment. Operating
+   Theatre records dests fill `thematic_area` as Health Records for
+   clients, `hss_building_block` as Health Information System, and
+   the provided `attribute_name` labels. Other `thematic_area` values,
    `hss_building_block`, and `attribute_name` stay blank until those
    labels are added. You can still run `writeFqaScoreTable` on its own.
 
