@@ -16,9 +16,11 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
 | `FQA_QuIPS_Pharmacy.js` | Pharmacy (dates + raw passthrough) |
 | `FQA_QuIPS_Central_Store.js` | Central Store (dates + raw passthrough) |
 | `FQA_QuIPS_Facility_General.js` | Facility General (dates + raw passthrough) |
-| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then `writeFqaScoreTable` |
+| `FQA_QuIPS_Orchestrator.js` | `FORM_CONFIG`, `pullAllForms`, `fullRefreshAllForms`, then Scores; insight linkage is separate (`runFqaQuipsInsightLinkage`) |
 | `FQA_QuIPS_Weighting.js` | Builds the `FQA Weighting` score catalog sheet |
 | `FQA_QuIPS_Scores.js` | Builds the long-format `FQA Scores` totalling sheet |
+| `FQA_QuIPS_Insight_Crosswalk.js` | QuIPS observation ↔ FQA resource/protocol theme map + classifiers |
+| `FQA_QuIPS_Insight_Linkage.js` | Joins QuIPS Cleaned Data with FQA Scores (department tabs optional detail) |
 | `FQA_QuIPS_Token.example.js` | Template for a local token override |
 
 ## Setup
@@ -36,7 +38,28 @@ Google Apps Script project that pulls eight FQA/QuIPS Kobo forms from
    `label`, `score`). Yes/No labels default to 1/0; other labels leave
    `score` blank so you can fill them in later. Re-running keeps scores
    already typed on that sheet. The orchestrator does not rebuild it.
-7. `pullAllForms` and `fullRefreshAllForms` both finish by running
+7. After `FQA Scores` is available, run `writeFqaQuipsInsightLinkage`.
+   QuIPS cleaned data is read from a local `QuIPS Cleaned Data` tab if
+   present; otherwise from the QuIPS workbook
+   `1CjK8cfDVR_Bb6rny4n_SYW2F6Ltx8kHRzP0A92bJtd4` (gid `1114469965`).
+   The first run must authorize access to that spreadsheet. This builds:
+   - `FQA-QuIPS Crosswalk` — catalog of QuIPS delivery observations linked
+     to FQA resources / protocols / training (e.g. hand hygiene practice
+     ↔ WASH supplies, handwashing SOP, IPC training)
+   - `FQA-QuIPS Facility Insights` — facility × theme rows with QuIPS
+     practice rate, FQA readiness, and an insight quadrant:
+     Enabled & practiced / Practice gap / Adaptive practice / Structural gap
+   - `FQA-QuIPS Insight Summary` — theme-level counts of those quadrants  
+   **Required sources:** QuIPS cleaned data (local tab or linked workbook)
+   + `FQA Scores` (join on `facility_code`; facility identity and readiness
+   come from Scores).
+   **Optional detail:** `Inpatient Maternity`, `Facility General`, and
+   `Newborn Unit` — when present, categorical responses overlay Scores for
+   richer enabler/gap text. Themes cover hand hygiene, PPE, uterotonics,
+   newborn resuscitation readiness, essential newborn care, infection
+   prevention, maternal monitoring, labour monitoring, respectful care,
+   and avoidance of harmful practices.
+8. `pullAllForms` and `fullRefreshAllForms` both finish by running
    `writeFqaScoreTable`. The `FQA Scores` sheet is the totalling table:
    `county`, `subcounty`, `facility`, `facility_code`, `facility_level`,
    `department`, `thematic_area`, `hss_building_block`, `attribute`,
