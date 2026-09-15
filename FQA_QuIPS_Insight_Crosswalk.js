@@ -28,7 +28,8 @@ var FQA_QUIPS_CROSSWALK_SHEET = 'FQA-QuIPS Crosswalk';
 var FQA_QUIPS_FACILITY_INSIGHTS_SHEET = 'FQA-QuIPS Facility Insights';
 var FQA_QUIPS_INSIGHT_SUMMARY_SHEET = 'FQA-QuIPS Insight Summary';
 
-var QUIPS_MIN_VALID_FOR_INSIGHT = 3;
+/** Require at least one scored QuIPS response; zero stays insufficient_data. */
+var QUIPS_MIN_VALID_FOR_INSIGHT = 1;
 var QUIPS_PRACTICE_STRONG = 0.8;
 var QUIPS_PRACTICE_WEAK = 0.5;
 

@@ -4442,6 +4442,8 @@ assert.strictEqual(
   'ready'
 );
 
+assert.strictEqual(g('QUIPS_MIN_VALID_FOR_INSIGHT'), 1);
+
 const strongPractice = g(
   "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
     "{hand_hygiene:'Yes'},{hand_hygiene:'Yes'},{hand_hygiene:'Yes'}" +
@@ -4449,6 +4451,22 @@ const strongPractice = g(
 );
 assert.strictEqual(strongPractice.practice_level, 'strong');
 assert.strictEqual(strongPractice.practice_rate, 1);
+
+const singleScoredPractice = g(
+  "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
+    "{hand_hygiene:'Yes'}" +
+    '])'
+);
+assert.strictEqual(singleScoredPractice.practice_level, 'strong');
+assert.strictEqual(singleScoredPractice.scored_responses, 1);
+
+const zeroScoredPractice = g(
+  "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
+    "{hand_hygiene:'Unable to observe'}" +
+    '])'
+);
+assert.strictEqual(zeroScoredPractice.practice_level, 'insufficient_data');
+assert.strictEqual(zeroScoredPractice.scored_responses, 0);
 
 const weakPractice = g(
   "aggregateQuipsPractice_(FQA_QUIPS_INSIGHT_THEMES.find(function (t) { return t.id === 'hand_hygiene'; }), [" +
