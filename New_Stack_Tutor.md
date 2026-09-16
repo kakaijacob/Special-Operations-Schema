@@ -780,17 +780,18 @@ Curriculum for building dbt models on your Jaffle Shop project.
 
 | # | Topic | Status |
 |---|-------|--------|
-| 1 | What are Models? | Start here |
-| 2 | Build Your First Model | Hands-on |
-| 3 | What is Modularity? | |
-| 4 | Modularity and the `ref` Macro | |
-| 5 | Troubleshooting `dbt run` | |
-| 6 | Data Modeling Frameworks | |
-| 7 | Naming Conventions | |
-| 8 | Reorganize Your Project | |
-| 9 | Materialization Strategies | |
-| 10 | Practice + Exemplar | |
-| 11 | Knowledge check | |
+| 1 | What are Models? | Ready |
+| 2 | Build Your First Model | Ready |
+| 3 | What is Modularity? | Ready |
+| 4 | Modularity and the `ref` Macro | Ready |
+| 5 | Troubleshooting `dbt run` | Ready |
+| 6 | Data Modeling Frameworks | Ready |
+| 7 | Naming Conventions | Ready |
+| 8 | Reorganize Your Project | Ready |
+| 9 | Materialization Strategies | Ready |
+| 10 | Practice + Exemplar | Your turn |
+| 11 | Knowledge check | Your turn |
+| 12 | Resources & Review | Ready |
 
 ---
 
@@ -822,7 +823,31 @@ customers.sql         (dbt model — business logic / mart)
 
 ### 2 — Build Your First Model (guided)
 
-You already have staging models. Let’s **read** one carefully, then you’ll build a new mart in Practice.
+#### Lab A — Create a brand-new model file (do this first)
+
+1. In Cursor, open folder `jaffle_shop_dbt/models/marts/`
+2. Open `product_type_summary.sql.lab`
+3. Rename it to **`product_type_summary.sql`** (remove `.lab`)
+4. Replace the placeholder with a model that:
+   - uses `{{ ref('stg_products') }}`
+   - groups by `product_type`
+   - returns `number_of_products` and `catalog_price_sum`
+5. Run:
+
+```bash
+cd ~/projects/Special-Operations-Schema/jaffle_shop_dbt
+dbt run --select product_type_summary
+```
+
+6. Check in ClickHouse:
+
+```sql
+SELECT * FROM jaffle_shop.product_type_summary;
+```
+
+You just created a model: **file name → warehouse table**.
+
+#### Lab B — Read an existing staging model
 
 Open `jaffle_shop_dbt/models/staging/stg_customers.sql`:
 
@@ -849,18 +874,15 @@ What’s happening:
 | `id as customer_id` | Rename for clear analytics naming |
 | Final `select * from renamed` | What dbt materializes as the model |
 
-**Try it yourself (read-only check):**
-
 ```bash
-cd ~/projects/Special-Operations-Schema/jaffle_shop_dbt
 dbt run --select stg_customers
 ```
-
-In ClickHouse:
 
 ```sql
 SELECT * FROM jaffle_shop.stg_customers LIMIT 5;
 ```
+
+**Path:** Lab A (create) → read staging → later Practice `order_items` (joins + modularity).
 
 ---
 

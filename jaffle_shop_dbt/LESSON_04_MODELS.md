@@ -36,12 +36,11 @@ raw.raw_*  --source()-->  stg_*  --ref()-->  customers / orders / (your order_it
 
 Set in `dbt_project.yml`. Override: `{{ config(materialized='table') }}`.
 
-## Practice
+## Practice ladder
 
-1. Edit `models/marts/order_items.sql.practice`
-2. Rename → `order_items.sql`
-3. `dbt run --select order_items`
-4. Only then open `_exemplar_order_items.sql.exemplar`
+1. **Lab A:** `models/marts/product_type_summary.sql.lab` → rename → `dbt run --select product_type_summary`
+2. **Practice:** `models/marts/order_items.sql.practice` → rename → `dbt run --select order_items`
+3. Compare only if stuck: `_exemplar_order_items.sql.exemplar`
 
 ## Knowledge check
 
