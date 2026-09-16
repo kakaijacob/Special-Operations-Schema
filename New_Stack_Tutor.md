@@ -781,7 +781,7 @@ Curriculum for building dbt models on your Jaffle Shop project.
 | # | Topic | Status |
 |---|-------|--------|
 | 1 | What are Models? | Ready |
-| 2 | Build Your First Model | Ready |
+| 2 | Build Your First Model | Lab A ready — your turn |
 | 3 | What is Modularity? | Ready |
 | 4 | Modularity and the `ref` Macro | Ready |
 | 5 | Troubleshooting `dbt run` | Ready |
@@ -789,8 +789,8 @@ Curriculum for building dbt models on your Jaffle Shop project.
 | 7 | Naming Conventions | Ready |
 | 8 | Reorganize Your Project | Ready |
 | 9 | Materialization Strategies | Ready |
-| 10 | Practice + Exemplar | Your turn |
-| 11 | Knowledge check | Your turn |
+| 10 | Practice + Exemplar | After Lab A |
+| 11 | Knowledge check | After Practice |
 | 12 | Resources & Review | Ready |
 
 ---
@@ -1003,10 +1003,12 @@ Your project is already organized:
 jaffle_shop_dbt/
   models/
     staging/     # stg_* + _sources.yml
-    marts/       # customers, orders
+    marts/       # customers, orders (+ your labs)
   macros/        # cents_to_dollars
   dbt_project.yml
 ```
+
+**Why folders matter:** dbt applies config by path. Moving `stg_customers.sql` into `models/staging/` makes it inherit `+materialized: view` automatically.
 
 `dbt_project.yml` sets defaults:
 
@@ -1018,6 +1020,13 @@ models:
     marts:
       +materialized: table
 ```
+
+**Reorganize rules**
+
+1. One model per file  
+2. Staging stays 1:1 with sources (no heavy joins)  
+3. Marts are for business entities consumers query  
+4. Don’t put raw Airbyte table names in mart SQL — go through `stg_*`
 
 Folder = layer. Config cascades from `dbt_project.yml`.
 
@@ -1032,7 +1041,20 @@ Folder = layer. Config cascades from `dbt_project.yml`.
 | **incremental** | Table + append/merge | Large fact tables (later topic) |
 | **ephemeral** | CTE only (no object) | Tiny reusable fragments |
 
-Your project: staging = **views**, marts = **tables**. Override per model with:
+Your project: staging = **views**, marts = **tables**.
+
+**See it in the warehouse after `dbt run`:**
+
+```sql
+SELECT name, engine
+FROM system.tables
+WHERE database = 'jaffle_shop'
+ORDER BY name;
+```
+
+Staging models show as views; marts show as tables (ClickHouse engine names vary, e.g. `SharedMergeTree` for tables).
+
+Override per model with:
 
 ```sql
 {{ config(materialized='table') }}
@@ -1040,11 +1062,14 @@ Your project: staging = **views**, marts = **tables**. Override per model with:
 
 at the top of a model file.
 
+**Try (optional experiment):** add `{{ config(materialized='view') }}` temporarily to a mart, `dbt run --select that_model`, then remove it — notice the object type change.
 ---
 
 ### 10 — Practice
 
-**Build mart `order_items`**
+**Do Lab A first** (`product_type_summary`) if you haven’t — see §2.
+
+**Then build mart `order_items`**
 
 1. Open `models/marts/order_items.sql.practice`
 2. Write SQL that:
@@ -1066,7 +1091,8 @@ SELECT * FROM jaffle_shop.order_items LIMIT 10;
 SELECT count() FROM jaffle_shop.order_items;  -- expect ~90,183
 ```
 
-6. Compare with exemplar: `models/marts/_exemplar_order_items.sql.exemplar`
+6. Compare with exemplar: `models/marts/_exemplar_order_items.sql.exemplar`  
+   (Exemplar SQL was verified to build successfully against your ClickHouse.)
 
 **Suggested CTE shape (don’t peek at exemplar first):**
 
@@ -1131,8 +1157,18 @@ Answer these (reply with your answers, or self-check in `jaffle_shop_dbt/LESSON_
 - [ ] I can explain what `dbt run` does to a `.sql` model
 - [ ] I used `source()` for raw and `ref()` for models
 - [ ] I know staging = views, marts = tables in this project
+- [ ] I completed Lab A (`product_type_summary`)
 - [ ] I built (or attempted) `order_items`
 - [ ] I answered the 5 knowledge-check questions
+
+**Learner completion (mark done as you go)**
+
+```text
+[ ] git pull on cursor/new-stack-tutor-bea8
+[ ] Lab A: product_type_summary.sql runs
+[ ] Practice: order_items.sql runs (~90183 rows)
+[ ] Knowledge check: 5/5 attempted (then check ANSWERS)
+```
 
 ---
 
