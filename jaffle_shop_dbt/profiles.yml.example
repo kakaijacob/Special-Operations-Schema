@@ -1,4 +1,5 @@
-# Copy to ~/.dbt/profiles.yml and set CLICKHOUSE_PASSWORD in your shell.
+# Prefer the repo-root profiles.example.yml (has special_operations + jaffle).
+# Or copy this block into ~/.dbt/profiles.yml and set CLICKHOUSE_PASSWORD.
 # Do not commit real passwords.
 
 jaffle_clickhouse:

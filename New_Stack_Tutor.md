@@ -628,9 +628,49 @@ You should see `dbt-clickhouse` listed among plugins.
 
 ---
 
-### Step 2 — Configure `~/.dbt/profiles.yml` (secrets stay local)
+### Step 2 — Point your existing dbt profile at the new ClickHouse host
 
-Create or edit `~/.dbt/profiles.yml` (this file stays on your laptop — **never commit passwords**):
+You already have a dbt profile (EmONC / `special_operations`). Do **not** create a brand-new file from scratch if `~/.dbt/profiles.yml` already exists — **edit the host** (and keep both profiles in one file).
+
+#### 2a — Open your local profile
+
+```bash
+# macOS / Linux
+open ~/.dbt/profiles.yml      # or: code ~/.dbt/profiles.yml
+# Windows (PowerShell)
+notepad $env:USERPROFILE\.dbt\profiles.yml
+```
+
+#### 2b — Change only what moved to the new service
+
+| Field | Old (example) | New (this service) |
+|-------|---------------|--------------------|
+| **host** | `….eu-west-1.aws.clickhouse.cloud` (or whatever you had) | `s88yqw81q8.germanywestcentral.azure.clickhouse.cloud` |
+| **port** | `8443` | `8443` (keep) |
+| **secure** | `true` | `true` (keep) |
+| **password** | old service password | **new** service password (or `{{ env_var('CLICKHOUSE_PASSWORD') }}`) |
+
+Reference file in this repo: **`profiles.example.yml`** (includes `special_operations` + `jaffle_clickhouse`).
+
+Minimal edit for your existing profile:
+
+```yaml
+special_operations:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud   # <-- new hostname
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"            # <-- new password
+      schema: dbt_dev                                             # keep your old schema name if you prefer
+      secure: true
+      verify: true
+      threads: 4
+```
+
+Add a second profile for the Jaffle tutor project (same host, different schema):
 
 ```yaml
 jaffle_clickhouse:
@@ -638,11 +678,11 @@ jaffle_clickhouse:
   outputs:
     dev:
       type: clickhouse
-      schema: jaffle_shop
       host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
       port: 8443
       user: default
       password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      schema: jaffle_shop
       secure: true
       verify: true
       threads: 4
@@ -654,8 +694,11 @@ Then in your shell:
 export CLICKHOUSE_PASSWORD='your_private_password'
 ```
 
-Also make sure your current IP is allowed in ClickHouse Cloud (same Settings → IP access list as for Airbyte).
+Also allow your **laptop IP** in ClickHouse Cloud (Settings → IP access list) — same list Airbyte uses.
 
+> `dbt_project.yml` profile names:
+> - EmONC project → `profile: special_operations`
+> - Jaffle tutor (`jaffle_shop_dbt/`) → `profile: jaffle_clickhouse`
 ---
 
 ### Step 3 — Open the starter project and test the connection
@@ -709,19 +752,22 @@ SELECT count() FROM jaffle_shop.orders;
 
 ### Step 6 — Part 3 checklist
 
-- [ ] `dbt-clickhouse` installed
-- [ ] `~/.dbt/profiles.yml` configured (password via env var)
-- [ ] `dbt debug` OK
-- [ ] `dbt run` builds staging + marts in `jaffle_shop`
-- [ ] `dbt test` passes
-- [ ] You can query `jaffle_shop.customers` / `jaffle_shop.orders`
+- [x] `dbt-clickhouse` installed (verified in this environment)
+- [x] `profiles.yml` connects (`dbt debug` OK)
+- [x] `dbt run` built 6 staging views + 2 mart tables in `jaffle_shop`
+- [x] `dbt test` — 16/16 passed
+- [x] Sample mart query works (top spender: David Leonard, 122 orders)
+
+On your laptop: copy `jaffle_shop_dbt/profiles.yml.example` → `~/.dbt/profiles.yml`, set `CLICKHOUSE_PASSWORD`, then `dbt run`.
 
 ---
 
-## How to use this tutor
+## Stack status
 
-1. ~~Part 1 — ClickHouse~~ done
-2. ~~Part 2 — Airbyte Jaffle sync~~ done (6 raw tables verified)
-3. **Do Part 3 now:** install dbt → set `profiles.yml` → `dbt debug` → `dbt run`
+| Layer | Status |
+|-------|--------|
+| ClickHouse Cloud (Azure DE) | Ready |
+| Airbyte → `raw.*` Jaffle tables | Synced |
+| dbt → `jaffle_shop` staging + marts | Built |
 
-Stack complete when marts exist: **Airbyte → ClickHouse raw → dbt jaffle_shop**.
+You now have the full loop: **extract/load (Airbyte) → warehouse (ClickHouse) → transform (dbt)**.
