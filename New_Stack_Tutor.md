@@ -250,6 +250,56 @@ CLICKHOUSE_SECURE=true
 
 ---
 
+### Your service (verified) — Part 1 complete
+
+Status as of 2026-09-16: **connected and practice data loaded**.
+
+| Field | Value |
+|-------|--------|
+| **Provider / region** | Azure · `germanywestcentral` |
+| **Host** | `s88yqw81q8.germanywestcentral.azure.clickhouse.cloud` |
+| **HTTPS port** | `8443` |
+| **Native port** | `9440` |
+| **User** | `default` |
+| **Password** | *(keep private — never commit to git or paste in chat)* |
+| **ClickHouse version** | `26.4.1.2359` |
+| **Practice database** | `learning` |
+| **Practice table** | `learning.first_events` (3 sample rows) |
+
+How to read a JDBC URL like the one from the console:
+
+```text
+jdbc:clickhouse://HOST:8443?user=default&password=...&ssl=true
+                 └─────┬────┘ └──┬──┘
+                     host      HTTPS port
+```
+
+For tools that ask for separate fields (Airbyte, dbt), use:
+
+- **Host:** `s88yqw81q8.germanywestcentral.azure.clickhouse.cloud`
+- **Port:** `8443` (HTTPS) or `9440` (native)
+- **SSL / secure:** enabled
+- **Database:** `learning` (or `default` until you create more)
+
+**Security:** If this password was shared in chat, email, or a ticket, **rotate it now** in the ClickHouse Cloud console (service → Connect / Users → reset `default` password). Update your private notes only. Do not put the new password in this repo.
+
+Verify anytime in the SQL console:
+
+```sql
+SELECT * FROM learning.first_events ORDER BY event_time;
+```
+
+Checklist:
+
+- [x] ClickHouse Cloud account created
+- [x] Service running on Azure Germany West Central
+- [x] Host / ports recorded (password stored privately)
+- [x] `SELECT version()` works (`26.4.1.2359`)
+- [x] Practice database `learning` + table `first_events` created
+- [ ] Idle/pause confirmed in service Settings (do this if not already)
+
+---
+
 ## Part 2 — Airbyte (coming next)
 
 Next section will cover:
@@ -274,8 +324,8 @@ After Airbyte is loading data, we will cover:
 
 ## How to use this tutor
 
-1. Finish **Part 1** end-to-end (this file, above)
-2. Reply when your ClickHouse service is up and you can query `learning.first_events`
-3. We will continue with **Airbyte setup**, then **dbt**, in the same file
+1. ~~Finish Part 1~~ — done for your Azure service
+2. Confirm idle/pause is on, and **rotate the password** if it was pasted anywhere public
+3. Reply when you want **Part 2 — Airbyte setup** added to this file
 
 Welcome to the stack — warehouse first, pipelines second, models third.
