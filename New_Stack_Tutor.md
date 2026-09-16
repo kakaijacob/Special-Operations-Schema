@@ -302,9 +302,14 @@ Checklist:
 
 ## Part 2 — Airbyte: Jaffle Shop → ClickHouse
 
-**Goal:** Load classic **Jaffle Shop** raw CSVs (`customers`, `orders`, `payments`) into ClickHouse with Airbyte, so dbt can transform them next.
+**Goal:** Load classic **Jaffle Shop** raw data (`customers`, `orders`, `payments`) into ClickHouse with Airbyte, so dbt can transform them next.
 
-Airbyte does **not** ship a built-in “Jaffle Shop” connector. We use three **File (HTTPS)** sources pointing at the public dbt Labs CSVs, and one **ClickHouse** destination.
+Airbyte does **not** ship a built-in “Jaffle Shop” connector. Use either:
+
+| Path | How | Best when |
+|------|-----|-----------|
+| **A — Google Sheets (recommended here)** | Download CSVs → import into one spreadsheet (3 tabs) → **one** Google Sheets source | You want an editable, familiar source |
+| **B — File (HTTPS)** | Point Airbyte at the public GitHub CSV URLs (3 File sources) | You want zero Google setup |
 
 Prepared on your warehouse already:
 
@@ -313,23 +318,25 @@ Prepared on your warehouse already:
 
 ---
 
-### What you will build
+### What you will build (Path A — Google Sheets)
 
 ```text
-GitHub CSV (HTTPS)
-   └─ Airbyte File source × 3  (customers / orders / payments)
-         └─ Airbyte connection × 3
-               └─ ClickHouse destination → database `raw`
-                     └─ tables: raw_customers, raw_orders, raw_payments
+Download 3 CSVs from GitHub
+   └─ One Google Spreadsheet with 3 tabs
+         (raw_customers / raw_orders / raw_payments)
+         └─ Airbyte Google Sheets source × 1
+               └─ Airbyte connection × 1
+                     └─ ClickHouse destination → database `raw`
+                           └─ tables for each sheet/stream
 ```
 
-Public source files (classic jaffle shop):
+Download links (classic jaffle shop):
 
-| Stream / dataset name | URL |
-|-----------------------|-----|
-| `raw_customers` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv |
-| `raw_orders` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv |
-| `raw_payments` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv |
+| Sheet / stream name | Download CSV |
+|---------------------|--------------|
+| `raw_customers` | [raw_customers.csv](https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv) |
+| `raw_orders` | [raw_orders.csv](https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv) |
+| `raw_payments` | [raw_payments.csv](https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv) |
 
 ---
 
@@ -344,7 +351,10 @@ Public source files (classic jaffle shop):
 
 **Alternative:** self-host with Docker (`git clone` Airbyte + `./run-ab-platform.sh`) if you prefer local. Cloud is faster for this tutorial.
 
-Official ClickHouse destination docs: [docs.airbyte.com/integrations/destinations/clickhouse](https://docs.airbyte.com/integrations/destinations/clickhouse)
+Docs:
+
+- ClickHouse destination: [docs.airbyte.com/integrations/destinations/clickhouse](https://docs.airbyte.com/integrations/destinations/clickhouse)
+- Google Sheets source: [docs.airbyte.com/integrations/sources/google-sheets](https://docs.airbyte.com/integrations/sources/google-sheets)
 
 ---
 
@@ -413,70 +423,90 @@ On Airbyte Cloud, SSL/HTTPS is handled for you when you use port `8443`.
 
 ---
 
-### Step 4 — Add three File sources (Jaffle Shop CSVs)
+### Step 4 — Download CSVs and build one Google Sheet
 
-Airbyte’s File connector loads **one file per source**. Create three sources the same way.
+#### 4a — Download the three files
 
-#### 4a — Customers
+1. Open each CSV link above in your browser
+2. Save them locally as:
+   - `raw_customers.csv`
+   - `raw_orders.csv`
+   - `raw_payments.csv`
 
-1. **Sources** → **+ New source** → **File (CSV, JSON, Excel, Feather, Parquet)**
-2. Settings:
+#### 4b — Create the spreadsheet
 
-| Field | Value |
-|-------|--------|
-| **Source name** | `Jaffle raw_customers` |
-| **Dataset Name** | `raw_customers` |
-| **File Format** | `csv` |
-| **Storage Provider** | `HTTPS: Public Web` |
-| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv` |
-| **Reader Options** | leave blank (or `{}`) |
+1. Go to [sheets.google.com](https://sheets.google.com) → **Blank spreadsheet**
+2. Name it `jaffle_shop_raw`
+3. You need **three tabs** (sheets). Rename them exactly:
+   - `raw_customers`
+   - `raw_orders`
+   - `raw_payments`
 
-3. **Set up source** and confirm the test passes.
+Airbyte treats **each tab name** as a stream name, so keep these names clean (letters, numbers, underscores).
 
-#### 4b — Orders
+#### 4c — Import each CSV into its tab
 
-Same as above, but:
+For each tab:
 
-| Field | Value |
-|-------|--------|
-| **Source name** | `Jaffle raw_orders` |
-| **Dataset Name** | `raw_orders` |
-| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv` |
+1. Open the tab (e.g. `raw_customers`)
+2. **File → Import → Upload** → choose the matching CSV
+3. Import location: **Replace current sheet** (or “Replace spreadsheet” only if you are careful not to wipe other tabs — prefer replace **current sheet**)
+4. Separator type: **Detect automatically** / Comma
+5. Convert text to numbers/dates: **Yes**
+6. Repeat for `raw_orders` and `raw_payments`
 
-#### 4c — Payments
+#### 4d — Sheet hygiene (important)
 
-| Field | Value |
-|-------|--------|
-| **Source name** | `Jaffle raw_payments` |
-| **Dataset Name** | `raw_payments` |
-| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv` |
+- Row 1 must be headers (`id`, `first_name`, …)
+- No blank header cells
+- No extra title rows above the header
+- Do not merge cells
+- Prefer one header row only
+
+#### 4e — Sharing
+
+1. Click **Share** → **Copy link**
+2. You will paste that link into Airbyte
+3. With **OAuth (Airbyte Cloud)**: sign in as the Google user who can open the sheet — simplest path
+4. With **Service Account** (optional / OSS): share the sheet with the service account `client_email` as **Viewer**
 
 ---
 
-### Step 5 — Create connections and sync
+### Step 5 — Create the Google Sheets source in Airbyte
 
-Do this three times (one connection per source → same ClickHouse destination).
+1. Airbyte → **Sources** → **+ New source** → **Google Sheets**
+2. **Source name:** `Jaffle Shop Sheets`
+3. **Spreadsheet Link:** paste the Google Sheets URL / share link
+4. **Authentication (Airbyte Cloud):** choose **Authenticate via Google (OAuth)** → **Sign in with Google** → allow access
+5. Leave name-conversion options off unless you know you need them
+6. **Set up source** and wait for a successful test
+
+You should see streams matching your tab names: `raw_customers`, `raw_orders`, `raw_payments`.
+
+---
+
+### Step 6 — Create one connection and sync
 
 1. **Connections** → **+ New connection**
-2. Source: `Jaffle raw_customers` (then later orders / payments)
+2. Source: `Jaffle Shop Sheets`
 3. Destination: `ClickHouse Jaffle`
 4. Connection settings:
 
 | Setting | Recommended |
 |---------|-------------|
 | **Replication frequency** | `Manual` (while learning) |
-| **Destination Namespace** | Destination default (`raw`) — or Custom = `raw` |
-| **Stream** | enable `raw_customers` / `raw_orders` / `raw_payments` |
-| **Sync mode** | `Full refresh \| Overwrite` |
+| **Destination Namespace** | Destination default (`raw`) |
+| **Streams** | enable `raw_customers`, `raw_orders`, `raw_payments` |
+| **Sync mode** | `Full refresh \| Overwrite` for each |
 
-5. Save the connection
-6. Click **Sync now**
-7. Wait until status is **Succeeded**
-8. Repeat for orders and payments
+5. Save → **Sync now**
+6. Wait until status is **Succeeded**
+
+One spreadsheet → one source → one connection is why Sheets is nicer than three File sources for this dataset.
 
 ---
 
-### Step 6 — Verify data landed in ClickHouse
+### Step 7 — Verify data landed in ClickHouse
 
 In the ClickHouse SQL console:
 
@@ -500,26 +530,41 @@ Classic seed sizes are roughly:
 | `raw_orders` | ~99 |
 | `raw_payments` | ~113 |
 
-Exact names may include Airbyte prefixes depending on connector version / namespace settings. If you do not see `raw.raw_customers`, run:
+Exact names may differ slightly by connector/namespace. If you do not see those tables:
 
 ```sql
 SHOW TABLES FROM raw;
 SHOW DATABASES;
 ```
 
-and note the actual table names Airbyte created (sometimes under a namespace database). Use those names in dbt sources later.
+Use whatever names Airbyte created when you set up dbt sources later.
 
 ---
 
-### Step 7 — Part 2 checklist
+### Step 8 — Part 2 checklist (Google Sheets path)
 
 - [ ] Airbyte Cloud workspace created
 - [ ] ClickHouse IP access allows Airbyte (or “anywhere” temporarily)
 - [ ] `airbyte_user` created with grants on `raw`
 - [ ] ClickHouse destination tested successfully
-- [ ] Three File sources for jaffle CSVs created
-- [ ] Three connections synced successfully
+- [ ] Three CSVs downloaded and imported into one Google Sheet (3 tabs)
+- [ ] Google Sheets source authenticated and tested
+- [ ] One connection synced successfully
 - [ ] Row counts visible in `raw.*` tables
+
+---
+
+### Option B — File (HTTPS) sources instead of Sheets
+
+Skip Steps 4–6 above and create **three** File sources instead (one CSV URL each):
+
+| Source name | Dataset Name | URL |
+|-------------|--------------|-----|
+| `Jaffle raw_customers` | `raw_customers` | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv` |
+| `Jaffle raw_orders` | `raw_orders` | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv` |
+| `Jaffle raw_payments` | `raw_payments` | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv` |
+
+For each: Source type **File** → Format **csv** → Storage **HTTPS: Public Web** → then create **three** connections to the same ClickHouse destination (Manual / Full refresh Overwrite).
 
 ---
 
@@ -527,10 +572,12 @@ and note the actual table names Airbyte created (sometimes under a namespace dat
 
 | Symptom | Fix |
 |---------|-----|
-| Destination test fails / timeout | Open ClickHouse IP allow list; confirm host has **no** `https://` prefix; port `8443` |
+| Destination test fails / timeout | Open ClickHouse IP allow list; host has **no** `https://` prefix; port `8443` |
 | `Failed to insert expected rows` | `ALTER USER airbyte_user SETTINGS async_insert = 0;` |
 | Permission denied | Re-run the `GRANT` statements on database `raw` |
-| File source test fails | Open the CSV URL in a browser; must be publicly readable |
+| Google Sheets auth fails | Re-run OAuth as the sheet owner; or share sheet with service account email |
+| Missing / wrong columns | Header must be row 1; re-import CSV; no merged cells |
+| Stream names ugly | Rename tabs to `raw_customers` etc. before setting up the source |
 | Tables missing in `raw` | Check connection namespace; `SHOW DATABASES` / `SHOW TABLES FROM raw` |
 
 ---
@@ -549,7 +596,7 @@ After the three raw tables are in ClickHouse, we will:
 ## How to use this tutor
 
 1. ~~Part 1 — ClickHouse~~ done
-2. **Do Part 2 now:** Airbyte signup → destination → 3 file sources → sync jaffle CSVs
+2. **Do Part 2 now (Sheets path):** download CSVs → Google Sheet with 3 tabs → Airbyte Google Sheets source → sync to ClickHouse `raw`
 3. Reply with sync success (or paste errors / `SHOW TABLES FROM raw` output) and we will add **Part 3 — dbt**
 
 Warehouse ✓ → **pipelines (this section)** → models next.
