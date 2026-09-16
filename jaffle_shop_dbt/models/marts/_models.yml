@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: customers
+    description: One row per customer with order activity summary
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: orders
+    description: One row per order with customer and location attributes
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null

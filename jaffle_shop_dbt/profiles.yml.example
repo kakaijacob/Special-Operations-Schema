@@ -1,0 +1,16 @@
+# Copy to ~/.dbt/profiles.yml and set CLICKHOUSE_PASSWORD in your shell.
+# Do not commit real passwords.
+
+jaffle_clickhouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: jaffle_shop
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: true
+      verify: true
+      threads: 4

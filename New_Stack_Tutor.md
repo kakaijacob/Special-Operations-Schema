@@ -547,10 +547,34 @@ Use whatever names Airbyte created when you set up dbt sources later.
 - [ ] ClickHouse IP access allows Airbyte (or “anywhere” temporarily)
 - [ ] `airbyte_user` created with grants on `raw`
 - [ ] ClickHouse destination tested successfully
-- [ ] Three CSVs downloaded and imported into one Google Sheet (3 tabs)
-- [ ] Google Sheets source authenticated and tested
-- [ ] One connection synced successfully
+- [ ] CSVs / sheets imported and Google Sheets (or File) source tested
+- [ ] Connection synced successfully
 - [ ] Row counts visible in `raw.*` tables
+
+---
+
+### Your sync (verified) — Part 2 complete
+
+Status as of 2026-09-16: **Airbyte → ClickHouse succeeded**.
+
+You loaded the **modern Jaffle Shop** dataset (not the tiny classic `raw_payments` version):
+
+| Table | Rows |
+|-------|------|
+| `raw.raw_customers` | 930 |
+| `raw.raw_orders` | 63,148 |
+| `raw.raw_items` | 90,183 |
+| `raw.raw_products` | 10 |
+| `raw.raw_stores` | 6 |
+| `raw.raw_supplies` | 29 |
+
+Airbyte metadata columns on each table: `_airbyte_raw_id`, `_airbyte_extracted_at`, `_airbyte_meta`, `_airbyte_generation_id`.
+
+Checklist:
+
+- [x] ClickHouse destination working
+- [x] Jaffle raw tables present in database `raw`
+- [x] Row counts verified
 
 ---
 
@@ -582,21 +606,122 @@ For each: Source type **File** → Format **csv** → Storage **HTTPS: Public We
 
 ---
 
-## Part 3 — dbt (coming next)
+## Part 3 — dbt on ClickHouse (Jaffle Shop)
 
-After the three raw tables are in ClickHouse, we will:
+**Goal:** Transform `raw.*` into clean staging views and simple marts in database `jaffle_shop`.
 
-1. Install dbt + `dbt-clickhouse`
-2. Point `profiles.yml` at your Azure service
-3. Declare sources on `raw.raw_customers` / `raw_orders` / `raw_payments`
-4. Build staging + marts (`stg_*`, `dim_customers`, `fct_orders`)
+A starter project lives in this repo at **`jaffle_shop_dbt/`**.
+
+---
+
+### Step 1 — Install dbt + ClickHouse adapter
+
+On your machine (Python 3.9+ recommended):
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install dbt-core dbt-clickhouse
+dbt --version
+```
+
+You should see `dbt-clickhouse` listed among plugins.
+
+---
+
+### Step 2 — Configure `~/.dbt/profiles.yml` (secrets stay local)
+
+Create or edit `~/.dbt/profiles.yml` (this file stays on your laptop — **never commit passwords**):
+
+```yaml
+jaffle_clickhouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: jaffle_shop
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: true
+      verify: true
+      threads: 4
+```
+
+Then in your shell:
+
+```bash
+export CLICKHOUSE_PASSWORD='your_private_password'
+```
+
+Also make sure your current IP is allowed in ClickHouse Cloud (same Settings → IP access list as for Airbyte).
+
+---
+
+### Step 3 — Open the starter project and test the connection
+
+```bash
+cd jaffle_shop_dbt
+dbt debug
+```
+
+Expect: `Connection test: [OK connection ok]`
+
+If it fails:
+
+- Wrong password / need to re-export `CLICKHOUSE_PASSWORD`
+- IP not allowlisted
+- Host mistyped (no `https://`, no port in host field)
+
+---
+
+### Step 4 — What the project builds
+
+| Layer | Models | Purpose |
+|-------|--------|---------|
+| **Sources** | `ecom` → `raw.raw_*` | Point at Airbyte tables |
+| **Staging** | `stg_customers`, `stg_orders`, `stg_order_items`, `stg_products`, `stg_locations`, `stg_supplies` | Rename, cast types, drop Airbyte meta cols |
+| **Marts** | `customers`, `orders` | Simple analytics-ready tables |
+
+Money fields in raw data are **integer cents stored as strings** (Airbyte typing). Staging casts them to numbers and converts to dollars.
+
+---
+
+### Step 5 — Run dbt
+
+```bash
+cd jaffle_shop_dbt
+dbt run
+dbt test
+```
+
+Then in ClickHouse SQL console:
+
+```sql
+SHOW TABLES FROM jaffle_shop;
+
+SELECT * FROM jaffle_shop.stg_customers LIMIT 5;
+SELECT * FROM jaffle_shop.customers LIMIT 5;
+SELECT count() FROM jaffle_shop.orders;
+```
+
+---
+
+### Step 6 — Part 3 checklist
+
+- [ ] `dbt-clickhouse` installed
+- [ ] `~/.dbt/profiles.yml` configured (password via env var)
+- [ ] `dbt debug` OK
+- [ ] `dbt run` builds staging + marts in `jaffle_shop`
+- [ ] `dbt test` passes
+- [ ] You can query `jaffle_shop.customers` / `jaffle_shop.orders`
 
 ---
 
 ## How to use this tutor
 
 1. ~~Part 1 — ClickHouse~~ done
-2. **Do Part 2 now (Sheets path):** download CSVs → Google Sheet with 3 tabs → Airbyte Google Sheets source → sync to ClickHouse `raw`
-3. Reply with sync success (or paste errors / `SHOW TABLES FROM raw` output) and we will add **Part 3 — dbt**
+2. ~~Part 2 — Airbyte Jaffle sync~~ done (6 raw tables verified)
+3. **Do Part 3 now:** install dbt → set `profiles.yml` → `dbt debug` → `dbt run`
 
-Warehouse ✓ → **pipelines (this section)** → models next.
+Stack complete when marts exist: **Airbyte → ClickHouse raw → dbt jaffle_shop**.
