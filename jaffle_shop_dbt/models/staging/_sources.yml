@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: ecom
+    description: Jaffle Shop raw tables loaded by Airbyte into ClickHouse
+    schema: raw
+    tables:
+      - name: raw_customers
+        description: One record per customer
+      - name: raw_orders
+        description: One record per order
+      - name: raw_items
+        description: Line items on an order
+      - name: raw_products
+        description: Product catalog by SKU
+      - name: raw_stores
+        description: Store / location dimension
+      - name: raw_supplies
+        description: Supplies used to make products

@@ -1,0 +1,17 @@
+# Prefer the repo-root profiles.example.yml (has special_operations + jaffle).
+# Or copy this block into ~/.dbt/profiles.yml and set CLICKHOUSE_PASSWORD.
+# Do not commit real passwords.
+
+jaffle_clickhouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: jaffle_shop
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: true
+      verify: true
+      threads: 4
