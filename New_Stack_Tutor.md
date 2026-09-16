@@ -300,32 +300,256 @@ Checklist:
 
 ---
 
-## Part 2 — Airbyte (coming next)
+## Part 2 — Airbyte: Jaffle Shop → ClickHouse
 
-Next section will cover:
+**Goal:** Load classic **Jaffle Shop** raw CSVs (`customers`, `orders`, `payments`) into ClickHouse with Airbyte, so dbt can transform them next.
 
-1. Free Airbyte options (Airbyte Cloud trial vs local Docker)
-2. Creating a destination pointing at this ClickHouse service
-3. Syncing a sample source into `learning` / a raw schema
-4. Checking loaded tables in ClickHouse
+Airbyte does **not** ship a built-in “Jaffle Shop” connector. We use three **File (HTTPS)** sources pointing at the public dbt Labs CSVs, and one **ClickHouse** destination.
+
+Prepared on your warehouse already:
+
+- Database `raw` (Airbyte landing zone)
+- Database `jaffle_shop` (optional later for dbt models)
+
+---
+
+### What you will build
+
+```text
+GitHub CSV (HTTPS)
+   └─ Airbyte File source × 3  (customers / orders / payments)
+         └─ Airbyte connection × 3
+               └─ ClickHouse destination → database `raw`
+                     └─ tables: raw_customers, raw_orders, raw_payments
+```
+
+Public source files (classic jaffle shop):
+
+| Stream / dataset name | URL |
+|-----------------------|-----|
+| `raw_customers` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv |
+| `raw_orders` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv |
+| `raw_payments` | https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv |
+
+---
+
+### Step 0 — Create an Airbyte account (do this first)
+
+**Recommended for learning:** [Airbyte Cloud](https://cloud.airbyte.com/signup)
+
+1. Open **https://cloud.airbyte.com/signup**
+2. Sign up (email / Google / GitHub — whatever the page offers)
+3. Create a workspace, e.g. `new-stack-tutor`
+4. Stay on the free trial / starter credits while learning
+
+**Alternative:** self-host with Docker (`git clone` Airbyte + `./run-ab-platform.sh`) if you prefer local. Cloud is faster for this tutorial.
+
+Official ClickHouse destination docs: [docs.airbyte.com/integrations/destinations/clickhouse](https://docs.airbyte.com/integrations/destinations/clickhouse)
+
+---
+
+### Step 1 — Open ClickHouse network access for Airbyte
+
+Airbyte Cloud must reach your Azure ClickHouse service.
+
+1. In **ClickHouse Cloud** → your service → **Settings** → **Security** → **IP access list**
+2. Either:
+   - Temporarily **Allow from anywhere** (ok for a short learning session), **or**
+   - Add Airbyte Cloud egress IPs from [Airbyte IP allow list](https://docs.airbyte.com/platform/operating-airbyte/ip-allowlist) (default US residency uses the GCP us-west-3 / us-central-1 addresses listed there)
+3. Save
+
+If the destination “Test connection” fails later, IP allowlisting is the first thing to check.
+
+---
+
+### Step 2 — Create a dedicated ClickHouse user for Airbyte
+
+In the **ClickHouse SQL console**, run (pick your own strong password — do not reuse the one pasted in chat):
+
+```sql
+CREATE USER IF NOT EXISTS airbyte_user IDENTIFIED BY 'REPLACE_WITH_A_STRONG_PASSWORD';
+
+ALTER USER airbyte_user SETTINGS async_insert = 0;
+
+-- Broad CREATE so Airbyte can make helper DBs/tables if needed
+GRANT CREATE ON * TO airbyte_user;
+
+-- Permissions on the landing database
+GRANT CREATE DATABASE ON raw.* TO airbyte_user;
+GRANT CREATE TABLE  ON raw.* TO airbyte_user;
+GRANT DROP TABLE    ON raw.* TO airbyte_user;
+GRANT ALTER         ON raw.* TO airbyte_user;
+GRANT TRUNCATE      ON raw.* TO airbyte_user;
+GRANT INSERT        ON raw.* TO airbyte_user;
+GRANT SELECT        ON raw.* TO airbyte_user;
+```
+
+Store `airbyte_user` + password in your **private** notes only.
+
+> You *can* use `default` for a quick test, but a dedicated user is the habit you want.
+
+---
+
+### Step 3 — Add ClickHouse as an Airbyte destination
+
+1. In Airbyte → **Destinations** → **+ New destination**
+2. Choose **ClickHouse**
+3. Fill in:
+
+| Field | Value |
+|-------|--------|
+| **Destination name** | `ClickHouse Jaffle` |
+| **Host** | `s88yqw81q8.germanywestcentral.azure.clickhouse.cloud` |
+| **Port** | `8443` |
+| **Database** | `raw` |
+| **Username** | `airbyte_user` (or `default`) |
+| **Password** | *(your private password)* |
+| **Enable JSON** | optional; leave default / on if offered |
+
+4. Click **Set up destination** / **Test and save**
+5. Wait for a successful test
+
+On Airbyte Cloud, SSL/HTTPS is handled for you when you use port `8443`.
+
+---
+
+### Step 4 — Add three File sources (Jaffle Shop CSVs)
+
+Airbyte’s File connector loads **one file per source**. Create three sources the same way.
+
+#### 4a — Customers
+
+1. **Sources** → **+ New source** → **File (CSV, JSON, Excel, Feather, Parquet)**
+2. Settings:
+
+| Field | Value |
+|-------|--------|
+| **Source name** | `Jaffle raw_customers` |
+| **Dataset Name** | `raw_customers` |
+| **File Format** | `csv` |
+| **Storage Provider** | `HTTPS: Public Web` |
+| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_customers.csv` |
+| **Reader Options** | leave blank (or `{}`) |
+
+3. **Set up source** and confirm the test passes.
+
+#### 4b — Orders
+
+Same as above, but:
+
+| Field | Value |
+|-------|--------|
+| **Source name** | `Jaffle raw_orders` |
+| **Dataset Name** | `raw_orders` |
+| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_orders.csv` |
+
+#### 4c — Payments
+
+| Field | Value |
+|-------|--------|
+| **Source name** | `Jaffle raw_payments` |
+| **Dataset Name** | `raw_payments` |
+| **URL** | `https://raw.githubusercontent.com/dbt-labs/jaffle-shop-classic/refs/heads/main/seeds/raw_payments.csv` |
+
+---
+
+### Step 5 — Create connections and sync
+
+Do this three times (one connection per source → same ClickHouse destination).
+
+1. **Connections** → **+ New connection**
+2. Source: `Jaffle raw_customers` (then later orders / payments)
+3. Destination: `ClickHouse Jaffle`
+4. Connection settings:
+
+| Setting | Recommended |
+|---------|-------------|
+| **Replication frequency** | `Manual` (while learning) |
+| **Destination Namespace** | Destination default (`raw`) — or Custom = `raw` |
+| **Stream** | enable `raw_customers` / `raw_orders` / `raw_payments` |
+| **Sync mode** | `Full refresh \| Overwrite` |
+
+5. Save the connection
+6. Click **Sync now**
+7. Wait until status is **Succeeded**
+8. Repeat for orders and payments
+
+---
+
+### Step 6 — Verify data landed in ClickHouse
+
+In the ClickHouse SQL console:
+
+```sql
+SHOW TABLES FROM raw;
+
+SELECT count() AS n FROM raw.raw_customers;
+SELECT count() AS n FROM raw.raw_orders;
+SELECT count() AS n FROM raw.raw_payments;
+
+SELECT * FROM raw.raw_customers LIMIT 5;
+SELECT * FROM raw.raw_orders LIMIT 5;
+SELECT * FROM raw.raw_payments LIMIT 5;
+```
+
+Classic seed sizes are roughly:
+
+| Table | Approx rows |
+|-------|-------------|
+| `raw_customers` | ~100 |
+| `raw_orders` | ~99 |
+| `raw_payments` | ~113 |
+
+Exact names may include Airbyte prefixes depending on connector version / namespace settings. If you do not see `raw.raw_customers`, run:
+
+```sql
+SHOW TABLES FROM raw;
+SHOW DATABASES;
+```
+
+and note the actual table names Airbyte created (sometimes under a namespace database). Use those names in dbt sources later.
+
+---
+
+### Step 7 — Part 2 checklist
+
+- [ ] Airbyte Cloud workspace created
+- [ ] ClickHouse IP access allows Airbyte (or “anywhere” temporarily)
+- [ ] `airbyte_user` created with grants on `raw`
+- [ ] ClickHouse destination tested successfully
+- [ ] Three File sources for jaffle CSVs created
+- [ ] Three connections synced successfully
+- [ ] Row counts visible in `raw.*` tables
+
+---
+
+### Troubleshooting (common)
+
+| Symptom | Fix |
+|---------|-----|
+| Destination test fails / timeout | Open ClickHouse IP allow list; confirm host has **no** `https://` prefix; port `8443` |
+| `Failed to insert expected rows` | `ALTER USER airbyte_user SETTINGS async_insert = 0;` |
+| Permission denied | Re-run the `GRANT` statements on database `raw` |
+| File source test fails | Open the CSV URL in a browser; must be publicly readable |
+| Tables missing in `raw` | Check connection namespace; `SHOW DATABASES` / `SHOW TABLES FROM raw` |
 
 ---
 
 ## Part 3 — dbt (coming next)
 
-After Airbyte is loading data, we will cover:
+After the three raw tables are in ClickHouse, we will:
 
-1. Installing dbt and `dbt-clickhouse`
-2. Creating a project and profiles.yml for ClickHouse
-3. Staging / mart models over Airbyte-loaded tables
-4. Tests, docs, and a simple daily transform habit
+1. Install dbt + `dbt-clickhouse`
+2. Point `profiles.yml` at your Azure service
+3. Declare sources on `raw.raw_customers` / `raw_orders` / `raw_payments`
+4. Build staging + marts (`stg_*`, `dim_customers`, `fct_orders`)
 
 ---
 
 ## How to use this tutor
 
-1. ~~Finish Part 1~~ — done for your Azure service
-2. Confirm idle/pause is on, and **rotate the password** if it was pasted anywhere public
-3. Reply when you want **Part 2 — Airbyte setup** added to this file
+1. ~~Part 1 — ClickHouse~~ done
+2. **Do Part 2 now:** Airbyte signup → destination → 3 file sources → sync jaffle CSVs
+3. Reply with sync success (or paste errors / `SHOW TABLES FROM raw` output) and we will add **Part 3 — dbt**
 
-Welcome to the stack — warehouse first, pipelines second, models third.
+Warehouse ✓ → **pipelines (this section)** → models next.
