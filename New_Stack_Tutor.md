@@ -1041,15 +1041,27 @@ dbt run --select order_items
 
 ```sql
 SELECT * FROM jaffle_shop.order_items LIMIT 10;
+SELECT count() FROM jaffle_shop.order_items;  -- expect ~90,183
 ```
 
 6. Compare with exemplar: `models/marts/_exemplar_order_items.sql.exemplar`
+
+**Suggested CTE shape (don’t peek at exemplar first):**
+
+```sql
+with order_items as ( ... ref stg_order_items ... ),
+products as ( ... ),
+orders as ( ... )
+select ... from order_items
+left join products on ...
+left join orders on ...
+```
 
 ---
 
 ### 11 — Knowledge check (Models)
 
-Answer these (reply with your answers):
+Answer these (reply with your answers, or self-check in `jaffle_shop_dbt/LESSON_04_MODELS_ANSWERS.md` after trying):
 
 1. What warehouse object does a dbt model create by default in our staging folder — table or view? Why?
 2. When do you use `source()` vs `ref()`?
@@ -1059,10 +1071,53 @@ Answer these (reply with your answers):
 
 ---
 
+### 12 — Resources & Review
+
+**Official docs**
+
+- [About dbt models](https://docs.getdbt.com/docs/build/models)
+- [ref macro](https://docs.getdbt.com/reference/dbt-jinja-functions/ref)
+- [source macro](https://docs.getdbt.com/reference/dbt-jinja-functions/source)
+- [Materializations](https://docs.getdbt.com/docs/build/materializations)
+- [Model selection syntax](https://docs.getdbt.com/reference/node-selection/syntax)
+- [dbt-clickhouse setup](https://docs.getdbt.com/docs/core/connect-data-platform/clickhouse-setup)
+
+**In this repo**
+
+| Artifact | Path |
+|----------|------|
+| Lesson cheat sheet | `jaffle_shop_dbt/LESSON_04_MODELS.md` |
+| Answer key (after you try) | `jaffle_shop_dbt/LESSON_04_MODELS_ANSWERS.md` |
+| Practice stub | `models/marts/order_items.sql.practice` |
+| Exemplar | `models/marts/_exemplar_order_items.sql.exemplar` |
+| Staging examples | `models/staging/stg_*.sql` |
+| Mart examples | `models/marts/customers.sql`, `orders.sql` |
+
+**60-minute pacing**
+
+| Minutes | Focus |
+|---------|--------|
+| 0–10 | §1–2 What are models + run `stg_customers` |
+| 10–20 | §3–4 Modularity + read `customers.sql` for `ref` |
+| 20–30 | §5–6 Troubleshoot commands + frameworks |
+| 30–40 | §7–9 Naming + folders + materializations |
+| 40–55 | §10 Practice `order_items` |
+| 55–60 | §11 Knowledge check |
+
+**Review checklist**
+
+- [ ] I can explain what `dbt run` does to a `.sql` model
+- [ ] I used `source()` for raw and `ref()` for models
+- [ ] I know staging = views, marts = tables in this project
+- [ ] I built (or attempted) `order_items`
+- [ ] I answered the 5 knowledge-check questions
+
+---
+
 ### How we’ll use this section
 
 1. You already passed `dbt debug` and can see `stg_*` in the IDE + ClickHouse  
-2. **Now:** read §1–4 above, re-run `stg_customers`, then do **Practice** (`order_items`)  
-3. Reply with practice result or knowledge-check answers — we continue to tests/docs next curriculum module  
+2. **Now:** follow the 60-min pacing (or `LESSON_04_MODELS.md`), then do **Practice**  
+3. Reply with `order_items` success and/or knowledge-check answers  
 
 **Start Practice when ready** — say when `order_items` builds successfully.
