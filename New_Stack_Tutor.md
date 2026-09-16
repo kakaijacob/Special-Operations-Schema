@@ -780,18 +780,21 @@ Curriculum for building dbt models on your Jaffle Shop project.
 
 | # | Topic | Status |
 |---|-------|--------|
-| 1 | What are Models? | Ready |
-| 2 | Build Your First Model | Lab A ready — your turn |
-| 3 | What is Modularity? | Ready |
-| 4 | Modularity and the `ref` Macro | Ready |
-| 5 | Troubleshooting `dbt run` | Ready |
-| 6 | Data Modeling Frameworks | Ready |
-| 7 | Naming Conventions | Ready |
-| 8 | Reorganize Your Project | Ready |
-| 9 | Materialization Strategies | Ready |
-| 10 | Practice + Exemplar | After Lab A |
-| 11 | Knowledge check | After Practice |
-| 12 | Resources & Review | Ready |
+| 1 | What are Models? | Done |
+| 2 | Build Your First Model | Done — `product_type_summary` |
+| 3 | What is Modularity? | Done |
+| 4 | Modularity and the `ref` Macro | Done |
+| 5 | Troubleshooting `dbt run` | Done |
+| 6 | Data Modeling Frameworks | Done |
+| 7 | Naming Conventions | Done |
+| 8 | Reorganize Your Project | Done |
+| 9 | Materialization Strategies | Done |
+| 10 | Practice + Exemplar | Done — `order_items` (~90183 rows) |
+| 11 | Knowledge check | Self-check via `LESSON_04_MODELS_ANSWERS.md` |
+| 12 | Resources & Review | Done |
+
+**Follow along:** `jaffle_shop_dbt/LESSON_04_STEP_BY_STEP.md` (copy-paste walkthrough).
+
 
 ---
 
