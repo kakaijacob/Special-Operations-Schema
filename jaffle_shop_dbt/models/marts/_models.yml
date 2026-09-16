@@ -16,3 +16,20 @@ models:
         tests:
           - unique
           - not_null
+
+  - name: product_type_summary
+    description: Product counts and catalog price by type (Lab A)
+    columns:
+      - name: product_type
+        tests:
+          - unique
+          - not_null
+
+  - name: order_items
+    description: Line items with product and order context (Models practice)
+    columns:
+      - name: order_item_id
+        tests:
+          - unique
+          - not_null
+
