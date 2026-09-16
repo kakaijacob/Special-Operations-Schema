@@ -771,3 +771,298 @@ On your laptop: copy `jaffle_shop_dbt/profiles.yml.example` → `~/.dbt/profiles
 | dbt → `jaffle_shop` staging + marts | Built |
 
 You now have the full loop: **extract/load (Airbyte) → warehouse (ClickHouse) → transform (dbt)**.
+
+---
+
+## 04. Models (≈60 min)
+
+Curriculum for building dbt models on your Jaffle Shop project.
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | What are Models? | Start here |
+| 2 | Build Your First Model | Hands-on |
+| 3 | What is Modularity? | |
+| 4 | Modularity and the `ref` Macro | |
+| 5 | Troubleshooting `dbt run` | |
+| 6 | Data Modeling Frameworks | |
+| 7 | Naming Conventions | |
+| 8 | Reorganize Your Project | |
+| 9 | Materialization Strategies | |
+| 10 | Practice + Exemplar | |
+| 11 | Knowledge check | |
+
+---
+
+### 1 — What are Models?
+
+A **dbt model** is a `.sql` file that contains a `SELECT` statement. When you run `dbt run`, dbt:
+
+1. Wraps your SQL in a `CREATE VIEW` / `CREATE TABLE` (depending on materialization)
+2. Builds it in your warehouse schema (`jaffle_shop` for this project)
+3. Names the object after the **file name** (without `.sql`)
+
+So `models/staging/stg_customers.sql` → ClickHouse view `jaffle_shop.stg_customers`.
+
+Models are how you turn raw loaded data (`raw.*` from Airbyte) into clean, trusted analytics tables.
+
+**Mental model:**
+
+```text
+raw.raw_customers     (Airbyte)
+        │
+        ▼
+stg_customers.sql     (dbt model — clean/rename)
+        │
+        ▼
+customers.sql         (dbt model — business logic / mart)
+```
+
+---
+
+### 2 — Build Your First Model (guided)
+
+You already have staging models. Let’s **read** one carefully, then you’ll build a new mart in Practice.
+
+Open `jaffle_shop_dbt/models/staging/stg_customers.sql`:
+
+```sql
+with source as (
+    select * from {{ source('ecom', 'raw_customers') }}
+),
+
+renamed as (
+    select
+        id as customer_id,
+        name as customer_name
+    from source
+)
+
+select * from renamed
+```
+
+What’s happening:
+
+| Piece | Meaning |
+|-------|---------|
+| `{{ source('ecom', 'raw_customers') }}` | Points at Airbyte table `raw.raw_customers` (declared in `_sources.yml`) |
+| `id as customer_id` | Rename for clear analytics naming |
+| Final `select * from renamed` | What dbt materializes as the model |
+
+**Try it yourself (read-only check):**
+
+```bash
+cd ~/projects/Special-Operations-Schema/jaffle_shop_dbt
+dbt run --select stg_customers
+```
+
+In ClickHouse:
+
+```sql
+SELECT * FROM jaffle_shop.stg_customers LIMIT 5;
+```
+
+---
+
+### 3 — What is Modularity?
+
+**Modularity** = break work into small reusable pieces instead of one giant SQL file.
+
+Bad: one 400-line query that cleans customers, joins orders, calculates LTV, and formats for a dashboard.
+
+Good:
+
+1. `stg_customers` — clean customers only  
+2. `stg_orders` — clean orders only  
+3. `customers` — join + aggregate for the dashboard  
+
+Benefits: easier testing, less duplication, clearer lineage, safer changes.
+
+---
+
+### 4 — Modularity and the `ref` Macro
+
+`ref()` tells dbt: “depend on another model.”
+
+```sql
+select * from {{ ref('stg_customers') }}
+```
+
+dbt:
+
+- Resolves the correct schema/database
+- Builds models in the right **order** (DAG)
+- Lets you rename/move files without rewriting every downstream query
+
+**Rule of thumb**
+
+| Upstream | Use |
+|----------|-----|
+| Airbyte / raw loaded table | `source('ecom', 'raw_…')` |
+| Another dbt model | `ref('model_name')` |
+
+Example from `models/marts/customers.sql`:
+
+```sql
+with customers as (
+    select * from {{ ref('stg_customers') }}
+),
+orders as (
+    select * from {{ ref('stg_orders') }}
+),
+...
+```
+
+Never hard-code `jaffle_shop.stg_customers` in models — always `ref()`.
+
+---
+
+### 5 — Troubleshooting `dbt run`
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `compilation error` / Jinja | Typo in `ref` / `source` | Check model name spelling; `dbt ls` |
+| `relation does not exist` | Upstream not built | `dbt run --select +this_model` |
+| Profile / connection error | `profiles.yml` | `dbt debug` |
+| Syntax error near `{{` | Ran SQL in ClickHouse with Jinja | Jinja only works via `dbt run` |
+| Empty profile | Bad YAML indent | Profile name at column 0 |
+| Model skipped | Selector too narrow | Drop `--select` or widen it |
+
+Useful commands:
+
+```bash
+dbt run --select stg_customers          # one model
+dbt run --select staging.*              # folder
+dbt run --select +customers             # customers + upstream
+dbt run --select customers+             # customers + downstream
+dbt ls                                  # list models
+dbt compile                             # see compiled SQL in target/
+```
+
+Compiled SQL lives in `target/compiled/jaffle_shop_dbt/models/...` — great for debugging.
+
+---
+
+### 6 — Data Modeling Frameworks
+
+Common analytics engineering layers (what you’re using):
+
+| Layer | Prefix / folder | Job |
+|-------|-----------------|-----|
+| **Sources** | `_sources.yml` | Declare raw tables |
+| **Staging** | `stg_` | 1:1 with source; rename, cast, light clean |
+| **Intermediate** (optional) | `int_` | Reusable joins / business logic |
+| **Marts** | entity names (`customers`, `orders`) | Business-ready tables for BI |
+
+This is often called a **staging → marts** (or medallion-inspired) pattern. Keep staging boring; put business logic in marts (or intermediate).
+
+---
+
+### 7 — Naming Conventions
+
+| Object | Convention | Example |
+|--------|------------|---------|
+| Staging model | `stg_<entity>` | `stg_orders` |
+| Intermediate | `int_<verb>_<entity>` | `int_order_items_joined` |
+| Mart | plural business entity | `customers`, `orders` |
+| Primary key column | `<entity>_id` | `customer_id`, `order_id` |
+| Booleans | `is_` / `has_` | `is_perishable` |
+| Timestamps | `<event>_at` | `ordered_at`, `opened_at` |
+
+File name = model name = warehouse relation name.
+
+---
+
+### 8 — Reorganize Your Project
+
+Your project is already organized:
+
+```text
+jaffle_shop_dbt/
+  models/
+    staging/     # stg_* + _sources.yml
+    marts/       # customers, orders
+  macros/        # cents_to_dollars
+  dbt_project.yml
+```
+
+`dbt_project.yml` sets defaults:
+
+```yaml
+models:
+  jaffle_shop_dbt:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+```
+
+Folder = layer. Config cascades from `dbt_project.yml`.
+
+---
+
+### 9 — Materialization Strategies
+
+| Materialization | Creates | Best for |
+|-----------------|---------|----------|
+| **view** | `CREATE VIEW` | Staging — always fresh, cheap to rebuild |
+| **table** | `CREATE TABLE` | Marts — faster BI queries |
+| **incremental** | Table + append/merge | Large fact tables (later topic) |
+| **ephemeral** | CTE only (no object) | Tiny reusable fragments |
+
+Your project: staging = **views**, marts = **tables**. Override per model with:
+
+```sql
+{{ config(materialized='table') }}
+```
+
+at the top of a model file.
+
+---
+
+### 10 — Practice
+
+**Build mart `order_items`**
+
+1. Open `models/marts/order_items.sql.practice`
+2. Write SQL that:
+   - `ref('stg_order_items')`
+   - joins `ref('stg_products')` on `sku`
+   - joins `ref('stg_orders')` on `order_id`
+   - returns line-item + product + order context
+3. Rename file to `order_items.sql`
+4. Run:
+
+```bash
+dbt run --select order_items
+```
+
+5. Check:
+
+```sql
+SELECT * FROM jaffle_shop.order_items LIMIT 10;
+```
+
+6. Compare with exemplar: `models/marts/_exemplar_order_items.sql.exemplar`
+
+---
+
+### 11 — Knowledge check (Models)
+
+Answer these (reply with your answers):
+
+1. What warehouse object does a dbt model create by default in our staging folder — table or view? Why?
+2. When do you use `source()` vs `ref()`?
+3. If `customers` depends on `stg_orders`, and you change `stg_orders`, which command rebuilds both safely?
+4. Why prefer `customer_id` over `id` in staging?
+5. Name one reason to materialize a mart as a **table** instead of a **view**.
+
+---
+
+### How we’ll use this section
+
+1. You already passed `dbt debug` and can see `stg_*` in the IDE + ClickHouse  
+2. **Now:** read §1–4 above, re-run `stg_customers`, then do **Practice** (`order_items`)  
+3. Reply with practice result or knowledge-check answers — we continue to tests/docs next curriculum module  
+
+**Start Practice when ready** — say when `order_items` builds successfully.
