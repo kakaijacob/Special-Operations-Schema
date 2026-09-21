@@ -2,6 +2,15 @@
 
 dbt project for the New Stack Tutor: transform Airbyte-loaded Jaffle Shop tables in ClickHouse.
 
+## Layers
+
+```text
+raw.* (Airbyte)
+  → staging (stg_*)
+  → intermediate (int_customer_order_summary)
+  → marts (customers, orders, order_items, …)
+```
+
 ## Quick start
 
 1. Install: `pip install dbt-core dbt-clickhouse`
@@ -10,4 +19,4 @@ dbt project for the New Stack Tutor: transform Airbyte-loaded Jaffle Shop tables
 4. `dbt debug`
 5. `dbt run && dbt test`
 
-See `New_Stack_Tutor.md` Part 3 for full steps.
+See `New_Stack_Tutor.md` Part 3 / §04 Models for full steps.

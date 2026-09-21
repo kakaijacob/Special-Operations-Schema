@@ -17,7 +17,9 @@ dbt compile
 ## DAG for this project
 
 ```text
-raw.raw_*  --source()-->  stg_*  --ref()-->  customers / orders / (your order_items)
+raw.raw_*  --source()-->  stg_*  --ref()-->  int_* (summaries)  --ref()-->  marts
+                                              └─ int_customer_order_summary
+                                                                    └─ customers
 ```
 
 ## source vs ref
@@ -32,6 +34,7 @@ raw.raw_*  --source()-->  stg_*  --ref()-->  customers / orders / (your order_it
 | Folder | Default |
 |--------|---------|
 | `models/staging/` | view |
+| `models/intermediate/` | view |
 | `models/marts/` | table |
 
 Set in `dbt_project.yml`. Override: `{{ config(materialized='table') }}`.
