@@ -7,8 +7,8 @@ dbt project for the New Stack Tutor: transform Airbyte-loaded Jaffle Shop tables
 ```text
 raw.* (Airbyte)
   → staging (stg_*)
-  → intermediate (int_customer_order_summary)
-  → marts (customers, orders, order_items, …)
+  → intermediate (int_customer_order_summary, int_product_type_summary)
+  → marts (customers, orders, order_items, product_type_summary, …)
 ```
 
 ## Quick start

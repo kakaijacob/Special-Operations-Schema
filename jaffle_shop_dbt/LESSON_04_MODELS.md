@@ -18,8 +18,8 @@ dbt compile
 
 ```text
 raw.raw_*  --source()-->  stg_*  --ref()-->  int_* (summaries)  --ref()-->  marts
-                                              └─ int_customer_order_summary
-                                                                    └─ customers
+                                              ├─ int_customer_order_summary → customers
+                                              └─ int_product_type_summary   → product_type_summary
 ```
 
 ## source vs ref

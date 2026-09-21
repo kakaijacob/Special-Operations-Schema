@@ -11,3 +11,14 @@ models:
       - name: number_of_orders
         tests:
           - not_null
+
+  - name: int_product_type_summary
+    description: Per-product-type catalog aggregates (count and price sum)
+    columns:
+      - name: product_type
+        tests:
+          - unique
+          - not_null
+      - name: number_of_products
+        tests:
+          - not_null
