@@ -16,5 +16,7 @@ models:
   jaffle_shop_dbt:
     staging:
       +materialized: view
+    intermediate:
+      +materialized: view
     marts:
       +materialized: table

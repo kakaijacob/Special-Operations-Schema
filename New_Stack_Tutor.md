@@ -724,7 +724,8 @@ If it fails:
 |-------|--------|---------|
 | **Sources** | `ecom` → `raw.raw_*` | Point at Airbyte tables |
 | **Staging** | `stg_customers`, `stg_orders`, `stg_order_items`, `stg_products`, `stg_locations`, `stg_supplies` | Rename, cast types, drop Airbyte meta cols |
-| **Marts** | `customers`, `orders` | Simple analytics-ready tables |
+| **Intermediate** | `int_customer_order_summary` | Reusable per-customer order aggregates |
+| **Marts** | `customers`, `orders`, `order_items`, `product_type_summary` | Analytics-ready tables |
 
 Money fields in raw data are **integer cents stored as strings** (Airbyte typing). Staging casts them to numbers and converts to dollars.
 

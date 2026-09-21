@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_customer_order_summary
+    description: Per-customer order aggregates (first/last order, count, lifetime spend)
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: number_of_orders
+        tests:
+          - not_null
