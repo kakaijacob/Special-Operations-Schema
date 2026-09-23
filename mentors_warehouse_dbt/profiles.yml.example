@@ -1,0 +1,32 @@
+# Copy this into ~/.dbt/profiles.yml (or merge with your existing profiles).
+# Replace every REPLACE_ME_* value with details from your real ClickHouse Cloud account.
+# Never commit real passwords to git.
+
+mentors_warehouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      # From ClickHouse Cloud → service → Connect
+      # Example: abcd1234.germanywestcentral.azure.clickhouse.cloud
+      host: REPLACE_ME_CLICKHOUSE_HOST
+      port: 8443
+      user: REPLACE_ME_CLICKHOUSE_USER
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      # Database you already created for this project
+      schema: mentors_warehouse
+      secure: true
+      verify: true
+      threads: 4
+
+    # Optional: separate prod target when you are ready
+    # prod:
+    #   type: clickhouse
+    #   host: REPLACE_ME_CLICKHOUSE_HOST
+    #   port: 8443
+    #   user: REPLACE_ME_CLICKHOUSE_USER
+    #   password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+    #   schema: mentors_warehouse
+    #   secure: true
+    #   verify: true
+    #   threads: 8

@@ -1,0 +1,6 @@
+# Mart models: business-ready tables for BI / reporting.
+# Add .sql models here after intermediate/staging are ready.
+
+version: 2
+
+models: []

@@ -1,0 +1,6 @@
+# Intermediate models: reusable joins/aggregates (int_*).
+# Add .sql models here after staging exists.
+
+version: 2
+
+models: []
