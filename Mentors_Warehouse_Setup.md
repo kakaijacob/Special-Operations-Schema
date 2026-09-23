@@ -55,14 +55,14 @@ Open the folder in Cursor: **Open project** → `~/projects/mentors_warehouse`.
 
 ---
 
-## 4. Create `~/.dbt/profiles.yml` (placeholders)
+## 4. Profile + secrets (passwords as secrets, not plaintext)
+
+### 4a. `~/.dbt/profiles.yml` — password via `env_var`
 
 ```bash
 mkdir -p ~/.dbt
 nano ~/.dbt/profiles.yml
 ```
-
-Paste (replace every `REPLACE_ME_*`):
 
 ```yaml
 mentors_warehouse:
@@ -70,27 +70,47 @@ mentors_warehouse:
   outputs:
     dev:
       type: clickhouse
-      host: REPLACE_ME_CLICKHOUSE_HOST
+      host: "{{ env_var('MENTORS_CLICKHOUSE_HOST', 'REPLACE_ME_CLICKHOUSE_HOST') }}"
       port: 8443
-      user: REPLACE_ME_CLICKHOUSE_USER
-      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      user: "{{ env_var('MENTORS_CLICKHOUSE_USER', 'default') }}"
+      # SECRET — never paste the real password into this file
+      password: "{{ env_var('MENTORS_CLICKHOUSE_PASSWORD') }}"
       schema: mentors_warehouse
       secure: true
       verify: true
       threads: 4
 ```
 
-Same template lives in the repo as `profiles.yml.example`.
+Template: `profiles.yml.example` in the project.
 
-You may keep older profiles (`jaffle_clickhouse`, `special_operations`) in the **same** file.
+### 4b. Keep secrets in a local env file (outside the repo)
+
+```bash
+mkdir -p ~/.config
+cp secrets.env.example ~/.config/mentors_warehouse.env
+nano ~/.config/mentors_warehouse.env
+```
+
+```bash
+export MENTORS_CLICKHOUSE_PASSWORD='your_real_secret_password'
+export MENTORS_CLICKHOUSE_HOST='xxxx.region.azure.clickhouse.cloud'
+export MENTORS_CLICKHOUSE_USER='default'
+```
+
+```bash
+source ~/.config/mentors_warehouse.env
+```
+
+Never commit that env file. Optional: add the `source` line to `~/.bashrc`.
+
+You may keep older profiles (`jaffle_clickhouse`, `special_operations`) in the same `profiles.yml`, each with its own `env_var('…_PASSWORD')`.
 
 ---
 
-## 5. Export password and test
+## 5. Test
 
 ```bash
-export CLICKHOUSE_PASSWORD='REPLACE_ME_PASSWORD'
-
+source ~/.config/mentors_warehouse.env
 cd ~/projects/mentors_warehouse
 dbt debug
 ```

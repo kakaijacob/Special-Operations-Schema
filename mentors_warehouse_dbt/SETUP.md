@@ -55,12 +55,16 @@ dbt --version
 
 ---
 
-## 3. Profile (`~/.dbt/profiles.yml`)
+## 3. Profile + secrets (no plaintext passwords)
+
+### 3a. profiles.yml — password via `env_var` (secret)
 
 ```bash
 mkdir -p ~/.dbt
 nano ~/.dbt/profiles.yml
 ```
+
+Paste from `profiles.yml.example` (important lines):
 
 ```yaml
 mentors_warehouse:
@@ -68,25 +72,47 @@ mentors_warehouse:
   outputs:
     dev:
       type: clickhouse
-      host: REPLACE_ME_CLICKHOUSE_HOST
+      host: "{{ env_var('MENTORS_CLICKHOUSE_HOST', 'REPLACE_ME_CLICKHOUSE_HOST') }}"
       port: 8443
-      user: REPLACE_ME_CLICKHOUSE_USER
-      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      user: "{{ env_var('MENTORS_CLICKHOUSE_USER', 'default') }}"
+      # SECRET — never paste the real password here
+      password: "{{ env_var('MENTORS_CLICKHOUSE_PASSWORD') }}"
       schema: mentors_warehouse
       secure: true
       verify: true
       threads: 4
 ```
 
+### 3b. Store secrets outside git
+
 ```bash
-export CLICKHOUSE_PASSWORD='REPLACE_ME_PASSWORD'
+mkdir -p ~/.config
+cp secrets.env.example ~/.config/mentors_warehouse.env
+nano ~/.config/mentors_warehouse.env
 ```
+
+Fill real values (this file stays on your machine only):
+
+```bash
+export MENTORS_CLICKHOUSE_PASSWORD='your_real_secret_password'
+export MENTORS_CLICKHOUSE_HOST='xxxx.region.azure.clickhouse.cloud'
+export MENTORS_CLICKHOUSE_USER='default'
+```
+
+Load secrets in every terminal before dbt:
+
+```bash
+source ~/.config/mentors_warehouse.env
+```
+
+Optional: add that `source` line to `~/.bashrc` so it loads automatically.
 
 ---
 
 ## 4. Debug
 
 ```bash
+source ~/.config/mentors_warehouse.env
 cd ~/projects/mentors_warehouse
 dbt debug
 dbt ls
