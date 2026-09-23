@@ -165,7 +165,7 @@ dbt test
 - [ ] Host / user / password known
 - [ ] Laptop IP allowlisted
 - [ ] Repo cloned
-- [ ] `~/.dbt/profiles.yml` profile `mentors_warehouse` filled in
-- [ ] `CLICKHOUSE_PASSWORD` exported
+- [ ] `~/.dbt/profiles.yml` uses `env_var('MENTORS_CLICKHOUSE_PASSWORD')` (no plaintext password)
+- [ ] Secrets loaded via `source ~/.config/mentors_warehouse.env`
 - [ ] `dbt debug` OK
 - [ ] IDE shows `staging` / `intermediate` / `marts`
