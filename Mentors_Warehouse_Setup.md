@@ -1,29 +1,36 @@
-# Mentors Warehouse — prepare real ClickHouse + dbt project
-#
-# Project path: mentors_warehouse_dbt/
-# ClickHouse database: mentors_warehouse
-# Profile name: mentors_warehouse
+# Mentors Warehouse — setup sequence (real ClickHouse account)
 
-## Code sequence (run in order)
+Repo: https://github.com/kakaijacob/mentors_warehouse  
+Profile name: `mentors_warehouse`  
+ClickHouse database: `mentors_warehouse`
 
-### A. ClickHouse (SQL console on the real account)
+Run these steps in order on your laptop (WSL).
+
+---
+
+## 1. Create / confirm ClickHouse database
+
+In the **real** ClickHouse Cloud SQL console:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS mentors_warehouse;
 SHOW DATABASES;
 ```
 
-Collect from **Connect**:
-- host (no https://)
-- port `8443`
-- user
-- password
+From the service → **Connect**, copy:
 
-Allow your laptop IP under Settings → IP access list.
+| Detail | Example shape |
+|--------|----------------|
+| Host | `xxxx.region.azure.clickhouse.cloud` (no `https://`) |
+| Port | `8443` |
+| User | `default` (or dedicated user) |
+| Password | (shown once / your vault) |
+
+**Settings → Security → IP access list** → allow your laptop IP.
 
 ---
 
-### B. Local machine — install
+## 2. Install dbt
 
 ```bash
 python -m pip install --upgrade pip
@@ -33,14 +40,29 @@ dbt --version
 
 ---
 
-### C. Profile (`~/.dbt/profiles.yml`)
+## 3. Clone this repo
+
+```bash
+mkdir -p ~/projects
+cd ~/projects
+git clone https://github.com/kakaijacob/mentors_warehouse.git
+cd mentors_warehouse
+ls models
+# expect: staging  intermediate  marts
+```
+
+Open the folder in Cursor: **Open project** → `~/projects/mentors_warehouse`.
+
+---
+
+## 4. Create `~/.dbt/profiles.yml` (placeholders)
 
 ```bash
 mkdir -p ~/.dbt
 nano ~/.dbt/profiles.yml
 ```
 
-Use / merge this block (placeholders):
+Paste (replace every `REPLACE_ME_*`):
 
 ```yaml
 mentors_warehouse:
@@ -58,40 +80,72 @@ mentors_warehouse:
       threads: 4
 ```
 
-```bash
-export CLICKHOUSE_PASSWORD='REPLACE_ME_PASSWORD'
-```
+Same template lives in the repo as `profiles.yml.example`.
 
-Full template also in: `mentors_warehouse_dbt/profiles.yml.example`
+You may keep older profiles (`jaffle_clickhouse`, `special_operations`) in the **same** file.
 
 ---
 
-### D. Pull project and debug
+## 5. Export password and test
 
 ```bash
-cd ~/projects/Special-Operations-Schema
-git fetch origin
-git checkout cursor/mentors-warehouse-scaffold-bea8
-cd mentors_warehouse_dbt
+export CLICKHOUSE_PASSWORD='REPLACE_ME_PASSWORD'
 
+cd ~/projects/mentors_warehouse
 dbt debug
+```
+
+Expect: `Connection test: [OK connection ok]`
+
+```bash
 dbt ls
 ```
 
-Expect folders in the IDE:
-
-```text
-models/staging/
-models/intermediate/
-models/marts/
-```
-
-No business models yet — add `stg_` / `int_` / mart `.sql` files when ready.
+Model folders are ready; no business `.sql` models yet.
 
 ---
 
-### E. Later (when sources exist)
+## 6. What you should see in the IDE
 
-1. Edit `models/staging/_sources.yml`
-2. Add staging → intermediate → mart SQL
-3. `dbt run && dbt test`
+```text
+mentors_warehouse/
+  models/
+    staging/         # pending stg_*.sql
+    intermediate/    # pending int_*.sql
+    marts/           # pending marts
+  macros/
+  seeds/
+  tests/
+  dbt_project.yml
+  profiles.yml.example
+  SETUP.md
+  README.md
+```
+
+---
+
+## 7. Later — when Airbyte / raw tables exist
+
+1. Edit `models/staging/_sources.yml` (declare raw tables)
+2. Add `stg_*.sql` under `models/staging/`
+3. Add `int_*.sql` under `models/intermediate/`
+4. Add marts under `models/marts/`
+5. Run:
+
+```bash
+dbt run
+dbt test
+```
+
+---
+
+## Checklist
+
+- [ ] `mentors_warehouse` database exists in ClickHouse
+- [ ] Host / user / password known
+- [ ] Laptop IP allowlisted
+- [ ] Repo cloned
+- [ ] `~/.dbt/profiles.yml` profile `mentors_warehouse` filled in
+- [ ] `CLICKHOUSE_PASSWORD` exported
+- [ ] `dbt debug` OK
+- [ ] IDE shows `staging` / `intermediate` / `marts`

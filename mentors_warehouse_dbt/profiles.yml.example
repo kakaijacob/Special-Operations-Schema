@@ -1,32 +1,40 @@
-# Copy this into ~/.dbt/profiles.yml (or merge with your existing profiles).
+# Copy / merge into ~/.dbt/profiles.yml
 # Replace every REPLACE_ME_* value with details from your real ClickHouse Cloud account.
 # Never commit real passwords to git.
 
 mentors_warehouse:
   target: dev
   outputs:
+    # Local development against the real mentors warehouse service
     dev:
       type: clickhouse
-      # From ClickHouse Cloud → service → Connect
+      # ClickHouse Cloud → your service → Connect
+      # Host only — no https:// and no :8443 in this field
       # Example: abcd1234.germanywestcentral.azure.clickhouse.cloud
       host: REPLACE_ME_CLICKHOUSE_HOST
+      # HTTPS interface (dbt-clickhouse with secure: true)
       port: 8443
+      # Usually "default", or a dedicated dbt user you create
       user: REPLACE_ME_CLICKHOUSE_USER
+      # Prefer env var so the secret is not stored in this file
       password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
-      # Database you already created for this project
+      # ClickHouse database for this project
       schema: mentors_warehouse
       secure: true
       verify: true
       threads: 4
 
-    # Optional: separate prod target when you are ready
+    # Optional prod target
     # prod:
     #   type: clickhouse
-    #   host: REPLACE_ME_CLICKHOUSE_HOST
+    #   host: REPLACE_ME_CLICKHOUSE_HOST_PROD
     #   port: 8443
-    #   user: REPLACE_ME_CLICKHOUSE_USER
+    #   user: REPLACE_ME_CLICKHOUSE_USER_PROD
     #   password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
     #   schema: mentors_warehouse
     #   secure: true
     #   verify: true
     #   threads: 8
+
+# Shell (each new terminal session):
+#   export CLICKHOUSE_PASSWORD='your_real_password'
