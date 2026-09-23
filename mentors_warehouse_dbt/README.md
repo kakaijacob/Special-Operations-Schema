@@ -26,9 +26,9 @@ dbt_project.yml
 ## Quick start
 
 ```bash
-# after repo is populated
 cd ~/projects/mentors_warehouse
-# fill ~/.dbt/profiles.yml from profiles.yml.example
-export CLICKHOUSE_PASSWORD='...'
+# copy profiles.yml.example → ~/.dbt/profiles.yml (password via env_var)
+cp secrets.env.example ~/.config/mentors_warehouse.env   # fill real secrets
+source ~/.config/mentors_warehouse.env
 dbt debug
 ```
