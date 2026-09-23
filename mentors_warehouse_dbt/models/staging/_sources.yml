@@ -1,0 +1,14 @@
+# Mentors Warehouse — dbt sources (fill in as Airbyte / pipelines land raw tables)
+#
+# Example:
+# version: 2
+# sources:
+#   - name: airbyte_mentors
+#     schema: raw          # or wherever Airbyte writes
+#     tables:
+#       - name: mentees
+#       - name: mentors
+
+version: 2
+
+sources: []

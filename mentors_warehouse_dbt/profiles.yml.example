@@ -1,0 +1,42 @@
+# ~/.dbt/profiles.yml — Mentors Warehouse
+#
+# SECRETS: never put real passwords (or other secrets) in this file as plain text.
+# Use dbt env_var() so values come from your environment / secret store.
+#
+# Required secret (set in your shell before dbt commands):
+#   export MENTORS_CLICKHOUSE_PASSWORD='...'
+#
+# Optional (if you also want host/user out of the file):
+#   export MENTORS_CLICKHOUSE_HOST='xxxx.region.azure.clickhouse.cloud'
+#   export MENTORS_CLICKHOUSE_USER='default'
+#
+# Copy this block into ~/.dbt/profiles.yml (merge with other profiles if needed).
+# Do not commit ~/.dbt/profiles.yml or any .env file that holds real values.
+
+mentors_warehouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      # Non-secret defaults OK here; or switch to env_var as shown in comments
+      host: "{{ env_var('MENTORS_CLICKHOUSE_HOST', 'REPLACE_ME_CLICKHOUSE_HOST') }}"
+      port: 8443
+      user: "{{ env_var('MENTORS_CLICKHOUSE_USER', 'default') }}"
+      # SECRET — must come from the environment (no plaintext password)
+      password: "{{ env_var('MENTORS_CLICKHOUSE_PASSWORD') }}"
+      schema: mentors_warehouse
+      secure: true
+      verify: true
+      threads: 4
+
+    # Optional prod — use a separate secret name
+    # prod:
+    #   type: clickhouse
+    #   host: "{{ env_var('MENTORS_CLICKHOUSE_HOST_PROD') }}"
+    #   port: 8443
+    #   user: "{{ env_var('MENTORS_CLICKHOUSE_USER_PROD', 'default') }}"
+    #   password: "{{ env_var('MENTORS_CLICKHOUSE_PASSWORD_PROD') }}"
+    #   schema: mentors_warehouse
+    #   secure: true
+    #   verify: true
+    #   threads: 8

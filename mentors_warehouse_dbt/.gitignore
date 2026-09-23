@@ -1,0 +1,14 @@
+target/
+dbt_packages/
+logs/
+.user.yml
+
+# Never commit secrets
+.env
+.env.*
+!.env.example
+!secrets.env.example
+*.env.local
+secrets.env
+credentials.yml
+profiles.yml

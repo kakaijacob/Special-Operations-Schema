@@ -1,0 +1,6 @@
+# Staging models: 1:1 clean/rename from sources (stg_*).
+# Add .sql models here as pipelines land.
+
+version: 2
+
+models: []

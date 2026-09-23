@@ -1,0 +1,26 @@
+name: mentors_warehouse
+version: 1.0.0
+config-version: 2
+
+# Must match the profile name in ~/.dbt/profiles.yml
+profile: mentors_warehouse
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+# All models land in ClickHouse database `mentors_warehouse` (profile schema).
+# Folder names organize code only; they do not create extra databases.
+models:
+  mentors_warehouse:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
