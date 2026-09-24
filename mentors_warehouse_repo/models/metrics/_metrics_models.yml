@@ -1,0 +1,6 @@
+# Metric / indicator tables for dashboards.
+# Add .sql files when marts feed indicators.
+
+version: 2
+
+models: []
