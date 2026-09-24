@@ -2,7 +2,6 @@ version: 2
 
 models:
   - name: stg_airbyte__mentees
-    description: Cleaned mentee records from Airbyte source airbyte.mentees
-    columns:
-      - name: "{{ 'id' }}"
-        description: Placeholder — replace with real PK column after first sync
+    description: >
+      Cleaned mentee records from Airbyte source airbyte.mentees.
+      Expand columns/tests after first successful DESCRIBE of the raw table.
