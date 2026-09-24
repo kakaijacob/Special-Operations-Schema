@@ -1,0 +1,6 @@
+# Staging models (stg_*): 1:1 clean/rename/cast from sources.
+# Add .sql files here when raw tables exist.
+
+version: 2
+
+models: []

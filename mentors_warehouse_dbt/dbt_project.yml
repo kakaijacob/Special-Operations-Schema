@@ -1,0 +1,70 @@
+name: "jacaranda_mentors"
+version: "1.0.0"
+config-version: 2
+
+# Links this project to connection credentials in ~/.dbt/profiles.yml
+# (and to ./profiles.yml in CI, where DBT_PROFILES_DIR=./)
+profile: "warehouse_mentors_ke"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  jacaranda_mentors:
+    # ClickHouse default engine unless a model overrides it
+    +engine: MergeTree()
+
+    # Push YAML descriptions into ClickHouse COMMENTs (BI-friendly)
+    +persist_docs:
+      relation: true
+      columns: true
+
+    staging:
+      # Lightweight parsing / rename / cast → views
+      +materialized: view
+
+    intermediate:
+      # Joins / entity resolution / summaries
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    marts:
+      # Analytics-ready tables for BI
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+      # In prod (dbt_mentors_ke), marts land in dbt_mentors_ke_gold via
+      # macros/generate_schema_name.sql. Outside prod they stay in the
+      # developer's DBT_USER_SCHEMA.
+      +schema: gold
+
+    metrics:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+      +schema: gold
+
+    exports:
+      # Interfaces for external consumers — views stay live
+      +materialized: view
+
+seeds:
+  jacaranda_mentors:
+    +engine: MergeTree()
+
+snapshots:
+  jacaranda_mentors:
+    +engine: MergeTree()
+    +target_schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') }}{% if env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') == 'dbt_mentors_ke' %}_snapshots{% endif %}"

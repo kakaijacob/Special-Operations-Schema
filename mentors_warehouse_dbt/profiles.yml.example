@@ -1,0 +1,45 @@
+# Local development profile — copy/merge into ~/.dbt/profiles.yml
+# Secrets MUST come from environment variables (never plaintext passwords).
+#
+# Load secrets first, e.g.:
+#   source ~/.config/warehouse_mentors_ke.env
+#
+# Known ClickHouse Cloud host for this project (also set via DBT_HOST):
+#   tplb1fkekn.eu-west-2.aws.clickhouse.cloud
+
+warehouse_mentors_ke:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dev_scratch') }}"
+      host: "{{ env_var('DBT_HOST') }}"
+      port: 8443
+      user: "{{ env_var('DBT_USER', 'default') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      secure: true
+      connection:
+        method: ssl
+        ssl: true
+        sslmode: "NONE"
+      threads: 3
+      retries: 3
+      connect_timeout: 30
+      send_receive_timeout: 1800
+
+    prod:
+      type: clickhouse
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') }}"
+      host: "{{ env_var('DBT_HOST') }}"
+      port: 8443
+      user: "{{ env_var('DBT_USER', 'default') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      secure: true
+      connection:
+        method: ssl
+        ssl: true
+        sslmode: "NONE"
+      threads: 3
+      retries: 3
+      connect_timeout: 30
+      send_receive_timeout: 1800

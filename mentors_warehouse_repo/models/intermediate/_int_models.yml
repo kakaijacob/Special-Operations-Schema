@@ -1,0 +1,6 @@
+# Intermediate models (int_*): joins, entity resolution, summaries.
+# Add .sql files after staging exists.
+
+version: 2
+
+models: []

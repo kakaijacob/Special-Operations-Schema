@@ -1,0 +1,14 @@
+# Declare Airbyte / pipeline raw tables here as they land.
+#
+# Example:
+# version: 2
+# sources:
+#   - name: airbyte_mentors
+#     schema: raw
+#     tables:
+#       - name: mentees
+#       - name: mentors
+
+version: 2
+
+sources: []
