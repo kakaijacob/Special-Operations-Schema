@@ -1,6 +1,5 @@
-# Mart models: analytics-ready tables for BI.
-# Add .sql files after intermediate/staging are ready.
-
 version: 2
 
-models: []
+models:
+  - name: mentee_database
+    description: Analytics-ready mentee master table

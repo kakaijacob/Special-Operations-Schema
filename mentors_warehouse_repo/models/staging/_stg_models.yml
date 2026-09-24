@@ -1,6 +1,8 @@
-# Staging models (stg_*): 1:1 clean/rename/cast from sources.
-# Add .sql files here when raw tables exist.
-
 version: 2
 
-models: []
+models:
+  - name: stg_airbyte__mentees
+    description: Cleaned mentee records from Airbyte source airbyte.mentees
+    columns:
+      - name: "{{ 'id' }}"
+        description: Placeholder — replace with real PK column after first sync
