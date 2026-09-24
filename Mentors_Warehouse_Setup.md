@@ -9,6 +9,6 @@
 | Profile | `warehouse_mentors_ke` |
 | Host | `tplb1fkekn.eu-west-2.aws.clickhouse.cloud` |
 | Prod schema | `dbt_mentors_ke` |
-| Dev schema default | `dev_scratch` |
+| Dev schema default | `dev_wanyama` |
 
 See `mentors_warehouse_repo/SETUP.md` and `PUSH_TO_MENTORS_WAREHOUSE.md`.

@@ -1,7 +1,7 @@
 {#
   Schema naming (Kenya mentors parity with Ghana warehouse pattern):
 
-  - Outside prod schema (dev_scratch, personal schemas): ignore custom schema
+  - Outside prod schema (dev_wanyama, personal schemas): ignore custom schema
     suffixes so everything lands in DBT_USER_SCHEMA.
   - In prod (dbt_mentors_ke): apply per-layer suffixes from +schema
     (e.g. marts +schema: gold → dbt_mentors_ke_gold).
