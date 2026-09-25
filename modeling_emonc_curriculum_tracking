@@ -1,0 +1,544 @@
+# Modeling — EmONC Curriculum Tracking
+
+**Pipeline:** Kobo (EmONC Curriculum Tracking Form) → Airbyte → ClickHouse → dbt → Power BI  
+**Target fact grain:** one row per `submission_id × mentee_id × mentorship_activity × topic`  
+**Canonical BI table:** `mart_emonc_curriculum_tracking` (replaces / feeds `mentors.mentee_curriculum_tracking`)
+
+This document ports the existing mentee curriculum tracking transformation framework
+(Power Query / Apps Script activities log / `handle_mentee_curriculum_tracking`) into a
+layered dbt model for ClickHouse.
+
+Framework references used while the shared sheet was not readable from this environment:
+
+- [Transformation framework sheet](https://docs.google.com/spreadsheets/d/1WOKBC1VCzNt7oXcRxd_5NfamZab6S_NLOZZjXVHF1T0/edit?gid=0#gid=0)
+- `Mentors_tables_processing.md` → `handle_mentee_curriculum_tracking`
+- `EmONC_Curriculum_Activities_Log_Transformation.js` (Power Query topic display maps)
+- EmONC Curriculum Tracking Form 2026 survey/choices (`emonc_activities` + per-activity topics)
+
+---
+
+## 1. Architecture
+
+```text
+┌─────────────┐    Airbyte     ┌──────────────────────┐
+│ Kobo CTF    │ ─────────────► │ ClickHouse raw       │
+│ submissions │   (JSON/flat)  │ airbyte.*            │
+└─────────────┘                └──────────┬───────────┘
+                                          │
+                     dbt staging (views)  ▼
+                               stg_airbyte__emonc_curriculum_tracking
+                                          │
+                  dbt intermediate (tables)▼
+                               int_emonc_curriculum_activity_rows
+                               int_emonc_facility_inattendance
+                                          │
+                       dbt marts (gold)   ▼
+                               mart_emonc_curriculum_tracking   ◄── Power BI fact
+                               mart_emonc_facility_inattendance
+                                          │
+                                          ▼  (existing completion pipeline)
+                               mart_emonc_curriculum_completion
+```
+
+| Layer | Materialization | Role |
+|-------|-----------------|------|
+| **staging** | `view` | Rename / cast / light clean of Airbyte columns; 1 row ≈ 1 Kobo submission |
+| **intermediate** | `table` | Business logic: parse mentees, facilities, activities↔topics; explode to fact grain |
+| **marts** | `table` (`+schema: gold`) | Stable BI contracts for Power BI |
+
+---
+
+## 2. Source contract (Airbyte → ClickHouse)
+
+Declare the raw stream once Airbyte lands Kobo CTF data. Column names vary by Airbyte
+normalization; resolve with the same `resolve_column` pattern used for mentees.
+
+```yaml
+# models/staging/airbyte/_airbyte__sources.yml  (add)
+sources:
+  - name: airbyte
+    schema: "{{ var('airbyte_schema', 'default') }}"
+    tables:
+      - name: emonc_curriculum_tracking
+        identifier: EmONC_Curriculum_Tracking   # confirm DESCRIBE after first sync
+        description: >
+          Raw Kobo EmONC Curriculum Tracking Form submissions loaded by Airbyte.
+          Prefer JSON/_airbyte_data if the connector lands nested payloads;
+          otherwise flattened slash-path columns from Kobo.
+```
+
+### Expected Kobo field families (multi-schema tolerant)
+
+| Concept | Candidate keys / prefixes |
+|---------|---------------------------|
+| Submission id | `_id`, `_uuid` |
+| Submitted at | `_submission_time` |
+| Session date | `demographic_information/mentor_details/session_date`, `session_date`, … |
+| Mentor name | `demographic_information/mentor_details/mentor_name`, `mentor/name`, … |
+| County | `demographic_information/facility_details/county`, `…/mentee_details/county`, … |
+| Facility | `…/facility_details/*_facilities`, `…/q_facility_*`, … |
+| Mentees | `demographic_information/mentee_details*/`* `*_mentees` values `id_name` space-separated |
+| Activities | `emonc_training_curriculum/emonc_curriculum_activities/emonc_activities` (space-separated) |
+| Topics by activity | see activity → topic key map below |
+| Inattendance | `group_mo8aa12/Reasons_for_inattendance` (and mentor_checklist variants) |
+
+### Activity → topic key map (framework)
+
+| Activity code (`mentorship_activity`) | Topic field suffix(es) |
+|---------------------------------------|------------------------|
+| `cmes` | `cmes` |
+| `videos` | `videos` |
+| `case_scenarios` | `case_scenarios` |
+| `video_case_scenarios` / `videoa_case_scenarios` | `video_scenarios` (normalize activity → `video_case_scenarios`) |
+| `skill_demos_mentor` | `mentor_skills_demo` |
+| `skills_demos_mentee` | `mentee_skills_return_demo` |
+| `drills` | `drills` |
+
+Topic prefixes to search: `emonc_training_curriculum/`, `group_activities/`,
+`mentor/group_activities/`, `mentor_checklist/mentor/group_ek78v70/`, `group_ek78v70/`.
+
+**Critical rule (do not cartesian):** for each selected activity, only explode topics from
+that activity’s topic field. Never cross all topics with all activities on a submission.
+
+---
+
+## 3. Staging
+
+One cleaned submission row. Keep raw payload columns needed for intermediate parsing
+(or keep a single `payload` JSON column if Airbyte stores it).
+
+```sql
+-- models/staging/airbyte/stg_airbyte__emonc_curriculum_tracking.sql
+-- Staging: 1 row per Kobo submission. No mentee/activity explode yet.
+
+{%- set src = source('airbyte', 'emonc_curriculum_tracking') -%}
+
+with source as (
+
+    select * from {{ src }}
+
+),
+
+renamed as (
+
+    select
+        -- Prefer _uuid for durable keys; fall back to numeric _id
+        coalesce(
+            nullIf(trim(toString({{ resolve_column(src, '_uuid') }})), ''),
+            nullIf(trim(toString({{ resolve_column(src, '_id') }})), '')
+        ) as submission_id,
+
+        parseDateTime64BestEffortOrNull(
+            toString({{ resolve_column(src, '_submission_time') }})
+        ) as submitted_at,
+
+        -- Pass through common flattened columns when present; intermediate
+        -- still searches alternate schemas via payload / map columns.
+        nullIf(trim(toString({{ resolve_column(src, 'demographic_information/mentor_details/session_date') }})), '')
+            as session_date_raw,
+        nullIf(trim(toString({{ resolve_column(src, 'demographic_information/mentor_details/mentor_name') }})), '')
+            as mentor_name_raw,
+        nullIf(trim(toString({{ resolve_column(src, 'demographic_information/facility_details/county') }})), '')
+            as county_raw,
+        nullIf(
+            trim(toString({{ resolve_column(src, 'emonc_training_curriculum/emonc_curriculum_activities/emonc_activities') }})),
+            ''
+        ) as activities_raw,
+
+        -- Full row for multi-schema field discovery in intermediate
+        * except (
+            -- list only if ClickHouse * EXCEPT needs explicit Airbyte meta cols
+        )
+    from source
+
+)
+
+select
+    submission_id,
+    submitted_at,
+    session_date_raw,
+    mentor_name_raw,
+    county_raw,
+    activities_raw,
+    *
+from renamed
+where submission_id is not null
+```
+
+YAML contract:
+
+```yaml
+# models/staging/airbyte/_airbyte__models.yml  (add)
+models:
+  - name: stg_airbyte__emonc_curriculum_tracking
+    description: Cleaned EmONC CTF submissions from Airbyte (one row per Kobo submission).
+    columns:
+      - name: submission_id
+        data_tests: [not_null, unique]
+      - name: submitted_at
+        data_tests: [not_null]
+```
+
+---
+
+## 4. Intermediate
+
+### 4.1 Seed — topic display labels (Power Query map)
+
+```csv
+# seeds/emonc_topic_label_map.csv
+topic_raw,topic_label
+Partograph_use_and_interpretation,Labor Monitoring
+Maternal_Shock_Resuscitaion,Maternal Shock
+Preeclampsia_Eclampsia_Management,Preeclampsia/Eclampsia Management
+Preeclampsia_/_eclampsia,Preeclampsia/Eclampsia Management
+Preeclampsia_/_Eclampsia,Preeclampsia/Eclampsia Management
+Hypertension_in_pregnancy,Preeclampsia/Eclampsia Management
+PPH,Postpartum Haemorrhage (PPH)
+PPH_Drill,Postpartum Haemorrhage (PPH)
+Postpartum_haemorrhage_(PPH),Postpartum Haemorrhage (PPH)
+Vaginal_AVD,Vacuum-Assisted Delivery
+Vacuum_Assisted_Delivery,Vacuum-Assisted Delivery
+B-lynch_suture,B-Lynch Suture
+Compression_of_Abdominal_Aorta,Abdominal Aortic Compression
+Compression_abdominal_aorta,Abdominal Aortic Compression
+Perineal_tear_repair,Perineal Tear Repair
+Ubt_placement,UBT Placement
+UBT,UBT Placement
+ubt_placement_(free_flow),UBT Placement (Free Flow)
+Ubt_placement_(free_flow),UBT Placement (Free Flow)
+Newborn_resuscitation,Neonatal Resuscitation
+Newborn_Resuscitation,Neonatal Resuscitation
+Neonatal_resuscitation,Neonatal Resuscitation
+```
+
+Fallback when unmapped: replace `_` with spaces (leave as-is for BI filters that still
+use raw codes; expose both `topic_code` and `topic` in the mart).
+
+### 4.2 Explode to activity rows
+
+ClickHouse-friendly approach when Airbyte lands **flattened** columns: use
+`arrayJoin` on split activity / mentee / topic tokens. When the payload is JSON,
+parse with `JSONExtract*` / `JSONExtractKeysAndValues` in a dedicated model.
+
+Pseudo-SQL for the flattened path (illustrative — adjust column names after `DESCRIBE`):
+
+```sql
+-- models/intermediate/int_emonc_curriculum_activity_rows.sql
+-- Grain: submission × mentee × activity × topic
+-- Implements process_mentee_data() from the transformation framework.
+
+with submissions as (
+
+    select * from {{ ref('stg_airbyte__emonc_curriculum_tracking') }}
+
+),
+
+-- Normalize activity tokens; fix known typo videoa_case_scenarios
+activities as (
+
+    select
+        s.submission_id,
+        s.submitted_at,
+        multiIf(
+            lowerUTF8(activity_raw) = 'videoa_case_scenarios', 'video_case_scenarios',
+            lowerUTF8(activity_raw)
+        ) as mentorship_activity,
+        activity_raw as mentorship_activity_raw
+    from submissions s
+    array join splitByWhitespace(coalesce(s.activities_raw, '')) as activity_raw
+    where activity_raw != ''
+
+),
+
+-- Mentee tokens: "12345_jane_doe 67890_john_smith"
+mentees as (
+
+    select
+        s.submission_id,
+        nullIf(splitByChar('_', mentee_tok)[1], '') as mentee_id,
+        initcapUTF8(
+            replaceAll(
+                arrayStringConcat(arraySlice(splitByChar('_', mentee_tok), 2), ' '),
+                '_',
+                ' '
+            )
+        ) as mentee_name
+    from submissions s
+    -- Resolve the first populated *_mentees column via a helper view or map
+    array join splitByWhitespace(coalesce(s.mentees_raw, '')) as mentee_tok
+    where mentee_tok != ''
+
+),
+
+-- Topics: only the field that belongs to mentorship_activity (framework pairing)
+topics as (
+
+    select
+        a.submission_id,
+        a.mentorship_activity,
+        topic_tok as topic_code
+    from activities a
+    inner join submissions s on a.submission_id = s.submission_id
+    array join splitByWhitespace(
+        coalesce(
+            multiIf(
+                a.mentorship_activity = 'cmes', s.cmes_raw,
+                a.mentorship_activity = 'videos', s.videos_raw,
+                a.mentorship_activity = 'case_scenarios', s.case_scenarios_raw,
+                a.mentorship_activity = 'video_case_scenarios', s.video_scenarios_raw,
+                a.mentorship_activity = 'skill_demos_mentor', s.mentor_skills_demo_raw,
+                a.mentorship_activity = 'skills_demos_mentee', s.mentee_skills_return_demo_raw,
+                a.mentorship_activity = 'drills', s.drills_raw,
+                ''
+            ),
+            ''
+        )
+    ) as topic_tok
+    where topic_tok != ''
+
+),
+
+facility as (
+
+    select
+        submission_id,
+        -- value pattern: "{code}_{facility_name_slug}"
+        toInt64OrNull(splitByChar('_', facility_raw)[1]) as facility_code,
+        initcapUTF8(
+            replaceAll(
+                arrayStringConcat(arraySlice(splitByChar('_', facility_raw), 2), ' '),
+                '_',
+                ' '
+            )
+        ) as facility
+    from submissions
+    where facility_raw != ''
+
+),
+
+joined as (
+
+    select
+        s.submission_id,
+        s.submitted_at,
+        toDateOrNull(s.session_date_raw) as session_date,
+        -- Mentor: replace commas with "/", title-case segments
+        arrayStringConcat(
+            arrayMap(
+                x -> initcapUTF8(trim(x)),
+                splitByChar('/', replaceAll(coalesce(s.mentor_name_raw, ''), ',', '/'))
+            ),
+            '/'
+        ) as mentor_name,
+        initcapUTF8(replaceAll(coalesce(s.county_raw, ''), '_', ' ')) as county,
+        f.facility_code,
+        f.facility,
+        m.mentee_id,
+        m.mentee_name,
+        a.mentorship_activity,
+        t.topic_code,
+        coalesce(map.topic_label, replaceAll(t.topic_code, '_', ' ')) as topic
+    from submissions s
+    inner join activities a on s.submission_id = a.submission_id
+    inner join topics t
+        on a.submission_id = t.submission_id
+       and a.mentorship_activity = t.mentorship_activity
+    left join mentees m on s.submission_id = m.submission_id
+    left join facility f on s.submission_id = f.submission_id
+    left join {{ ref('emonc_topic_label_map') }} map
+        on t.topic_code = map.topic_raw
+
+)
+
+select *
+from joined
+-- Framework: skip activity rows with no topic
+where topic_code is not null
+```
+
+### 4.3 Facility inattendance (side stream)
+
+```sql
+-- models/intermediate/int_emonc_facility_inattendance.sql
+-- Grain: submission × reason (from process_facility_inattendance_reasons)
+
+with submissions as (
+
+    select * from {{ ref('stg_airbyte__emonc_curriculum_tracking') }}
+
+),
+
+reasons as (
+
+    select
+        submission_id,
+        submitted_at,
+        facility_code,
+        reason_tok as facility_level_reasons_for_inattendance
+    from submissions
+    array join splitByWhitespace(coalesce(inattendance_reasons_raw, '')) as reason_tok
+    where reason_tok != ''
+
+)
+
+select * from reasons
+```
+
+---
+
+## 5. Marts (Power BI ready)
+
+### 5.1 Primary fact — curriculum activity log
+
+```sql
+-- models/marts/mart_emonc_curriculum_tracking.sql
+-- BI grain: one mentee-activity-topic credit per submission
+-- Column names aligned with mentors.mentee_curriculum_tracking for drop-in Power BI.
+
+select
+    submission_id,
+    submitted_at as date_submitted,
+    session_date,
+    mentor_name,
+    county,
+    toString(facility_code) as facility_code,
+    facility,
+    mentee_id,
+    mentee_name,
+    mentorship_activity,
+    topic_code,
+    topic,
+    -- Helpful for Power BI relationships / integrity scoring
+    toDate(submitted_at) as submission_date,
+    dateDiff('day', session_date, toDate(submitted_at)) as days_session_to_submit
+from {{ ref('int_emonc_curriculum_activity_rows') }}
+where mentee_id is not null
+```
+
+YAML:
+
+```yaml
+models:
+  - name: mart_emonc_curriculum_tracking
+    description: >
+      EmONC curriculum activity fact for Power BI. Grain =
+      submission × mentee × mentorship_activity × topic.
+    columns:
+      - name: submission_id
+        data_tests: [not_null]
+      - name: mentee_id
+        data_tests: [not_null]
+      - name: mentorship_activity
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - cmes
+                  - videos
+                  - case_scenarios
+                  - video_case_scenarios
+                  - skill_demos_mentor
+                  - skills_demos_mentee
+                  - drills
+      - name: topic
+        data_tests: [not_null]
+      - name: date_submitted
+        data_tests: [not_null]
+```
+
+Suggested uniqueness test (composite):
+
+```yaml
+data_tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+          - submission_id
+          - mentee_id
+          - mentorship_activity
+          - topic_code
+```
+
+### 5.2 Inattendance mart
+
+```sql
+-- models/marts/mart_emonc_facility_inattendance.sql
+select
+    submission_id,
+    submitted_at as date_submitted,
+    toString(facility_code) as facility_code,
+    facility_level_reasons_for_inattendance
+from {{ ref('int_emonc_facility_inattendance') }}
+```
+
+### 5.3 Downstream completion (already modeled)
+
+Keep using the existing completion chain against this mart (or a thin staging adapter):
+
+```text
+mart_emonc_curriculum_tracking
+  → stg / int adapters that expose mentorship_activity + topic + date_submitted
+  → int_emonc_curriculum_activity_progress
+  → mart_emonc_curriculum_completion
+```
+
+Until Airbyte is live, `stg_mentors__mentee_curriculum_tracking` can `ref('mart_emonc_curriculum_tracking')`
+or the seed sample so completion models keep working.
+
+---
+
+## 6. Power BI consumption
+
+| Dataset table | Use |
+|---------------|-----|
+| `mart_emonc_curriculum_tracking` | Activity log visuals, topic coverage, mentor/facility filters |
+| `mart_emonc_facility_inattendance` | Inattendance reasons |
+| `mart_emonc_curriculum_completion` | Cohort completion KPIs |
+| `mentee_database` (existing) | Dimension for mentee attributes |
+
+**Relationships:** `mentee_id` → mentee dimension; `facility_code` → facility dimension;
+`submission_date` / `session_date` → date dimension.
+
+**Activity labels for slicers (optional measure table):**
+
+| mentorship_activity | label |
+|---------------------|-------|
+| `cmes` | Lecturettes (CMEs) |
+| `videos` | Videos |
+| `case_scenarios` | Case scenarios & role plays |
+| `skill_demos_mentor` | Skill demonstrations by mentor |
+| `skills_demos_mentee` | Return demonstrations by mentee |
+| `drills` | Simulations and drills |
+
+---
+
+## 7. Implementation checklist
+
+1. Confirm Airbyte stream name + `DESCRIBE TABLE` columns in ClickHouse.
+2. Wire `_airbyte__sources.yml` identifier; expand staging `resolve_column` list.
+3. Land flattened helper columns on staging (`cmes_raw`, `videos_raw`, …) **or** implement JSON parse path.
+4. Add `emonc_topic_label_map` seed; run `dbt seed`.
+5. Build `int_emonc_curriculum_activity_rows` → `mart_emonc_curriculum_tracking`.
+6. Point Power BI at `dbt_mentors_ke_gold.mart_emonc_curriculum_tracking` (prod schema convention).
+7. Reconcile row counts vs historical `mentors.mentee_curriculum_tracking` for overlapping submissions.
+8. When the framework sheet is shared, diff any extra Power Query steps (filters, exclusions, renames) into staging/intermediate and update this file.
+
+---
+
+## 8. Framework ↔ dbt step map
+
+| Transformation framework step | dbt layer | Model |
+|------------------------------|-----------|-------|
+| Load Kobo submissions | source | `source('airbyte','emonc_curriculum_tracking')` |
+| Type / rename metadata | staging | `stg_airbyte__emonc_curriculum_tracking` |
+| Parse mentor / county / facility / session date | intermediate | `int_emonc_curriculum_activity_rows` |
+| Split mentees (`id_name`) | intermediate | same |
+| Split activities; normalize `videoa_*` | intermediate | same |
+| Pair activity → topic field; split topics | intermediate | same |
+| Map topic codes → Power Query display names | intermediate + seed | `emonc_topic_label_map` |
+| Skip activities without topics | intermediate | `where topic_code is not null` |
+| Emit fact rows | mart | `mart_emonc_curriculum_tracking` |
+| Inattendance reasons | intermediate → mart | `int_` / `mart_emonc_facility_inattendance` |
+| Curriculum completion KPIs | existing marts | `mart_emonc_curriculum_completion` |
