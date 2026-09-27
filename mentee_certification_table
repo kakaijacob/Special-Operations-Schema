@@ -39,7 +39,7 @@ skill_demo AS (
         COUNT(DISTINCT topic) AS completed_topics,
         CASE
             WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
-            ELSE 21
+            ELSE 20
         END AS required_topics
     FROM mentors.mentee_curriculum_tracking
     WHERE mentorship_activity = 'skill_demos_mentor'
@@ -53,7 +53,7 @@ return_demo AS (
         COUNT(DISTINCT topic) AS completed_topics,
         CASE
             WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
-            ELSE 21
+            ELSE 20
         END AS required_topics
     FROM mentors.mentee_curriculum_tracking
     WHERE mentorship_activity = 'skills_demos_mentee'
@@ -88,13 +88,15 @@ skill_evaluation AS (
 
         CASE
             WHEN MAX(date_submitted) <= DATE '2026-04-01' THEN 18
-            ELSE 21
+            ELSE 20
         END AS required_assessments,
 
         AVG(average_score) AS avg_score
 
     FROM mentors.process_moh_skills_assessment_2026
     WHERE skill_evaluation IS NOT NULL
+      -- Partograph is no longer essential for curriculum completion
+      AND LOWER(TRIM(skill_evaluation)) <> 'partograph'
     GROUP BY mentee_id
 )
 

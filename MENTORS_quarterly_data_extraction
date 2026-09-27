@@ -42,10 +42,10 @@ WITH completions AS (
         HAVING
             COUNT(DISTINCT CASE
                 WHEN mentorship_activity = 'skill_demos_mentor' THEN topic
-            END) >= 18
+            END) >= 20
             AND COUNT(DISTINCT CASE
                 WHEN mentorship_activity = 'skills_demos_mentee' THEN topic
-            END) >= 18
+            END) >= 20
 
     ) d
 
@@ -55,9 +55,10 @@ WITH completions AS (
             pmsa.mentee_id,
             MAX(pmsa.date_submitted) AS last_evaluation_date
         FROM mentors.process_moh_skills_assessment_2026 pmsa
+        WHERE LOWER(TRIM(pmsa.skill_evaluation)) <> 'partograph'
         GROUP BY pmsa.mentee_id
         HAVING
-            COUNT(DISTINCT pmsa.skill_evaluation ) >= 18
+            COUNT(DISTINCT pmsa.skill_evaluation ) >= 20
             AND AVG(pmsa.average_score) >= 0.85
 
     ) e
