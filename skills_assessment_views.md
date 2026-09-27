@@ -153,10 +153,12 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 ### 11. mentors.maternal_resuscitation_evaluation_2026 source
 ```sql
+-- Canonical maternal resuscitation child view (feeds process_moh_skills_assessment_2026).
 -- Score = sum of 21 items / 21.0 (each Yes = 1).
 -- After 2026-04-01 the form writes debrief_or_assign_tasks + identify_cpr_lormarks.
 -- Legacy columns debrief_and_assign_tasks + identify_cpr_landmarks stay 0 on new
 -- submissions — do NOT score those for post-cutoff rows (that understates by up to 2/21).
+-- Do not use mentors.moh_maternal_resuscitation_evaluation for 2026 scoring.
 CREATE OR REPLACE VIEW mentors.maternal_resuscitation_evaluation_2026
 AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.safety_assessement::integer AS "safety assessment", msc.check_response::integer AS "check response", msc.shout_for_help_003::integer AS "shout for help", msc.initiate_cpr_001::integer AS "initiate cpr",
         CASE
@@ -346,56 +348,9 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
   GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.check_for_safety, msc.check_for_response, msc.call_for_help_002, msc.initiate_cpr, msc.assign_team_tasks, msc.offer_leadership, msc.assess_airway, msc.oropharyngeal_airway, msc.assess_breathing, msc.assess_carotid_pulse, msc.cpr_30_2, msc.breathing_assessment, msc.give_oxygen, msc.manage_circulation, msc.check_pulse_bp, msc.iv_fluids, msc.transfuse_in_anemia, msc.palpate_the_uterus, msc.inspect_external_genitalia, msc.vaginal_exam_001, msc.repeat_vital_signs, msc.input_output_monitoring, msc.iv_antibiotics;
 ```
 
-### 22. mentors.moh_maternal_resuscitation_evaluation source (compat / export shape)
-```sql
--- LIVE BUG (confirmed Sept 2026 exports): this view scored
---   debrief_and_assign_tasks + identify_cpr_landmarks
--- which stay 0 after the form rename. Every post-cutoff row shows
--- "assign tasks"=0 and "cpr landmarks"=0, understating average score by up to 2/21.
--- Example: mentee 708370297 on 2026-09-17 reported 0.8571 (18/21); if both
--- renamed items were Yes, true score is 20/21 = 0.9524.
--- Fix: same date-cutoff coalesce as maternal_resuscitation_evaluation_2026.
-CREATE OR REPLACE VIEW mentors.moh_maternal_resuscitation_evaluation
-AS SELECT msc.county, msc.facility, msc.facility_code, msc.mentee_id, msc.date_submitted,
-          msc.safety_assessement::integer AS "safety assessment",
-          msc.check_response::integer AS "check response",
-          msc.shout_for_help_003::integer AS "shout for help",
-          msc.initiate_cpr_001::integer AS "initiate cpr",
-          CASE
-              WHEN msc.date_submitted <= '2026-04-01'::date THEN msc.debrief_and_assign_tasks::integer
-              ELSE msc.debrief_or_assign_tasks::integer
-          END AS "assign tasks",
-          msc.offer_leadership::integer AS "offer leadership",
-          msc.assess::integer AS assess,
-          msc.head_titl_chin_lift::integer AS "head tilt chin lift",
-          msc.jaw_thrust::integer AS "jaw thrust",
-          msc.maintain_airway::integer AS "maintain airway",
-          CASE
-              WHEN msc.date_submitted <= '2026-04-01'::date THEN msc.identify_cpr_landmarks::integer
-              ELSE msc.identify_cpr_lormarks::integer
-          END AS "cpr landmarks",
-          msc.demo_cpr::integer AS "demo cpr",
-          msc._30_2_cpr::integer AS "cpr ratio",
-          msc.reassess_breathing::integer AS "reassess breathing",
-          msc._2min_exchanges_cpr::integer AS "2 min exchanges",
-          msc.perimotem_cs::integer AS "perimortem cs",
-          msc.o2_recovery_room::integer AS "recovery o2",
-          msc.assess_circulation_inverted_j::integer AS inverted_j,
-          msc.iv_fluids::integer AS "iv fluids",
-          msc.perform_secondary_survey::integer AS "2ndry survey",
-          msc.recovery_position::integer AS "recovery position",
-          CASE
-              WHEN msc.date_submitted <= '2026-04-01'::date THEN (msc.safety_assessement::integer + msc.check_response::integer + msc.shout_for_help_003::integer + msc.initiate_cpr_001::integer + msc.debrief_and_assign_tasks::integer + msc.offer_leadership::integer + msc.assess::integer + msc.head_titl_chin_lift::integer + msc.jaw_thrust::integer + msc.maintain_airway::integer + msc.identify_cpr_landmarks::integer + msc.demo_cpr::integer + msc._30_2_cpr::integer + msc.reassess_breathing::integer + msc._2min_exchanges_cpr::integer + msc.perimotem_cs::integer + msc.o2_recovery_room::integer + msc.assess_circulation_inverted_j::integer + msc.iv_fluids::integer + msc.perform_secondary_survey::integer + msc.recovery_position::integer)::numeric::numeric(18,0) / 21.0
-              ELSE (msc.safety_assessement::integer + msc.check_response::integer + msc.shout_for_help_003::integer + msc.initiate_cpr_001::integer + msc.debrief_or_assign_tasks::integer + msc.offer_leadership::integer + msc.assess::integer + msc.head_titl_chin_lift::integer + msc.jaw_thrust::integer + msc.maintain_airway::integer + msc.identify_cpr_lormarks::integer + msc.demo_cpr::integer + msc._30_2_cpr::integer + msc.reassess_breathing::integer + msc._2min_exchanges_cpr::integer + msc.perimotem_cs::integer + msc.o2_recovery_room::integer + msc.assess_circulation_inverted_j::integer + msc.iv_fluids::integer + msc.perform_secondary_survey::integer + msc.recovery_position::integer)::numeric::numeric(18,0) / 21.0
-          END AS "average score"
-   FROM mentors.moh_skills_checklist msc
-  WHERE msc.skill_evaluation::text = 'Maternal resuscitation'::character varying::text;
-```
-
 ## Notes
 - Purpose: Capture AMTSL evaluation scores in a reusable view
 - Database: mentors
 - Results / observations: View calculates average score using different item sets before and after 2026-04-01
 - Maternal shock: 23 checklist items, each Yes = 1 point; average score = sum / 23.0
-- Maternal resuscitation: 21 checklist items, each Yes = 1 point; average score = sum / 21.0. After 2026-04-01 use `debrief_or_assign_tasks` + `identify_cpr_lormarks` (not the legacy `debrief_and_assign_tasks` + `identify_cpr_landmarks`, which stay 0 on new form submissions and understate scores by up to 2/21).
-- Deploy both `maternal_resuscitation_evaluation_2026` and `moh_maternal_resuscitation_evaluation` with the CASE fix; Sept 2026 Jacaranda exports prove the live `moh_` view still reads the legacy columns.
+- Maternal resuscitation child view name: `mentors.maternal_resuscitation_evaluation_2026` (not `moh_maternal_resuscitation_evaluation`). 21 checklist items, each Yes = 1 point; average score = sum / 21.0. After 2026-04-01 use `debrief_or_assign_tasks` + `identify_cpr_lormarks` (not the legacy `debrief_and_assign_tasks` + `identify_cpr_landmarks`, which stay 0 on new form submissions and understate scores by up to 2/21).
