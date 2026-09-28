@@ -3,6 +3,7 @@
 // =====================================================
 function generateAllOutputs() {
   generateMenteeList();
+  generateMentorPrivacyKey(); // private Name↔Privacy Code map for mentors only
   generateVariableNames();
   generateMenteeFacilityLogic();
   generateMoHSkillsChecklist();
@@ -31,18 +32,80 @@ function generateMenteeList() {
   var nameIndex = header.indexOf("Name");
   var countyIndex = header.indexOf("County");
   var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
   var programIndex = header.indexOf("Program");
 
   var menteeSheet = getOrCreateSheet("Mentee List");
-  var output = [["Mentee Kobo","County","Facility","Program"]];
+  // Privacy Code = facility-scoped opaque label for dashboards.
+  // Does not embed name or phone-like mentee ID. Keep Name only in Mentor Privacy Key.
+  var output = [["Privacy Code","Mentee Kobo","County","Facility","Facility Code","Program"]];
 
   for (var i = 1; i < data.length; i++) {
     if (!data[i][idIndex] || !data[i][nameIndex]) continue;
-    var menteeKobo = data[i][idIndex] + "_" + cleanForKobo(data[i][nameIndex]);
-    output.push([menteeKobo,data[i][countyIndex],data[i][facilityIndex],data[i][programIndex]]);
+    var cleanedID = data[i][idIndex].toString().replace(/\s+/g, "").trim();
+    var facilityCode = facilityCodeIndex >= 0 ? data[i][facilityCodeIndex] : "";
+    var menteeKobo = cleanedID + "_" + cleanForKobo(data[i][nameIndex]);
+    output.push([
+      privacyDisplayCode(facilityCode, cleanedID),
+      menteeKobo,
+      data[i][countyIndex],
+      data[i][facilityIndex],
+      facilityCode,
+      data[i][programIndex]
+    ]);
   }
 
   menteeSheet.getRange(1,1,output.length,output[0].length).setValues(output);
+}
+
+// =====================================================
+// 1️⃣b MENTOR PRIVACY KEY (PRIVATE — do not publish / commit)
+// Maps privacy display codes back to names for involved mentors only.
+// =====================================================
+function generateMentorPrivacyKey() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Mentee Database");
+  var data = sheet.getDataRange().getValues();
+  var header = data[0];
+
+  var idIndex = header.indexOf("Mentee ID");
+  var nameIndex = header.indexOf("Name");
+  var countyIndex = header.indexOf("County");
+  var facilityIndex = header.indexOf("Facility");
+  var facilityCodeIndex = header.indexOf("Facility Code");
+  var programIndex = header.indexOf("Program");
+  var statusIndex = header.indexOf("Status");
+
+  var keySheet = getOrCreateSheet("Mentor Privacy Key");
+  var output = [[
+    "Privacy Code",
+    "Name",
+    "Mentee ID",
+    "County",
+    "Facility",
+    "Facility Code",
+    "Program",
+    "Status"
+  ]];
+
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][idIndex] || !data[i][nameIndex]) continue;
+    var cleanedID = data[i][idIndex].toString().replace(/\s+/g, "").trim();
+    var facilityCode = facilityCodeIndex >= 0 ? data[i][facilityCodeIndex] : "";
+    output.push([
+      privacyDisplayCode(facilityCode, cleanedID),
+      data[i][nameIndex],
+      cleanedID,
+      data[i][countyIndex],
+      data[i][facilityIndex],
+      facilityCode,
+      programIndex >= 0 ? data[i][programIndex] : "",
+      statusIndex >= 0 ? data[i][statusIndex] : ""
+    ]);
+  }
+
+  keySheet.clear();
+  keySheet.getRange(1,1,output.length,output[0].length).setValues(output);
 }
 
 // =====================================================
@@ -1269,6 +1332,39 @@ function cleanForKobo(text) {
     .replace(/\s+/g,"_")
     .replace(/_+/g,"_")
     .replace(/^_+|_+$/g,"");
+}
+
+// =====================================================
+// 🔒 PRIVACY DISPLAY CODE (dashboard-safe mentee label)
+// Format: {FacilityCode}-{first 4 hex of SHA-256(FacilityCode|MenteeID)}
+// - Stable and reproducible from Facility Code + Mentee ID
+// - Does not embed name or raw mentee ID / phone
+// - Mentors resolve identity via private "Mentor Privacy Key" sheet
+// =====================================================
+function privacyDisplayCode(facilityCode, menteeId) {
+  var fc = (facilityCode === null || facilityCode === undefined)
+    ? ""
+    : facilityCode.toString().replace(/\s+/g, "").trim();
+  var mid = (menteeId === null || menteeId === undefined)
+    ? ""
+    : menteeId.toString().replace(/\s+/g, "").trim();
+  if (!fc || !mid) return "";
+
+  var raw = fc + "|" + mid;
+  var digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    raw,
+    Utilities.Charset.UTF_8
+  );
+  var hex = "";
+  for (var i = 0; i < digest.length; i++) {
+    var b = digest[i];
+    if (b < 0) b += 256;
+    var h = b.toString(16);
+    if (h.length === 1) h = "0" + h;
+    hex += h;
+  }
+  return fc + "-" + hex.substring(0, 4).toUpperCase();
 }
 
 // =====================================================
