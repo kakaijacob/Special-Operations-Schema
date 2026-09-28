@@ -958,7 +958,30 @@ function ensurePseudoColumnAfterName_(sheet, headerRow, commentRow) {
 
 // =====================================================
 // PRIVACY DISPLAY CODE (Pseudo value)
-// Format: {FacilityCode}-{first 4 hex of SHA-256(FacilityCode|MenteeID)}
+// =====================================================
+// Pseudo format:
+//   {FacilityCode}-{XXXX}
+// where XXXX is the first 4 hex digits of:
+//   SHA-256( UTF-8( "{FacilityCode}|{MenteeID}" ) )
+//
+// How the hex is calculated (step by step):
+//   1. Normalize Facility Code and Mentee ID
+//      - stringify, strip spaces, strip trailing ".0" from Sheets numbers
+//   2. Build the hash input string (name is NEVER used):
+//        "{FacilityCode}|{MenteeID}"
+//      Example (illustrative IDs only — do not store real mentee PII here):
+//        "15996|712345678"
+//   3. Compute SHA-256 over the UTF-8 bytes of that string.
+//      Example full digest:
+//        fdc360e194a295377e760d035b559123f904ebb8358f5c387673bdfe2ff12c3b
+//   4. Take the first 4 hex characters and uppercase them → "FDC3"
+//   5. Prefix with Facility Code → Pseudo "15996-FDC3"
+//
+// Notes:
+//   - Mentee ID alone is NOT hashed; Facility Code is part of the input.
+//   - Same Facility Code + Mentee ID always yields the same Pseudo.
+//   - SHA-256 is one-way: Pseudo cannot be reversed to Mentee ID.
+//   - If Facility Code is missing at write time, the algo falls back to "0".
 // =====================================================
 function privacyDisplayCode(facilityCode, menteeId) {
   var fc = (facilityCode === null || facilityCode === undefined)
@@ -974,12 +997,17 @@ function privacyDisplayCode(facilityCode, menteeId) {
     mid = String(Math.round(Number(menteeId)));
   }
 
+  // Step 2: FacilityCode|MenteeID  (e.g. "15996|712345678")
   var raw = fc + "|" + mid;
+
+  // Step 3: SHA-256(UTF-8(raw)) → 32 bytes
   var digest = Utilities.computeDigest(
     Utilities.DigestAlgorithm.SHA_256,
     raw,
     Utilities.Charset.UTF_8
   );
+
+  // Convert digest bytes to lowercase hex string
   var hex = "";
   for (var i = 0; i < digest.length; i++) {
     var b = digest[i];
@@ -988,5 +1016,7 @@ function privacyDisplayCode(facilityCode, menteeId) {
     if (h.length === 1) h = "0" + h;
     hex += h;
   }
+
+  // Steps 4–5: first 4 hex chars, uppercased, prefixed with Facility Code
   return fc + "-" + hex.substring(0, 4).toUpperCase();
 }
