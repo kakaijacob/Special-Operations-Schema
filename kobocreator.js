@@ -1344,10 +1344,10 @@ function cleanForKobo(text) {
 function privacyDisplayCode(facilityCode, menteeId) {
   var fc = (facilityCode === null || facilityCode === undefined)
     ? ""
-    : facilityCode.toString().replace(/\s+/g, "").trim();
+    : facilityCode.toString().replace(/\s+/g, "").replace(/\.0$/, "").trim();
   var mid = (menteeId === null || menteeId === undefined)
     ? ""
-    : menteeId.toString().replace(/\s+/g, "").trim();
+    : menteeId.toString().replace(/\s+/g, "").replace(/\.0$/, "").trim();
   if (!fc || !mid) return "";
 
   var raw = fc + "|" + mid;
