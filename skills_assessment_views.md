@@ -353,11 +353,59 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 ### 20. mentors.uterine_inversion_evaluation_2026 source
 ```sql
+-- Cohort-aware child (same shape as amstl_evaluation_2026).
+-- skill_evaluation in moh_skills_checklist is 'Uterine inversion' (lowercase i).
+-- Exact '= Uterine Inversion' drops rows (e.g. mentee 706665277, submission 820211387).
+-- Use ILIKE. Score = sum of 25 items / 25.0 (each Yes = 1); COALESCE nulls to 0.
 CREATE OR REPLACE VIEW mentors.uterine_inversion_evaluation_2026
-AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help::integer AS shout_for_help, msc.blood_monitoring_drape::integer AS blood_monitoring_drape, msc.emergency_team_roles::integer AS emergency_team_roles, msc.rapid_initial_assessment::integer AS rapid_initial_assessment, msc.ensure_patient_privacy::integer AS ensure_patient_privacy, msc.explain_procedure_mother1::integer AS explain_procedure_mother1, msc.obtain_informed_consent1::integer AS obtain_informed_consent1, msc.assess_blood_loss::integer AS assess_blood_loss, msc.assess_abcs_resuscitate1::integer AS assess_abcs_resuscitate1, msc.stop_uterotonic_drugs::integer AS stop_uterotonic_drugs, msc.insert_iv_cannulae::integer AS insert_iv_cannulae, msc.collect_blood_samples1::integer AS collect_blood_samples1, msc.start_crystalloid_infusion::integer AS start_crystalloid_infusion, msc.insert_urinary_catheter::integer AS insert_urinary_catheter, msc.administer_analgesics_antibiotics::integer AS administer_analgesics_antibiotics, msc.hor_hygiene_ppe::integer AS hor_hygiene_ppe, msc.replace_uterine_fundus::integer AS replace_uterine_fundus, msc.remove_retained_placenta::integer AS remove_retained_placenta, msc.start_oxytocin_infusion::integer AS start_oxytocin_infusion, msc.examine_repair_tears::integer AS examine_repair_tears, msc.monitor_vitals_bleeding::integer AS monitor_vitals_bleeding, msc.explain_procedure_results::integer AS explain_procedure_results, msc.prepare_operating_theatre::integer AS prepare_operating_theatre, msc.inform_client_outcomes::integer AS inform_client_outcomes, msc.document_blood_loss::integer AS document_blood_loss, avg((msc.shout_for_help::integer + msc.blood_monitoring_drape::integer + msc.emergency_team_roles::integer + msc.rapid_initial_assessment::integer + msc.ensure_patient_privacy::integer + msc.explain_procedure_mother1::integer + msc.obtain_informed_consent1::integer + msc.assess_blood_loss::integer + msc.assess_abcs_resuscitate1::integer + msc.stop_uterotonic_drugs::integer + msc.insert_iv_cannulae::integer + msc.collect_blood_samples1::integer + msc.start_crystalloid_infusion::integer + msc.insert_urinary_catheter::integer + msc.administer_analgesics_antibiotics::integer + msc.hor_hygiene_ppe::integer + msc.replace_uterine_fundus::integer + msc.remove_retained_placenta::integer + msc.start_oxytocin_infusion::integer + msc.examine_repair_tears::integer + msc.monitor_vitals_bleeding::integer + msc.explain_procedure_results::integer + msc.prepare_operating_theatre::integer + msc.inform_client_outcomes::integer + msc.document_blood_loss::integer)::numeric::numeric(18,0) / 24.0) AS "average score"
-   FROM mentors.moh_skills_checklist msc
-  WHERE msc.skill_evaluation::text = 'Uterine Inversion'::character varying::text
-  GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.shout_for_help, msc.blood_monitoring_drape, msc.emergency_team_roles, msc.rapid_initial_assessment, msc.ensure_patient_privacy, msc.explain_procedure_mother1, msc.obtain_informed_consent1, msc.assess_blood_loss, msc.assess_abcs_resuscitate1, msc.stop_uterotonic_drugs, msc.insert_iv_cannulae, msc.collect_blood_samples1, msc.start_crystalloid_infusion, msc.insert_urinary_catheter, msc.administer_analgesics_antibiotics, msc.hor_hygiene_ppe, msc.replace_uterine_fundus, msc.remove_retained_placenta, msc.start_oxytocin_infusion, msc.examine_repair_tears, msc.monitor_vitals_bleeding, msc.explain_procedure_results, msc.prepare_operating_theatre, msc.inform_client_outcomes, msc.document_blood_loss;
+AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_attempts.date_ended, ranked_attempts.date_submitted, ranked_attempts.county, ranked_attempts.facility, ranked_attempts.facility_code, ranked_attempts.program, ranked_attempts.mentee_name, ranked_attempts.mentee_id, ranked_attempts.skill_evaluation, ranked_attempts."average score" AS average_score, ranked_attempts.cycle_id, ranked_attempts.cycle_label, ranked_attempts.cycle_start, ranked_attempts.cycle_end, ranked_attempts.attempt_count, ranked_attempts.first_pass_date
+   FROM ( SELECT scored_attempts.submission_id, scored_attempts.date_started, scored_attempts.date_ended, scored_attempts.date_submitted, scored_attempts.county, scored_attempts.facility, scored_attempts.facility_code, scored_attempts.program, scored_attempts.mentee_name, scored_attempts.mentee_id, scored_attempts.skill_evaluation, scored_attempts."average score", scored_attempts.cycle_id, scored_attempts.cycle_label, scored_attempts.cycle_start, scored_attempts.cycle_end, count(*)
+          OVER(
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS attempt_count, min(
+                CASE
+                    WHEN scored_attempts."average score" >= 0.85 THEN scored_attempts.date_submitted::date
+                    ELSE NULL::date
+                END)
+          OVER(
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date
+           FROM ( SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
+                        (COALESCE(msc.shout_for_help::integer, 0)
+                         + COALESCE(msc.blood_monitoring_drape::integer, 0)
+                         + COALESCE(msc.emergency_team_roles::integer, 0)
+                         + COALESCE(msc.rapid_initial_assessment::integer, 0)
+                         + COALESCE(msc.ensure_patient_privacy::integer, 0)
+                         + COALESCE(msc.explain_procedure_mother1::integer, 0)
+                         + COALESCE(msc.obtain_informed_consent1::integer, 0)
+                         + COALESCE(msc.assess_blood_loss::integer, 0)
+                         + COALESCE(msc.assess_abcs_resuscitate1::integer, 0)
+                         + COALESCE(msc.stop_uterotonic_drugs::integer, 0)
+                         + COALESCE(msc.insert_iv_cannulae::integer, 0)
+                         + COALESCE(msc.collect_blood_samples1::integer, 0)
+                         + COALESCE(msc.start_crystalloid_infusion::integer, 0)
+                         + COALESCE(msc.insert_urinary_catheter::integer, 0)
+                         + COALESCE(msc.administer_analgesics_antibiotics::integer, 0)
+                         + COALESCE(msc.hor_hygiene_ppe::integer, 0)
+                         + COALESCE(msc.replace_uterine_fundus::integer, 0)
+                         + COALESCE(msc.remove_retained_placenta::integer, 0)
+                         + COALESCE(msc.start_oxytocin_infusion::integer, 0)
+                         + COALESCE(msc.examine_repair_tears::integer, 0)
+                         + COALESCE(msc.monitor_vitals_bleeding::integer, 0)
+                         + COALESCE(msc.explain_procedure_results::integer, 0)
+                         + COALESCE(msc.prepare_operating_theatre::integer, 0)
+                         + COALESCE(msc.inform_client_outcomes::integer, 0)
+                         + COALESCE(msc.document_blood_loss::integer, 0)
+                        )::numeric::numeric(18,0) / 25.0 AS "average score",
+                        c.cycle_id, c.cycle_label, c.cycle_start, c.cycle_end
+                   FROM mentors.moh_skills_checklist msc
+              JOIN (( SELECT 1 AS cycle_id, 'Cohort 1'::character varying::character varying(50) AS cycle_label, '2024-01-01'::date AS cycle_start, '2026-03-31'::date AS cycle_end
+                UNION ALL
+                         SELECT 2, 'Cohort 2'::character varying::character varying(50) AS "varchar", '2026-04-01'::date AS date, '2027-03-31'::date AS date)
+                UNION ALL
+                         SELECT 3, 'Cohort 3'::character varying::character varying(50) AS "varchar", '2027-04-01'::date AS date, '2028-03-31'::date AS date) c ON msc.date_submitted::date >= c.cycle_start AND msc.date_submitted::date <= c.cycle_end
+             WHERE msc.skill_evaluation ILIKE 'Uterine inversion') scored_attempts
+          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts;
 ```
 
 ### 21. mentors.maternal_shock_evaluation_2026 source
@@ -375,3 +423,4 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 - Results / observations: View calculates average score using different item sets before and after 2026-04-01
 - Maternal shock: 23 checklist items, each Yes = 1 point; average score = sum / 23.0
 - Maternal resuscitation child view name: `mentors.maternal_resuscitation_evaluation_2026` (not `moh_maternal_resuscitation_evaluation`). 21 checklist items, each Yes = 1 point; average score = sum / 21.0. After 2026-04-01 use `debrief_or_assign_tasks` + `identify_cpr_lormarks` (not the legacy `debrief_and_assign_tasks` + `identify_cpr_landmarks`, which stay 0 on new form submissions and understate scores by up to 2/21).
+- Uterine inversion: checklist stores `Uterine inversion` (lowercase i). Child view must use `ILIKE 'Uterine inversion'` — exact `= 'Uterine Inversion'` drops rows from parent (e.g. mentee 706665277). Score = sum of 25 items / 25.0.
