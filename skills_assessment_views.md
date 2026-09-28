@@ -344,11 +344,69 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 ### 19. mentors.ubt_free_flow_evaluation_2026 source
 ```sql
+-- Cohort-aware child (same shape as amstl_evaluation_2026).
+-- Cohort 2+ checklist: 34 items, each Yes = 1; average = sum / 34.0.
+-- Column note: hungon_drip_stand_valve_closed (not ..._stor_...); document (lowercase).
+-- Use ILIKE for skill_evaluation to avoid uterine-inversion-style case drops.
+-- COALESCE null checklist items to 0 so average_score IS NOT NULL does not drop rows.
 CREATE OR REPLACE VIEW mentors.ubt_free_flow_evaluation_2026
-AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent::integer AS "obtain consent", msc.sterile_gloves::integer AS "sterile gloves", msc.assemble_ubt::integer AS "assemble utb", msc.hungon_drip_stand_valve_closed::integer AS "close valve", msc.lithotomy_position::integer AS "lithotomy position", msc.clean_perinuem::integer AS "clean perineum", msc.catheterize::integer AS catheterize, msc.drape_patient::integer AS "drape patient", msc.visualize_cervix_sims_speculum::integer AS "visualize cervix", msc.stabilize_uterus::integer AS "stabilize uterus", msc.remove_speculum::integer AS "remove speculum", msc.insert_balloon::integer AS "insert balloon", msc.withdraw_forceps::integer AS "withdraw forceps", msc.prevent_expulsion_when_inflati::integer AS "prevent expulsion", msc.inflate_balloon::integer AS "inflate balloon", msc.inflate_until_equilibrium::integer AS "attain equilibrium", msc.balloon_insitu_check_bleeding::integer AS "check bleeding", msc.determine_approp_bag_height::integer AS "appropriate bag height", msc.not_level_when_bleeding_stops::integer AS "note level bleeding stops", msc.observe_patient::integer AS "observe patient", msc.secure_tubing::integer AS "secure tubing", msc.antibiotics::integer AS antibiotics, msc.documentation_time_level::integer AS "document time & level", msc.continue_iv_fluids::integer AS "continue iv fluids", msc.vital_signs::integer AS "vital signs", msc.when_to_remove::integer AS "when to remove", msc.drain_balloon::integer AS "drain balloon", msc.remove_balloon_gently::integer AS "remove balloon gently", msc.post_removal_monitoring::integer AS "monitoring post removal", msc.activity_resumption::integer AS "activity resumption", msc.what_if_bleeing_resumes::integer AS "if bleeding resumes", msc.referral::integer AS referral, msc.close_valve_in_transfer::integer AS "valve closure & transfer", msc.document::integer AS document, (msc.obtain_consent::integer + msc.sterile_gloves::integer + msc.assemble_ubt::integer + msc.hungon_drip_stand_valve_closed::integer + msc.lithotomy_position::integer + msc.clean_perinuem::integer + msc.catheterize::integer + msc.drape_patient::integer + msc.visualize_cervix_sims_speculum::integer + msc.stabilize_uterus::integer + msc.remove_speculum::integer + msc.insert_balloon::integer + msc.withdraw_forceps::integer + msc.prevent_expulsion_when_inflati::integer + msc.inflate_balloon::integer + msc.inflate_until_equilibrium::integer + msc.balloon_insitu_check_bleeding::integer + msc.determine_approp_bag_height::integer + msc.not_level_when_bleeding_stops::integer + msc.observe_patient::integer + msc.secure_tubing::integer + msc.antibiotics::integer + msc.documentation_time_level::integer + msc.continue_iv_fluids::integer + msc.vital_signs::integer + msc.when_to_remove::integer + msc.drain_balloon::integer + msc.remove_balloon_gently::integer + msc.post_removal_monitoring::integer + msc.activity_resumption::integer + msc.what_if_bleeing_resumes::integer + msc.referral::integer + msc.close_valve_in_transfer::integer + msc.document::integer)::numeric::numeric(18,0) / 34.0 AS "average score"
-   FROM mentors.moh_skills_checklist msc
-  WHERE msc.skill_evaluation::text = 'UBT (free flow)'::character varying::text
-  GROUP BY msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation, msc.obtain_consent, msc.sterile_gloves, msc.assemble_ubt, msc.hungon_drip_stand_valve_closed, msc.lithotomy_position, msc.clean_perinuem, msc.catheterize, msc.drape_patient, msc.visualize_cervix_sims_speculum, msc.stabilize_uterus, msc.remove_speculum, msc.insert_balloon, msc.withdraw_forceps, msc.prevent_expulsion_when_inflati, msc.inflate_balloon, msc.inflate_until_equilibrium, msc.balloon_insitu_check_bleeding, msc.determine_approp_bag_height, msc.not_level_when_bleeding_stops, msc.observe_patient, msc.secure_tubing, msc.antibiotics, msc.documentation_time_level, msc.continue_iv_fluids, msc.vital_signs, msc.when_to_remove, msc.drain_balloon, msc.remove_balloon_gently, msc.post_removal_monitoring, msc.activity_resumption, msc.what_if_bleeing_resumes, msc.referral, msc.close_valve_in_transfer, msc.document;
+AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_attempts.date_ended, ranked_attempts.date_submitted, ranked_attempts.county, ranked_attempts.facility, ranked_attempts.facility_code, ranked_attempts.program, ranked_attempts.mentee_name, ranked_attempts.mentee_id, ranked_attempts.skill_evaluation, ranked_attempts."average score" AS average_score, ranked_attempts.cycle_id, ranked_attempts.cycle_label, ranked_attempts.cycle_start, ranked_attempts.cycle_end, ranked_attempts.attempt_count, ranked_attempts.first_pass_date
+   FROM ( SELECT scored_attempts.submission_id, scored_attempts.date_started, scored_attempts.date_ended, scored_attempts.date_submitted, scored_attempts.county, scored_attempts.facility, scored_attempts.facility_code, scored_attempts.program, scored_attempts.mentee_name, scored_attempts.mentee_id, scored_attempts.skill_evaluation, scored_attempts."average score", scored_attempts.cycle_id, scored_attempts.cycle_label, scored_attempts.cycle_start, scored_attempts.cycle_end, count(*)
+          OVER(
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS attempt_count, min(
+                CASE
+                    WHEN scored_attempts."average score" >= 0.85 THEN scored_attempts.date_submitted::date
+                    ELSE NULL::date
+                END)
+          OVER(
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date
+           FROM ( SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
+                        (COALESCE(msc.obtain_consent::integer, 0)
+                         + COALESCE(msc.sterile_gloves::integer, 0)
+                         + COALESCE(msc.assemble_ubt::integer, 0)
+                         + COALESCE(msc.hungon_drip_stand_valve_closed::integer, 0)
+                         + COALESCE(msc.lithotomy_position::integer, 0)
+                         + COALESCE(msc.clean_perinuem::integer, 0)
+                         + COALESCE(msc.catheterize::integer, 0)
+                         + COALESCE(msc.drape_patient::integer, 0)
+                         + COALESCE(msc.visualize_cervix_sims_speculum::integer, 0)
+                         + COALESCE(msc.stabilize_uterus::integer, 0)
+                         + COALESCE(msc.remove_speculum::integer, 0)
+                         + COALESCE(msc.insert_balloon::integer, 0)
+                         + COALESCE(msc.withdraw_forceps::integer, 0)
+                         + COALESCE(msc.prevent_expulsion_when_inflati::integer, 0)
+                         + COALESCE(msc.inflate_balloon::integer, 0)
+                         + COALESCE(msc.inflate_until_equilibrium::integer, 0)
+                         + COALESCE(msc.balloon_insitu_check_bleeding::integer, 0)
+                         + COALESCE(msc.determine_approp_bag_height::integer, 0)
+                         + COALESCE(msc.not_level_when_bleeding_stops::integer, 0)
+                         + COALESCE(msc.observe_patient::integer, 0)
+                         + COALESCE(msc.secure_tubing::integer, 0)
+                         + COALESCE(msc.antibiotics::integer, 0)
+                         + COALESCE(msc.documentation_time_level::integer, 0)
+                         + COALESCE(msc.continue_iv_fluids::integer, 0)
+                         + COALESCE(msc.vital_signs::integer, 0)
+                         + COALESCE(msc.when_to_remove::integer, 0)
+                         + COALESCE(msc.drain_balloon::integer, 0)
+                         + COALESCE(msc.remove_balloon_gently::integer, 0)
+                         + COALESCE(msc.post_removal_monitoring::integer, 0)
+                         + COALESCE(msc.activity_resumption::integer, 0)
+                         + COALESCE(msc.what_if_bleeing_resumes::integer, 0)
+                         + COALESCE(msc.referral::integer, 0)
+                         + COALESCE(msc.close_valve_in_transfer::integer, 0)
+                         + COALESCE(msc.document::integer, 0)
+                        )::numeric::numeric(18,0) / 34.0 AS "average score",
+                        c.cycle_id, c.cycle_label, c.cycle_start, c.cycle_end
+                   FROM mentors.moh_skills_checklist msc
+              JOIN (( SELECT 1 AS cycle_id, 'Cohort 1'::character varying::character varying(50) AS cycle_label, '2024-01-01'::date AS cycle_start, '2026-03-31'::date AS cycle_end
+                UNION ALL
+                         SELECT 2, 'Cohort 2'::character varying::character varying(50) AS "varchar", '2026-04-01'::date AS date, '2027-03-31'::date AS date)
+                UNION ALL
+                         SELECT 3, 'Cohort 3'::character varying::character varying(50) AS "varchar", '2027-04-01'::date AS date, '2028-03-31'::date AS date) c ON msc.date_submitted::date >= c.cycle_start AND msc.date_submitted::date <= c.cycle_end
+             WHERE msc.skill_evaluation ILIKE 'UBT (free flow)') scored_attempts
+          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts;
 ```
 
 ### 20. mentors.uterine_inversion_evaluation_2026 source
@@ -424,3 +482,4 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 - Maternal shock: 23 checklist items, each Yes = 1 point; average score = sum / 23.0
 - Maternal resuscitation child view name: `mentors.maternal_resuscitation_evaluation_2026` (not `moh_maternal_resuscitation_evaluation`). 21 checklist items, each Yes = 1 point; average score = sum / 21.0. After 2026-04-01 use `debrief_or_assign_tasks` + `identify_cpr_lormarks` (not the legacy `debrief_and_assign_tasks` + `identify_cpr_landmarks`, which stay 0 on new form submissions and understate scores by up to 2/21).
 - Uterine inversion: checklist stores `Uterine inversion` (lowercase i). Child view must use `ILIKE 'Uterine inversion'` — exact `= 'Uterine Inversion'` drops rows from parent (e.g. mentee 706665277). Score = sum of 25 items / 25.0.
+- UBT free flow: cohort 2+ checklist has 34 items (Yes = 1); average = sum / 34.0. Column names: `hungon_drip_stand_valve_closed` (not `..._stor_...`), `document` (lowercase). Child uses `ILIKE 'UBT (free flow)'` + COALESCE nulls to 0; cohort-aware shape matches `amstl_evaluation_2026`.
