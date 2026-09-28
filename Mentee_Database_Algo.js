@@ -259,6 +259,11 @@ function updateAllStatusesByName() {
   let ineligibleCount = 0;
   let rowsWithErrors = 0;
   let totalErrors = 0;
+  let pseudoFilledCount = 0;
+  let pseudoMissingCount = 0;
+
+  // Collect Pseudo values for a single batch write so every mentee row is filled.
+  const pseudoColumnValues = [];
 
   Logger.log("Starting main row validation loop...");
 
@@ -313,20 +318,29 @@ function updateAllStatusesByName() {
     // ----------------------------
     // PSEUDO (privacy display code)
     // FacilityCode-XXXX from SHA-256(FacilityCode|MenteeID).
-    // Safe for shared dashboards; mentors resolve via Name + private key.
+    // Every mentee with a Mentee ID gets a Pseudo; blank rows stay blank.
     // ----------------------------
-    if (colPseudo > 0) {
-      const pseudoCode =
-        colFacilityCode > 0 && colMenteeID > 0
-          ? privacyDisplayCode(
-              normalizeCode(row[colFacilityCode - 1]),
-              row[colMenteeID - 1]
-            )
-          : "";
-      sheet
-        .getRange(rowNum, colPseudo)
-        .setValue(pseudoCode);
+    const rawMenteeId = colMenteeID > 0 ? row[colMenteeID - 1] : "";
+    const rawFacilityCode = colFacilityCode > 0 ? row[colFacilityCode - 1] : "";
+    const rawName = colName > 0 ? row[colName - 1] : "";
+    const hasMenteeIdentity =
+      (rawMenteeId !== "" && rawMenteeId !== null) ||
+      (rawName !== "" && rawName !== null && String(rawName).trim() !== "");
+
+    let pseudoCode = "";
+    if (rawMenteeId !== "" && rawMenteeId !== null) {
+      // Prefer Facility Code; fall back to "0" so Pseudo is still generated.
+      const codeForPseudo = normalizeCode(rawFacilityCode) || "0";
+      pseudoCode = privacyDisplayCode(codeForPseudo, rawMenteeId);
     }
+
+    if (pseudoCode) {
+      pseudoFilledCount++;
+    } else if (hasMenteeIdentity) {
+      pseudoMissingCount++;
+    }
+
+    pseudoColumnValues.push([pseudoCode]);
 
     // ----------------------------
     // LEARNING MODE
@@ -441,6 +455,14 @@ function updateAllStatusesByName() {
 
         }
 
+      }
+
+      // Pseudo requires Mentee ID so every mentee can get a privacy code
+      if (colPseudo > 0 && !pseudoCode) {
+        addError(
+          colPseudo > 0 ? colPseudo : colMenteeID,
+          "Pseudo could not be generated. Mentee ID is required."
+        );
       }
 
     }
@@ -866,9 +888,29 @@ function updateAllStatusesByName() {
 
   });
 
+  // ----------------------------
+  // WRITE PSEUDO COLUMN (batch — every mentee row)
+  // ----------------------------
+  if (colPseudo > 0 && pseudoColumnValues.length === numRows) {
+    sheet
+      .getRange(commentRow + 1, colPseudo, numRows, 1)
+      .setValues(pseudoColumnValues);
+    Logger.log(
+      "Pseudo column written — filled: " + pseudoFilledCount +
+      ", mentees missing Pseudo (no Mentee ID): " + pseudoMissingCount
+    );
+  } else {
+    Logger.log(
+      "ERROR: Pseudo column was not written. colPseudo=" + colPseudo +
+      ", values=" + pseudoColumnValues.length +
+      ", numRows=" + numRows
+    );
+  }
+
   Logger.log(
     "Finished updateAllStatusesByName — Eligible: " + eligibleCount +
     ", Ineligible: " + ineligibleCount +
+    ", Pseudo filled: " + pseudoFilledCount +
     ", rows with errors: " + rowsWithErrors +
     ", total validation messages: " + totalErrors
   );
@@ -926,6 +968,11 @@ function privacyDisplayCode(facilityCode, menteeId) {
     ? ""
     : String(menteeId).replace(/\s+/g, "").replace(/\.0$/, "").trim();
   if (!fc || !mid) return "";
+
+  // Sheets may store IDs as numbers; keep digits-only mentee IDs stable.
+  if (/^\d+\.?\d*e[+\-]?\d+$/i.test(mid)) {
+    mid = String(Math.round(Number(menteeId)));
+  }
 
   var raw = fc + "|" + mid;
   var digest = Utilities.computeDigest(
