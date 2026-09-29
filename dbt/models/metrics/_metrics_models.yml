@@ -139,6 +139,15 @@ models:
       - name: labor_monitoring_progress_count
         data_tests: [not_null]
 
+  - name: metric_individual_mentee_emonc_curriculum_progress
+    description: >
+      Combined roll-up of all individual EmONC progress count columns by progress year.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: mentee_count
+        data_tests: [not_null]
+
   - name: metric_newborn_curriculum_completion_by_cycle
     description: Cycle-level newborn full-curriculum completion counts and averages.
     columns:

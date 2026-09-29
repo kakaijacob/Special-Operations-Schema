@@ -103,6 +103,7 @@ Port of Individual Mentee Curriculum Completion Progress Tracker.
 | `metric_skill_eval_progress_count` | sum/avg of `skill_eval_count` |
 | `metric_average_score_progress` | avg of `average_score` |
 | `metric_labor_monitoring_progress_count` | sum/avg of `labor_monitoring_count` |
+| `metric_individual_mentee_emonc_curriculum_progress` | combined roll-up of all progress counts |
 
 ## Mart 2: cohort-aware newborn curriculum completion
 
