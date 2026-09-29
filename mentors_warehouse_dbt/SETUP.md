@@ -8,21 +8,20 @@
 | dbt project `name` | `jacaranda_mentors` |
 | Profile key | `warehouse_mentors_ke` |
 | ClickHouse host | `tplb1fkekn.eu-west-2.aws.clickhouse.cloud` |
-| Prod schema | `dbt_mentors_ke` |
-| Dev schema default | `dev_wanyama` |
-| Marts/metrics schema suffix (prod only) | `_gold` |
+| Prod schema | `dbt_mentors_gold` |
+| Dev schema default | `dev_andrew` |
+| Marts/metrics schema | same as prod (`dbt_mentors_gold`) |
 
-If you prefer different prod schema naming (e.g. `mentors_ke` instead of `dbt_mentors_ke`), say so — it is centralized in `macros/generate_schema_name.sql` and `secrets.env.example`.
+If you prefer different prod schema naming (e.g. `mentors_ke` instead of `dbt_mentors_gold`), say so — it is centralized in `macros/generate_schema_name.sql` and `secrets.env.example`.
 
 ---
 
 ## 1. ClickHouse (real account)
 
 ```sql
-CREATE DATABASE IF NOT EXISTS dbt_mentors_ke;
-CREATE DATABASE IF NOT EXISTS dbt_mentors_ke_gold;
-CREATE DATABASE IF NOT EXISTS dbt_mentors_ke_snapshots;
-CREATE DATABASE IF NOT EXISTS dev_wanyama;
+CREATE DATABASE IF NOT EXISTS dbt_mentors_gold;
+CREATE DATABASE IF NOT EXISTS dbt_mentors_gold_snapshots;
+CREATE DATABASE IF NOT EXISTS dev_andrew;
 SHOW DATABASES;
 ```
 
@@ -69,7 +68,7 @@ Set at least:
 export DBT_HOST='tplb1fkekn.eu-west-2.aws.clickhouse.cloud'
 export DBT_USER='default'
 export DBT_PASSWORD='your_real_secret'
-export DBT_USER_SCHEMA='dev_wanyama'
+export DBT_USER_SCHEMA='dev_andrew'
 ```
 
 ```bash
@@ -129,7 +128,7 @@ Add `stg_` / `int_` / mart SQL after Airbyte (or other) loads land; declare them
 
 ## Checklist
 
-- [ ] Databases created (`dbt_mentors_ke`, `dev_wanyama`, optional gold/snapshots)
+- [ ] Databases created (`dbt_mentors_gold`, `dev_andrew`, optional gold/snapshots)
 - [ ] IP allowlisted
 - [ ] Repo cloned / open in Cursor
 - [ ] `~/.config/warehouse_mentors_ke.env` filled (secrets)

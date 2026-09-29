@@ -3,8 +3,7 @@
 # ~/.dbt/profiles.yml, which carries a dev target as well.
 #
 # Schema comes from DBT_USER_SCHEMA: workflows export it, and
-# generate_schema_name treats 'dbt_mentors_ke' as the production schema that
-# gets per-layer suffixes (e.g. dbt_mentors_ke_gold).
+# generate_schema_name treats 'dbt_mentors_gold' as the production schema.
 #
 # Never put real passwords in this file — only env_var references.
 
@@ -29,10 +28,10 @@ warehouse_mentors_ke:
       send_receive_timeout: 1800
 
     # Used by local / manual-run workflows. Never defaults to prod's
-    # 'dbt_mentors_ke' — caller must supply a schema (or use the local default).
+    # 'dbt_mentors_gold' — caller must supply a schema (or use the local default).
     dev:
       type: clickhouse
-      schema: "{{ env_var('DBT_USER_SCHEMA', 'dev_wanyama') }}"
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dev_andrew') }}"
       host: "{{ env_var('DBT_HOST', '') }}"
       port: 8443
       user: "{{ env_var('DBT_USER', '') }}"

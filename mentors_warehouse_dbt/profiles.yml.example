@@ -12,7 +12,7 @@ warehouse_mentors_ke:
   outputs:
     dev:
       type: clickhouse
-      schema: "{{ env_var('DBT_USER_SCHEMA', 'dev_wanyama') }}"
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dev_andrew') }}"
       host: "{{ env_var('DBT_HOST') }}"
       port: 8443
       user: "{{ env_var('DBT_USER', 'default') }}"
@@ -29,7 +29,7 @@ warehouse_mentors_ke:
 
     prod:
       type: clickhouse
-      schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') }}"
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') }}"
       host: "{{ env_var('DBT_HOST') }}"
       port: 8443
       user: "{{ env_var('DBT_USER', 'default') }}"

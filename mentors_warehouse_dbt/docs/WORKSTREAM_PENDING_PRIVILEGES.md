@@ -1,7 +1,7 @@
 # Workstream while ClickHouse privileges are pending
 
 Connection/`dbt debug` can wait until `jh_dna_dev` can use a schema
-(`dev_wanyama` or `default`) with CREATE/SELECT grants.
+(`dev_andrew` or `default`) with CREATE/SELECT grants.
 
 ## Do today (no live warehouse required)
 
@@ -18,7 +18,7 @@ Connection/`dbt debug` can wait until `jh_dna_dev` can use a schema
 cd ~/projects/mentors_warehouse
 source ~/.config/warehouse_mentors_ke.env
 # Prefer your own schema once created+granted:
-#   export DBT_USER_SCHEMA='dev_wanyama'
+#   export DBT_USER_SCHEMA='dev_andrew'
 dbt debug --target dev
 dbt run --select staging.*
 dbt test

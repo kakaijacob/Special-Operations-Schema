@@ -5,7 +5,7 @@
 | dbt project (`name`) | `jacaranda_mentors` |
 | Profile | `warehouse_mentors_ke` |
 | ClickHouse host | `tplb1fkekn.eu-west-2.aws.clickhouse.cloud` |
-| Prod schema convention | `dbt_mentors_ke` (+ `_gold` / `_snapshots` in prod) |
+| Prod schema convention | `dbt_mentors_gold` (+ `_snapshots` in prod) |
 | Repo | https://github.com/Jacaranda-Health/mentors_warehouse |
 
 Full setup: **[SETUP.md](./SETUP.md)**

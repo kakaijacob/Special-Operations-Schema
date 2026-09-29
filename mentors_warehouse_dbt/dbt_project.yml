@@ -39,22 +39,18 @@ models:
         allow_nullable_key: 1
 
     marts:
-      # Analytics-ready tables for BI
+      # Analytics-ready tables for BI — land in DBT_USER_SCHEMA
+      # (dev_andrew locally; dbt_mentors_gold in prod).
       +materialized: table
       +engine: MergeTree()
       +settings:
         allow_nullable_key: 1
-      # In prod (dbt_mentors_ke), marts land in dbt_mentors_ke_gold via
-      # macros/generate_schema_name.sql. Outside prod they stay in the
-      # developer's DBT_USER_SCHEMA.
-      +schema: gold
 
     metrics:
       +materialized: table
       +engine: MergeTree()
       +settings:
         allow_nullable_key: 1
-      +schema: gold
 
     exports:
       # Interfaces for external consumers — views stay live
@@ -67,4 +63,4 @@ seeds:
 snapshots:
   jacaranda_mentors:
     +engine: MergeTree()
-    +target_schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') }}{% if env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') == 'dbt_mentors_ke' %}_snapshots{% endif %}"
+    +target_schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') }}{% if env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') == 'dbt_mentors_gold' %}_snapshots{% endif %}"
