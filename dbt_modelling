@@ -49,6 +49,7 @@ mart_newborn_curriculum_completion
         │
         ▼  metrics
 metric_emonc_*_by_cycle
+metric_*_progress_count / metric_average_score_progress
 metric_newborn_*_by_cycle
 ```
 
@@ -95,6 +96,13 @@ Port of Individual Mentee Curriculum Completion Progress Tracker.
 | dbt model | Role |
 |-----------|------|
 | `mart_individual_mentee_emonc_curriculum_progress` | BI fact for annual individual progress |
+| `metric_cme_progress_count` | sum/avg of `cme_count` by progress year |
+| `metric_drill_progress_count` | sum/avg of `drill_count` |
+| `metric_skill_demos_progress_count` | sum/avg of `skill_demos_count` |
+| `metric_return_demos_progress_count` | sum/avg of `return_demos_count` |
+| `metric_skill_eval_progress_count` | sum/avg of `skill_eval_count` |
+| `metric_average_score_progress` | avg of `average_score` |
+| `metric_labor_monitoring_progress_count` | sum/avg of `labor_monitoring_count` |
 
 ## Mart 2: cohort-aware newborn curriculum completion
 

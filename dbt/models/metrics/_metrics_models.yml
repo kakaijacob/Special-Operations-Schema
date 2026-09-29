@@ -83,6 +83,62 @@ models:
         data_tests:
           - not_null
 
+  - name: metric_cme_progress_count
+    description: Sum/avg of CME topic counts for mentees in mart_individual_mentee_emonc_curriculum_progress.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: cme_progress_count
+        data_tests: [not_null]
+
+  - name: metric_drill_progress_count
+    description: Sum/avg of drill topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: drill_progress_count
+        data_tests: [not_null]
+
+  - name: metric_skill_demos_progress_count
+    description: Sum/avg of skill-demo topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: skill_demos_progress_count
+        data_tests: [not_null]
+
+  - name: metric_return_demos_progress_count
+    description: Sum/avg of return-demo topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: return_demos_progress_count
+        data_tests: [not_null]
+
+  - name: metric_skill_eval_progress_count
+    description: Sum/avg of skill-eval counts for individual EmONC progress mentees (Partograph excluded).
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: skill_eval_progress_count
+        data_tests: [not_null]
+
+  - name: metric_average_score_progress
+    description: Average skill scores across individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: average_score_progress
+        data_tests: [not_null]
+
+  - name: metric_labor_monitoring_progress_count
+    description: Sum/avg of labor-monitoring topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: labor_monitoring_progress_count
+        data_tests: [not_null]
+
   - name: metric_newborn_curriculum_completion_by_cycle
     description: Cycle-level newborn full-curriculum completion counts and averages.
     columns:
