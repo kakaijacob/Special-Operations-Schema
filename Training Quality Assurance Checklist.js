@@ -58,14 +58,24 @@ function getTrainingQaApiToken_() {
 }
 
 /**
- * Resolve a Kobo field from a submission. Tries the exact key first, then
- * any key that ends with "/" + name (group-prefixed exports).
+ * Resolve a Kobo field from a submission.
+ * 1) Exact key, or any key ending with "/" + name (group-prefixed paths).
+ * 2) select_multiple expansion: names like "partograph_use/clarity" are stored
+ *    on the parent field as a space-separated list of choices
+ *    (e.g. Section_2/lecturette_assessment/partograph_use = "clarity engagement").
+ *    Returns 1 when the choice is selected, otherwise "".
  */
 function getKoboField_(sub, name) {
   if (!sub || !name) return "";
-  if (Object.prototype.hasOwnProperty.call(sub, name) && sub[name] != null) {
+
+  if (
+    Object.prototype.hasOwnProperty.call(sub, name) &&
+    sub[name] != null &&
+    sub[name] !== ""
+  ) {
     return sub[name];
   }
+
   var suffix = "/" + name;
   var keys = Object.keys(sub);
   for (var i = 0; i < keys.length; i++) {
@@ -74,6 +84,21 @@ function getKoboField_(sub, name) {
       return sub[k] != null ? sub[k] : "";
     }
   }
+
+  // select_multiple: parent/choice → 1 if choice is in the parent's value list
+  var slash = name.indexOf("/");
+  if (slash !== -1) {
+    var parent = name.substring(0, slash);
+    var choice = name.substring(slash + 1);
+    var parentVal = getKoboField_(sub, parent);
+    if (parentVal === "" || parentVal == null) return "";
+    var parts = String(parentVal).trim().split(/\s+/);
+    for (var j = 0; j < parts.length; j++) {
+      if (parts[j] === choice) return 1;
+    }
+    return "";
+  }
+
   return "";
 }
 
