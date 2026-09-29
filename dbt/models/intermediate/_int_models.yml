@@ -105,3 +105,15 @@ models:
     description: >
       NNR baseline/endline/assessment_count for individual progress inspection
       (endline is always the last attempt; completion still requires count > 1).
+
+  - name: int_emonc_activity_sessions_monthly
+    description: EmONC curriculum sessions (distinct submissions) by month and activity.
+
+  - name: int_newborn_activity_sessions_monthly
+    description: Newborn curriculum sessions (distinct submissions) by month and activity.
+
+  - name: int_emonc_skill_eval_sessions_monthly
+    description: EmONC MoH skill-eval sessions by month (Partograph excluded).
+
+  - name: int_newborn_nnr_sessions_monthly
+    description: Newborn resuscitation assessment sessions by month.

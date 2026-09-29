@@ -52,6 +52,8 @@ mart_individual_mentee_newborn_curriculum_progress
 metric_emonc_*_by_cycle
 metric_*_progress_count_by_cycle / metric_average_score_progress_by_cycle / metric_individual_mentee_*_progress_by_cycle
 metric_newborn_*_by_cycle
+metric_emonc_*_sessions_conducted_monthly
+metric_newborn_*_sessions_conducted_monthly
 ```
 
 | Layer | Materialization | Rule |
@@ -162,7 +164,7 @@ Port of newborn individual progress inspection SQL.
 | `int_newborn_individual_curriculum_counts` | curriculum_summary CTE |
 | `int_newborn_individual_nnr_progress` | NNR with assessment_count |
 | `mart_individual_mentee_newborn_curriculum_progress` | BI inspection fact |
-| `metric_newborn_*_progress_count` | column progress by cycle |
+| `metric_newborn_*_progress_count_by_cycle` | column progress by cycle |
 | `metric_individual_mentee_newborn_curriculum_progress_by_cycle` | avg capped progress ratio |
 
 ### Important interim note
@@ -170,8 +172,32 @@ Raw Kobo submissions are wide / nested. Until explode/parse intermediates land:
 - Seeds stand in for processed facts (`use_sample_seeds: true` by default).
 - Flip to `false` once ClickHouse sources + processed intermediates are wired.
 
-| `metric_individual_mentee_newborn_curriculum_progress_by_cycle` | avg capped progress ratio by cycle |
-| `metric_newborn_*_progress_count_by_cycle` | column progress counts by cycle |
+## Metrics: monthly sessions conducted
+
+Counts distinct form `submission_id`s per calendar month (a session), not distinct topics.
+
+**EmONC**
+- `metric_emonc_cme_sessions_conducted_monthly`
+- `metric_emonc_drill_sessions_conducted_monthly`
+- `metric_emonc_skill_demo_sessions_conducted_monthly`
+- `metric_emonc_return_demo_sessions_conducted_monthly`
+- `metric_emonc_labor_monitoring_sessions_conducted_monthly`
+- `metric_emonc_skill_eval_sessions_conducted_monthly`
+
+**Newborn**
+- `metric_newborn_cme_sessions_conducted_monthly`
+- `metric_newborn_drill_sessions_conducted_monthly`
+- `metric_newborn_practicum_sessions_conducted_monthly`
+- `metric_newborn_skill_demo_sessions_conducted_monthly`
+- `metric_newborn_video_sessions_conducted_monthly`
+- `metric_newborn_roleplay_sessions_conducted_monthly`
+- `metric_newborn_case_scenario_sessions_conducted_monthly`
+- `metric_newborn_group_discussions_sessions_conducted_monthly`
+- `metric_newborn_nnr_assessment_sessions_conducted_monthly`
+
+Supporting intermediates: `int_emonc_activity_sessions_monthly`,
+`int_newborn_activity_sessions_monthly`, `int_emonc_skill_eval_sessions_monthly`,
+`int_newborn_nnr_sessions_monthly`.
 
 ## Next modelling waves
 1. Wire real googlesheets columns via `resolve_column`.
