@@ -526,8 +526,10 @@ function buildLostAndFound_(ss) {
   Logger.log("Mapped mentee IDs loaded: " + Object.keys(mappedIds).length);
 
   var lostRows = [];
+  var seenLostMenteeIds = {};
   var blankMenteeIdCount = 0;
   var checkedCount = 0;
+  var duplicateUnmappedCount = 0;
   var e;
 
   for (e = 1; e < enrollmentValues.length; e++) {
@@ -541,6 +543,12 @@ function buildLostAndFound_(ss) {
 
     checkedCount++;
     if (!mappedIds[menteeId]) {
+      // One Lost & Found row per mentee_id (Enrollment can repeat the same mentee).
+      if (seenLostMenteeIds[menteeId]) {
+        duplicateUnmappedCount++;
+        continue;
+      }
+      seenLostMenteeIds[menteeId] = true;
       lostRows.push(row);
     }
   }
@@ -554,9 +562,11 @@ function buildLostAndFound_(ss) {
       blankMenteeIdCount +
       " blank mentee_id skipped; " +
       lostRows.length +
-      " unmapped → '" +
+      " unique unmapped mentee(s) → '" +
       LOST_AND_FOUND_SHEET_NAME +
-      "'."
+      "' (" +
+      duplicateUnmappedCount +
+      " duplicate unmapped row(s) collapsed)."
   );
 
   return lostRows.length;
