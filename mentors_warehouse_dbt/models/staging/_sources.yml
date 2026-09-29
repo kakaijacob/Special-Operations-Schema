@@ -1,0 +1,23 @@
+# Declare raw tables as Airbyte (or other loaders) land them in ClickHouse.
+# Update `schema` / `identifier` to match the real destination database + table names.
+#
+# Until privileges are fixed you can still edit this file; `dbt run` waits until
+# connection works.
+
+version: 2
+
+sources:
+  - name: airbyte
+    description: Tables loaded into ClickHouse by Airbyte (Kenya mentors warehouse).
+    schema: "{{ var('airbyte_schema', 'default') }}"
+    tables:
+      - name: mentees
+        identifier: Mentees
+        description: Mentee master data (Google Sheet / Airbyte). Confirm exact table name in ClickHouse.
+      # Uncomment / rename as real streams exist:
+      # - name: mentors
+      #   identifier: Mentors
+      # - name: mentee_curriculum_tracking
+      #   identifier: Mentee_Curriculum_Tracking
+      # - name: skill_assessments
+      #   identifier: Skill_Assessments

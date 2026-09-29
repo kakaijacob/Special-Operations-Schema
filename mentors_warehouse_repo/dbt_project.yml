@@ -1,0 +1,66 @@
+name: "jacaranda_mentors"
+version: "1.0.0"
+config-version: 2
+
+# Links this project to connection credentials in ~/.dbt/profiles.yml
+# (and to ./profiles.yml in CI, where DBT_PROFILES_DIR=./)
+profile: "warehouse_mentors_ke"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  jacaranda_mentors:
+    # ClickHouse default engine unless a model overrides it
+    +engine: MergeTree()
+
+    # Push YAML descriptions into ClickHouse COMMENTs (BI-friendly)
+    +persist_docs:
+      relation: true
+      columns: true
+
+    staging:
+      # Lightweight parsing / rename / cast → views
+      +materialized: view
+
+    intermediate:
+      # Joins / entity resolution / summaries
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    marts:
+      # Analytics-ready tables for BI — land in DBT_USER_SCHEMA
+      # (dev_andrew locally; dbt_mentors_gold in prod).
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    metrics:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    exports:
+      # Interfaces for external consumers — views stay live
+      +materialized: view
+
+seeds:
+  jacaranda_mentors:
+    +engine: MergeTree()
+
+snapshots:
+  jacaranda_mentors:
+    +engine: MergeTree()
+    +target_schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') }}{% if env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') == 'dbt_mentors_gold' %}_snapshots{% endif %}"

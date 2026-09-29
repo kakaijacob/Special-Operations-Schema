@@ -1,0 +1,6 @@
+# Export interfaces for external services (views).
+# Add .sql files when needed.
+
+version: 2
+
+models: []

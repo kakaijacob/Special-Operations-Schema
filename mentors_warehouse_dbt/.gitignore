@@ -1,0 +1,32 @@
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+!secrets.env.example
+*.env.local
+secrets.env
+credentials.yml
+
+# Keep repo profiles.yml (CI template with env_var only).
+# Ignore accidental local overrides that might contain secrets:
+profiles.yml.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
