@@ -83,7 +83,7 @@ models:
         data_tests:
           - not_null
 
-  - name: metric_cme_progress_count
+  - name: metric_cme_progress_count_by_cycle
     description: Sum/avg of CME topic counts for mentees in mart_individual_mentee_emonc_curriculum_progress.
     columns:
       - name: progress_year
@@ -91,7 +91,7 @@ models:
       - name: cme_progress_count
         data_tests: [not_null]
 
-  - name: metric_drill_progress_count
+  - name: metric_drill_progress_count_by_cycle
     description: Sum/avg of drill topic counts for individual EmONC progress mentees.
     columns:
       - name: progress_year
@@ -99,7 +99,7 @@ models:
       - name: drill_progress_count
         data_tests: [not_null]
 
-  - name: metric_skill_demos_progress_count
+  - name: metric_skill_demos_progress_count_by_cycle
     description: Sum/avg of skill-demo topic counts for individual EmONC progress mentees.
     columns:
       - name: progress_year
@@ -107,7 +107,7 @@ models:
       - name: skill_demos_progress_count
         data_tests: [not_null]
 
-  - name: metric_return_demos_progress_count
+  - name: metric_return_demos_progress_count_by_cycle
     description: Sum/avg of return-demo topic counts for individual EmONC progress mentees.
     columns:
       - name: progress_year
@@ -115,7 +115,7 @@ models:
       - name: return_demos_progress_count
         data_tests: [not_null]
 
-  - name: metric_skill_eval_progress_count
+  - name: metric_skill_eval_progress_count_by_cycle
     description: Sum/avg of skill-eval counts for individual EmONC progress mentees (Partograph excluded).
     columns:
       - name: progress_year
@@ -123,7 +123,7 @@ models:
       - name: skill_eval_progress_count
         data_tests: [not_null]
 
-  - name: metric_average_score_progress
+  - name: metric_average_score_progress_by_cycle
     description: Average skill scores across individual EmONC progress mentees.
     columns:
       - name: progress_year
@@ -131,7 +131,7 @@ models:
       - name: average_score_progress
         data_tests: [not_null]
 
-  - name: metric_labor_monitoring_progress_count
+  - name: metric_labor_monitoring_progress_count_by_cycle
     description: Sum/avg of labor-monitoring topic counts for individual EmONC progress mentees.
     columns:
       - name: progress_year
@@ -139,7 +139,7 @@ models:
       - name: labor_monitoring_progress_count
         data_tests: [not_null]
 
-  - name: metric_individual_mentee_emonc_curriculum_progress
+  - name: metric_individual_mentee_emonc_curriculum_progress_by_cycle
     description: >
       Average of per-mentee capped progress ratios, mirroring the Power BI DAX
       AVERAGEX(DIVIDE(sum of MIN(count, req) + score flag, 13+5+20+20+20+1+1)).
@@ -237,7 +237,7 @@ models:
       - name: nnr_assessment_coverage_rate
         data_tests: [not_null]
 
-  - name: metric_newborn_cme_progress_count
+  - name: metric_newborn_cme_progress_count_by_cycle
     description: Sum/avg of newborn CME topic counts by cycle (individual progress mart).
     columns:
       - name: cycle_id
@@ -245,7 +245,7 @@ models:
       - name: cme_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_drill_progress_count
+  - name: metric_newborn_drill_progress_count_by_cycle
     description: Sum/avg of newborn drill topic counts by cycle.
     columns:
       - name: cycle_id
@@ -253,7 +253,7 @@ models:
       - name: drill_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_practicum_progress_count
+  - name: metric_newborn_practicum_progress_count_by_cycle
     description: Sum/avg of newborn practicum topic counts by cycle.
     columns:
       - name: cycle_id
@@ -261,7 +261,7 @@ models:
       - name: practicum_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_skill_demo_progress_count
+  - name: metric_newborn_skill_demo_progress_count_by_cycle
     description: Sum/avg of newborn skill-demo topic counts by cycle.
     columns:
       - name: cycle_id
@@ -269,7 +269,7 @@ models:
       - name: skill_demo_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_video_progress_count
+  - name: metric_newborn_video_progress_count_by_cycle
     description: Sum/avg of newborn video topic counts by cycle.
     columns:
       - name: cycle_id
@@ -277,7 +277,7 @@ models:
       - name: video_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_roleplay_progress_count
+  - name: metric_newborn_roleplay_progress_count_by_cycle
     description: Sum/avg of newborn role-play topic counts by cycle.
     columns:
       - name: cycle_id
@@ -285,7 +285,7 @@ models:
       - name: roleplay_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_case_scenario_progress_count
+  - name: metric_newborn_case_scenario_progress_count_by_cycle
     description: Sum/avg of newborn case-scenario topic counts by cycle.
     columns:
       - name: cycle_id
@@ -293,7 +293,7 @@ models:
       - name: case_scenario_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_group_discussions_progress_count
+  - name: metric_newborn_group_discussions_progress_count_by_cycle
     description: Sum/avg of newborn group-discussion topic counts by cycle.
     columns:
       - name: cycle_id
@@ -301,7 +301,7 @@ models:
       - name: group_discussions_progress_count
         data_tests: [not_null]
 
-  - name: metric_newborn_nnr_assessment_progress_count
+  - name: metric_newborn_nnr_assessment_progress_count_by_cycle
     description: NNR completion rate and avg baseline/endline by cycle (individual progress).
     columns:
       - name: cycle_id
@@ -309,7 +309,7 @@ models:
       - name: nnr_assessment_progress_rate
         data_tests: [not_null]
 
-  - name: metric_individual_mentee_newborn_curriculum_progress
+  - name: metric_individual_mentee_newborn_curriculum_progress_by_cycle
     description: >
       Average of per-mentee×cycle capped newborn progress ratios (counts capped
       at requirements + NNR completion flag).

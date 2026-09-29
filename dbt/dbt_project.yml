@@ -21,14 +21,14 @@ vars:
   use_sample_seeds: true
   # Calendar year for mart_individual_mentee_emonc_curriculum_progress
   emonc_progress_year: 2026
-  # Caps for metric_individual_mentee_emonc_curriculum_progress (Cohort 2+ / DAX mirror)
+  # Caps for metric_individual_mentee_emonc_curriculum_progress_by_cycle (Cohort 2+ / DAX mirror)
   emonc_individual_req_cme: 13
   emonc_individual_req_drills: 5
   emonc_individual_req_skill_demos: 20
   emonc_individual_req_return_demos: 20
   emonc_individual_req_skill_eval: 20
   emonc_individual_req_labor: 1
-  # Caps for metric_individual_mentee_newborn_curriculum_progress
+  # Caps for metric_individual_mentee_newborn_curriculum_progress_by_cycle
   newborn_individual_req_cme: 19
   newborn_individual_req_drills: 7
   newborn_individual_req_practicum_essential: 20
