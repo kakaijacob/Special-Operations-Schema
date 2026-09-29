@@ -4,7 +4,7 @@ From your laptop (you have write access):
 
 ```bash
 cd ~/projects
-git clone https://github.com/kakaijacob/mentors_warehouse.git
+git clone https://github.com/Jacaranda-Health/mentors_warehouse.git
 cd mentors_warehouse
 
 # Pull scaffold from Special-Operations-Schema

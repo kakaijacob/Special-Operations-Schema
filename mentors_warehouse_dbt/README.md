@@ -6,7 +6,7 @@
 | Profile | `warehouse_mentors_ke` |
 | ClickHouse host | `tplb1fkekn.eu-west-2.aws.clickhouse.cloud` |
 | Prod schema convention | `dbt_mentors_ke` (+ `_gold` / `_snapshots` in prod) |
-| Repo | https://github.com/kakaijacob/mentors_warehouse |
+| Repo | https://github.com/Jacaranda-Health/mentors_warehouse |
 
 Full setup: **[SETUP.md](./SETUP.md)**
 
@@ -29,7 +29,7 @@ packages.yml       # dbt_utils
 ## Quick start (local)
 
 ```bash
-git clone https://github.com/kakaijacob/mentors_warehouse.git
+git clone https://github.com/Jacaranda-Health/mentors_warehouse.git
 cd mentors_warehouse
 
 cp secrets.env.example ~/.config/warehouse_mentors_ke.env

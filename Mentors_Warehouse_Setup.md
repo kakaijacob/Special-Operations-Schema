@@ -1,6 +1,6 @@
 # Mentors Warehouse → preferred repo setup
 
-**Preferred repo:** https://github.com/kakaijacob/mentors_warehouse  
+**Preferred repo:** https://github.com/Jacaranda-Health/mentors_warehouse  
 **Scaffold mirror (this monorepo):** `mentors_warehouse_repo/` on branch `cursor/jacaranda-mentors-scaffold-bea8`
 
 | Item | Value |

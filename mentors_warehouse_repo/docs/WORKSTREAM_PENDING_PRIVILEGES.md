@@ -5,7 +5,7 @@ Connection/`dbt debug` can wait until `jh_dna_dev` can use a schema
 
 ## Do today (no live warehouse required)
 
-1. **Confirm repo is pushed** — https://github.com/kakaijacob/mentors_warehouse
+1. **Confirm repo is pushed** — https://github.com/Jacaranda-Health/mentors_warehouse
 2. **Inventory raw tables** — list what Airbyte (or others) will load; fill `models/staging/_sources.yml`
 3. **Write staging / int / mart stubs** — SQL + YAML docs (this PR adds starters)
 4. **Document privilege ask** — send `docs/clickhouse_grants_request.sql` to whoever admins ClickHouse

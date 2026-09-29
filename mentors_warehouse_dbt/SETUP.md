@@ -4,7 +4,7 @@
 
 | Role | Name |
 |------|------|
-| GitHub repo | `mentors_warehouse` |
+| GitHub repo | `Jacaranda-Health/mentors_warehouse` |
 | dbt project `name` | `jacaranda_mentors` |
 | Profile key | `warehouse_mentors_ke` |
 | ClickHouse host | `tplb1fkekn.eu-west-2.aws.clickhouse.cloud` |
@@ -47,7 +47,7 @@ dbt --version
 ```bash
 mkdir -p ~/projects
 cd ~/projects
-git clone https://github.com/kakaijacob/mentors_warehouse.git
+git clone https://github.com/Jacaranda-Health/mentors_warehouse.git
 cd mentors_warehouse
 ```
 
