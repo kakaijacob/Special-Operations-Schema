@@ -46,6 +46,7 @@ int_emonc_*  |  int_newborn_*
 mart_emonc_curriculum_completion
 mart_individual_mentee_emonc_curriculum_progress
 mart_newborn_curriculum_completion
+mart_individual_mentee_newborn_curriculum_progress
         │
         ▼  metrics
 metric_emonc_*_by_cycle
@@ -146,10 +147,31 @@ Port of `newborn_curriculum_completion_progress`.
 | `metric_newborn_group_discussions_coverage_by_cycle` | group-discussion coverage |
 | `metric_newborn_nnr_assessment_coverage_by_cycle` | NNR coverage |
 
+## Mart 2b: individual newborn mentee progress (by cycle)
+
+Port of newborn individual progress inspection SQL.
+
+- **Grain:** one row per `(mentee_id, cycle_id)` with **raw distinct topic counts**
+- **curriculum_completion:** exact equality to cohort requirements (not ratio ≥ 1)
+- **NNR:** last attempt always exposed as endline; completion requires `assessment_count > 1`
+  and endline ≥ 0.85
+- **Practicum:** prefer essential track counts when both present
+
+| dbt model | Role |
+|-----------|------|
+| `int_newborn_individual_curriculum_counts` | curriculum_summary CTE |
+| `int_newborn_individual_nnr_progress` | NNR with assessment_count |
+| `mart_individual_mentee_newborn_curriculum_progress` | BI inspection fact |
+| `metric_newborn_*_progress_count` | column progress by cycle |
+| `metric_individual_mentee_newborn_curriculum_progress` | avg capped progress ratio |
+
 ### Important interim note
 Raw Kobo submissions are wide / nested. Until explode/parse intermediates land:
 - Seeds stand in for processed facts (`use_sample_seeds: true` by default).
 - Flip to `false` once ClickHouse sources + processed intermediates are wired.
+
+| `metric_individual_mentee_newborn_curriculum_progress` | avg capped progress ratio by cycle |
+| `metric_newborn_*_progress_count` | column progress counts by cycle |
 
 ## Next modelling waves
 1. Wire real googlesheets columns via `resolve_column`.

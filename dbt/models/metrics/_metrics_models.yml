@@ -236,3 +236,85 @@ models:
         data_tests: [not_null, unique]
       - name: nnr_assessment_coverage_rate
         data_tests: [not_null]
+
+  - name: metric_newborn_cme_progress_count
+    description: Sum/avg of newborn CME topic counts by cycle (individual progress mart).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: cme_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_drill_progress_count
+    description: Sum/avg of newborn drill topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: drill_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_practicum_progress_count
+    description: Sum/avg of newborn practicum topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: practicum_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_skill_demo_progress_count
+    description: Sum/avg of newborn skill-demo topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: skill_demo_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_video_progress_count
+    description: Sum/avg of newborn video topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: video_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_roleplay_progress_count
+    description: Sum/avg of newborn role-play topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: roleplay_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_case_scenario_progress_count
+    description: Sum/avg of newborn case-scenario topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: case_scenario_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_group_discussions_progress_count
+    description: Sum/avg of newborn group-discussion topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: group_discussions_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_nnr_assessment_progress_count
+    description: NNR completion rate and avg baseline/endline by cycle (individual progress).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: nnr_assessment_progress_rate
+        data_tests: [not_null]
+
+  - name: metric_individual_mentee_newborn_curriculum_progress
+    description: >
+      Average of per-mentee×cycle capped newborn progress ratios (counts capped
+      at requirements + NNR completion flag).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: individual_mentee_newborn_curriculum_progress
+        data_tests: [not_null]

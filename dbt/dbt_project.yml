@@ -19,6 +19,8 @@ vars:
   # true = compile/run against seeds (no ClickHouse source required)
   # false = read Airbyte googlesheets / kobotoolbox sources
   use_sample_seeds: true
+  # Calendar year for mart_individual_mentee_emonc_curriculum_progress
+  emonc_progress_year: 2026
   # Caps for metric_individual_mentee_emonc_curriculum_progress (Cohort 2+ / DAX mirror)
   emonc_individual_req_cme: 13
   emonc_individual_req_drills: 5
@@ -26,6 +28,16 @@ vars:
   emonc_individual_req_return_demos: 20
   emonc_individual_req_skill_eval: 20
   emonc_individual_req_labor: 1
+  # Caps for metric_individual_mentee_newborn_curriculum_progress
+  newborn_individual_req_cme: 19
+  newborn_individual_req_drills: 7
+  newborn_individual_req_practicum_essential: 20
+  newborn_individual_req_practicum_comprehensive: 22
+  newborn_individual_req_skill_demo: 5
+  newborn_individual_req_videos: 12
+  newborn_individual_req_roleplay: 2
+  newborn_individual_req_case_scenarios: 9
+  newborn_individual_req_group_discussions: 7
 
 models:
   jacaranda_mentors:

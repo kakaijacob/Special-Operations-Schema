@@ -93,4 +93,15 @@ models:
 
   - name: int_newborn_nnr_assessment_progress
     description: >
-      First-attempt baseline and last-attempt endline NNR scores per mentee×cycle.
+      First-attempt baseline and last-attempt endline NNR scores per mentee×cycle
+      (endline only when more than one assessment — used by completion mart).
+
+  - name: int_newborn_individual_curriculum_counts
+    description: >
+      Distinct newborn activity topic counts by mentee×cycle for individual
+      progress inspection (essential practicum preferred when both tracks present).
+
+  - name: int_newborn_individual_nnr_progress
+    description: >
+      NNR baseline/endline/assessment_count for individual progress inspection
+      (endline is always the last attempt; completion still requires count > 1).

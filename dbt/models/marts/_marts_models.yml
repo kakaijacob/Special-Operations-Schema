@@ -81,3 +81,26 @@ models:
       - name: date_completed
         description: >
           First date in the cycle when all nine thresholds were met; NULL otherwise.
+
+  - name: mart_individual_mentee_newborn_curriculum_progress
+    description: >
+      Individual newborn curriculum progress inspection. Grain one row per
+      (mentee_id, cycle_id) with distinct topic counts, NNR scores, and exact
+      requirement equality curriculum_completion.
+    columns:
+      - name: mentee_id
+        data_tests: [not_null]
+      - name: cycle_id
+        data_tests: [not_null]
+      - name: cme_count
+        data_tests: [not_null]
+      - name: nnr_assessment_completion
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: curriculum_completion
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
