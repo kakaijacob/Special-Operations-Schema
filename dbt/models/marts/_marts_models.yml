@@ -22,6 +22,39 @@ models:
         description: >
           First date in the cycle when all six thresholds were met; NULL otherwise.
 
+  - name: mart_individual_mentee_emonc_curriculum_progress
+    description: >
+      Per-mentee EmONC activity counts for mentees activated in the progress year
+      (default 2026). Grain one row per mentee_id. Includes zero-activity mentees.
+      Partograph skill evaluations excluded. Not cohort-aware (see
+      mart_emonc_curriculum_completion for cohort completion).
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+      - name: progress_year
+        data_tests:
+          - not_null
+      - name: cme_count
+        data_tests:
+          - not_null
+      - name: drill_count
+        data_tests:
+          - not_null
+      - name: skill_demos_count
+        data_tests:
+          - not_null
+      - name: return_demos_count
+        data_tests:
+          - not_null
+      - name: skill_eval_count
+        data_tests:
+          - not_null
+      - name: labor_monitoring_count
+        data_tests:
+          - not_null
+
   - name: mart_newborn_curriculum_completion
     description: >
       Cohort-aware newborn curriculum progress. Grain one row per

@@ -12,6 +12,7 @@ with unioned as (
         facility,
         facility_code,
         program,
+        date_activated,
         mentee_source,
         toUInt8(1) as source_priority
     from {{ ref('stg_googlesheets__ke_mentors_mentees') }}
@@ -26,6 +27,7 @@ with unioned as (
         facility,
         facility_code,
         program,
+        date_activated,
         mentee_source,
         toUInt8(2) as source_priority
     from {{ ref('stg_googlesheets__ke_mentors_legacy_mentees') }}
@@ -54,6 +56,7 @@ preferred as (
         facility,
         facility_code,
         program,
+        date_activated,
         mentee_source as preferred_source
     from ranked
     where rn = 1
@@ -78,6 +81,7 @@ select
     p.facility,
     p.facility_code,
     p.program,
+    p.date_activated,
     p.preferred_source as mentee_source,
     toUInt8(f.in_current) as in_current,
     toUInt8(f.in_legacy) as in_legacy

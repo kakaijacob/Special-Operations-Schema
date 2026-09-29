@@ -19,6 +19,8 @@ vars:
   # true = compile/run against seeds (no ClickHouse source required)
   # false = read Airbyte googlesheets / kobotoolbox sources
   use_sample_seeds: true
+  # Calendar year for mart_individual_mentee_emonc_curriculum_progress filters
+  emonc_progress_year: 2026
 
 models:
   jacaranda_mentors:

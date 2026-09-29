@@ -23,6 +23,8 @@ models:
           - not_null
           - accepted_values:
               values: [0, 1]
+      - name: date_activated
+        description: Activation date from the preferred mentee sheet.
 
   - name: int_emonc_cohorts
     description: EmONC cohort windows and requirement thresholds.

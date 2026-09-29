@@ -11,6 +11,7 @@ seeds:
         facility: String
         facility_code: String
         program: String
+        date_activated: Date
 
   - name: mentee_database_legacy_sample
     description: Sample legacy mentee master (2024–2025) unioned into int_mentee_database.
@@ -22,6 +23,7 @@ seeds:
         facility: String
         facility_code: String
         program: String
+        date_activated: Date
 
   - name: mentee_curriculum_tracking_sample
     description: Sample processed EmONC curriculum activity rows.

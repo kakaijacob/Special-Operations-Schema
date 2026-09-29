@@ -17,6 +17,7 @@ select
     nullIf(trim(toString(facility)), '') as facility,
     nullIf(trim(toString(facility_code)), '') as facility_code,
     lowerUTF8(trim(toString(program))) as program,
+    toDateOrNull(toString(date_activated)) as date_activated,
     cast('current' as String) as mentee_source
 from source
 
@@ -38,7 +39,8 @@ cleaned as (
         nullIf(trim(toString({{ resolve_column(src, 'County') }})), '') as county,
         nullIf(trim(toString({{ resolve_column(src, 'Facility') }})), '') as facility,
         nullIf(trim(toString({{ resolve_column(src, 'Facility Code') }})), '') as facility_code,
-        nullIf(trim(toString({{ resolve_column(src, 'Program') }})), '') as program
+        nullIf(trim(toString({{ resolve_column(src, 'Program') }})), '') as program,
+        nullIf(trim(toString({{ resolve_column(src, 'Date Activated') }})), '') as raw_date_activated
     from source
 
 )
@@ -50,6 +52,7 @@ select
     facility,
     facility_code,
     lowerUTF8(trim(program)) as program,
+    {{ parse_sheet_date('raw_date_activated') }} as date_activated,
     cast('current' as String) as mentee_source
 from cleaned
 
