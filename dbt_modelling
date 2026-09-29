@@ -1,0 +1,121 @@
+# Mentors dbt modelling plan
+# Anticipatory models only — does not change existing Redshift/ClickHouse SQL files.
+# Project root: ./dbt/
+
+## Goal
+Rebuild mentors analytics in dbt layers against Airbyte → ClickHouse raw schemas,
+starting with cohort-aware EmONC mentee curriculum completion.
+
+## Source schemas (Airbyte → ClickHouse)
+
+### googlesheets
+| Table | Role |
+|-------|------|
+| ke_mentors_legacy_mentees | Legacy mentee DB (cohort 2024–2025) |
+| ke_mentors_mentees | Current mentee DB (cohort 2026) |
+| ke_mentors_mentors | In-facility mentor master |
+| ke_facility_prioritization_database | Facilities in mentors program |
+| ke_mentors_total_delta_users | DELTA 1.0 learners (ids, pre/post scores) |
+| ke_legacy_emonc_knowledge_survey | Baseline/endline knowledge (expanded curriculum era) |
+
+### kobotoolbox
+| Table | Role |
+|-------|------|
+| emonc_curriculum_tracking_submissions | EmONC curriculum activity log (primary for completion) |
+| moh_skills_assessment_submissions | MoH skill assessments (primary for skill eval) |
+| newbon_curriculum_tracking_submissions | Newborn curriculum activity log (later) |
+| quality_intrapartum_care_surveillance_submissions | QuIPS / quality surveillance (later) |
+
+Confirm exact ClickHouse identifiers with `SHOW TABLES FROM googlesheets` /
+`SHOW TABLES FROM kobotoolbox` before first `dbt run`. Update
+`dbt/models/staging/_sources.yml` if Airbyte renamed any stream.
+
+## Layering (dbt best practice)
+
+```text
+googlesheets.* / kobotoolbox.*
+        │
+        ▼  staging (views) — rename, cast, light clean; 1:1 with source
+stg_googlesheets__* / stg_kobotoolbox__*
+        │
+        ▼  intermediate (tables) — business logic, spines, cohort assign
+int_mentee_database, int_emonc_cohorts, int_emonc_mentees,
+int_emonc_mentee_cycles, int_emonc_curriculum_activity_progress,
+int_emonc_skill_evaluation_progress
+        │
+        ▼  marts (tables) — BI contracts
+mart_emonc_curriculum_completion
+        │
+        ▼  metrics (tables) — rolled-up indicators
+metric_emonc_curriculum_completion_by_cycle
+```
+
+| Layer | Materialization | Rule |
+|-------|-----------------|------|
+| staging | view | No business filters beyond null/trim; keep raw grain |
+| intermediate | table | One clear job per model; reusable across marts |
+| marts | table | Stable grain + column names for Power BI |
+| metrics | table | Aggregations / rates only — never re-implement mart logic |
+
+## First mart: cohort-aware EmONC curriculum completion
+
+Port of `mentee_curriculum_completion_progress` into layered models.
+
+- **Grain:** one row per `(mentee_id, cycle_id)`, including empty mentee×cycle rows
+- **Mentee spine:** EmONC / both from mentee sheets, plus any mentee_id only in facts
+- **Skill avg:** AVG of per-skill MAX(average_score) within mentee×cycle
+- **Skill assessments:** exclude Partograph (not essential for completion)
+- **Cohort 1:** 11 CME, 5 drills, 18 skill demo, 18 return demo, 1 labor, 18 skill eval
+- **Cohort 2+:** 13 CME, 5 drills, 20 skill demo, 20 return demo, 1 labor, 20 skill eval
+- **date_completed:** first date in cycle when ALL six thresholds met; else NULL
+- **Windows:** inclusive on both ends (`cycle_start <= date <= cycle_end`)
+- **Add a future cohort:** insert another `UNION ALL` row in `int_emonc_cohorts`
+
+### Model map (this mart)
+
+| dbt model | Replaces SQL CTE(s) |
+|-----------|---------------------|
+| `int_emonc_cohorts` | `cohorts` |
+| `stg_googlesheets__ke_mentors_*` + `int_mentee_database` | `db_mentees` sources |
+| `stg_kobotoolbox__emonc_curriculum_tracking_submissions` → processed rows | `mentee_curriculum_tracking` |
+| `stg_kobotoolbox__moh_skills_assessment_submissions` → processed scores | `process_moh_skills_assessment_2026` |
+| `int_emonc_mentees` | `db_mentees` ∪ `fact_mentees` → `mentees` |
+| `int_emonc_mentee_cycles` | `mentee_cycles` |
+| `int_emonc_curriculum_activity_progress` | tracking / topic / cme / drills / demos / labor |
+| `int_emonc_skill_evaluation_progress` | skill_eval_* |
+| `mart_emonc_curriculum_completion` | `progress` + final SELECT |
+| `metric_emonc_curriculum_completion_by_cycle` | (new) cycle-level rates |
+
+### Important interim note
+Raw Kobo submissions are wide / nested. Completion logic needs a **fact grain** of
+one row per `(submission × mentee × activity × topic)` (and skill scores similarly).
+
+Until the Kobo explode transformers land in intermediate:
+- Seeds (`mentee_curriculum_tracking_sample`, `process_moh_skills_assessment_sample`,
+  `mentee_database_sample`) stand in for processed facts.
+- Set `use_sample_seeds: true` (default in `dbt_project.yml`) so models compile offline.
+- Flip to `false` once ClickHouse sources + processed intermediates are wired.
+
+## Next modelling waves (after this mart)
+1. Wire real googlesheets columns via `resolve_column` (Airbyte rewrites headers).
+2. Intermediate explode for EmONC CTF submissions (see prior `modeling_emonc_curriculum_tracking` plan).
+3. Intermediate process for MoH skills assessments (score parse + skill label).
+4. Newborn curriculum completion (parallel pattern; `newbon_curriculum_tracking_submissions`).
+5. Mentors / facility prioritization dimensions.
+6. DELTA users + legacy knowledge survey knowledge marts.
+7. QuIPS surveillance marts.
+
+## How to run (once ClickHouse profile exists)
+```bash
+cd dbt
+cp profiles.example.yml ~/.dbt/profiles.yml   # edit host/user/password
+dbt deps
+dbt seed --select mentee_database_sample mentee_curriculum_tracking_sample process_moh_skills_assessment_sample
+dbt run --select +mart_emonc_curriculum_completion +metric_emonc_curriculum_completion_by_cycle
+dbt test --select mart_emonc_curriculum_completion
+```
+
+## Non-goals for this pass
+- Do not modify `mentee_curriculum_completion_progress` or other live SQL artifacts.
+- Do not require a live ClickHouse connection to review/edit models.
+- Do not explode full Kobo JSON yet — stub staging + seed-backed completion path first.

@@ -1,0 +1,41 @@
+version: 2
+
+seeds:
+  - name: mentee_database_sample
+    description: Sample mentee master for offline curriculum-completion practice.
+    config:
+      column_types:
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+
+  - name: mentee_curriculum_tracking_sample
+    description: Sample processed EmONC curriculum activity rows.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        mentorship_activity: String
+        topic: String
+
+  - name: process_moh_skills_assessment_sample
+    description: Sample processed MoH skill scores (0–1).
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        skill_evaluation: String
+        average_score: Float64

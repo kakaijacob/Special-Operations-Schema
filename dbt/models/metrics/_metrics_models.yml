@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: metric_emonc_curriculum_completion_by_cycle
+    description: Cycle-level completion counts and average component rates.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_count
+        data_tests:
+          - not_null
+      - name: curriculum_completion_rate
+        data_tests:
+          - not_null

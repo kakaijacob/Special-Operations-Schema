@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: int_mentee_database
+    description: Deduplicated mentee master preferring current sheet over legacy.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_emonc_cohorts
+    description: EmONC cohort windows and requirement thresholds.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_emonc_mentees
+    description: EmONC mentee spine (master EmONC/both ∪ fact-only mentees).
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_emonc_mentee_cycles
+    description: Every eligible mentee crossed with every configured cohort.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+
+  - name: int_emonc_curriculum_activity_progress
+    description: Distinct activity-topic counts and threshold dates by cycle.
+
+  - name: int_emonc_skill_evaluation_progress
+    description: >
+      Per-cycle skill pass counts (Partograph excluded), average of per-skill
+      maxima, and skill-eval threshold date.

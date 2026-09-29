@@ -1,0 +1,24 @@
+# Copy to ~/.dbt/profiles.yml (or set DBT_PROFILES_DIR).
+# Profile name must match dbt_project.yml: warehouse_mentors_ke
+
+warehouse_mentors_ke:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: "{{ env_var('DBT_HOST', 'localhost') }}"
+      port: "{{ env_var('DBT_PORT', '8443') | int }}"
+      user: "{{ env_var('DBT_USER', 'default') }}"
+      password: "{{ env_var('DBT_PASSWORD', '') }}"
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_dev') }}"
+      secure: true
+      threads: 4
+    prod:
+      type: clickhouse
+      host: "{{ env_var('DBT_HOST') }}"
+      port: "{{ env_var('DBT_PORT', '8443') | int }}"
+      user: "{{ env_var('DBT_USER') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_gold') }}"
+      secure: true
+      threads: 8
