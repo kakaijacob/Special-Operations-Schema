@@ -21,3 +21,30 @@ models:
       - name: date_completed
         description: >
           First date in the cycle when all six thresholds were met; NULL otherwise.
+
+  - name: mart_newborn_curriculum_completion
+    description: >
+      Cohort-aware newborn curriculum progress. Grain one row per
+      (mentee_id, cycle_id), including empty progress rows. Includes practicum
+      track, NNR baseline/endline, and date_completed.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+      - name: nnr_assessment_completion
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: curriculum_completion
+        description: 1 when all nine newborn requirements are complete, else 0.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: date_completed
+        description: >
+          First date in the cycle when all nine thresholds were met; NULL otherwise.

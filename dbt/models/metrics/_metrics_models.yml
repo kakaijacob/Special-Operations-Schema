@@ -82,3 +82,87 @@ models:
       - name: skill_evaluation_coverage_rate
         data_tests:
           - not_null
+
+  - name: metric_newborn_curriculum_completion_by_cycle
+    description: Cycle-level newborn full-curriculum completion counts and averages.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: curriculum_completion_rate
+        data_tests:
+          - not_null
+
+  - name: metric_newborn_cme_coverage_by_cycle
+    description: Cycle-level newborn CME coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: cme_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_drill_coverage_by_cycle
+    description: Cycle-level newborn drill coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: drill_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_practicum_coverage_by_cycle
+    description: Cycle-level newborn practicum coverage (essential or comprehensive track).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: practicum_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_skill_demo_coverage_by_cycle
+    description: Cycle-level newborn skill-demo coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: skill_demo_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_video_coverage_by_cycle
+    description: Cycle-level newborn video coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: video_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_roleplay_coverage_by_cycle
+    description: Cycle-level newborn role-play coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: roleplay_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_case_scenario_coverage_by_cycle
+    description: Cycle-level newborn case-scenario coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: case_scenario_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_group_discussions_coverage_by_cycle
+    description: Cycle-level newborn group-discussion coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: group_discussions_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_nnr_assessment_coverage_by_cycle
+    description: >
+      Cycle-level share of mentees with NNR baseline + endline and endline >= 0.85.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: nnr_assessment_coverage_rate
+        data_tests: [not_null]
