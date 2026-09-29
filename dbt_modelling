@@ -48,6 +48,12 @@ mart_emonc_curriculum_completion
         │
         ▼  metrics (tables) — rolled-up indicators
 metric_emonc_curriculum_completion_by_cycle
+metric_emonc_cme_coverage_by_cycle
+metric_emonc_drill_coverage_by_cycle
+metric_emonc_skill_demo_coverage_by_cycle
+metric_emonc_return_demo_coverage_by_cycle
+metric_emonc_labor_monitoring_coverage_by_cycle
+metric_emonc_skill_evaluation_coverage_by_cycle
 ```
 
 | Layer | Materialization | Rule |
@@ -84,7 +90,13 @@ Port of `mentee_curriculum_completion_progress` into layered models.
 | `int_emonc_curriculum_activity_progress` | tracking / topic / cme / drills / demos / labor |
 | `int_emonc_skill_evaluation_progress` | skill_eval_* |
 | `mart_emonc_curriculum_completion` | `progress` + final SELECT |
-| `metric_emonc_curriculum_completion_by_cycle` | (new) cycle-level rates |
+| `metric_emonc_curriculum_completion_by_cycle` | cycle-level full-curriculum rates |
+| `metric_emonc_cme_coverage_by_cycle` | cycle CME coverage (`cme_completion >= 1`) |
+| `metric_emonc_drill_coverage_by_cycle` | cycle drill coverage |
+| `metric_emonc_skill_demo_coverage_by_cycle` | cycle skill-demo coverage |
+| `metric_emonc_return_demo_coverage_by_cycle` | cycle return-demo coverage |
+| `metric_emonc_labor_monitoring_coverage_by_cycle` | cycle labor-monitoring coverage |
+| `metric_emonc_skill_evaluation_coverage_by_cycle` | cycle skill-eval coverage |
 
 ### Important interim note
 Raw Kobo submissions are wide / nested. Completion logic needs a **fact grain** of
@@ -111,7 +123,7 @@ cd dbt
 cp profiles.example.yml ~/.dbt/profiles.yml   # edit host/user/password
 dbt deps
 dbt seed --select mentee_database_sample mentee_curriculum_tracking_sample process_moh_skills_assessment_sample
-dbt run --select +mart_emonc_curriculum_completion +metric_emonc_curriculum_completion_by_cycle
+dbt run --select +mart_emonc_curriculum_completion +metrics
 dbt test --select mart_emonc_curriculum_completion
 ```
 

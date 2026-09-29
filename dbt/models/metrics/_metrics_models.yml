@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: metric_emonc_curriculum_completion_by_cycle
-    description: Cycle-level completion counts and average component rates.
+    description: Cycle-level full-curriculum completion counts and average component rates.
     columns:
       - name: cycle_id
         data_tests:
@@ -12,5 +12,73 @@ models:
         data_tests:
           - not_null
       - name: curriculum_completion_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_cme_coverage_by_cycle
+    description: Cycle-level share of mentees who met the CME requirement (cme_completion >= 1).
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: cme_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_drill_coverage_by_cycle
+    description: Cycle-level share of mentees who met the drills requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: drill_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_skill_demo_coverage_by_cycle
+    description: Cycle-level share of mentees who met the skill-demo (mentor) requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: skill_demo_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_return_demo_coverage_by_cycle
+    description: Cycle-level share of mentees who met the return-demo (mentee) requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: return_demo_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_labor_monitoring_coverage_by_cycle
+    description: Cycle-level share of mentees who met the labor-monitoring requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: labor_monitoring_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_skill_evaluation_coverage_by_cycle
+    description: >
+      Cycle-level share of mentees who met the skill-evaluation requirement
+      (Partograph excluded upstream).
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: skill_evaluation_coverage_rate
         data_tests:
           - not_null
