@@ -103,7 +103,11 @@ Port of Individual Mentee Curriculum Completion Progress Tracker.
 | `metric_skill_eval_progress_count` | sum/avg of `skill_eval_count` |
 | `metric_average_score_progress` | avg of `average_score` |
 | `metric_labor_monitoring_progress_count` | sum/avg of `labor_monitoring_count` |
-| `metric_individual_mentee_emonc_curriculum_progress` | combined roll-up of all progress counts |
+| `metric_individual_mentee_emonc_curriculum_progress` | AVERAGEX of capped progress ratio (DAX mirror) |
+
+Caps for the composite metric (Cohort 2+ defaults): CME 13, drills 5, skill demos 20,
+return demos 20, skill eval 20, avg-score flag 1 (`average_score >= 0.85`), labor 1
+→ denominator **80**.
 
 ## Mart 2: cohort-aware newborn curriculum completion
 

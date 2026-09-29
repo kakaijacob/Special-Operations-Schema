@@ -141,11 +141,16 @@ models:
 
   - name: metric_individual_mentee_emonc_curriculum_progress
     description: >
-      Combined roll-up of all individual EmONC progress count columns by progress year.
+      Average of per-mentee capped progress ratios, mirroring the Power BI DAX
+      AVERAGEX(DIVIDE(sum of MIN(count, req) + score flag, 13+5+20+20+20+1+1)).
+      Caps default to Cohort 2+ requirements (override via emonc_individual_req_* vars).
     columns:
       - name: progress_year
         data_tests: [not_null, unique]
       - name: mentee_count
+        data_tests: [not_null]
+      - name: individual_mentee_emonc_curriculum_progress
+        description: Mean mentee progress ratio in [0, 1].
         data_tests: [not_null]
 
   - name: metric_newborn_curriculum_completion_by_cycle
