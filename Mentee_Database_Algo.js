@@ -21,7 +21,7 @@ function updateAllStatusesByName() {
   const headerRow = 1;
   const commentRow = 2;
 
-  // Ensure Pseudo sits immediately after Name before resolving other columns.
+  // Ensure pseudo_code sits immediately after Name before resolving other columns.
   ensurePseudoColumnAfterName_(sheet, headerRow, commentRow);
 
   const headers = sheet
@@ -30,7 +30,7 @@ function updateAllStatusesByName() {
 
   // Core columns
   const colName = headers.indexOf("Name") + 1;
-  const colPseudo = headers.indexOf("Pseudo") + 1;
+  const colPseudo = headers.indexOf("pseudo_code") + 1;
   const colDateActivated = headers.indexOf("Date Activated") + 1;
   const colDateReactivated = headers.indexOf("Date Reactivated") + 1;
   const colDateDeactivated = headers.indexOf("Date Deactivated") + 1;
@@ -59,13 +59,13 @@ function updateAllStatusesByName() {
   }
 
   if (colPseudo < 1) {
-    Logger.log("ERROR: 'Pseudo' column could not be created or found. Aborting.");
+    Logger.log("ERROR: 'pseudo_code' column could not be created or found. Aborting.");
     return;
   }
 
   Logger.log(
     "Resolved columns — Name: " + colName +
-    ", Pseudo: " + colPseudo +
+    ", pseudo_code: " + colPseudo +
     ", Status: " + colStatus +
     ", Learning Mode: " + colLearningMode +
     ", Facility Code: " + colFacilityCode +
@@ -262,7 +262,7 @@ function updateAllStatusesByName() {
   let pseudoFilledCount = 0;
   let pseudoMissingCount = 0;
 
-  // Collect Pseudo values for a single batch write so every mentee row is filled.
+  // Collect pseudo_code values for a single batch write so every mentee row is filled.
   const pseudoColumnValues = [];
 
   Logger.log("Starting main row validation loop...");
@@ -316,9 +316,9 @@ function updateAllStatusesByName() {
       .setValue(status);
 
     // ----------------------------
-    // PSEUDO (privacy display code)
+    // pseudo_code (privacy display code)
     // FacilityCode-XXXX from SHA-256(FacilityCode|MenteeID).
-    // Every mentee with a Mentee ID gets a Pseudo; blank rows stay blank.
+    // Every mentee with a Mentee ID gets a pseudo_code; blank rows stay blank.
     // ----------------------------
     const rawMenteeId = colMenteeID > 0 ? row[colMenteeID - 1] : "";
     const rawFacilityCode = colFacilityCode > 0 ? row[colFacilityCode - 1] : "";
@@ -329,7 +329,7 @@ function updateAllStatusesByName() {
 
     let pseudoCode = "";
     if (rawMenteeId !== "" && rawMenteeId !== null) {
-      // Prefer Facility Code; fall back to "0" so Pseudo is still generated.
+      // Prefer Facility Code; fall back to "0" so pseudo_code is still generated.
       const codeForPseudo = normalizeCode(rawFacilityCode) || "0";
       pseudoCode = privacyDisplayCode(codeForPseudo, rawMenteeId);
     }
@@ -457,11 +457,11 @@ function updateAllStatusesByName() {
 
       }
 
-      // Pseudo requires Mentee ID so every mentee can get a privacy code
+      // pseudo_code requires Mentee ID so every mentee can get a privacy code
       if (colPseudo > 0 && !pseudoCode) {
         addError(
           colPseudo > 0 ? colPseudo : colMenteeID,
-          "Pseudo could not be generated. Mentee ID is required."
+          "pseudo_code could not be generated. Mentee ID is required."
         );
       }
 
@@ -889,19 +889,19 @@ function updateAllStatusesByName() {
   });
 
   // ----------------------------
-  // WRITE PSEUDO COLUMN (batch — every mentee row)
+  // WRITE pseudo_code COLUMN (batch — every mentee row)
   // ----------------------------
   if (colPseudo > 0 && pseudoColumnValues.length === numRows) {
     sheet
       .getRange(commentRow + 1, colPseudo, numRows, 1)
       .setValues(pseudoColumnValues);
     Logger.log(
-      "Pseudo column written — filled: " + pseudoFilledCount +
-      ", mentees missing Pseudo (no Mentee ID): " + pseudoMissingCount
+      "pseudo_code column written — filled: " + pseudoFilledCount +
+      ", mentees missing pseudo_code (no Mentee ID): " + pseudoMissingCount
     );
   } else {
     Logger.log(
-      "ERROR: Pseudo column was not written. colPseudo=" + colPseudo +
+      "ERROR: pseudo_code column was not written. colPseudo=" + colPseudo +
       ", values=" + pseudoColumnValues.length +
       ", numRows=" + numRows
     );
@@ -910,7 +910,7 @@ function updateAllStatusesByName() {
   Logger.log(
     "Finished updateAllStatusesByName — Eligible: " + eligibleCount +
     ", Ineligible: " + ineligibleCount +
-    ", Pseudo filled: " + pseudoFilledCount +
+    ", pseudo_code filled: " + pseudoFilledCount +
     ", rows with errors: " + rowsWithErrors +
     ", total validation messages: " + totalErrors
   );
@@ -918,33 +918,43 @@ function updateAllStatusesByName() {
 }
 
 // =====================================================
-// PSEUDO COLUMN: place immediately after Name
+// pseudo_code COLUMN: place immediately after Name
 // =====================================================
 function ensurePseudoColumnAfterName_(sheet, headerRow, commentRow) {
   var lastCol = Math.max(sheet.getLastColumn(), 1);
   var headers = sheet.getRange(headerRow, 1, 1, lastCol).getValues()[0];
   var nameCol = headers.indexOf("Name") + 1; // 1-based
-  var pseudoCol = headers.indexOf("Pseudo") + 1;
+  var pseudoCol = headers.indexOf("pseudo_code") + 1;
+  var legacyPseudoCol = headers.indexOf("Pseudo") + 1;
 
   if (nameCol < 1) {
-    throw new Error("Name column is required to place Pseudo.");
+    throw new Error("Name column is required to place pseudo_code.");
+  }
+
+  // Rename legacy "Pseudo" header in place so existing sheets keep their data.
+  if (pseudoCol < 1 && legacyPseudoCol > 0) {
+    sheet.getRange(headerRow, legacyPseudoCol).setValue("pseudo_code");
+    pseudoCol = legacyPseudoCol;
+    Logger.log(
+      "Renamed legacy 'Pseudo' header to 'pseudo_code' at col " + pseudoCol + "."
+    );
   }
 
   if (pseudoCol === nameCol + 1) {
-    Logger.log("Pseudo column already present immediately after Name (col " + pseudoCol + ").");
+    Logger.log("pseudo_code column already present immediately after Name (col " + pseudoCol + ").");
     return pseudoCol;
   }
 
   if (pseudoCol > 0) {
     Logger.log(
-      "WARNING: Pseudo already exists at col " + pseudoCol +
+      "WARNING: pseudo_code already exists at col " + pseudoCol +
       " (not after Name). Using existing column to avoid duplicates."
     );
     return pseudoCol;
   }
 
   sheet.insertColumnAfter(nameCol);
-  sheet.getRange(headerRow, nameCol + 1).setValue("Pseudo");
+  sheet.getRange(headerRow, nameCol + 1).setValue("pseudo_code");
 
   if (commentRow > 0) {
     sheet.getRange(commentRow, nameCol + 1).setValue(
@@ -952,14 +962,14 @@ function ensurePseudoColumnAfterName_(sheet, headerRow, commentRow) {
     );
   }
 
-  Logger.log("Inserted Pseudo column after Name at col " + (nameCol + 1) + ".");
+  Logger.log("Inserted pseudo_code column after Name at col " + (nameCol + 1) + ".");
   return nameCol + 1;
 }
 
 // =====================================================
-// PRIVACY DISPLAY CODE (Pseudo value)
+// PRIVACY DISPLAY CODE (pseudo_code value)
 // =====================================================
-// Pseudo format:
+// pseudo_code format:
 //   {FacilityCode}-{XXXX}
 // where XXXX is the first 4 hex digits of:
 //   SHA-256( UTF-8( "{FacilityCode}|{MenteeID}" ) )
@@ -975,12 +985,12 @@ function ensurePseudoColumnAfterName_(sheet, headerRow, commentRow) {
 //      Example full digest:
 //        fdc360e194a295377e760d035b559123f904ebb8358f5c387673bdfe2ff12c3b
 //   4. Take the first 4 hex characters and uppercase them → "FDC3"
-//   5. Prefix with Facility Code → Pseudo "15996-FDC3"
+//   5. Prefix with Facility Code → pseudo_code "15996-FDC3"
 //
 // Notes:
 //   - Mentee ID alone is NOT hashed; Facility Code is part of the input.
-//   - Same Facility Code + Mentee ID always yields the same Pseudo.
-//   - SHA-256 is one-way: Pseudo cannot be reversed to Mentee ID.
+//   - Same Facility Code + Mentee ID always yields the same pseudo_code.
+//   - SHA-256 is one-way: pseudo_code cannot be reversed to Mentee ID.
 //   - If Facility Code is missing at write time, the algo falls back to "0".
 // =====================================================
 function privacyDisplayCode(facilityCode, menteeId) {
