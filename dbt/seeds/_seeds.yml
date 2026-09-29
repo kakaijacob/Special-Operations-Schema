@@ -2,7 +2,18 @@ version: 2
 
 seeds:
   - name: mentee_database_sample
-    description: Sample mentee master for offline curriculum-completion practice.
+    description: Sample current mentee master for offline curriculum-completion practice.
+    config:
+      column_types:
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+
+  - name: mentee_database_legacy_sample
+    description: Sample legacy mentee master (2024–2025) unioned into int_mentee_database.
     config:
       column_types:
         mentee_id: String

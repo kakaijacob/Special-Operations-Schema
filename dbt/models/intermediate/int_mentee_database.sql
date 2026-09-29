@@ -1,4 +1,8 @@
--- Prefer current sheet over legacy when the same mentee_id appears in both.
+-- Combined mentee master: current (ke_mentors_mentees) ∪ legacy
+-- (ke_mentors_legacy_mentees). One row per mentee_id.
+-- Attributes prefer the current sheet when the same id appears in both;
+-- flags record which sheet(s) contributed the id.
+
 with unioned as (
 
     select
@@ -39,15 +43,44 @@ ranked as (
         ) as rn
     from unioned
 
+),
+
+preferred as (
+
+    select
+        mentee_id,
+        mentee_name,
+        county,
+        facility,
+        facility_code,
+        program,
+        mentee_source as preferred_source
+    from ranked
+    where rn = 1
+
+),
+
+source_flags as (
+
+    select
+        mentee_id,
+        max(mentee_source = 'current') as in_current,
+        max(mentee_source = 'legacy') as in_legacy
+    from unioned
+    group by mentee_id
+
 )
 
 select
-    mentee_id,
-    mentee_name,
-    county,
-    facility,
-    facility_code,
-    program,
-    mentee_source
-from ranked
-where rn = 1
+    p.mentee_id,
+    p.mentee_name,
+    p.county,
+    p.facility,
+    p.facility_code,
+    p.program,
+    p.preferred_source as mentee_source,
+    toUInt8(f.in_current) as in_current,
+    toUInt8(f.in_legacy) as in_legacy
+from preferred p
+inner join source_flags f
+    on p.mentee_id = f.mentee_id

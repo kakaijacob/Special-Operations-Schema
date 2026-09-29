@@ -1,20 +1,24 @@
 {#
-  Legacy mentee sheet (2024–2025). Sample path reuses mentee_database_sample with
-  mentee_source='legacy' so the union spine compiles offline. Replace with real
-  column map once DESCRIBE googlesheets.ke_mentors_legacy_mentees is available.
+  Legacy mentee sheet (2024–2025 cohort).
+  Always paired with stg_googlesheets__ke_mentors_mentees in int_mentee_database.
 #}
 {% if var('use_sample_seeds', true) %}
 
--- Offline: no separate legacy seed yet — empty relation with correct schema.
+with source as (
+
+    select * from {{ ref('mentee_database_legacy_sample') }}
+
+)
+
 select
-    cast(null as Nullable(String)) as mentee_id,
-    cast(null as Nullable(String)) as mentee_name,
-    cast(null as Nullable(String)) as county,
-    cast(null as Nullable(String)) as facility,
-    cast(null as Nullable(String)) as facility_code,
-    cast(null as Nullable(String)) as program,
+    nullIf(trim(toString(mentee_id)), '') as mentee_id,
+    nullIf(trim(toString(mentee_name)), '') as mentee_name,
+    nullIf(trim(toString(county)), '') as county,
+    nullIf(trim(toString(facility)), '') as facility,
+    nullIf(trim(toString(facility_code)), '') as facility_code,
+    lowerUTF8(trim(toString(program))) as program,
     cast('legacy' as String) as mentee_source
-where 1 = 0
+from source
 
 {% else %}
 

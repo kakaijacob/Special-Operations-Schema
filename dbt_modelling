@@ -39,7 +39,7 @@ googlesheets.* / kobotoolbox.*
 stg_googlesheets__* / stg_kobotoolbox__*
         │
         ▼  intermediate (tables) — business logic, spines, cohort assign
-int_mentee_database, int_emonc_cohorts, int_emonc_mentees,
+int_mentee_database (current ∪ legacy), int_emonc_cohorts, int_emonc_mentees,
 int_emonc_mentee_cycles, int_emonc_curriculum_activity_progress,
 int_emonc_skill_evaluation_progress
         │
@@ -82,7 +82,7 @@ Port of `mentee_curriculum_completion_progress` into layered models.
 | dbt model | Replaces SQL CTE(s) |
 |-----------|---------------------|
 | `int_emonc_cohorts` | `cohorts` |
-| `stg_googlesheets__ke_mentors_*` + `int_mentee_database` | `db_mentees` sources |
+| `stg_googlesheets__ke_mentors_*` + `int_mentee_database` | current ∪ legacy mentee sheets (`db_mentees`) |
 | `stg_kobotoolbox__emonc_curriculum_tracking_submissions` → processed rows | `mentee_curriculum_tracking` |
 | `stg_kobotoolbox__moh_skills_assessment_submissions` → processed scores | `process_moh_skills_assessment_2026` |
 | `int_emonc_mentees` | `db_mentees` ∪ `fact_mentees` → `mentees` |
@@ -122,7 +122,7 @@ Until the Kobo explode transformers land in intermediate:
 cd dbt
 cp profiles.example.yml ~/.dbt/profiles.yml   # edit host/user/password
 dbt deps
-dbt seed --select mentee_database_sample mentee_curriculum_tracking_sample process_moh_skills_assessment_sample
+dbt seed --select mentee_database_sample mentee_database_legacy_sample mentee_curriculum_tracking_sample process_moh_skills_assessment_sample
 dbt run --select +mart_emonc_curriculum_completion +metrics
 dbt test --select mart_emonc_curriculum_completion
 ```

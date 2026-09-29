@@ -10,6 +10,14 @@ models:
 
   - name: stg_googlesheets__ke_mentors_legacy_mentees
     description: Cleaned legacy mentee master rows from googlesheets.ke_mentors_legacy_mentees.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: mentee_source
+        data_tests:
+          - accepted_values:
+              values: [legacy]
 
   - name: stg_googlesheets__ke_mentors_mentors
     description: Anticipatory staging for in-facility mentors sheet.

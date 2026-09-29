@@ -2,12 +2,27 @@ version: 2
 
 models:
   - name: int_mentee_database
-    description: Deduplicated mentee master preferring current sheet over legacy.
+    description: >
+      Deduplicated mentee master unioning current (ke_mentors_mentees) and
+      legacy (ke_mentors_legacy_mentees). Attributes prefer current when the
+      same mentee_id exists in both; in_current / in_legacy flag sheet membership.
     columns:
       - name: mentee_id
         data_tests:
           - not_null
           - unique
+      - name: in_current
+        description: 1 when the mentee appears in the current mentee sheet.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: in_legacy
+        description: 1 when the mentee appears in the legacy mentee sheet.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
 
   - name: int_emonc_cohorts
     description: EmONC cohort windows and requirement thresholds.
