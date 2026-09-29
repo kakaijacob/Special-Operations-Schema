@@ -171,7 +171,7 @@ Raw Kobo submissions are wide / nested. Until explode/parse intermediates land:
 - Flip to `false` once ClickHouse sources + processed intermediates are wired.
 
 | `metric_individual_mentee_newborn_curriculum_progress_by_cycle` | avg capped progress ratio by cycle |
-| `metric_newborn_*_progress_count` | column progress counts by cycle |
+| `metric_newborn_*_progress_count_by_cycle` | column progress counts by cycle |
 
 ## Next modelling waves
 1. Wire real googlesheets columns via `resolve_column`.
