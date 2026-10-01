@@ -1,0 +1,442 @@
+version: 2
+
+models:
+  - name: metric_emonc_curriculum_completion_by_cycle
+    description: Cycle-level full-curriculum completion counts and average component rates.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: mentee_count
+        data_tests:
+          - not_null
+      - name: curriculum_completion_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_cme_coverage_by_cycle
+    description: Cycle-level share of mentees who met the CME requirement (cme_completion >= 1).
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: cme_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_drill_coverage_by_cycle
+    description: Cycle-level share of mentees who met the drills requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: drill_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_skill_demo_coverage_by_cycle
+    description: Cycle-level share of mentees who met the skill-demo (mentor) requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: skill_demo_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_return_demo_coverage_by_cycle
+    description: Cycle-level share of mentees who met the return-demo (mentee) requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: return_demo_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_labor_monitoring_coverage_by_cycle
+    description: Cycle-level share of mentees who met the labor-monitoring requirement.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: labor_monitoring_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_emonc_skill_evaluation_coverage_by_cycle
+    description: >
+      Cycle-level share of mentees who met the skill-evaluation requirement
+      (Partograph excluded upstream).
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: skill_evaluation_coverage_rate
+        data_tests:
+          - not_null
+
+  - name: metric_cme_progress_count_by_cycle
+    description: Sum/avg of CME topic counts for mentees in mart_individual_mentee_emonc_curriculum_progress.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: cme_progress_count
+        data_tests: [not_null]
+
+  - name: metric_drill_progress_count_by_cycle
+    description: Sum/avg of drill topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: drill_progress_count
+        data_tests: [not_null]
+
+  - name: metric_skill_demos_progress_count_by_cycle
+    description: Sum/avg of skill-demo topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: skill_demos_progress_count
+        data_tests: [not_null]
+
+  - name: metric_return_demos_progress_count_by_cycle
+    description: Sum/avg of return-demo topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: return_demos_progress_count
+        data_tests: [not_null]
+
+  - name: metric_skill_eval_progress_count_by_cycle
+    description: Sum/avg of skill-eval counts for individual EmONC progress mentees (Partograph excluded).
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: skill_eval_progress_count
+        data_tests: [not_null]
+
+  - name: metric_average_score_progress_by_cycle
+    description: Average skill scores across individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: average_score_progress
+        data_tests: [not_null]
+
+  - name: metric_labor_monitoring_progress_count_by_cycle
+    description: Sum/avg of labor-monitoring topic counts for individual EmONC progress mentees.
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: labor_monitoring_progress_count
+        data_tests: [not_null]
+
+  - name: metric_individual_mentee_emonc_curriculum_progress_by_cycle
+    description: >
+      Average of per-mentee capped progress ratios, mirroring the Power BI DAX
+      AVERAGEX(DIVIDE(sum of MIN(count, req) + score flag, 13+5+20+20+20+1+1)).
+      Caps default to Cohort 2+ requirements (override via emonc_individual_req_* vars).
+    columns:
+      - name: progress_year
+        data_tests: [not_null, unique]
+      - name: mentee_count
+        data_tests: [not_null]
+      - name: individual_mentee_emonc_curriculum_progress
+        description: Mean mentee progress ratio in [0, 1].
+        data_tests: [not_null]
+
+  - name: metric_newborn_curriculum_completion_by_cycle
+    description: Cycle-level newborn full-curriculum completion counts and averages.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+      - name: curriculum_completion_rate
+        data_tests:
+          - not_null
+
+  - name: metric_newborn_cme_coverage_by_cycle
+    description: Cycle-level newborn CME coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: cme_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_drill_coverage_by_cycle
+    description: Cycle-level newborn drill coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: drill_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_practicum_coverage_by_cycle
+    description: Cycle-level newborn practicum coverage (essential or comprehensive track).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: practicum_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_skill_demo_coverage_by_cycle
+    description: Cycle-level newborn skill-demo coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: skill_demo_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_video_coverage_by_cycle
+    description: Cycle-level newborn video coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: video_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_roleplay_coverage_by_cycle
+    description: Cycle-level newborn role-play coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: roleplay_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_case_scenario_coverage_by_cycle
+    description: Cycle-level newborn case-scenario coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: case_scenario_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_group_discussions_coverage_by_cycle
+    description: Cycle-level newborn group-discussion coverage.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: group_discussions_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_nnr_assessment_coverage_by_cycle
+    description: >
+      Cycle-level share of mentees with NNR baseline + endline and endline >= 0.85.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: nnr_assessment_coverage_rate
+        data_tests: [not_null]
+
+  - name: metric_newborn_cme_progress_count_by_cycle
+    description: Sum/avg of newborn CME topic counts by cycle (individual progress mart).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: cme_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_drill_progress_count_by_cycle
+    description: Sum/avg of newborn drill topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: drill_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_practicum_progress_count_by_cycle
+    description: Sum/avg of newborn practicum topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: practicum_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_skill_demo_progress_count_by_cycle
+    description: Sum/avg of newborn skill-demo topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: skill_demo_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_video_progress_count_by_cycle
+    description: Sum/avg of newborn video topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: video_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_roleplay_progress_count_by_cycle
+    description: Sum/avg of newborn role-play topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: roleplay_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_case_scenario_progress_count_by_cycle
+    description: Sum/avg of newborn case-scenario topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: case_scenario_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_group_discussions_progress_count_by_cycle
+    description: Sum/avg of newborn group-discussion topic counts by cycle.
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: group_discussions_progress_count
+        data_tests: [not_null]
+
+  - name: metric_newborn_nnr_assessment_progress_count_by_cycle
+    description: NNR completion rate and avg baseline/endline by cycle (individual progress).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: nnr_assessment_progress_rate
+        data_tests: [not_null]
+
+  - name: metric_individual_mentee_newborn_curriculum_progress_by_cycle
+    description: >
+      Average of per-mentee×cycle capped newborn progress ratios (counts capped
+      at requirements + NNR completion flag).
+    columns:
+      - name: cycle_id
+        data_tests: [not_null, unique]
+      - name: individual_mentee_newborn_curriculum_progress
+        data_tests: [not_null]
+
+  # --- Monthly sessions conducted (EmONC) ---
+  - name: metric_emonc_cme_sessions_conducted_monthly
+    description: Distinct EmONC CME form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: cme_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_emonc_drill_sessions_conducted_monthly
+    description: Distinct EmONC drill form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: drill_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_emonc_skill_demo_sessions_conducted_monthly
+    description: Distinct EmONC mentor skill-demo form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: skill_demo_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_emonc_return_demo_sessions_conducted_monthly
+    description: Distinct EmONC mentee return-demo form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: return_demo_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_emonc_labor_monitoring_sessions_conducted_monthly
+    description: Distinct EmONC labor-monitoring (Partograph/Labor Monitoring) sessions by month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: labor_monitoring_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_emonc_skill_eval_sessions_conducted_monthly
+    description: Distinct EmONC MoH skill-eval submissions by month (Partograph excluded).
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: skill_eval_sessions_conducted
+        data_tests: [not_null]
+
+  # --- Monthly sessions conducted (newborn) ---
+  - name: metric_newborn_cme_sessions_conducted_monthly
+    description: Distinct newborn CME form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: cme_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_drill_sessions_conducted_monthly
+    description: Distinct newborn drill form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: drill_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_practicum_sessions_conducted_monthly
+    description: Distinct newborn practicum form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: practicum_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_skill_demo_sessions_conducted_monthly
+    description: Distinct newborn skill-demo form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: skill_demo_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_video_sessions_conducted_monthly
+    description: Distinct newborn video form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: video_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_roleplay_sessions_conducted_monthly
+    description: Distinct newborn role-play form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: roleplay_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_case_scenario_sessions_conducted_monthly
+    description: Distinct newborn case-scenario form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: case_scenario_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_group_discussions_sessions_conducted_monthly
+    description: Distinct newborn group-discussion form submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: group_discussions_sessions_conducted
+        data_tests: [not_null]
+
+  - name: metric_newborn_nnr_assessment_sessions_conducted_monthly
+    description: Distinct newborn resuscitation assessment submissions by calendar month.
+    columns:
+      - name: month_start
+        data_tests: [not_null, unique]
+      - name: nnr_assessment_sessions_conducted
+        data_tests: [not_null]
