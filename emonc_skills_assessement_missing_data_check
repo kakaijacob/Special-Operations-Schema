@@ -1,0 +1,305 @@
+function fetchKoboData_Generic() {
+
+  // ================= CONFIG =================
+  const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
+  const formUid = 'aR4bTSJFw3Tnev6o77S3Sg';
+  const startDate = "2026-03-01T00:00:00"; // optional incremental window
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // ================= OUTPUT SHEET =================
+  const sheetName = 'Skills Assessment Data';
+  const sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+
+  // ================= QUERY =================
+  const queryObj = {
+    "_submission_time": {
+      "$gte": startDate
+    },
+    "group_mentorship_details/mentor_details/program": "mentors_curriculum",
+    "group_mentorship_details/mentee_details/county": {
+      "$in": ["Nairobi"]
+    }
+  };
+
+  let url =
+    `https://kc.humanitarianresponse.info/api/v2/assets/${formUid}/data/` +
+    `?format=json&query=${encodeURIComponent(JSON.stringify(queryObj))}` +
+    `&ordering=-_submission_time&limit=100`;
+
+  const options = {
+    method: "get",
+    headers: {
+      "Authorization": "Token " + apiToken
+    }
+  };
+
+  // ================= HELPERS =================
+  function formatDateTime(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return Utilities.formatDate(
+      d,
+      Session.getScriptTimeZone(),
+      "yyyy-MM-dd HH:mm"
+    );
+  }
+
+  function formatDateOnly(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) {
+      // Already a YYYY-MM-DD (or similar) string from Kobo
+      const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
+      return match ? match[1] : value;
+    }
+    return Utilities.formatDate(
+      d,
+      Session.getScriptTimeZone(),
+      "yyyy-MM-dd"
+    );
+  }
+
+  function toTitleCase(str) {
+    if (!str) return "";
+    return str
+      .toString()
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase())
+      .trim();
+  }
+
+  function splitFacility(raw) {
+    if (!raw) return { facility_code: "", facility: "" };
+    const value = raw.toString().trim();
+    const idx = value.indexOf("_");
+    if (idx === -1) {
+      return { facility_code: value, facility: "" };
+    }
+    // e.g. 1234_ruiru_hospital -> facility_code "1234_", facility "Ruiru Hospital"
+    return {
+      facility_code: value.substring(0, idx + 1),
+      facility: toTitleCase(value.substring(idx + 1))
+    };
+  }
+
+  function splitMentee(raw) {
+    if (!raw) return { mentee_id: "", mentee: "" };
+    const value = raw.toString().trim();
+    const idx = value.indexOf("_");
+    if (idx === -1) {
+      return { mentee_id: value, mentee: "" };
+    }
+    // e.g. 724504326_Kakai_Jacob -> mentee_id "724504326", mentee "Kakai Jacob"
+    return {
+      mentee_id: value.substring(0, idx).trim(),
+      mentee: toTitleCase(value.substring(idx + 1))
+    };
+  }
+
+  // Group prefixes — scan each submission for every field under these groups
+  // instead of maintaining hardcoded facility / mentee field lists.
+  const menteeGroupPrefixes = [
+    "group_mentorship_details/mentees/"
+  ];
+
+  const facilityGroupPrefixes = [
+    "group_mentorship_details/mentee_details/",
+    "group_mentorship_details/group_mentorship_facilities/"
+  ];
+
+  const leafName = (key, prefix) => key.slice(prefix.length);
+
+  const isDirectGroupChild = (key, prefixes) =>
+    prefixes.some(prefix =>
+      key.startsWith(prefix) &&
+      leafName(key, prefix).length > 0 &&
+      !leafName(key, prefix).includes("/")
+    );
+
+  // Every select under the mentees group
+  const isMenteeField = key => isDirectGroupChild(key, menteeGroupPrefixes);
+
+  // Facility selects under mentee_details / group_mentorship_facilities
+  // (exclude non-facility leaves such as county)
+  const isFacilityField = key =>
+    isDirectGroupChild(key, facilityGroupPrefixes) &&
+    key.endsWith("_facilities");
+
+  function extractMentees(flat) {
+    const pairs = Object.keys(flat)
+      .filter(isMenteeField)
+      .map(f => flat[f])
+      .filter(v => v && v.toString().trim() !== "")
+      .flatMap(v =>
+        // select_multiple values may be space-separated
+        v.toString().trim().split(/\s+/).filter(Boolean)
+      )
+      .map(splitMentee)
+      .filter(m => m.mentee_id || m.mentee);
+
+    return {
+      mentee_id: pairs.map(m => m.mentee_id).filter(Boolean).join(", "),
+      mentee: pairs.map(m => m.mentee).filter(Boolean).join(", ")
+    };
+  }
+
+  function extractFacility(flat) {
+    const raw =
+      Object.keys(flat)
+        .filter(isFacilityField)
+        .map(f => flat[f])
+        .find(v => v && String(v).trim() !== "") ||
+      "";
+    return splitFacility(raw);
+  }
+
+  // ================= OUTPUT HEADERS =================
+  const headers = [
+    "submission_uuid",
+    "date_started",
+    "date_ended",
+    "date_submitted",
+    "evaluation_date",
+    "submission_id",
+    "mentor_name",
+    "program",
+    "county",
+    "facility_code",
+    "facility",
+    "mentee_id",
+    "mentee",
+    "skill_evaluation",
+    "score"
+  ];
+
+  // ================= FETCH ALL DATA =================
+  let allResults = [];
+
+  while (url) {
+    const response = UrlFetchApp.fetch(url, options);
+    const json = JSON.parse(response.getContentText());
+
+    if (json.results?.length) {
+      allResults = allResults.concat(json.results);
+    }
+
+    url = json.next;
+  }
+
+  if (allResults.length === 0) {
+    Logger.log("No data found.");
+    return;
+  }
+
+  // ================= DEDUPLICATION (submission_uuid) =================
+  const existingIds = new Set();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow > 1) {
+    const existing = sheet.getRange(2, 1, lastRow, 1).getValues();
+    existing.forEach(r => {
+      if (r[0]) existingIds.add(String(r[0]));
+    });
+  }
+
+  // ================= FLATTEN =================
+  function flatten(obj, prefix = "") {
+    const result = {};
+
+    for (const key in obj) {
+      const value = obj[key];
+      const newKey = prefix ? `${prefix}/${key}` : key;
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        Object.assign(result, flatten(value, newKey));
+      } else {
+        result[newKey] = Array.isArray(value) ? value.join(" ") : value;
+      }
+    }
+
+    return result;
+  }
+
+  // ================= TRANSFORM (new rows only) =================
+  const rows = [];
+
+  allResults.forEach(r => {
+    const uuid = r._uuid || "";
+    if (!uuid || existingIds.has(String(uuid))) return;
+
+    const flat = flatten(r);
+
+    const facilityInfo = extractFacility(flat);
+    const menteeInfo = extractMentees(flat);
+
+    const row = {
+      submission_uuid: uuid,
+      date_started: formatDateTime(flat["start"] || r.start),
+      date_ended: formatDateTime(flat["end"] || r.end),
+      date_submitted: formatDateTime(flat["_submission_time"] || r._submission_time),
+      evaluation_date: formatDateOnly(
+        flat["group_mentorship_details/mentor_details/evaluation_date"]
+      ),
+      submission_id: flat["_id"] != null ? flat["_id"] : (r._id != null ? r._id : ""),
+      mentor_name: toTitleCase(
+        flat["group_mentorship_details/mentor_details/mentor_name"] || ""
+      ),
+      program: toTitleCase(
+        flat["group_mentorship_details/mentor_details/program"] || ""
+      ),
+      county: flat["group_mentorship_details/mentee_details/county"] || "",
+      facility_code: facilityInfo.facility_code,
+      facility: facilityInfo.facility,
+      mentee_id: menteeInfo.mentee_id,
+      mentee: menteeInfo.mentee,
+      skill_evaluation:
+        flat["skills_assessment/group_skills_checklist/skill_evaluation"] || "",
+      score:
+  flat["skills_assessment/group_ubt_free_flow/freeflow_score"] ??
+  flat["skills_assessment/group_manual_placenta_removal/manual_placenta_score"] ??
+  flat["skills_assessment/group_UBT/ubt_score"] ??
+  flat["skills_assessment/group_cord_prolapse/cord_prolapse_score"] ??
+  flat["skills_assessment/group_assisted_breech/breech_score"] ??
+  flat["skills_assessment/group_avd/avd_score"] ??
+  flat["skills_assessment/group_shoulder_dystocia/shoulder_score"] ??
+  flat["skills_assessment/group_amtsl/amtsl_score"] ??
+  flat["skills_assessment/group_nasg/nasg_score"] ??
+  flat["skills_assessment/group_nnr/nnr_score"] ??
+  flat["skills_assessment/group_maternal_shock/maternal_shock_score"] ??
+  flat["skills_assessment/group_b-lynch/blynch_score"] ??
+  flat["skills_assessment/group_perineal_tear/perineal_tear_score"] ??
+  flat["skills_assessment/group_maternal_resuscitation/maternal_resuscitation_score"] ??
+  flat["skills_assessment/group_cervical_tear/cervical_tear_score"] ??
+  flat["skills_assessment/group_bimanual_compressions/bimanual_compressions_score"] ??
+  flat["skills_assessment/group_aortic_compression/aortic_compression_score"] ??
+  flat["skills_assessment/group_hip/hip_score"] ??
+  flat["skills_assessment/group_Uterine_inversion/uterine_inversion_score"] ??
+  flat["skills_assessment/group_emotive/emotive_score"] ??
+  flat["skills_assessment/group_partograph/partograph_score"] ??
+  ""
+    };
+
+    rows.push(headers.map(h => (row[h] != null ? row[h] : "")));
+    existingIds.add(String(uuid));
+  });
+
+  if (rows.length === 0) {
+    Logger.log("No new records.");
+    return;
+  }
+
+  // ================= WRITE HEADERS =================
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+
+  // ================= APPEND NEW ROWS =================
+  sheet
+    .getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
+    .setValues(rows);
+
+  Logger.log(`Inserted ${rows.length} new records.`);
+}
