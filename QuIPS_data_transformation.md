@@ -963,7 +963,7 @@ function calculateSectionScores(t) {
         if (p == null || u == null) return "";
         const diff = u - p;
         if (diff < 0) return "";
-        return (u - p <= 300) ? "Yes" : "No";
+        return (u - p <= 900) ? "Yes" : "No";
       })(),
 
       oxytocin_first_line: formatCellValue(flat["technical_quality/oxytocin_first_line"]),
@@ -983,7 +983,7 @@ function calculateSectionScores(t) {
         if (p == null || o == null) return "";
         const diff = o - p;
         if (diff < 0) return "";
-        return (o - p <= 600) ? "Yes" : "No";
+        return (o - p <= 900) ? "Yes" : "No";
       })(),
 
       txa_administered: formatCellValue(flat["technical_quality/txa_administered"]),
@@ -1023,7 +1023,7 @@ function calculateSectionScores(t) {
         if (p == null || i == null) return "";
         const diff = i - p;
         if (diff < 0) return "";
-        return (i - p <= 600) ? "Yes" : "No";
+        return (i - p <= 900) ? "Yes" : "No";
       })(),
       
       pph_identified_cause: formatCellValue(flat["technical_quality/pph_identified_cause"]),
