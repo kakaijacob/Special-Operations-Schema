@@ -1,5 +1,5 @@
-//==============EMOTIVE TIMELY FIELDS (15-minute threshold = 900s)==============
-// Paste over the existing timely_* EMOTIVE IIFEs only.
+#==============EMOTIVE TIMELY FIELDS (15-minute threshold = 900s)==============
+# Paste over the existing timely_* EMOTIVE IIFEs only.
 
       timely_uterine_massage:
       (function () {

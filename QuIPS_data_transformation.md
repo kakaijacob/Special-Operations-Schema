@@ -3,6 +3,22 @@
 ```javascript
 function fetchKoboData_Generic() {
 
+  // Prevent overlapping runs from inserting the same _uuid twice
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) {
+    Logger.log("Could not obtain script lock; another run is in progress.");
+    return;
+  }
+
+  try {
+    fetchKoboData_GenericLocked_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function fetchKoboData_GenericLocked_() {
+
   // ================= CONFIGURATION =================
   const apiToken = '1faf1291cb5e472b7f5a253f3888380d28e7900b';
   const formUid = 'aSwMMq2L7UbfpRAvLFkL6d';
@@ -66,7 +82,7 @@ function fetchKoboData_Generic() {
 };
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = 'QuIPS Cleaned Data';
+  const sheetName = 'QuIPS Transformed Data ';
   const sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
 
   // ================= HELPERS =================
@@ -162,7 +178,7 @@ function fetchKoboData_Generic() {
     return "";
   }
 
-function formatCellValue(value) {
+  function formatCellValue(value) {
   if (!value) return "";
 
   const cleaned = value
@@ -173,6 +189,382 @@ function formatCellValue(value) {
 
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
+
+  const INDIAN_RED = "#CD5C5C";
+  const MIN_OBSERVER_GAP_MS = 30 * 60 * 1000; // 30 minutes
+  const QA_INTEGRITY_COLUMNS = [
+    "qa_short_observation",
+    "qa_successive_ended_lt_30m",
+    "qa_successive_submitted_lt_30m",
+    "qa_companion_inconsistency",
+    "qa_core",
+    "qa_timing_issues"
+  ];
+
+  function parseDateTimeValue(value) {
+    if (value === null || value === undefined || value === "") return null;
+    if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+      return value;
+    }
+    const s = String(value).trim();
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+    if (m) {
+      return new Date(
+        Number(m[1]), Number(m[2]) - 1, Number(m[3]),
+        Number(m[4]), Number(m[5]), Number(m[6])
+      );
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatMinutes(ms) {
+    if (ms === null || ms === undefined || isNaN(ms)) return "";
+    return (ms / 60000).toFixed(1);
+  }
+
+  // Flags negative HH:MM:SS duration values (strings starting with "-") in Indian Red.
+  function applyNegativeDurationConditionalFormatting(targetSheet) {
+    const lastCol = targetSheet.getLastColumn();
+    if (lastCol < 1) return;
+
+    const headers = targetSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const durationCols = [];
+
+    headers.forEach((header, index) => {
+      if (String(header || "").endsWith("_duration")) {
+        durationCols.push(index + 1);
+      }
+    });
+
+    if (durationCols.length === 0) return;
+
+    const durationColSet = new Set(durationCols);
+    const maxRows = targetSheet.getMaxRows();
+
+    // Drop prior negative-duration rules on these columns so re-runs stay idempotent.
+    const keptRules = targetSheet.getConditionalFormatRules().filter(rule => {
+      return !rule.getRanges().some(range =>
+        range.getNumColumns() === 1 && durationColSet.has(range.getColumn())
+      );
+    });
+
+    const durationRules = durationCols.map(col => {
+      const range = targetSheet.getRange(2, col, maxRows - 1, 1);
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextStartsWith("-")
+        .setBackground(INDIAN_RED)
+        .setRanges([range])
+        .build();
+    });
+
+    targetSheet.setConditionalFormatRules(keptRules.concat(durationRules));
+  }
+
+  function ensureColumns(targetSheet, columnNames) {
+    const lastCol = Math.max(targetSheet.getLastColumn(), 1);
+    const headers = targetSheet.getRange(1, 1, 1, lastCol).getValues()[0]
+      .map(h => String(h || ""));
+    const headerIndex = {};
+
+    headers.forEach((h, i) => {
+      if (h) headerIndex[h] = i;
+    });
+
+    columnNames.forEach(name => {
+      if (headerIndex[name] === undefined) {
+        const newCol = targetSheet.getLastColumn() + 1;
+        targetSheet.getRange(1, newCol).setValue(name);
+        headerIndex[name] = newCol - 1;
+      }
+    });
+
+    return headerIndex;
+  }
+
+  function applyQaYesConditionalFormatting(targetSheet, headerIndex) {
+    const yesFlagCols = [
+      "qa_short_observation",
+      "qa_successive_ended_lt_30m",
+      "qa_successive_submitted_lt_30m",
+      "qa_companion_inconsistency"
+    ]
+      .map(name => headerIndex[name])
+      .filter(i => i !== undefined)
+      .map(i => i + 1);
+
+    const issuesCol = headerIndex.qa_timing_issues !== undefined
+      ? headerIndex.qa_timing_issues + 1
+      : null;
+
+    const scoreCol = headerIndex.qa_core !== undefined
+      ? headerIndex.qa_core + 1
+      : null;
+
+    const managedCols = new Set(
+      yesFlagCols
+        .concat(issuesCol ? [issuesCol] : [])
+        .concat(scoreCol ? [scoreCol] : [])
+    );
+    if (managedCols.size === 0) return;
+
+    const maxRows = targetSheet.getMaxRows();
+
+    const keptRules = targetSheet.getConditionalFormatRules().filter(rule => {
+      return !rule.getRanges().some(range =>
+        range.getNumColumns() === 1 && managedCols.has(range.getColumn())
+      );
+    });
+
+    const qaRules = yesFlagCols.map(col =>
+      SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo("Yes")
+        .setBackground(INDIAN_RED)
+        .setRanges([targetSheet.getRange(2, col, maxRows - 1, 1)])
+        .build()
+    );
+
+    if (issuesCol) {
+      qaRules.push(
+        SpreadsheetApp.newConditionalFormatRule()
+          .whenCellNotEmpty()
+          .setBackground(INDIAN_RED)
+          .setRanges([targetSheet.getRange(2, issuesCol, maxRows - 1, 1)])
+          .build()
+      );
+    }
+
+    // Highlight imperfect integrity scores (qa_core)
+    if (scoreCol) {
+      qaRules.push(
+        SpreadsheetApp.newConditionalFormatRule()
+          .whenNumberLessThan(1)
+          .setBackground(INDIAN_RED)
+          .setRanges([targetSheet.getRange(2, scoreCol, maxRows - 1, 1)])
+          .build()
+      );
+    }
+
+    targetSheet.setConditionalFormatRules(keptRules.concat(qaRules));
+  }
+
+  // Integrity score: share of applicable QA checks passed (1 = clean, 0 = all failed).
+  function computeQaCore(rec, hasCompanionCols) {
+    let passed = 0;
+    let total = 0;
+
+    if (rec.started && rec.ended) {
+      total += 1;
+      if (!rec.shortObservation) passed += 1;
+    }
+
+    total += 1;
+    if (!rec.successiveEnded) passed += 1;
+
+    total += 1;
+    if (!rec.successiveSubmitted) passed += 1;
+
+    if (hasCompanionCols) {
+      total += 1;
+      if (!rec.companionInconsistency) passed += 1;
+    }
+
+    if (rec.hasDurationValue) {
+      total += 1;
+      if (!rec.negativeDuration) passed += 1;
+    }
+
+    if (total === 0) return 1;
+    return Number((passed / total).toFixed(3));
+  }
+
+  // Data integrity / malpractice checks on QuIPS Transformed Data:
+  // 1) date_ended - date_started < 30m → likely retrospective fill (not real-time)
+  // 2) successive same-observer + same-facility date_ended gap < 30m
+  // 3) successive same-observer + same-facility date_submitted gap < 30m
+  // 4) birth_companion = No but directly_engaged_companion_support = Yes
+  // date_started can be stale (form left open); date_ended / date_submitted are preferred anchors.
+  function refreshObserverTimingIntegrityChecks(targetSheet) {
+    const lastRow = targetSheet.getLastRow();
+    const lastCol = targetSheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) return;
+
+    const headerIndex = ensureColumns(targetSheet, QA_INTEGRITY_COLUMNS);
+    const required = [
+      "_uuid",
+      "observer_name",
+      "facility_code",
+      "date_started",
+      "date_ended",
+      "date_submitted"
+    ];
+    if (required.some(name => headerIndex[name] === undefined)) {
+      Logger.log("Timing QA skipped: missing required metadata columns.");
+      return;
+    }
+
+    const width = targetSheet.getLastColumn();
+    const values = targetSheet.getRange(2, 1, lastRow - 1, width).getValues();
+
+    // Re-read headers after ensureColumns (width may have grown)
+    const headersNow = targetSheet.getRange(1, 1, 1, width).getValues()[0];
+    const durationColIdxs = [];
+    headersNow.forEach((h, i) => {
+      if (String(h || "").endsWith("_duration")) durationColIdxs.push(i);
+    });
+
+    const hasCompanionCols =
+      headerIndex.birth_companion !== undefined &&
+      headerIndex.directly_engaged_companion_support !== undefined;
+
+    const records = values.map((row, idx) => {
+      const started = parseDateTimeValue(row[headerIndex.date_started]);
+      const ended = parseDateTimeValue(row[headerIndex.date_ended]);
+      const submitted = parseDateTimeValue(row[headerIndex.date_submitted]);
+      const birthCompanion = hasCompanionCols
+        ? String(row[headerIndex.birth_companion] || "").trim().toLowerCase()
+        : "";
+      const engagedCompanion = hasCompanionCols
+        ? String(row[headerIndex.directly_engaged_companion_support] || "").trim().toLowerCase()
+        : "";
+
+      let hasDurationValue = false;
+      let negativeDuration = false;
+      durationColIdxs.forEach(i => {
+        const raw = row[i];
+        if (raw === null || raw === undefined || raw === "") return;
+        hasDurationValue = true;
+        if (String(raw).trim().startsWith("-")) negativeDuration = true;
+      });
+
+      return {
+        rowIndex: idx,
+        uuid: String(row[headerIndex._uuid] || ""),
+        observer: String(row[headerIndex.observer_name] || "").trim(),
+        facilityCode: String(row[headerIndex.facility_code] || "").trim(),
+        started,
+        ended,
+        submitted,
+        birthCompanion,
+        engagedCompanion,
+        hasDurationValue,
+        negativeDuration,
+        shortObservation: false,
+        successiveEnded: false,
+        successiveSubmitted: false,
+        companionInconsistency: false,
+        qaCore: 1,
+        notes: []
+      };
+    });
+
+    records.forEach(rec => {
+      if (rec.started && rec.ended) {
+        const windowMs = rec.ended.getTime() - rec.started.getTime();
+        if (windowMs < MIN_OBSERVER_GAP_MS) {
+          rec.shortObservation = true;
+          rec.notes.push(
+            windowMs < 0
+              ? `form_window_negative(${formatMinutes(windowMs)}m)`
+              : `form_window_lt_30m(${formatMinutes(windowMs)}m)`
+          );
+        }
+      }
+
+      // Companion present = No cannot pair with engaged companion support = Yes
+      if (rec.birthCompanion === "no" && rec.engagedCompanion === "yes") {
+        rec.companionInconsistency = true;
+        rec.notes.push("companion_support_without_birth_companion");
+      }
+
+      if (rec.negativeDuration) {
+        rec.notes.push("negative_duration");
+      }
+    });
+
+    // Successive timing gaps only within the same observer_name + facility_code.
+    function flagSuccessiveGaps(timeKey, flagKey, label) {
+      const byObserverFacility = {};
+      records.forEach(rec => {
+        if (!rec.observer || !rec.facilityCode || !rec[timeKey]) return;
+        const key = `${rec.observer}||${rec.facilityCode}`;
+        if (!byObserverFacility[key]) byObserverFacility[key] = [];
+        byObserverFacility[key].push(rec);
+      });
+
+      Object.keys(byObserverFacility).forEach(key => {
+        const group = byObserverFacility[key].slice().sort((a, b) =>
+          a[timeKey].getTime() - b[timeKey].getTime()
+        );
+
+        for (let i = 1; i < group.length; i++) {
+          const prev = group[i - 1];
+          const curr = group[i];
+          const gapMs = curr[timeKey].getTime() - prev[timeKey].getTime();
+          if (gapMs < MIN_OBSERVER_GAP_MS) {
+            prev[flagKey] = true;
+            curr[flagKey] = true;
+            const detail = `${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${prev.uuid || "prior"})`;
+            curr.notes.push(detail);
+            prev.notes.push(`${label}_gap_lt_30m(${formatMinutes(gapMs)}m vs ${curr.uuid || "next"})`);
+          }
+        }
+      });
+    }
+
+    flagSuccessiveGaps("ended", "successiveEnded", "successive_date_ended");
+    flagSuccessiveGaps("submitted", "successiveSubmitted", "successive_date_submitted");
+
+    records.forEach(rec => {
+      rec.qaCore = computeQaCore(rec, hasCompanionCols);
+    });
+
+    const shortCol = headerIndex.qa_short_observation + 1;
+    const endedCol = headerIndex.qa_successive_ended_lt_30m + 1;
+    const submittedCol = headerIndex.qa_successive_submitted_lt_30m + 1;
+    const companionCol = headerIndex.qa_companion_inconsistency + 1;
+    const scoreCol = headerIndex.qa_core + 1;
+    const issuesCol = headerIndex.qa_timing_issues + 1;
+
+    const shortValues = records.map(r => [r.shortObservation ? "Yes" : ""]);
+    const endedValues = records.map(r => [r.successiveEnded ? "Yes" : ""]);
+    const submittedValues = records.map(r => [r.successiveSubmitted ? "Yes" : ""]);
+    const companionValues = records.map(r => [r.companionInconsistency ? "Yes" : ""]);
+    const scoreValues = records.map(r => [r.qaCore]);
+    const issuesValues = records.map(r => {
+      const uniqueNotes = [...new Set(r.notes)];
+      return [uniqueNotes.join("; ")];
+    });
+
+    targetSheet.getRange(2, shortCol, records.length, 1).setValues(shortValues);
+    targetSheet.getRange(2, endedCol, records.length, 1).setValues(endedValues);
+    targetSheet.getRange(2, submittedCol, records.length, 1).setValues(submittedValues);
+    targetSheet.getRange(2, companionCol, records.length, 1).setValues(companionValues);
+    targetSheet.getRange(2, scoreCol, records.length, 1).setValues(scoreValues);
+    targetSheet.getRange(2, issuesCol, records.length, 1).setValues(issuesValues);
+
+    applyQaYesConditionalFormatting(targetSheet, headerIndex);
+
+    const flaggedCount = records.filter(r =>
+      r.shortObservation ||
+      r.successiveEnded ||
+      r.successiveSubmitted ||
+      r.companionInconsistency ||
+      r.negativeDuration
+    ).length;
+
+    const flaggedPct = records.length === 0
+      ? "0.0"
+      : ((flaggedCount / records.length) * 100).toFixed(1);
+
+    const avgQa = records.length === 0
+      ? "1.000"
+      : (records.reduce((sum, r) => sum + r.qaCore, 0) / records.length).toFixed(3);
+
+    Logger.log(
+      `Integrity QA on '${targetSheet.getName()}': flagged ${flaggedCount} of ${records.length} (${flaggedPct}%) observations; avg qa_core=${avgQa}.`
+    );
+  }
 
 
 //=============SCORING HELPER FUNCTION ====================
@@ -185,7 +577,9 @@ function formatCellValue(value) {
     "unable to observe",
     "unable_to_observe",
     "not applicable",
-    "not_applicable"
+    "not_applicable",
+    "resuscitation required",
+    "not taken"
   ].includes(v);
 }
 
@@ -591,17 +985,33 @@ function calculateSectionScores(t) {
     url = json.next;
   }
 
-  if (allResults.length === 0) return;
+  if (allResults.length === 0) {
+    applyNegativeDurationConditionalFormatting(sheet);
+    refreshObserverTimingIntegrityChecks(sheet);
+    return;
+  }
 
   // ================= DEDUPE =================
+  // Load existing _uuid values from the sheet (by header name, not assumed column A).
+  // Also track IDs accepted in THIS run so pagination / API overlap cannot
+  // insert the same submission twice in one execution.
 
   const existingIds = new Set();
   const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
 
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, 1)
+  if (lastRow > 1 && lastCol > 0) {
+    const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    let uuidCol = headerRow.indexOf("_uuid") + 1; // 1-based
+    if (uuidCol < 1) uuidCol = 1; // fallback if header missing
+
+    // getRange(row, column, numRows, numColumns): numDataRows covers rows 2..lastRow
+    const numDataRows = lastRow - 1;
+    sheet.getRange(2, uuidCol, numDataRows, 1)
       .getValues()
-      .forEach(r => existingIds.add(r[0]));
+      .forEach(r => {
+        if (r[0]) existingIds.add(String(r[0]));
+      });
   }
 
   // ================= FLATTEN =================
@@ -628,7 +1038,10 @@ function calculateSectionScores(t) {
 
   allResults.forEach(record => {
 
-    if (existingIds.has(record._uuid)) return;
+    const uuid = record._uuid ? String(record._uuid) : "";
+    if (!uuid || existingIds.has(uuid)) return;
+    // Reserve immediately so duplicate pages / repeated API rows are skipped
+    existingIds.add(uuid);
 
     const flat = flatten(record);
 
@@ -1392,21 +1805,79 @@ kindly_none_of_above:
       
    });
 
-  if (transformedData.length === 0) return;
+  if (transformedData.length > 0) {
+    const headers = Object.keys(transformedData[0]);
 
-  const headers = Object.keys(transformedData[0]);
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    }
 
-  if (sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    const rows = transformedData.map(obj =>
+      headers.map(h => obj[h] || "")
+    );
+
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
+      .setValues(rows);
+
+    Logger.log(`Inserted ${rows.length} new records.`);
   }
 
-  const rows = transformedData.map(obj =>
-    headers.map(h => obj[h] || "")
-  );
+  // Data integrity: highlight negative durations on all *_duration columns.
+  applyNegativeDurationConditionalFormatting(sheet);
 
-  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
-    .setValues(rows);
+  // Data integrity: observer timing + companion consistency checks.
+  refreshObserverTimingIntegrityChecks(sheet);
+}
 
-  Logger.log(`Inserted ${rows.length} new records.`);
+/**
+ * One-time cleanup: remove duplicate rows in "QuIPS Transformed Data " by _uuid,
+ * keeping the first occurrence of each UUID. Run manually from the Apps Script editor.
+ */
+function dedupeQuipsSheetByUuid() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = "QuIPS Transformed Data ";
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    Logger.log('Sheet "' + sheetName + '" not found.');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow <= 1) {
+    Logger.log("No data rows to dedupe.");
+    return;
+  }
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  let uuidCol = headers.indexOf("_uuid");
+  if (uuidCol < 0) uuidCol = 0; // 0-based index into row arrays
+
+  const data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  const seen = new Set();
+  const kept = [];
+  let removed = 0;
+
+  data.forEach(row => {
+    const uuid = row[uuidCol] ? String(row[uuidCol]) : "";
+    if (uuid && seen.has(uuid)) {
+      removed++;
+      return;
+    }
+    if (uuid) seen.add(uuid);
+    kept.push(row);
+  });
+
+  if (removed === 0) {
+    Logger.log("No duplicate _uuid rows found.");
+    return;
+  }
+
+  sheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
+  if (kept.length > 0) {
+    sheet.getRange(2, 1, kept.length, lastCol).setValues(kept);
+  }
+
+  Logger.log(`Removed ${removed} duplicate row(s); kept ${kept.length}.`);
 }
 ```
