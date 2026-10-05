@@ -1,0 +1,2014 @@
+{
+  "catalog": {
+    "businessName": "LAUNDRY NOIR",
+    "year": 2026,
+    "months": [
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "customerTags": [
+      "Household",
+      "Spa/Barber Shop",
+      "Hotel",
+      "Office",
+      "Other"
+    ],
+    "paymentStatuses": [
+      "Paid",
+      "Pending",
+      "Partial"
+    ],
+    "deliveryStatuses": [
+      "Delivered",
+      "Pending",
+      "In Progress"
+    ],
+    "paymentMethods": [
+      "M-Pesa",
+      "Cash",
+      "Bank"
+    ],
+    "expenseCategories": [
+      "Cost of sales",
+      "Operating Expenses",
+      "Payroll",
+      "Marketing & Advertising",
+      "Equipment Maintenance",
+      "License, Taxes & Fees",
+      "Insurance",
+      "Direct Expenses"
+    ],
+    "expenseSources": [
+      "Jacob",
+      "Whitney",
+      "Business Account"
+    ],
+    "revenueServices": [
+      "By piece Items",
+      "Curtains/Sheers",
+      "Dry Cleaning/Suits",
+      "Duvet",
+      "Ironing Services",
+      "Jacket/Trench Coats",
+      "Pillows",
+      "Shoe Cleaning",
+      "Speciality Care",
+      "Stain Removal",
+      "Towels",
+      "Carpet",
+      "Wash & Fold"
+    ],
+    "costOfSalesItems": [
+      "Liquid Detergent",
+      "Powder Detergent",
+      "Fabric Softener",
+      "Oxy Perox Bleach",
+      "Booster Emulsifier",
+      "Liquid Chlorine Bleach",
+      "Vinegar",
+      "Machine Cleaning Tablets",
+      "Baking Soda",
+      "Water",
+      "Electricity",
+      "Laundry Gloves",
+      "Laundry Mesh",
+      "Sterile gloves",
+      "Cleaning Tablets",
+      "Wrapping Film",
+      "Toiletries",
+      "Packaging Materials",
+      "Machine Maintenance (Direct)"
+    ],
+    "operatingExpenseItems": [
+      "Staff Salaries & Wages",
+      "Rent",
+      "Internet & Phone",
+      "Marketing & Advertising (Stickers/Flyers/Bronchures)",
+      "Delivery Costs",
+      "Washing Machine Repairs (+Installations)",
+      "Office Supplies (Pens + Books + Invoices + Receipts)",
+      "Bank & Mobile Money Charges",
+      "Licenses & Permits",
+      "Insurance",
+      "Depreciation of Equipment",
+      "Miscellaneous Expenses"
+    ]
+  },
+  "orders": [
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-07-18",
+      "deliveryDate": "2026-07-19",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Duvet",
+      "quantity": 2.0,
+      "unitPrice": 600.0,
+      "quotation": 1200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****327",
+      "orderDate": "2026-07-18",
+      "deliveryDate": "2026-07-19",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Pillows",
+      "quantity": 3.0,
+      "unitPrice": 166.6666667,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****328",
+      "orderDate": "2026-07-18",
+      "deliveryDate": "2026-07-19",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Wash & Fold",
+      "quantity": 20.6,
+      "unitPrice": 120.0,
+      "quotation": 2472.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****329",
+      "orderDate": "2026-07-18",
+      "deliveryDate": "2026-07-19",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Jacket/Trench Coats",
+      "quantity": 1.0,
+      "unitPrice": 200.0,
+      "quotation": 200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 02",
+      "customerId": "011****133",
+      "orderDate": "2026-07-28",
+      "deliveryDate": "2026-07-29",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Jaswin Business Centre",
+      "service": "Towels",
+      "quantity": 1.0,
+      "unitPrice": 200.0,
+      "quotation": 200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 03",
+      "customerId": "070****769",
+      "orderDate": "2026-07-28",
+      "deliveryDate": "2026-07-29",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "2nd Sunrise Street",
+      "service": "Jacket/Trench Coats",
+      "quantity": 3.0,
+      "unitPrice": 450.0,
+      "quotation": 1350.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 04",
+      "customerId": "079****143",
+      "orderDate": "2026-08-02",
+      "deliveryDate": "2026-08-04",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Major Court",
+      "service": "Wash & Fold",
+      "quantity": 14.0,
+      "unitPrice": 100.0,
+      "quotation": 1400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-08-03",
+      "deliveryDate": "2026-08-06",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Behind Arch Angel Michael",
+      "service": "Wash & Fold",
+      "quantity": 14.0,
+      "unitPrice": 100.0,
+      "quotation": 1400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 06",
+      "customerId": "079****259",
+      "orderDate": "2026-08-03",
+      "deliveryDate": "2026-08-04",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Arch Angel Michael",
+      "service": "Wash & Fold",
+      "quantity": 1.0,
+      "unitPrice": 100.0,
+      "quotation": 100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 07",
+      "customerId": "011****893",
+      "orderDate": "2026-08-03",
+      "deliveryDate": "2026-08-06",
+      "customerTag": "Household",
+      "location": "Lucky Summer",
+      "building": "Aston Quarry",
+      "service": "Wash & Fold",
+      "quantity": 5.0,
+      "unitPrice": 100.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 08",
+      "customerId": "070****451",
+      "orderDate": "2026-08-06",
+      "deliveryDate": "2026-08-06",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Beviva Apartment",
+      "service": "By piece Items",
+      "quantity": 7.0,
+      "unitPrice": 42.85714286,
+      "quotation": 300.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 09",
+      "customerId": "074****280",
+      "orderDate": "2026-08-12",
+      "deliveryDate": "2026-08-08",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Imma's Kitchen",
+      "service": "Wash & Fold",
+      "quantity": 9.0,
+      "unitPrice": 100.0,
+      "quotation": 900.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 09",
+      "customerId": "074****281",
+      "orderDate": "2026-08-12",
+      "deliveryDate": "2026-08-09",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Imma's Kitchen",
+      "service": "Wash & Fold",
+      "quantity": 12.0,
+      "unitPrice": 100.0,
+      "quotation": 1200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 09",
+      "customerId": "074****282",
+      "orderDate": "2026-08-12",
+      "deliveryDate": "2026-08-09",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Imma's Kitchen",
+      "service": "Jacket/Trench Coats",
+      "quantity": 1.0,
+      "unitPrice": 100.0,
+      "quotation": 100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 10",
+      "customerId": "074****283",
+      "orderDate": "2026-08-16",
+      "deliveryDate": "2026-08-17",
+      "customerTag": "Spa/Barber Shop",
+      "location": "Kihunguro",
+      "building": "Masters Blade Kinyozi",
+      "service": "Towels",
+      "quantity": 3.2,
+      "unitPrice": 100.0,
+      "quotation": 320.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-08-16",
+      "deliveryDate": "2026-08-18",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Behind Arch Angel Michael",
+      "service": "By piece Items",
+      "quantity": 8.0,
+      "unitPrice": 50.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 11",
+      "customerId": "",
+      "orderDate": "2026-08-22",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 250.0,
+      "quotation": 250.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-08-23",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Behind Arch Angel Michael",
+      "service": "Wash & Fold",
+      "quantity": 9.5,
+      "unitPrice": 100.0,
+      "quotation": 950.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-08-23",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Behind Arch Angel Michael",
+      "service": "By piece Items",
+      "quantity": 4.0,
+      "unitPrice": 100.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-08-23",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Behind Arch Angel Michael",
+      "service": "Jacket/Trench Coats",
+      "quantity": 1.0,
+      "unitPrice": 300.0,
+      "quotation": 300.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 12",
+      "customerId": "079****160",
+      "orderDate": "2026-08-24",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "By piece Items",
+      "quantity": 2.0,
+      "unitPrice": 100.0,
+      "quotation": 200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 13",
+      "customerId": "070****268",
+      "orderDate": "2026-08-30",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Jaswin",
+      "service": "By piece Items",
+      "quantity": 1.0,
+      "unitPrice": 100.0,
+      "quotation": 100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 14",
+      "customerId": "070****499",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Elite Apartment",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 500.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Paid",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 15",
+      "customerId": "071****060",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "Wash & Fold",
+      "quantity": 10.0,
+      "unitPrice": 100.0,
+      "quotation": 1000.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Paid",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 16",
+      "customerId": "072****862",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Athena Apartment",
+      "service": "Sweaters",
+      "quantity": 2.0,
+      "unitPrice": 100.0,
+      "quotation": 200.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 16",
+      "customerId": "072****862",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Athena Apartment",
+      "service": "Towels",
+      "quantity": 1.0,
+      "unitPrice": 100.0,
+      "quotation": 100.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 16",
+      "customerId": "072****862",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Athena Apartment",
+      "service": "By piece Items",
+      "quantity": 1.0,
+      "unitPrice": 50.0,
+      "quotation": 50.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 17",
+      "customerId": "075****147",
+      "orderDate": "2026-08-31",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Dry Cleaning/Suits",
+      "quantity": 1.0,
+      "unitPrice": 400.0,
+      "quotation": 400.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 18",
+      "customerId": "NA 2",
+      "orderDate": "2026-09-01",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "Wedding Gown",
+      "quantity": 1.0,
+      "unitPrice": 500.0,
+      "quotation": 500.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 19",
+      "customerId": "011****416",
+      "orderDate": "2026-09-01",
+      "deliveryDate": "2026-09-05",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Excellent Aparment",
+      "service": "Wash & Fold",
+      "quantity": 11.0,
+      "unitPrice": 100.0,
+      "quotation": 1100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 20",
+      "customerId": "079****072",
+      "orderDate": "2026-09-01",
+      "deliveryDate": "2026-09-03",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "By piece Items",
+      "quantity": 7.0,
+      "unitPrice": 42.85714286,
+      "quotation": 300.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 09",
+      "customerId": "074****282",
+      "orderDate": "2026-09-01",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Imma's Kitchen",
+      "service": "Wash & Fold",
+      "quantity": 3.0,
+      "unitPrice": 100.0,
+      "quotation": 300.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 21",
+      "customerId": "NA 1",
+      "orderDate": "2026-09-01",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Jaswin",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 300.0,
+      "quotation": 300.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 19",
+      "customerId": "011****416",
+      "orderDate": "2026-09-01",
+      "deliveryDate": "2026-09-04",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Excellent Aparment",
+      "service": "Wash & Fold",
+      "quantity": 2.7,
+      "unitPrice": 100.0,
+      "quotation": 270.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 22",
+      "customerId": "011****349",
+      "orderDate": "2026-09-03",
+      "deliveryDate": "2026-09-05",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Excellent Aparment",
+      "service": "Wash & Fold",
+      "quantity": 4.9,
+      "unitPrice": 100.0,
+      "quotation": 490.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 23",
+      "customerId": "079****815",
+      "orderDate": "2026-09-04",
+      "deliveryDate": "2026-09-05",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Walk-in",
+      "service": "Curtains/Sheers",
+      "quantity": 2.0,
+      "unitPrice": 200.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 13",
+      "customerId": "070****268",
+      "orderDate": "2026-09-05",
+      "deliveryDate": "2026-09-06",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Jaswin",
+      "service": "Sweaters",
+      "quantity": 1.0,
+      "unitPrice": 100.0,
+      "quotation": 100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 09",
+      "customerId": "074****282",
+      "orderDate": "2026-09-03",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Imma's Kitchen",
+      "service": "Wash & Fold",
+      "quantity": 11.0,
+      "unitPrice": 100.0,
+      "quotation": 1100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 24",
+      "customerId": "",
+      "orderDate": "2026-09-04",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Jaswin",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 350.0,
+      "quotation": 350.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-08-15",
+      "deliveryDate": "2026-08-06",
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Wash & Fold",
+      "quantity": 10.0,
+      "unitPrice": 100.0,
+      "quotation": 1000.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-08-28",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Wash & Fold",
+      "quantity": 13.7,
+      "unitPrice": 100.0,
+      "quotation": 1370.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-09-04",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Wash & Fold",
+      "quantity": 19.3,
+      "unitPrice": 100.0,
+      "quotation": 1930.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-09-04",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "Harmony Park Apartment",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 400.0,
+      "quotation": 400.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 25",
+      "customerId": "074****668",
+      "orderDate": "2026-09-06",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 500.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "071****929",
+      "orderDate": "2026-09-06",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 12.9,
+      "unitPrice": 100.0,
+      "quotation": 1290.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 26",
+      "customerId": "071****974",
+      "orderDate": "2026-09-06",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 400.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 27",
+      "customerId": "",
+      "orderDate": "2026-09-06",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 400.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 27",
+      "customerId": "",
+      "orderDate": "2026-09-06",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "By piece Items",
+      "quantity": 3.0,
+      "unitPrice": 150.0,
+      "quotation": 450.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 10",
+      "customerId": "",
+      "orderDate": "2026-09-09",
+      "deliveryDate": null,
+      "customerTag": "Spa/Barber Shop",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Towels",
+      "quantity": 4.8,
+      "unitPrice": 100.0,
+      "quotation": 480.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 28",
+      "customerId": "",
+      "orderDate": "2026-09-11",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 8.0,
+      "unitPrice": 100.0,
+      "quotation": 800.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 29",
+      "customerId": "",
+      "orderDate": "2026-09-12",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 5.0,
+      "unitPrice": 100.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 30",
+      "customerId": "",
+      "orderDate": "2026-09-12",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 400.0,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 31",
+      "customerId": "",
+      "orderDate": "2026-09-14",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 600.0,
+      "quotation": 600.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 29",
+      "customerId": "",
+      "orderDate": "2026-09-14",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 12.0,
+      "unitPrice": 100.0,
+      "quotation": 1200.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 13",
+      "customerId": "",
+      "orderDate": "2026-09-15",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "By piece Items",
+      "quantity": 3.0,
+      "unitPrice": 83.33333333,
+      "quotation": 250.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 32",
+      "customerId": "",
+      "orderDate": "2026-09-14",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "By piece Items",
+      "quantity": 2.0,
+      "unitPrice": 70.0,
+      "quotation": 140.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 33",
+      "customerId": "",
+      "orderDate": "2026-09-19",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 2.0,
+      "unitPrice": 425.0,
+      "quotation": 850.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 34",
+      "customerId": "",
+      "orderDate": "2026-09-18",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 450.0,
+      "quotation": 450.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 28",
+      "customerId": "",
+      "orderDate": "2026-09-22",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 8.8,
+      "unitPrice": 100.0,
+      "quotation": 880.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 35",
+      "customerId": "",
+      "orderDate": "2026-09-22",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Jacket/Trench Coats",
+      "quantity": 3.0,
+      "unitPrice": 133.3333333,
+      "quotation": 400.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 36",
+      "customerId": "",
+      "orderDate": "2026-09-19",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Ironing Services",
+      "quantity": 2.0,
+      "unitPrice": 50.0,
+      "quotation": 100.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 10",
+      "customerId": "",
+      "orderDate": "2026-09-22",
+      "deliveryDate": null,
+      "customerTag": "Spa/Barber Shop",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 3.6,
+      "unitPrice": 100.0,
+      "quotation": 360.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 10",
+      "customerId": "",
+      "orderDate": "2026-09-23",
+      "deliveryDate": null,
+      "customerTag": "Spa/Barber Shop",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Carpet",
+      "quantity": 1.0,
+      "unitPrice": 500.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 37",
+      "customerId": "",
+      "orderDate": "2026-09-24",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 600.0,
+      "quotation": 600.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 38",
+      "customerId": "",
+      "orderDate": "2026-09-25",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 7.0,
+      "unitPrice": 100.0,
+      "quotation": 700.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 39",
+      "customerId": "",
+      "orderDate": "2026-09-25",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 40.0,
+      "unitPrice": 90.0,
+      "quotation": 3600.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 40",
+      "customerId": "",
+      "orderDate": "2026-09-25",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 2.0,
+      "unitPrice": 400.0,
+      "quotation": 800.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 40",
+      "customerId": "",
+      "orderDate": "2026-09-25",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Duvet",
+      "quantity": 1.0,
+      "unitPrice": 500.0,
+      "quotation": 500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 05",
+      "customerId": "",
+      "orderDate": "2026-09-26",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 15.0,
+      "unitPrice": 100.0,
+      "quotation": 1500.0,
+      "paymentStatus": "Paid",
+      "deliveryStatus": "Delivered",
+      "notes": ""
+    },
+    {
+      "customerName": "Client 01",
+      "customerId": "072****326",
+      "orderDate": "2026-09-27",
+      "deliveryDate": null,
+      "customerTag": "Household",
+      "location": "Gatongora",
+      "building": "",
+      "service": "Wash & Fold",
+      "quantity": 26.0,
+      "unitPrice": 100.0,
+      "quotation": 2600.0,
+      "paymentStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "notes": ""
+    }
+  ],
+  "expenditures": [
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Liquid Detergent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1300.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Powder Detergent",
+      "supplier": "",
+      "paymentMethod": "Bank",
+      "amount": 1700.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Fabric Softener",
+      "supplier": "",
+      "paymentMethod": "Cash",
+      "amount": 1200.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Oxy Perox Bleach",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1300.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Booster Emulsifier",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1500.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Liquid Chlorine Bleach",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1100.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Vinegar",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Machine Cleaning Tablets",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Cost of sales",
+      "description": "Baking Soda",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Operating Expenses",
+      "description": "Water",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 3000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Operating Expenses",
+      "description": "Electricity",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Operating Expenses",
+      "description": "Laundry Gloves",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Operating Expenses",
+      "description": "Sterile gloves",
+      "supplier": "",
+      "paymentMethod": "Cash",
+      "amount": 800.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-07",
+      "category": "Operating Expenses",
+      "description": "Toiletries",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-20",
+      "category": "Cost of sales",
+      "description": "Packaging Materials",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1125.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Equipment Maintenance",
+      "description": "Machine Maintenance (Direct)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 2600.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-29",
+      "category": "Payroll",
+      "description": "Staff Salaries & Wages",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 25000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Rent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 33000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Internet & Phone",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1500.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Marketing & Advertising",
+      "description": "Marketing & Advertising (Stickers/Flyers/Bronchures)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1300.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Delivery Costs",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Washing Machine Repairs (+Installations)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 2600.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Office Supplies (Pens + Books + Invoices + Receipts)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "Operating Expenses",
+      "description": "Bank & Mobile Money Charges",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 30.36,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-22",
+      "category": "License, Taxes & Fees",
+      "description": "Licenses & Permits",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 12620.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Insurance",
+      "description": "Insurance",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Equipment Maintenance",
+      "description": "Depreciation of Equipment",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-28",
+      "category": "Operating Expenses",
+      "description": "Miscellaneous Expenses",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 0.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-01",
+      "category": "Operating Expenses",
+      "description": "Rent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 11000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-04",
+      "category": "Marketing & Advertising",
+      "description": "Marketing & Advertising (Stickers/Flyers/Bronchures)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 4800.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-07-20",
+      "category": "Operating Expenses",
+      "description": "Office Supplies (Pens + Books + Invoices + Receipts)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1156.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-07",
+      "category": "Direct Expenses",
+      "description": "Wrapping Film",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 2950.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-16",
+      "category": "Marketing & Advertising",
+      "description": "Marketing & Advertising (Stickers/Flyers/Bronchures)",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1000.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-28",
+      "category": "Operating Expenses",
+      "description": "Cleaning Tablets",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 850.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-28",
+      "category": "Operating Expenses",
+      "description": "Cleaning Tablets",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 850.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-27",
+      "category": "Operating Expenses",
+      "description": "Rent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 11000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-28",
+      "category": "Operating Expenses",
+      "description": "Laundry Gloves",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 470.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-28",
+      "category": "Operating Expenses",
+      "description": "Laundry Gloves",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 470.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-27",
+      "category": "Payroll",
+      "description": "Staff Salaries & Wages",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 20000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-25",
+      "category": "Operating Expenses",
+      "description": "Electricity",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 3100.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-31",
+      "category": "Operating Expenses",
+      "description": "Stirring Baton",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 200.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-31",
+      "category": "Operating Expenses",
+      "description": "Horse Pipe",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 450.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-08-31",
+      "category": "Operating Expenses",
+      "description": "Bank & Mobile Money Charges",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 38.77,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-02",
+      "category": "Cost of sales",
+      "description": "Packaging Materials",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 3000.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-03",
+      "category": "Cost of sales",
+      "description": "Laundry Mesh",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1250.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-06",
+      "category": "Cost of sales",
+      "description": "Delivery Costs",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 300.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-06",
+      "category": "Cost of sales",
+      "description": "Powder Detergent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 1900.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-05",
+      "category": "Cost of sales",
+      "description": "Powder Detergent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 500.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-30",
+      "category": "Operating Expenses",
+      "description": "Bank & Mobile Money Charges",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 250.12,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-10-02",
+      "category": "Operating Expenses",
+      "description": "Rent",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 11000.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-10-01",
+      "category": "Operating Expenses",
+      "description": "Water",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 2100.0,
+      "source": "Jacob",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-09-29",
+      "category": "Operating Expenses",
+      "description": "Delivery Costs",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 300.0,
+      "source": "Business Account",
+      "notes": ""
+    },
+    {
+      "dateIncurred": "2026-10-02",
+      "category": "Payroll",
+      "description": "Staff Salaries & Wages",
+      "supplier": "",
+      "paymentMethod": "M-Pesa",
+      "amount": 20000.0,
+      "source": "Jacob",
+      "notes": ""
+    }
+  ],
+  "balanceSheet": {
+    "asAt": "2026-12-31",
+    "currentAssets": [
+      {
+        "label": "Cash on Hand",
+        "amount": 0.0
+      },
+      {
+        "label": "Bank Balance",
+        "amount": 0.0
+      },
+      {
+        "label": "M-Pesa Balance",
+        "amount": 0.0
+      },
+      {
+        "label": "Accounts Receivable (Customers Owing)",
+        "amount": 0.0
+      },
+      {
+        "label": "Inventory (Detergents, Bags, etc.)",
+        "amount": 0.0
+      }
+    ],
+    "fixedAssets": [
+      {
+        "label": "Washing Machines",
+        "amount": 159995.0
+      },
+      {
+        "label": "CCTV System",
+        "amount": 9500.0
+      },
+      {
+        "label": "Weighing Scale",
+        "amount": 7000.0
+      },
+      {
+        "label": "Laundry Baskets",
+        "amount": 4350.0
+      },
+      {
+        "label": "Chairs",
+        "amount": 2200.0
+      },
+      {
+        "label": "Power Extension",
+        "amount": 3150.0
+      },
+      {
+        "label": "Cleaning Equipment (Mop, Bucket, Dust Pan)",
+        "amount": 1000.0
+      },
+      {
+        "label": "20L Buckets (White)",
+        "amount": 500.0
+      },
+      {
+        "label": "Other Buckets + Masceleneous",
+        "amount": 1900.0
+      },
+      {
+        "label": "Electric Kettle",
+        "amount": 2200.0
+      },
+      {
+        "label": "Plumbing",
+        "amount": 32020.0
+      },
+      {
+        "label": "Tokens (Electricity Deposit)",
+        "amount": 11000.0
+      },
+      {
+        "label": "3D Signage",
+        "amount": 17000.0
+      },
+      {
+        "label": "Internet Installation",
+        "amount": 1500.0
+      },
+      {
+        "label": "Dryers",
+        "amount": 0.0
+      },
+      {
+        "label": "Iron Box",
+        "amount": 10000.0
+      },
+      {
+        "label": "Ironing Boards",
+        "amount": 6800.0
+      },
+      {
+        "label": "Reception desk",
+        "amount": 10500.0
+      },
+      {
+        "label": "Cloth hanging rack",
+        "amount": 9750.0
+      },
+      {
+        "label": "Electrical Fittings",
+        "amount": 3950.0
+      },
+      {
+        "label": "Business Name Registration",
+        "amount": 1000.0
+      },
+      {
+        "label": "Padlocks",
+        "amount": 2700.0
+      },
+      {
+        "label": "Licencing",
+        "amount": 15000.0
+      },
+      {
+        "label": "Stationary",
+        "amount": 1656.0
+      },
+      {
+        "label": "July Salary",
+        "amount": 25000.0
+      },
+      {
+        "label": "August Salary",
+        "amount": 20000.0
+      },
+      {
+        "label": "September Salary",
+        "amount": 20000.0
+      },
+      {
+        "label": "October Salary",
+        "amount": 20000.0
+      },
+      {
+        "label": "Power Surge Guard",
+        "amount": 1115.0
+      },
+      {
+        "label": "Lint Removers (Tape)",
+        "amount": 743.0
+      },
+      {
+        "label": "Manual Lint Remover",
+        "amount": 250.0
+      },
+      {
+        "label": "Soft Hand Brush",
+        "amount": 60.0
+      },
+      {
+        "label": "Hard Hand Brush",
+        "amount": 60.0
+      },
+      {
+        "label": "Packaging Materials",
+        "amount": 1125.0
+      },
+      {
+        "label": "Vinegar",
+        "amount": 250.0
+      },
+      {
+        "label": "Small Towels",
+        "amount": 450.0
+      },
+      {
+        "label": "Stickers (Door, Reception Desk, Wall)",
+        "amount": 3800.0
+      },
+      {
+        "label": "Flyers/Bronchures",
+        "amount": 2300.0
+      },
+      {
+        "label": "Electricity Bill",
+        "amount": 6000.0
+      },
+      {
+        "label": "Rent",
+        "amount": 66000.0
+      },
+      {
+        "label": "Laundry Gloves",
+        "amount": 940.0
+      },
+      {
+        "label": "Cleaning Tablets",
+        "amount": 1700.0
+      },
+      {
+        "label": "Water",
+        "amount": 5100.0
+      },
+      {
+        "label": "Water pump",
+        "amount": 4300.0
+      },
+      {
+        "label": "Delivery Equipment/Vehicle",
+        "amount": 0.0
+      },
+      {
+        "label": "Other Equipment",
+        "amount": 0.0
+      }
+    ],
+    "liabilities": [
+      {
+        "label": "Supplier Balances",
+        "amount": 0.0,
+        "kind": "current"
+      },
+      {
+        "label": "Utility Bills Payable",
+        "amount": 0.0,
+        "kind": "current"
+      },
+      {
+        "label": "Staff Salaries Payable",
+        "amount": 0.0,
+        "kind": "current"
+      },
+      {
+        "label": "Loan Repayments Due",
+        "amount": 0.0,
+        "kind": "current"
+      },
+      {
+        "label": "Other Payables",
+        "amount": 0.0,
+        "kind": "current"
+      },
+      {
+        "label": "Bank Loan",
+        "amount": 0.0,
+        "kind": "longterm"
+      },
+      {
+        "label": "Equipment Loan",
+        "amount": 0.0,
+        "kind": "longterm"
+      },
+      {
+        "label": "Other Long-term Debt",
+        "amount": 0.0,
+        "kind": "longterm"
+      }
+    ],
+    "equity": {
+      "whitneyCapital": 30000.0,
+      "whitneyDrawings": -4000.0,
+      "jacobDrawings": -18900.0,
+      "retainedEarnings": 0.0
+    }
+  }
+}
