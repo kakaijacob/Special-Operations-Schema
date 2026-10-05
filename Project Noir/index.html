@@ -4,24 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Project Noir · Laundry Noir</title>
-    <meta name="description" content="Laundry Noir financial management — orders, expenditures, statements." />
+    <meta name="description" content="Laundry Noir shared books — shop entry and manager processing." />
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
-    <div class="app" id="app">
+    <div id="login-screen" class="login-screen hidden">
+      <div class="login-card">
+        <div class="brand">
+          <div class="brand-mark">LAUNDRY <span>NOIR</span></div>
+          <div class="brand-sub">Project Noir · Shared books</div>
+        </div>
+        <p class="login-lead">Shop staff submit orders &amp; expenses. Manager sees them live and runs the books.</p>
+        <form id="login-form">
+          <label>Username
+            <input name="username" autocomplete="username" required placeholder="staff or manager" />
+          </label>
+          <label>Password
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="btn primary" type="submit" style="width:100%;margin-top:0.5rem">Sign in</button>
+          <p id="login-error" class="login-error" hidden></p>
+        </form>
+        <p class="muted login-hint">Defaults: <code>staff / staff123</code> · <code>manager / manager123</code></p>
+      </div>
+    </div>
+
+    <div class="app hidden" id="app">
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-mark">LAUNDRY <span>NOIR</span></div>
-          <div class="brand-sub">Project Noir · Books</div>
+          <div class="brand-sub" id="role-label">Project Noir · Books</div>
         </div>
         <nav class="nav" id="nav"></nav>
         <div class="sidebar-actions">
+          <div class="user-chip" id="user-chip"></div>
+          <button class="btn" id="btn-refresh" type="button">Refresh data</button>
           <button class="btn" id="btn-export" type="button">Export JSON</button>
-          <label class="btn" style="cursor: pointer; text-align: center">
-            Import JSON
-            <input id="import-file" type="file" accept="application/json,.json" hidden />
-          </label>
-          <button class="btn danger" id="btn-reset" type="button">Reset to seed</button>
+          <button class="btn danger" id="btn-logout" type="button">Sign out</button>
         </div>
       </aside>
       <main class="main">

@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Laundry Noir financial management — sales, expenditures, statements",
   "scripts": {
-    "dev": "python3 -m http.server 5173 --directory .",
-    "start": "python3 -m http.server 5173 --directory .",
+    "dev": "python3 server/app.py",
+    "start": "python3 server/app.py",
     "verify": "node scripts/verify.mjs"
   }
 }

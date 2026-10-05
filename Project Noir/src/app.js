@@ -4,27 +4,26 @@ import {
   weekdayName,
   money,
   moneyKes,
-  MONTHS,
 } from "./compute.js";
-import {
-  loadSeed,
-  loadState,
-  saveState,
-  clearState,
-  ensureIds,
-  uid,
-  downloadJson,
-} from "./store.js";
+import { downloadJson } from "./store.js";
+import API from "./api.js";
 
-const VIEWS = [
-  { id: "dashboard", label: "Dashboard", subtitle: "Sales volume, revenue, spend, and profit at a glance." },
-  { id: "orders", label: "Orders", subtitle: "Key in client details and service lines — quotation is qty × unit price." },
-  { id: "expenditures", label: "Expenditures", subtitle: "Record costs by category and description; feeds the income statement." },
-  { id: "income", label: "Income Statement", subtitle: "Monthly revenue by service and costs by description (sheet logic)." },
+const MANAGER_VIEWS = [
+  { id: "dashboard", label: "Dashboard", subtitle: "Live books from shop submissions and your edits." },
+  { id: "orders", label: "Orders", subtitle: "All client orders — staff can add; you can edit and process payment/delivery." },
+  { id: "expenditures", label: "Expenditures", subtitle: "Shop and manager expense lines feeding the income statement." },
+  { id: "income", label: "Income Statement", subtitle: "Monthly revenue by service and costs by description." },
   { id: "balance", label: "Balance Sheet", subtitle: "Assets, liabilities, and owners’ capital (Jacob / Whitney)." },
   { id: "payback", label: "Payback", subtitle: "Cumulative cash flow from capital invested to recovery." },
 ];
 
+const STAFF_VIEWS = [
+  { id: "orders", label: "New order", subtitle: "Enter client & laundry details. They go straight into the shared books." },
+  { id: "expenditures", label: "New expense", subtitle: "Record shop spending. Manager sees it on the statements." },
+  { id: "mine", label: "My submissions", subtitle: "What you have sent today from this login." },
+];
+
+let user = null;
 let state = null;
 let view = "dashboard";
 let orderFilter = "";
@@ -33,11 +32,17 @@ let editingOrderId = null;
 let editingExpId = null;
 
 const el = {
+  loginScreen: document.getElementById("login-screen"),
+  app: document.getElementById("app"),
   nav: document.getElementById("nav"),
   view: document.getElementById("view"),
   title: document.getElementById("view-title"),
   subtitle: document.getElementById("view-subtitle"),
   toast: document.getElementById("toast"),
+  roleLabel: document.getElementById("role-label"),
+  userChip: document.getElementById("user-chip"),
+  loginForm: document.getElementById("login-form"),
+  loginError: document.getElementById("login-error"),
 };
 
 function toast(msg) {
@@ -46,8 +51,12 @@ function toast(msg) {
   setTimeout(() => el.toast.classList.remove("show"), 2200);
 }
 
-function persist() {
-  saveState(state);
+function isManager() {
+  return user?.role === "manager";
+}
+
+function viewsForRole() {
+  return isManager() ? MANAGER_VIEWS : STAFF_VIEWS;
 }
 
 function computed() {
@@ -56,7 +65,7 @@ function computed() {
 
 function badge(status) {
   const s = (status || "").toLowerCase();
-  const cls = s.includes("paid") || s.includes("delivered") ? s.includes("pending") ? "pending" : s.includes("paid") ? "paid" : "delivered" : "pending";
+  const cls = s.includes("pending") ? "pending" : s.includes("paid") || s.includes("delivered") ? (s.includes("paid") ? "paid" : "delivered") : "pending";
   return `<span class="badge ${cls}">${escapeHtml(status || "—")}</span>`;
 }
 
@@ -74,10 +83,35 @@ function optionList(values, selected = "") {
     .join("");
 }
 
+async function refreshState() {
+  state = await API.state();
+}
+
+function showApp() {
+  el.loginScreen.classList.add("hidden");
+  el.app.classList.remove("hidden");
+  el.roleLabel.textContent = isManager() ? "Manager · Shared books" : "Shop staff · Submit details";
+  el.userChip.textContent = `${user.name} (${user.role})`;
+  view = isManager() ? "dashboard" : "orders";
+  render();
+}
+
+function showLogin(err = "") {
+  el.app.classList.add("hidden");
+  el.loginScreen.classList.remove("hidden");
+  if (err) {
+    el.loginError.hidden = false;
+    el.loginError.textContent = err;
+  } else {
+    el.loginError.hidden = true;
+  }
+}
+
 function renderNav() {
-  el.nav.innerHTML = VIEWS.map(
-    (v) => `<button type="button" data-view="${v.id}" class="${v.id === view ? "active" : ""}">${v.label}</button>`
-  ).join("");
+  const views = viewsForRole();
+  el.nav.innerHTML = views
+    .map((v) => `<button type="button" data-view="${v.id}" class="${v.id === view ? "active" : ""}">${v.label}</button>`)
+    .join("");
   el.nav.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
       view = btn.dataset.view;
@@ -89,23 +123,28 @@ function renderNav() {
 }
 
 function render() {
-  const meta = VIEWS.find((v) => v.id === view);
+  const meta = viewsForRole().find((v) => v.id === view) || viewsForRole()[0];
+  view = meta.id;
   el.title.textContent = meta.label;
   el.subtitle.textContent = meta.subtitle;
   renderNav();
   const c = computed();
   if (view === "dashboard") el.view.innerHTML = renderDashboard(c);
-  if (view === "orders") el.view.innerHTML = renderOrders(c);
-  if (view === "expenditures") el.view.innerHTML = renderExpenditures(c);
+  if (view === "orders") el.view.innerHTML = renderOrders();
+  if (view === "expenditures") el.view.innerHTML = renderExpenditures();
   if (view === "income") el.view.innerHTML = renderIncome(c);
   if (view === "balance") el.view.innerHTML = renderBalance(c);
   if (view === "payback") el.view.innerHTML = renderPayback(c);
+  if (view === "mine") el.view.innerHTML = renderMine();
   bindViewEvents();
 }
 
 function renderDashboard(c) {
   const d = c.dashboard;
   const cls = (n) => (n < 0 ? "neg" : n > 0 ? "pos" : "");
+  const recentStaffOrders = state.orders
+    .filter((o) => o.submittedBy && o.submittedBy !== "seed" && o.submittedBy !== "manager")
+    .slice(0, 8);
   return `
     <div class="kpi-grid">
       <div class="kpi"><div class="label">Sales volume</div><div class="value">${d.salesVolume}</div></div>
@@ -120,6 +159,30 @@ function renderDashboard(c) {
     <div class="panel" style="margin-top:1rem">
       <h2>Collections pulse</h2>
       <p class="muted">${d.paid} paid · ${d.pending} pending · capital in books ${moneyKes(d.totalCapital)}</p>
+    </div>
+    <div class="panel">
+      <h2>Latest shop submissions</h2>
+      ${
+        recentStaffOrders.length
+          ? `<div class="table-wrap"><table>
+              <thead><tr><th>When</th><th>By</th><th>Customer</th><th>Service</th><th class="num">Quotation</th><th>Pay</th></tr></thead>
+              <tbody>
+                ${recentStaffOrders
+                  .map(
+                    (o) => `<tr>
+                      <td>${escapeHtml(o.createdAt || o.orderDate || "—")}</td>
+                      <td>${escapeHtml(o.submittedBy)}</td>
+                      <td>${escapeHtml(o.customerName)}</td>
+                      <td>${escapeHtml(o.service)}</td>
+                      <td class="num">${money(quotation(o.quantity, o.unitPrice))}</td>
+                      <td>${badge(o.paymentStatus)}</td>
+                    </tr>`
+                  )
+                  .join("")}
+              </tbody>
+            </table></div>`
+          : `<p class="muted">No staff submissions yet — when the shop enters an order, it appears here and rolls into the statements.</p>`
+      }
     </div>
   `;
 }
@@ -151,27 +214,36 @@ function orderFormValues() {
 function renderOrders() {
   const draft = orderFormValues();
   const q = orderFilter.trim().toLowerCase();
-  const rows = state.orders
+  let rows = state.orders.slice();
+  if (!isManager()) {
+    // Staff mainly add; still show recent shared list filtered lightly
+    rows = rows.slice(0, 40);
+  }
+  rows = rows
     .filter((o) => {
       if (!q) return true;
-      return [o.customerName, o.customerId, o.service, o.building, o.location, o.paymentStatus]
+      return [o.customerName, o.customerId, o.service, o.building, o.location, o.paymentStatus, o.submittedBy]
         .join(" ")
         .toLowerCase()
         .includes(q);
-    })
-    .slice()
-    .reverse();
+    });
 
   const services = [
-    ...new Set([...(state.catalog.revenueServices || []), ...state.orders.map((o) => o.service).filter(Boolean), "Sweaters", "Wedding Gown"]),
+    ...new Set([
+      ...(state.catalog.revenueServices || []),
+      ...state.orders.map((o) => o.service).filter(Boolean),
+      "Sweaters",
+      "Wedding Gown",
+    ]),
   ];
 
   return `
     <div class="panel">
-      <h2>${editingOrderId ? "Edit order" : "New client order"}</h2>
+      <h2>${editingOrderId ? "Edit order" : isManager() ? "Add / process order" : "Submit client order"}</h2>
+      ${!isManager() ? `<p class="muted" style="margin-top:-0.4rem;margin-bottom:0.8rem">This saves to the shared shop books. Your manager sees it immediately on the dashboard and income statement.</p>` : ""}
       <form class="grid" id="order-form">
         <label>Customer name<input name="customerName" required value="${escapeHtml(draft.customerName)}" /></label>
-        <label>Customer ID / phone<input name="customerId" value="${escapeHtml(draft.customerId)}" /></label>
+        <label>Customer ID / phone<input name="customerId" value="${escapeHtml(draft.customerId)}" inputmode="tel" /></label>
         <label>Order date<input type="date" name="orderDate" required value="${escapeHtml(draft.orderDate || "")}" /></label>
         <label>Delivery date<input type="date" name="deliveryDate" value="${escapeHtml(draft.deliveryDate || "")}" /></label>
         <label>Customer tag<select name="customerTag">${optionList(state.catalog.customerTags, draft.customerTag)}</select></label>
@@ -185,7 +257,7 @@ function renderOrders() {
         <label class="span-4">Notes<textarea name="notes">${escapeHtml(draft.notes || "")}</textarea></label>
         <div class="actions">
           ${editingOrderId ? `<button type="button" class="btn ghost" id="cancel-order-edit">Cancel</button>` : ""}
-          <button type="submit" class="btn primary">${editingOrderId ? "Save order" : "Add order"}</button>
+          <button type="submit" class="btn primary">${editingOrderId ? "Save order" : isManager() ? "Add order" : "Submit to books"}</button>
         </div>
       </form>
     </div>
@@ -200,7 +272,7 @@ function renderOrders() {
             <tr>
               <th>Customer</th><th>Order</th><th>Day</th><th>Service</th>
               <th class="num">Qty</th><th class="num">Unit</th><th class="num">Quotation</th>
-              <th>Pay</th><th>Delivery</th><th></th>
+              <th>Pay</th><th>By</th>${isManager() ? "<th></th>" : ""}
             </tr>
           </thead>
           <tbody>
@@ -222,15 +294,19 @@ function renderOrders() {
                         <td class="num">${money(o.unitPrice)}</td>
                         <td class="num">${money(qt)}</td>
                         <td>${badge(o.paymentStatus)}</td>
-                        <td>${badge(o.deliveryStatus)}</td>
-                        <td>
-                          <button class="btn ghost" data-edit-order="${o.id}" type="button">Edit</button>
-                          <button class="btn danger ghost" data-del-order="${o.id}" type="button">Del</button>
-                        </td>
+                        <td class="muted">${escapeHtml(o.submittedBy || "—")}</td>
+                        ${
+                          isManager()
+                            ? `<td>
+                                <button class="btn ghost" data-edit-order="${o.id}" type="button">Edit</button>
+                                <button class="btn danger ghost" data-del-order="${o.id}" type="button">Del</button>
+                              </td>`
+                            : ""
+                        }
                       </tr>`;
                     })
                     .join("")
-                : `<tr><td colspan="10" class="empty">No orders yet — add a client order above.</td></tr>`
+                : `<tr><td colspan="10" class="empty">No orders yet.</td></tr>`
             }
           </tbody>
         </table>
@@ -261,16 +337,15 @@ function expFormValues() {
 function renderExpenditures() {
   const draft = expFormValues();
   const q = expFilter.trim().toLowerCase();
-  const rows = state.expenditures
-    .filter((e) => {
-      if (!q) return true;
-      return [e.category, e.description, e.source, e.paymentMethod, e.supplier]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-    })
-    .slice()
-    .reverse();
+  let rows = state.expenditures.slice();
+  if (!isManager()) rows = rows.slice(0, 40);
+  rows = rows.filter((e) => {
+    if (!q) return true;
+    return [e.category, e.description, e.source, e.paymentMethod, e.supplier, e.submittedBy]
+      .join(" ")
+      .toLowerCase()
+      .includes(q);
+  });
 
   const descriptions = [
     ...new Set([
@@ -282,7 +357,7 @@ function renderExpenditures() {
 
   return `
     <div class="panel">
-      <h2>${editingExpId ? "Edit expenditure" : "New expenditure"}</h2>
+      <h2>${editingExpId ? "Edit expenditure" : isManager() ? "Add expenditure" : "Submit expenditure"}</h2>
       <form class="grid" id="exp-form">
         <label>Date incurred<input type="date" name="dateIncurred" required value="${escapeHtml(draft.dateIncurred || "")}" /></label>
         <label>Category<select name="category">${optionList(state.catalog.expenseCategories, draft.category)}</select></label>
@@ -297,7 +372,7 @@ function renderExpenditures() {
         <label class="span-4">Notes<textarea name="notes">${escapeHtml(draft.notes || "")}</textarea></label>
         <div class="actions">
           ${editingExpId ? `<button type="button" class="btn ghost" id="cancel-exp-edit">Cancel</button>` : ""}
-          <button type="submit" class="btn primary">${editingExpId ? "Save expenditure" : "Add expenditure"}</button>
+          <button type="submit" class="btn primary">${editingExpId ? "Save expenditure" : isManager() ? "Add expenditure" : "Submit to books"}</button>
         </div>
       </form>
     </div>
@@ -311,7 +386,7 @@ function renderExpenditures() {
           <thead>
             <tr>
               <th>Date</th><th>Category</th><th>Description</th><th>Method</th>
-              <th>Source</th><th class="num">Amount</th><th></th>
+              <th>Source</th><th>By</th><th class="num">Amount</th>${isManager() ? "<th></th>" : ""}
             </tr>
           </thead>
           <tbody>
@@ -325,15 +400,20 @@ function renderExpenditures() {
                         <td>${escapeHtml(e.description)}</td>
                         <td>${escapeHtml(e.paymentMethod)}</td>
                         <td>${escapeHtml(e.source)}</td>
+                        <td class="muted">${escapeHtml(e.submittedBy || "—")}</td>
                         <td class="num">${money(e.amount)}</td>
-                        <td>
-                          <button class="btn ghost" data-edit-exp="${e.id}" type="button">Edit</button>
-                          <button class="btn danger ghost" data-del-exp="${e.id}" type="button">Del</button>
-                        </td>
+                        ${
+                          isManager()
+                            ? `<td>
+                                <button class="btn ghost" data-edit-exp="${e.id}" type="button">Edit</button>
+                                <button class="btn danger ghost" data-del-exp="${e.id}" type="button">Del</button>
+                              </td>`
+                            : ""
+                        }
                       </tr>`
                     )
                     .join("")
-                : `<tr><td colspan="7" class="empty">No expenditures yet.</td></tr>`
+                : `<tr><td colspan="8" class="empty">No expenditures yet.</td></tr>`
             }
           </tbody>
         </table>
@@ -342,36 +422,86 @@ function renderExpenditures() {
   `;
 }
 
-function monthCells(obj, months, strong = false) {
-  return months.map((m) => {
-    const v = obj[m] || 0;
-    const cls = v < 0 ? "neg" : "";
-    return `<td class="num ${cls}">${money(v)}</td>`;
-  }).join("");
+function renderMine() {
+  const mineOrders = state.orders.filter((o) => o.submittedBy === user.username);
+  const mineExps = state.expenditures.filter((e) => e.submittedBy === user.username);
+  return `
+    <div class="panel">
+      <h2>Orders you submitted (${mineOrders.length})</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Customer</th><th>Service</th><th class="num">Quotation</th><th>Pay</th></tr></thead>
+          <tbody>
+            ${
+              mineOrders.length
+                ? mineOrders
+                    .map(
+                      (o) => `<tr>
+                        <td>${escapeHtml(o.orderDate)}</td>
+                        <td>${escapeHtml(o.customerName)}</td>
+                        <td>${escapeHtml(o.service)}</td>
+                        <td class="num">${money(quotation(o.quantity, o.unitPrice))}</td>
+                        <td>${badge(o.paymentStatus)}</td>
+                      </tr>`
+                    )
+                    .join("")
+                : `<tr><td colspan="5" class="empty">No submissions yet.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Expenditures you submitted (${mineExps.length})</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Description</th><th class="num">Amount</th></tr></thead>
+          <tbody>
+            ${
+              mineExps.length
+                ? mineExps
+                    .map(
+                      (e) => `<tr>
+                        <td>${escapeHtml(e.dateIncurred)}</td>
+                        <td>${escapeHtml(e.description)}</td>
+                        <td class="num">${money(e.amount)}</td>
+                      </tr>`
+                    )
+                    .join("")
+                : `<tr><td colspan="3" class="empty">No submissions yet.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function monthCells(obj, months) {
+  return months
+    .map((m) => {
+      const v = obj[m] || 0;
+      return `<td class="num ${v < 0 ? "neg" : ""}">${money(v)}</td>`;
+    })
+    .join("");
 }
 
 function renderIncome(c) {
   const { income } = c;
   const months = income.months;
   const head = months.map((m) => `<th class="num">${m}</th>`).join("");
-
   const block = (title, rows, totals, totalsLabel) => `
     <div class="section-title">${title}</div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Line</th>${head}</tr></thead>
         <tbody>
-          ${rows
-            .map(
-              (r) => `<tr><td>${escapeHtml(r.label)}</td>${monthCells(r.months, months)}</tr>`
-            )
-            .join("")}
+          ${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td>${monthCells(r.months, months)}</tr>`).join("")}
           <tr class="row-strong"><td>${totalsLabel}</td>${monthCells(totals, months)}</tr>
         </tbody>
       </table>
     </div>
   `;
-
   return `
     <div class="panel">
       <h2>LAUNDRY NOIR · Income Statement ${income.year}</h2>
@@ -414,10 +544,8 @@ function renderBalance(c) {
         </tr>`
       )
       .join("");
-
   const current = b.currentAssets.map((r) => ({ ...r, _kind: "current" }));
   const fixed = b.fixedAssets.map((r) => ({ ...r, _kind: "fixed" }));
-
   return `
     <div class="panel">
       <h2>Balance Sheet · as at ${escapeHtml(b.asAt || "—")}</h2>
@@ -425,12 +553,10 @@ function renderBalance(c) {
       <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Amount (KES)</th></tr></thead>
         <tbody>${assetRows(current)}
         <tr class="row-strong"><td>Total Current Assets</td><td class="num">${money(b.totalCurrentAssets)}</td></tr></tbody></table></div>
-
       <div class="section-title">Fixed assets</div>
       <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Amount (KES)</th></tr></thead>
         <tbody>${assetRows(fixed)}
         <tr class="row-strong"><td>Total Fixed Assets</td><td class="num">${money(b.totalFixedAssets)}</td></tr></tbody></table></div>
-
       <div class="section-title">Equity</div>
       <form class="grid" id="equity-form">
         <label>Whitney capital invested<input type="number" step="0.01" name="whitneyCapital" value="${b.whitneyCapital}" /></label>
@@ -446,13 +572,10 @@ function renderBalance(c) {
             <tr><td>Whitney's Capital Invested</td><td class="num">${money(b.whitneyCapital)}</td><td class="num muted">${(b.whitneyShare * 100).toFixed(2)}%</td></tr>
             <tr class="row-strong"><td>Total Capital Invested</td><td class="num">${money(b.totalCapital)}</td><td class="num">100%</td></tr>
             <tr><td>Current Year Profit</td><td class="num ${b.currentYearProfit < 0 ? "neg" : ""}">${money(b.currentYearProfit)}</td><td></td></tr>
-            <tr><td>Whitney Drawings</td><td class="num">${money(b.whitneyDrawings)}</td><td></td></tr>
-            <tr><td>Jacob Drawings</td><td class="num">${money(b.jacobDrawings)}</td><td></td></tr>
             <tr class="row-strong"><td>Total Equity</td><td class="num">${money(b.totalEquity)}</td><td></td></tr>
           </tbody>
         </table>
       </div>
-      <p class="muted" style="margin-top:0.75rem">Jacob capital follows the sheet: Total Fixed Assets − Whitney Capital.</p>
     </div>
   `;
 }
@@ -462,7 +585,6 @@ function renderPayback(c) {
   return `
     <div class="panel">
       <h2>Payback Period Analysis</h2>
-      <p class="muted">Initial investment = total capital invested. Monthly net cash flow = net profit after tax + depreciation.</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -504,11 +626,10 @@ function readForm(form) {
 function bindViewEvents() {
   const orderForm = document.getElementById("order-form");
   if (orderForm) {
-    orderForm.addEventListener("submit", (e) => {
+    orderForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const raw = readForm(orderForm);
       const row = {
-        id: editingOrderId || uid("ord"),
         customerName: raw.customerName,
         customerId: raw.customerId,
         orderDate: raw.orderDate,
@@ -523,17 +644,20 @@ function bindViewEvents() {
         deliveryStatus: raw.deliveryStatus,
         notes: raw.notes || "",
       };
-      row.quotation = quotation(row.quantity, row.unitPrice);
-      if (editingOrderId) {
-        const idx = state.orders.findIndex((o) => o.id === editingOrderId);
-        if (idx >= 0) state.orders[idx] = row;
-      } else {
-        state.orders.push(row);
+      try {
+        if (editingOrderId && isManager()) {
+          await API.updateOrder(editingOrderId, row);
+          toast("Order updated");
+        } else {
+          await API.createOrder(row);
+          toast(isManager() ? "Order saved" : "Submitted to shared books");
+        }
+        editingOrderId = null;
+        await refreshState();
+        render();
+      } catch (err) {
+        alert(err.message);
       }
-      editingOrderId = null;
-      persist();
-      toast("Order saved");
-      render();
     });
   }
 
@@ -544,7 +668,6 @@ function bindViewEvents() {
 
   document.getElementById("order-search")?.addEventListener("input", (e) => {
     orderFilter = e.target.value;
-    // soft re-render table only would be nicer; full render is fine at this scale
     const start = e.target.selectionStart;
     render();
     const input = document.getElementById("order-search");
@@ -562,22 +685,25 @@ function bindViewEvents() {
     });
   });
   document.querySelectorAll("[data-del-order]").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       if (!confirm("Delete this order line?")) return;
-      state.orders = state.orders.filter((o) => o.id !== btn.dataset.delOrder);
-      persist();
-      toast("Order deleted");
-      render();
+      try {
+        await API.deleteOrder(btn.dataset.delOrder);
+        await refreshState();
+        toast("Order deleted");
+        render();
+      } catch (err) {
+        alert(err.message);
+      }
     });
   });
 
   const expForm = document.getElementById("exp-form");
   if (expForm) {
-    expForm.addEventListener("submit", (e) => {
+    expForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const raw = readForm(expForm);
       const row = {
-        id: editingExpId || uid("exp"),
         dateIncurred: raw.dateIncurred,
         category: raw.category,
         description: raw.description,
@@ -587,16 +713,20 @@ function bindViewEvents() {
         source: raw.source,
         notes: raw.notes || "",
       };
-      if (editingExpId) {
-        const idx = state.expenditures.findIndex((x) => x.id === editingExpId);
-        if (idx >= 0) state.expenditures[idx] = row;
-      } else {
-        state.expenditures.push(row);
+      try {
+        if (editingExpId && isManager()) {
+          await API.updateExp(editingExpId, row);
+          toast("Expenditure updated");
+        } else {
+          await API.createExp(row);
+          toast(isManager() ? "Expenditure saved" : "Submitted to shared books");
+        }
+        editingExpId = null;
+        await refreshState();
+        render();
+      } catch (err) {
+        alert(err.message);
       }
-      editingExpId = null;
-      persist();
-      toast("Expenditure saved");
-      render();
     });
   }
 
@@ -624,95 +754,121 @@ function bindViewEvents() {
     });
   });
   document.querySelectorAll("[data-del-exp]").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       if (!confirm("Delete this expenditure?")) return;
-      state.expenditures = state.expenditures.filter((x) => x.id !== btn.dataset.delExp);
-      persist();
-      toast("Expenditure deleted");
-      render();
+      try {
+        await API.deleteExp(btn.dataset.delExp);
+        await refreshState();
+        toast("Expenditure deleted");
+        render();
+      } catch (err) {
+        alert(err.message);
+      }
     });
   });
 
   document.querySelectorAll("[data-asset-kind]").forEach((input) => {
-    input.addEventListener("change", () => {
+    input.addEventListener("change", async () => {
       const kind = input.dataset.assetKind;
       const idx = Number(input.dataset.assetIdx);
       const amount = Number(input.value) || 0;
-      if (kind === "current") state.balanceSheet.currentAssets[idx].amount = amount;
-      if (kind === "fixed") state.balanceSheet.fixedAssets[idx].amount = amount;
-      persist();
-      toast("Asset updated");
-      render();
+      const bs = structuredClone(state.balanceSheet);
+      if (kind === "current") bs.currentAssets[idx].amount = amount;
+      if (kind === "fixed") bs.fixedAssets[idx].amount = amount;
+      try {
+        await API.updateBalance(bs);
+        await refreshState();
+        toast("Asset updated");
+        render();
+      } catch (err) {
+        alert(err.message);
+      }
     });
   });
 
   const equityForm = document.getElementById("equity-form");
   if (equityForm) {
-    equityForm.addEventListener("submit", (e) => {
+    equityForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const raw = readForm(equityForm);
-      state.balanceSheet.equity = {
-        ...state.balanceSheet.equity,
+      const bs = structuredClone(state.balanceSheet);
+      bs.equity = {
+        ...bs.equity,
         whitneyCapital: Number(raw.whitneyCapital) || 0,
         whitneyDrawings: Number(raw.whitneyDrawings) || 0,
         jacobDrawings: Number(raw.jacobDrawings) || 0,
         retainedEarnings: Number(raw.retainedEarnings) || 0,
       };
-      persist();
-      toast("Equity updated");
-      render();
+      try {
+        await API.updateBalance(bs);
+        await refreshState();
+        toast("Equity updated");
+        render();
+      } catch (err) {
+        alert(err.message);
+      }
     });
   }
 }
 
 async function boot() {
-  const saved = loadState();
-  if (saved) {
-    state = ensureIds(saved);
-  } else {
-    const seed = await loadSeed();
-    state = ensureIds(seed);
-    persist();
+  const healthy = await API.health();
+  if (!healthy) {
+    document.body.innerHTML = `
+      <div class="login-screen">
+        <div class="login-card">
+          <div class="brand-mark">LAUNDRY <span>NOIR</span></div>
+          <p>Start the shared server so shop &amp; manager use the same books:</p>
+          <pre style="white-space:pre-wrap;background:#0c0d10;padding:1rem;border-radius:10px;color:#ece4d4">cd "Project Noir"
+python3 server/app.py</pre>
+          <p class="muted">Then open this page again (http://localhost:5173).</p>
+        </div>
+      </div>`;
+    return;
   }
 
-  document.getElementById("btn-export").addEventListener("click", () => {
-    downloadJson(state);
-    toast("Exported JSON");
-  });
-
-  document.getElementById("btn-reset").addEventListener("click", async () => {
-    if (!confirm("Reset all local data to the spreadsheet seed?")) return;
-    clearState();
-    state = ensureIds(await loadSeed());
-    persist();
-    view = "dashboard";
-    toast("Reset to seed");
-    render();
-  });
-
-  document.getElementById("import-file").addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  el.loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const raw = readForm(el.loginForm);
     try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      if (!parsed.orders || !parsed.expenditures || !parsed.catalog) {
-        throw new Error("Missing orders / expenditures / catalog");
-      }
-      state = ensureIds(parsed);
-      persist();
-      toast("Imported JSON");
-      render();
+      const data = await API.login(raw.username, raw.password);
+      user = data.user;
+      await refreshState();
+      showApp();
+      toast(`Signed in as ${user.role}`);
     } catch (err) {
-      alert(`Import failed: ${err.message}`);
-    } finally {
-      e.target.value = "";
+      showLogin(err.message);
     }
   });
 
-  render();
+  document.getElementById("btn-logout").addEventListener("click", async () => {
+    await API.logout();
+    user = null;
+    state = null;
+    showLogin();
+  });
+
+  document.getElementById("btn-refresh").addEventListener("click", async () => {
+    await refreshState();
+    toast("Refreshed");
+    render();
+  });
+
+  document.getElementById("btn-export").addEventListener("click", () => {
+    downloadJson(state, `project-noir-${user.role}.json`);
+    toast("Exported JSON");
+  });
+
+  const me = await API.me();
+  if (me.user) {
+    user = me.user;
+    await refreshState();
+    showApp();
+  } else {
+    showLogin();
+  }
 }
 
 boot().catch((err) => {
-  el.view.innerHTML = `<div class="panel"><h2>Could not start Project Noir</h2><p class="muted">${escapeHtml(err.message)}</p></div>`;
+  showLogin(err.message);
 });
