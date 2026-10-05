@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Noir · Laundry Noir</title>
+    <meta name="description" content="Laundry Noir financial management — orders, expenditures, statements." />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">LAUNDRY <span>NOIR</span></div>
+          <div class="brand-sub">Project Noir · Books</div>
+        </div>
+        <nav class="nav" id="nav"></nav>
+        <div class="sidebar-actions">
+          <button class="btn" id="btn-export" type="button">Export JSON</button>
+          <label class="btn" style="cursor: pointer; text-align: center">
+            Import JSON
+            <input id="import-file" type="file" accept="application/json,.json" hidden />
+          </label>
+          <button class="btn danger" id="btn-reset" type="button">Reset to seed</button>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div>
+            <h1 id="view-title">Dashboard</h1>
+            <p id="view-subtitle">Live view of Laundry Noir financial books.</p>
+          </div>
+        </div>
+        <div id="view"></div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
