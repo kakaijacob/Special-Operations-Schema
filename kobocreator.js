@@ -1374,20 +1374,20 @@ function getSelectableMenteeFacilities_(data, header) {
 }
 
 /**
- * One authoritative record per mentee posting (Mentee ID + Facility Code).
+ * One authoritative record per mentee program posting.
  *
- * The mentee database often stores dual-curriculum people as two Active rows
- * (one MENTORS Curriculum, one Newborn Curriculum) rather than a single
- * "Both" row. Earlier logic let the last row win wholesale, which wiped the
- * other program's eligibility — e.g. Immaculate Ngina (759809396 at Kibwezi)
- * disappeared from EmONC choices when her Newborn row came later, and the
- * reverse when row order flipped.
+ * Last row still wins — that is intentional. A mentee who was later
+ * deactivated (or moved) must not keep an obsolete Active state from an
+ * earlier row, or they reappear in Kobo choices after leaving.
  *
- * Merge rules:
- * - Active rows OR their program flags onto the posting.
- * - Inactive rows clear only the program(s) they name.
- * - Demographics (name spelling, facility label) still follow the latest row.
- * - Program label becomes "Both" when both curricula are Active.
+ * The posting key is Mentee ID + Facility Code + Program family, not ID +
+ * facility alone. Dual-curriculum people are often stored as two Active rows
+ * (MENTORS Curriculum and Newborn Curriculum) rather than one "Both" row.
+ * Collapsing those onto one key made the later curriculum wipe the earlier
+ * one (e.g. Immaculate Ngina / 759809396 at Kibwezi dropped from EmONC when
+ * her Newborn row came last). Scoping last-wins per program keeps
+ * deactivation correct within each curriculum without letting programs
+ * overwrite each other.
  *
  * Program and Status are normalised because the database is typed by hand
  * ("Both", "both ", "MENTORS curriculum" all occur).
@@ -1417,58 +1417,34 @@ function resolveMenteeRecords_(data, header) {
 
     var cleanedID = String(rawID).replace(/\s+/g, "").trim();
     var cleanedCode = String(code).trim();
-    var normalizedProgram = String(program)
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "_");
+    var normalizedProgram = normalizeMenteeProgramFamily_(program);
+    if (!normalizedProgram) continue;
+
     var isActive =
       String(status == null ? "" : status).trim().toLowerCase() === "active";
-    var rowIsEmONC =
-      normalizedProgram === "mentors_curriculum" ||
-      normalizedProgram === "both";
-    var rowIsNewborn =
-      normalizedProgram === "newborn_curriculum" ||
-      normalizedProgram === "both";
 
-    var key = cleanedID + "|" + cleanedCode;
-    var existing = byPosting[key];
+    // Last row wins within this mentee + facility + program family.
+    var key = cleanedID + "|" + cleanedCode + "|" + normalizedProgram;
+    if (!byPosting[key]) order.push(key);
 
-    if (!existing) {
-      order.push(key);
-      byPosting[key] = {
-        county: county,
-        facility: facility,
-        code: cleanedCode,
-        program: program,
-        name: name,
-        menteeId: cleanedID,
-        isActive: isActive,
-        isEmONCMentee: isActive && rowIsEmONC,
-        isNewbornMentee: isActive && rowIsNewborn,
-        choiceName: cleanedID + "_" + cleanForKobo(name)
-      };
-      continue;
-    }
-
-    // Latest row wins for display fields (name casing, facility spelling).
-    existing.county = county;
-    existing.facility = facility;
-    existing.code = cleanedCode;
-    existing.name = name;
-    existing.choiceName = cleanedID + "_" + cleanForKobo(name);
-
-    if (isActive) {
-      // Keep every Active curriculum enrollment for this posting.
-      if (rowIsEmONC) existing.isEmONCMentee = true;
-      if (rowIsNewborn) existing.isNewbornMentee = true;
-    } else {
-      // Deactivation applies only to the program(s) named on this row.
-      if (rowIsEmONC) existing.isEmONCMentee = false;
-      if (rowIsNewborn) existing.isNewbornMentee = false;
-    }
-
-    existing.isActive = existing.isEmONCMentee || existing.isNewbornMentee;
-    existing.program = displayProgramForMenteeRecord_(existing);
+    byPosting[key] = {
+      county: county,
+      facility: facility,
+      code: cleanedCode,
+      program: program,
+      name: name,
+      menteeId: cleanedID,
+      isActive: isActive,
+      isEmONCMentee:
+        isActive &&
+        (normalizedProgram === "mentors_curriculum" ||
+          normalizedProgram === "both"),
+      isNewbornMentee:
+        isActive &&
+        (normalizedProgram === "newborn_curriculum" ||
+          normalizedProgram === "both"),
+      choiceName: cleanedID + "_" + cleanForKobo(name)
+    };
   }
 
   var records = [];
@@ -1481,13 +1457,24 @@ function resolveMenteeRecords_(data, header) {
 }
 
 /**
- * Label stored on the resolved posting for traceability in choices sheets.
+ * Canonical program family used in the mentee posting key.
+ * Returns "" for unrecognized values so they never create a posting.
  */
-function displayProgramForMenteeRecord_(record) {
-  if (record.isEmONCMentee && record.isNewbornMentee) return "Both";
-  if (record.isEmONCMentee) return "MENTORS Curriculum";
-  if (record.isNewbornMentee) return "Newborn Curriculum";
-  return record.program || "";
+function normalizeMenteeProgramFamily_(program) {
+  var normalized = String(program == null ? "" : program)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
+  if (
+    normalized === "mentors_curriculum" ||
+    normalized === "newborn_curriculum" ||
+    normalized === "both"
+  ) {
+    return normalized;
+  }
+
+  return "";
 }
 
 /**
