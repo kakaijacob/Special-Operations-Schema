@@ -1,851 +1,544 @@
-# Mentee Mapping Tool (Kobo)
-
-Facility-led Kobo form for **maternity nurse incharges** to **activate**, **deactivate**, or **reactivate** mentees at their facility.
-
-One mentee per submission. Repeat the form for additional mentees.
+# Mentee Mapping Tool — Survey
 
 **Form title:** Mentee Mapping Tool  
 **Form ID:** `mentee_mapping_tool`  
-**Version:** 2026.04.01
+**Who fills it:** Maternity nurse incharge (or designated maternity lead)  
+**Rule:** One mentee per submission
 
 ---
 
-# SECTION A — Welcome & role
+## Section A — Welcome
 
 ---
 
-### Q1. Intro note
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `intro_note` |
-| **Label** | Mentee Mapping Tool |
-| **Hint** | For maternity nurse incharges. Use this form to activate a new mentee, deactivate a mentee who has left or stopped, or reactivate a previously deactivated mentee at your facility. |
+**NOTE**
+
+**Mentee Mapping Tool**
+
+This form is for maternity nurse incharges. Use it to activate a new mentee, deactivate a mentee who has left or stopped participating, or reactivate a previously deactivated mentee at your facility.
+
+Submit once per mentee. Open the form again for the next mentee.
 
 ---
 
-### Q2. Are you the maternity nurse incharge?
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `confirm_incharge` |
-| **Label** | Are you the maternity nurse incharge (or designated maternity lead) for this facility? |
-| **Required** | Yes |
-| **Choices** | `yes` = Yes · `no` = No |
+**Q. Are you the maternity nurse incharge (or designated maternity lead) for this facility?**  
+*Required*
 
-**If No** → show stop note (Q3) and end. No further questions.
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q3. Stop — not authorized *(only if Q2 = No)*
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `stop_not_incharge` |
-| **Relevant** | `${confirm_incharge} = 'no'` |
-| **Label** | This tool is for the maternity nurse incharge or designated maternity lead only. Please hand the device to the incharge, or exit without submitting. |
+**NOTE** *(only if No)*
+
+This tool is for the maternity nurse incharge or designated maternity lead only. Please hand the device to the incharge, or exit without submitting.
 
 ---
 
-# SECTION B — Facility context
+## Section B — Your facility
 
-*Shown only when Q2 = Yes.*
-
----
-
-### Q4. County
-| | |
-|--|--|
-| **Type** | `select_one counties` |
-| **Name** | `county` |
-| **Label** | County |
-| **Required** | Yes |
-| **Relevant** | `${confirm_incharge} = 'yes'` |
-| **Appearance** | `minimal` or search |
-| **Choices** | From master facilities list (e.g. Kakamega, …) |
+*(Shown only if Yes above)*
 
 ---
 
-### Q5. Facility
-| | |
-|--|--|
-| **Type** | `select_one facilities` |
-| **Name** | `facility` |
-| **Label** | Facility |
-| **Required** | Yes |
-| **Relevant** | `${confirm_incharge} = 'yes'` |
-| **Choice filter** | `county = ${county}` |
-| **Appearance** | search |
-| **Example** | Malava Sub County Hospital |
+**Q. County**  
+*Required · search*
+
+- [ ] Kakamega
+- [ ] *(other counties from master facilities list)*
 
 ---
 
-### Q6. Facility Code (DHIS)
-| | |
-|--|--|
-| **Type** | `calculate` *(preferred)* or `text` |
-| **Name** | `facility_code` |
-| **Label** | Facility Code |
-| **Required** | Yes (if text) |
-| **Constraint** | `regex(., '^\d{1,5}$')` |
-| **Constraint message** | Facility Code must be up to 5 digits. |
-| **Hint** | Prefer auto-fill from the selected facility (e.g. Malava → `15996`). |
+**Q. Facility**  
+*Required · search · filtered by County selected above*
+
+- [ ] Malava Sub County Hospital
+- [ ] *(other facilities in the selected county)*
 
 ---
 
-### Q7. Facility confirmation note
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `facility_confirm` |
-| **Label** | You are mapping mentees for: **${facility}** (Code ${facility_code}), ${county}. |
+**Q. Facility Code**  
+*Auto-filled from Facility · or enter DHIS code (up to 5 digits)*  
+*Required*
+
+`_______________`  
+*Example: 15996*
 
 ---
 
-# SECTION C — Mapping action
+**NOTE**
+
+You are mapping mentees for: **${Facility}** (Code ${Facility Code}), ${County}.
 
 ---
 
-### Q8. What do you want to do?
-| | |
-|--|--|
-| **Type** | `select_one mapping_action` |
-| **Name** | `mapping_action` |
-| **Label** | What do you want to do for this mentee? |
-| **Required** | Yes |
-| **Relevant** | `${confirm_incharge} = 'yes'` |
-| **Choices** | |
-
-| name | label |
-|------|-------|
-| `activate` | Activate a new mentee |
-| `deactivate` | Deactivate an existing mentee |
-| `reactivate` | Reactivate a deactivated mentee |
-
-→ **Activate** opens Section D  
-→ **Deactivate** opens Section E  
-→ **Reactivate** opens Section F  
+## Section C — What do you want to do?
 
 ---
 
-# SECTION D — Activate a new mentee
+**Q. What do you want to do for this mentee?**  
+*Required*
 
-*Shown only when Q8 = Activate.*
+- [ ] Activate a new mentee
+- [ ] Deactivate an existing mentee
+- [ ] Reactivate a deactivated mentee
 
----
-
-### Q9. Section note — Activate
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `activate_note` |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Label** | Enter details for the mentee you are activating at this facility. |
+→ **Activate** → go to Section D  
+→ **Deactivate** → go to Section E  
+→ **Reactivate** → go to Section F  
 
 ---
 
-### Q10. Name
-| | |
-|--|--|
-| **Type** | `text` |
-| **Name** | `mentee_name` |
-| **Label** | Name |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Hint** | Full name as on the maternity duty roster. |
-| **Example** | Geofrey Njebeli |
+## Section D — Activate a new mentee
+
+*(Shown only if “Activate a new mentee” selected)*
 
 ---
 
-### Q11. Mentee ID
-| | |
-|--|--|
-| **Type** | `text` |
-| **Name** | `mentee_id` |
-| **Label** | Mentee ID |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Hint** | Usually the mentee’s primary phone number. Enter 9 digits starting with 1 or 7. Do not include country code (254) or leading zero. |
-| **Constraint** | `regex(., '^[17]\d{8}$')` |
-| **Constraint message** | Mentee ID must be 9 digits starting with 1 or 7. |
-| **Example** | 705367519 |
+**NOTE**
+
+Enter details for the mentee you are activating at this facility. Use the name as it appears on the maternity duty roster. Mentee ID is usually their primary phone number (9 digits starting with 1 or 7 — no country code, no leading zero).
 
 ---
 
-### Q12. WhatsApp phone number
-| | |
-|--|--|
-| **Type** | `text` |
-| **Name** | `phone_number_whatsapp` |
-| **Label** | WhatsApp phone number |
-| **Required** | Yes **if** Learning Mode will be Hybrid (Both); otherwise optional |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Hint** | Same format as Mentee ID when provided. Leave blank if the mentee has no WhatsApp. Required if the mentee will learn both in-person and via DELTA. |
-| **Constraint** | `regex(., '^[17]\d{8}$')` *(when not blank)* |
-| **Constraint message** | WhatsApp number must be 9 digits starting with 1 or 7. |
-| **Example** | 705367519 |
+**Q. Name**  
+*Required*
+
+`_______________`  
+*Example: Geofrey Njebeli*
 
 ---
 
-### Q13. Cadre
-| | |
-|--|--|
-| **Type** | `select_one cadre` |
-| **Name** | `cadre` |
-| **Label** | Cadre |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | |
+**Q. Mentee ID**  
+*Required*  
+*Hint: 9 digits starting with 1 or 7. Do not include 254 or a leading 0.*
 
-| name | label |
-|------|-------|
-| `nurse` | Nurse |
-| `midwife` | Midwife |
-| `clinical_officer` | Clinical Officer |
-| `other` | Other |
+`_______________`  
+*Example: 705367519*
 
 ---
 
-### Q14. Gender
-| | |
-|--|--|
-| **Type** | `select_one gender` |
-| **Name** | `gender` |
-| **Label** | Gender |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | |
+**Q. WhatsApp phone number**  
+*Optional, unless Learning Mode will be Hybrid (Both) — then Required*  
+*Hint: Same format as Mentee ID. Leave blank if the mentee has no WhatsApp.*
 
-| name | label |
-|------|-------|
-| `male` | Male |
-| `female` | Female |
+`_______________`  
+*Example: 705367519*
 
 ---
 
-### Q15. New or Existing?
-| | |
-|--|--|
-| **Type** | `select_one new_existing` |
-| **Name** | `new_or_existing` |
-| **Label** | New or Existing? |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Hint** | New = joining mentorship for the first time. Existing = previously known to the program. |
-| **Choices** | |
+**Q. Cadre**  
+*Required*
 
-| name | label |
-|------|-------|
-| `new` | New |
-| `existing` | Existing |
+- [ ] Nurse
+- [ ] Midwife
+- [ ] Clinical Officer
+- [ ] Other
 
 ---
 
-### Q16. Date Activated
-| | |
-|--|--|
-| **Type** | `date` |
-| **Name** | `date_activated` |
-| **Label** | Date Activated |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Default** | today |
-| **Constraint** | `. <= today()` |
-| **Constraint message** | Date Activated cannot be in the future. |
-| **Example** | 2026-04-01 |
+**Q. Gender**  
+*Required*
+
+- [ ] Male
+- [ ] Female
 
 ---
 
-### Q17. Program
-| | |
-|--|--|
-| **Type** | `select_one program` |
-| **Name** | `program` |
-| **Label** | Program |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | |
+**Q. New or Existing?**  
+*Required*  
+*Hint: New = joining mentorship for the first time. Existing = previously known to the program.*
 
-| name | label |
-|------|-------|
-| `emonc_curriculum` | EmONC Curriculum |
-| `newborn_curriculum` | Newborn Curriculum |
-| `both` | Both |
-| `other` | Other |
+- [ ] New
+- [ ] Existing
 
 ---
 
-### Q18. Group note — Curriculum / modality
-| | |
-|--|--|
-| **Type** | `begin_group` |
-| **Name** | `curriculum_flags` |
-| **Label** | Curriculum and learning modality |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Hint** | Answer Yes or No for each. These drive Learning Mode and must match the Program selected above. |
+**Q. Date Activated**  
+*Required · default = today · cannot be in the future*
+
+`____ / ____ / ________`  
+*Example: 01 / 04 / 2026*
 
 ---
 
-### Q19. EmONC In-person
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `emonc_inperson` |
-| **Label** | EmONC In-person |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
+**Q. Program**  
+*Required*
+
+- [ ] EmONC Curriculum
+- [ ] Newborn Curriculum
+- [ ] Both
+- [ ] Other
 
 ---
 
-### Q20. EmONC DELTA
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `emonc_delta` |
-| **Label** | EmONC DELTA |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
+**NOTE — Curriculum and learning modality**
 
----
+Answer Yes or No for each item below. These must match the Program you selected:
 
-### Q21. Essential Newborn In-person
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `essential_nb_inperson` |
-| **Label** | Essential Newborn In-person |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q22. Essential Newborn DELTA
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `essential_nb_delta` |
-| **Label** | Essential Newborn DELTA |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q23. Comprehensive Newborn In-person
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `comprehensive_nb_inperson` |
-| **Label** | Comprehensive Newborn In-person |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q24. Continuum of Care
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `continuum_of_care` |
-| **Label** | Continuum of Care |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q25. Safe Surgery
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `safe_surgery` |
-| **Label** | Safe Surgery |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q26. OPOCUS
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `opocus` |
-| **Label** | OPOCUS |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Choices** | `yes` = Yes · `no` = No |
-
----
-
-### Q27. End group — Curriculum / modality
-| | |
-|--|--|
-| **Type** | `end_group` |
-| **Name** | `curriculum_flags` |
-
-**Program ↔ flag rules (enforce with constraints):**
-
-| If Program is… | Then |
-|----------------|------|
+| Program | Rule |
+|---------|------|
 | EmONC Curriculum | EmONC In-person = Yes; Essential Newborn In-person = No; Comprehensive Newborn In-person = No |
-| Newborn Curriculum | EmONC In-person = No; at least one of Essential or Comprehensive Newborn In-person = Yes |
-| Both | EmONC In-person = Yes **and** at least one newborn in-person = Yes |
-| Other | EmONC / Essential / Comprehensive In-person all = No |
+| Newborn Curriculum | EmONC In-person = No; at least one newborn in-person option = Yes |
+| Both | EmONC In-person = Yes **and** at least one newborn in-person option = Yes |
+| Other | EmONC / Essential Newborn / Comprehensive Newborn In-person all = No |
+
+Learning Mode is calculated from these answers (In-person Only / Virtually (DELTA) / Hybrid (Both)).
 
 ---
 
-### Q28. Learning Mode *(calculated — read only)*
-| | |
-|--|--|
-| **Type** | `calculate` + `note` to display |
-| **Name** | `learning_mode` |
-| **Label** | Learning Mode |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Calculation** | |
+**Q. EmONC In-person**  
+*Required*
 
-| Any in-person* Yes? | Any DELTA** Yes? | Result |
-|---------------------|------------------|--------|
-| Yes | Yes | `Hybrid (Both)` |
-| Yes | No | `In-person Only` |
-| No | Yes | `Virtually (DELTA)` |
-| No | No | *(blank — review)* |
-
-\* EmONC / Essential Newborn / Comprehensive Newborn In-person  
-\*\* EmONC DELTA / Essential Newborn DELTA  
-
-If result = `Hybrid (Both)` and WhatsApp (Q12) is blank → block submit.
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q29. Status *(calculated)*
-| | |
-|--|--|
-| **Type** | `calculate` |
-| **Name** | `status` |
-| **Label** | Status |
-| **Relevant** | `${mapping_action} = 'activate'` |
-| **Calculation** | `'Eligible'` |
+**Q. EmONC DELTA**  
+*Required*
+
+- [ ] Yes
+- [ ] No
 
 ---
 
-# SECTION E — Deactivate an existing mentee
+**Q. Essential Newborn In-person**  
+*Required*
 
-*Shown only when Q8 = Deactivate.*
-
----
-
-### Q30. Section note — Deactivate
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `deactivate_note` |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Label** | Select an Eligible mentee at this facility to deactivate. They will become Ineligible and drop off active Kobo mentee lists. |
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q31. Select mentee
-| | |
-|--|--|
-| **Type** | `select_one facility_mentees` |
-| **Name** | `mentee_select` |
-| **Label** | Select mentee to deactivate |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Choice filter** | Facility Code = `${facility_code}` **and** Status = Eligible |
-| **Appearance** | search |
-| **Choice format** | name = Mentee ID · label = `Name (Mentee ID)` |
-| **Example label** | Geofrey Njebeli (705367519) |
+**Q. Essential Newborn DELTA**  
+*Required*
+
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q32. Selected mentee confirmation
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `mentee_selected_note` |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Label** | You selected: **${mentee_select}** at ${facility}. |
+**Q. Comprehensive Newborn In-person**  
+*Required*
+
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q33. Date Deactivated
-| | |
-|--|--|
-| **Type** | `date` |
-| **Name** | `date_deactivated` |
-| **Label** | Date Deactivated |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Default** | today |
-| **Constraint** | `. <= today()` *(and ≥ Date Activated when known from mentee record)* |
-| **Constraint message** | Date Deactivated cannot be in the future (or earlier than Date Activated). |
+**Q. Continuum of Care**  
+*Required*
+
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q34. Reason for Deactivation
-| | |
-|--|--|
-| **Type** | `select_one deactivation_reason` |
-| **Name** | `reason_for_deactivation` |
-| **Label** | Reason for Deactivation |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Choices** | |
+**Q. Safe Surgery**  
+*Required*
 
-| name | label |
-|------|-------|
-| `transfer` | Transfer to another facility |
-| `promotion` | Promotion / role change |
-| `retirement` | Retirement |
-| `resignation` | Resignation / left service |
-| `non_participation` | Lack of participation |
-| `leave` | Extended leave |
-| `deceased` | Deceased |
-| `other` | Other |
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q35. Specify other reason *(only if Q34 = Other)*
-| | |
-|--|--|
-| **Type** | `text` |
-| **Name** | `reason_other` |
-| **Label** | Please specify the reason for deactivation |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'deactivate' and ${reason_for_deactivation} = 'other'` |
+**Q. OPOCUS**  
+*Required*
+
+- [ ] Yes
+- [ ] No
 
 ---
 
-### Q36. Status after deactivate *(calculated)*
-| | |
-|--|--|
-| **Type** | `calculate` |
-| **Name** | `status_deactivate` |
-| **Label** | Status |
-| **Relevant** | `${mapping_action} = 'deactivate'` |
-| **Calculation** | `'Ineligible'` |
+**NOTE — Calculated (read only)**
+
+**Learning Mode:** ${Learning Mode}  
+*(In-person Only · Virtually (DELTA) · Hybrid (Both))*
+
+**Status:** Eligible
+
+If Learning Mode is **Hybrid (Both)**, WhatsApp phone number is required before you can submit.
 
 ---
 
-# SECTION F — Reactivate a deactivated mentee
+## Section E — Deactivate an existing mentee
 
-*Shown only when Q8 = Reactivate.*
-
----
-
-### Q37. Section note — Reactivate
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `reactivate_note` |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Label** | Select an Ineligible (deactivated) mentee at this facility to bring them back as Eligible. |
+*(Shown only if “Deactivate an existing mentee” selected)*
 
 ---
 
-### Q38. Select deactivated mentee
-| | |
-|--|--|
-| **Type** | `select_one facility_mentees_inactive` |
-| **Name** | `mentee_select_inactive` |
-| **Label** | Select mentee to reactivate |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Choice filter** | Facility Code = `${facility_code}` **and** Status = Ineligible |
-| **Appearance** | search |
-| **Choice format** | name = Mentee ID · label = `Name (Mentee ID)` |
+**NOTE**
+
+Select an **Eligible** mentee currently mapped to this facility. After deactivation they become **Ineligible** and will drop off active Kobo mentee lists until reactivated.
 
 ---
 
-### Q39. Selected mentee confirmation
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `mentee_reactivate_note` |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Label** | You selected: **${mentee_select_inactive}** at ${facility}. |
+**Q. Select mentee to deactivate**  
+*Required · search · only Eligible mentees at this facility*
+
+- [ ] Geofrey Njebeli (705367519)
+- [ ] Judith Alusa (715372096)
+- [ ] Modesta Sumbati (710242428)
+- [ ] *(other Eligible mentees at this facility)*
 
 ---
 
-### Q40. Date Reactivated
-| | |
-|--|--|
-| **Type** | `date` |
-| **Name** | `date_reactivated` |
-| **Label** | Date Reactivated |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Default** | today |
-| **Constraint** | `. <= today()` *(and ≥ Date Deactivated when known)* |
-| **Constraint message** | Date Reactivated cannot be in the future (or earlier than Date Deactivated). |
+**NOTE**
+
+You selected: **${Mentee}** at ${Facility}.
 
 ---
 
-### Q41. WhatsApp phone number (update if changed)
-| | |
-|--|--|
-| **Type** | `text` |
-| **Name** | `phone_number_whatsapp_update` |
-| **Label** | WhatsApp phone number (update if changed) |
-| **Required** | No *(Yes if Learning Mode becomes Hybrid after refresh)* |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Hint** | Leave blank to keep the existing number. If entered, use 9 digits starting with 1 or 7. |
-| **Constraint** | `regex(., '^[17]\d{8}$')` *(when not blank)* |
+**Q. Date Deactivated**  
+*Required · default = today · cannot be in the future · cannot be earlier than Date Activated*
+
+`____ / ____ / ________`
 
 ---
 
-### Q42. Update program / curriculum flags?
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `refresh_program` |
-| **Label** | Do you need to update this mentee’s Program or curriculum flags? |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Choices** | `yes` = Yes · `no` = No |
+**Q. Reason for Deactivation**  
+*Required*
 
-**If No** → skip to Q54 (Status).  
-**If Yes** → ask Q43–Q53 (same as Activate program + curriculum block).
-
----
-
-### Q43. Program *(reactivate refresh)*
-| | |
-|--|--|
-| **Type** | `select_one program` |
-| **Name** | `program_refresh` |
-| **Label** | Program |
-| **Required** | Yes |
-| **Relevant** | `${mapping_action} = 'reactivate' and ${refresh_program} = 'yes'` |
-| **Choices** | Same as Q17 |
+- [ ] Transfer to another facility
+- [ ] Promotion / role change
+- [ ] Retirement
+- [ ] Resignation / left service
+- [ ] Lack of participation
+- [ ] Extended leave
+- [ ] Deceased
+- [ ] Other
 
 ---
 
-### Q44–Q51. Curriculum flags *(reactivate refresh)*
+**Q. Please specify the reason for deactivation**  
+*(Only if Reason = Other)*  
+*Required*
 
-Same questions as **Q19–Q26**, with names suffixed `_refresh` and relevant when  
-`${mapping_action} = 'reactivate' and ${refresh_program} = 'yes'`:
-
-| # | Name | Label |
-|---|------|-------|
-| Q44 | `emonc_inperson_refresh` | EmONC In-person |
-| Q45 | `emonc_delta_refresh` | EmONC DELTA |
-| Q46 | `essential_nb_inperson_refresh` | Essential Newborn In-person |
-| Q47 | `essential_nb_delta_refresh` | Essential Newborn DELTA |
-| Q48 | `comprehensive_nb_inperson_refresh` | Comprehensive Newborn In-person |
-| Q49 | `continuum_of_care_refresh` | Continuum of Care |
-| Q50 | `safe_surgery_refresh` | Safe Surgery |
-| Q51 | `opocus_refresh` | OPOCUS |
-
-Each: `select_one yes_no`, Required = Yes. Same Program ↔ flag rules as Activate.
+`_______________`
 
 ---
 
-### Q52. Learning Mode *(calculated on refresh)*
-| | |
-|--|--|
-| **Type** | `calculate` |
-| **Name** | `learning_mode_refresh` |
-| **Relevant** | `${mapping_action} = 'reactivate' and ${refresh_program} = 'yes'` |
-| **Calculation** | Same rules as Q28 |
+**NOTE — Calculated (read only)**
+
+**Status:** Ineligible
 
 ---
 
-### Q53. Status after reactivate *(calculated)*
-| | |
-|--|--|
-| **Type** | `calculate` |
-| **Name** | `status_reactivate` |
-| **Label** | Status |
-| **Relevant** | `${mapping_action} = 'reactivate'` |
-| **Calculation** | `'Eligible'` |
+## Section F — Reactivate a deactivated mentee
+
+*(Shown only if “Reactivate a deactivated mentee” selected)*
 
 ---
 
-# SECTION G — Review & submit
+**NOTE**
 
-*Shown for all successful paths (after Q2 = Yes and an action is completed).*
+Select an **Ineligible** (deactivated) mentee at this facility to bring them back as **Eligible**.
 
 ---
 
-### Q54. Review summary
-| | |
-|--|--|
-| **Type** | `note` |
-| **Name** | `review_summary` |
-| **Relevant** | `${confirm_incharge} = 'yes'` |
-| **Label** | **Please review before submitting** |
+**Q. Select mentee to reactivate**  
+*Required · search · only Ineligible mentees at this facility*
 
-**Activate path shows:**
-- Facility: ${facility} (${facility_code}), ${county}
-- Action: Activate
-- Name: ${mentee_name}
-- Mentee ID: ${mentee_id}
-- Cadre / Gender / New or Existing?
-- Date Activated: ${date_activated}
-- Program: ${program}
-- Learning Mode: ${learning_mode}
+- [ ] *(deactivated mentees at this facility — Name (Mentee ID))*
+
+---
+
+**NOTE**
+
+You selected: **${Mentee}** at ${Facility}.
+
+---
+
+**Q. Date Reactivated**  
+*Required · default = today · cannot be in the future · cannot be earlier than Date Deactivated*
+
+`____ / ____ / ________`
+
+---
+
+**Q. WhatsApp phone number (update if changed)**  
+*Optional*  
+*Hint: Leave blank to keep the existing number. If entered, use 9 digits starting with 1 or 7.*
+
+`_______________`
+
+---
+
+**Q. Do you need to update this mentee’s Program or curriculum flags?**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+→ **No** → skip to Status note below  
+→ **Yes** → answer the questions below  
+
+---
+
+*(Only if Yes — update program / curriculum)*
+
+**Q. Program**  
+*Required*
+
+- [ ] EmONC Curriculum
+- [ ] Newborn Curriculum
+- [ ] Both
+- [ ] Other
+
+---
+
+**NOTE — Curriculum and learning modality**
+
+Answer Yes or No for each. Same Program rules as in Section D (Activate).
+
+---
+
+**Q. EmONC In-person**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. EmONC DELTA**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. Essential Newborn In-person**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. Essential Newborn DELTA**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. Comprehensive Newborn In-person**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. Continuum of Care**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. Safe Surgery**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**Q. OPOCUS**  
+*Required*
+
+- [ ] Yes
+- [ ] No
+
+---
+
+**NOTE — Calculated (read only)**
+
+**Learning Mode:** ${Learning Mode}  
+**Status:** Eligible
+
+---
+
+## Section G — Review and submit
+
+*(Shown after completing Activate, Deactivate, or Reactivate)*
+
+---
+
+**NOTE — Please review before submitting**
+
+**Facility:** ${Facility} (${Facility Code}), ${County}  
+**Action:** ${Activate / Deactivate / Reactivate}
+
+**If Activate:**
+- Name: ${Name}
+- Mentee ID: ${Mentee ID}
+- WhatsApp: ${WhatsApp}
+- Cadre: ${Cadre}
+- Gender: ${Gender}
+- New or Existing?: ${New or Existing?}
+- Date Activated: ${Date Activated}
+- Program: ${Program}
+- EmONC In-person: ${…} · EmONC DELTA: ${…}
+- Essential Newborn In-person: ${…} · Essential Newborn DELTA: ${…}
+- Comprehensive Newborn In-person: ${…}
+- Continuum of Care: ${…} · Safe Surgery: ${…} · OPOCUS: ${…}
+- Learning Mode: ${Learning Mode}
 - Status: Eligible
 
-**Deactivate path shows:**
-- Facility + selected mentee
-- Action: Deactivate
-- Date Deactivated: ${date_deactivated}
-- Reason: ${reason_for_deactivation}
+**If Deactivate:**
+- Mentee: ${Mentee}
+- Date Deactivated: ${Date Deactivated}
+- Reason for Deactivation: ${Reason}
 - Status: Ineligible
 
-**Reactivate path shows:**
-- Facility + selected mentee
-- Action: Reactivate
-- Date Reactivated: ${date_reactivated}
+**If Reactivate:**
+- Mentee: ${Mentee}
+- Date Reactivated: ${Date Reactivated}
+- WhatsApp (if updated): ${WhatsApp}
+- Program / flags (if updated): ${…}
 - Status: Eligible
-- (Plus refreshed program/flags if Q42 = Yes)
 
 ---
 
-### Q55. Confirm submission
-| | |
-|--|--|
-| **Type** | `select_one yes_no` |
-| **Name** | `confirm_submit` |
-| **Label** | Is all information correct? Submit this mapping update? |
-| **Required** | Yes |
-| **Relevant** | `${confirm_incharge} = 'yes'` |
-| **Choices** | `yes` = Yes, submit · `no` = No, go back and edit |
+**Q. Is all information correct? Submit this mapping update?**  
+*Required*
 
-Constraint: must equal `yes` to finalize (or allow edit by going back).
+- [ ] Yes, submit
+- [ ] No, go back and edit
 
 ---
 
-# Metadata (auto-captured)
+## Example — Activate (ready to fill)
 
-| Type | Name | Purpose |
-|------|------|---------|
-| `start` | `start` | Start timestamp |
-| `end` | `end` | End timestamp |
-| `today` | `today` | Submission date |
-| `username` | `username` | Kobo username |
-| `deviceid` | `deviceid` | Device ID |
+**County:** Kakamega  
+**Facility:** Malava Sub County Hospital  
+**Facility Code:** 15996  
+**Action:** Activate a new mentee  
 
----
-
-# Choice lists (full)
-
-### `yes_no`
-| name | label |
-|------|-------|
-| yes | Yes |
-| no | No |
-
-### `mapping_action`
-| name | label |
-|------|-------|
-| activate | Activate a new mentee |
-| deactivate | Deactivate an existing mentee |
-| reactivate | Reactivate a deactivated mentee |
-
-### `cadre`
-| name | label |
-|------|-------|
-| nurse | Nurse |
-| midwife | Midwife |
-| clinical_officer | Clinical Officer |
-| other | Other |
-
-### `gender`
-| name | label |
-|------|-------|
-| male | Male |
-| female | Female |
-
-### `new_existing`
-| name | label |
-|------|-------|
-| new | New |
-| existing | Existing |
-
-### `program`
-| name | label |
-|------|-------|
-| emonc_curriculum | EmONC Curriculum |
-| newborn_curriculum | Newborn Curriculum |
-| both | Both |
-| other | Other |
-
-### `deactivation_reason`
-| name | label |
-|------|-------|
-| transfer | Transfer to another facility |
-| promotion | Promotion / role change |
-| retirement | Retirement |
-| resignation | Resignation / left service |
-| non_participation | Lack of participation |
-| leave | Extended leave |
-| deceased | Deceased |
-| other | Other |
-
-### Dynamic lists (built from databases)
-| list_name | Source | Filter |
-|-----------|--------|--------|
-| `counties` | Master facilities | Distinct counties |
-| `facilities` | Master facilities | By `${county}`; name = facility key, label = facility name; store DHIS code for Q6 |
-| `facility_mentees` | Mentees sheet | Facility Code + Status = Eligible |
-| `facility_mentees_inactive` | Mentees sheet | Facility Code + Status = Ineligible |
-
----
-
-# How answers land on the Mentees sheet
-
-| Mentees column | From question(s) |
-|----------------|------------------|
-| Name | Q10 / Q31 / Q38 |
-| pseudo_code | Post-process: `{FacilityCode}-{SHA256(FacilityCode\|MenteeID)[0:4]}` |
-| Mentee ID | Q11 / Q31 / Q38 |
-| phone_number_whatsapp | Q12 / Q41 |
-| Learning Mode | Q28 / Q52 (or algo) |
-| County | Q4 |
-| Facility Code | Q6 |
-| Facility | Q5 |
-| Cadre | Q13 |
-| Gender | Q14 |
-| New or Existing? | Q15 |
-| Date Activated | Q16 |
-| Date Deactivated | Q33 |
-| Date Reactivated | Q40 |
-| Reason for Deactivation | Q34 (+ Q35 if Other) |
-| Status | Q29 / Q36 / Q53 (or algo from dates) |
-| Program | Q17 / Q43 |
-| EmONC In-person … OPOCUS | Q19–Q26 / Q44–Q51 |
-
-### Sample Activate submissions (Malava)
-
-| Name | Mentee ID | WhatsApp | Learning Mode | County | Code | Facility | Cadre | Gender | New/Existing | Date Activated | Status | Program | EmONC IP | EmONC Δ | Ess NB IP | Ess NB Δ | Comp NB IP | Continuum | Safe Surgery | OPOCUS |
-|------|-----------|----------|---------------|--------|------|----------|-------|--------|--------------|----------------|--------|---------|----------|---------|-----------|----------|------------|-----------|--------------|--------|
-| Geofrey Njebeli | 705367519 | 705367519 | In-person Only | Kakamega | 15996 | Malava Sub County Hospital | Nurse | Male | New | Apr 1, 2026 | Eligible | EmONC Curriculum | Yes | No | No | No | No | Yes | | |
-| Judith Alusa | 715372096 | | In-person Only | Kakamega | 15996 | Malava Sub County Hospital | Nurse | Female | New | Apr 1, 2026 | Eligible | EmONC Curriculum | Yes | No | No | No | No | Yes | | |
-| Modesta Sumbati | 710242428 | 710242428 | In-person Only | Kakamega | 15996 | Malava Sub County Hospital | Nurse | Female | New | Apr 1, 2026 | Eligible | EmONC Curriculum | Yes | No | No | No | No | Yes | | |
-
----
-
-# Question index
-
-| # | Section | Question |
-|---|---------|----------|
-| Q1 | A Welcome | Intro note |
-| Q2 | A Welcome | Are you the maternity nurse incharge? |
-| Q3 | A Welcome | Stop — not authorized |
-| Q4 | B Facility | County |
-| Q5 | B Facility | Facility |
-| Q6 | B Facility | Facility Code |
-| Q7 | B Facility | Facility confirmation |
-| Q8 | C Action | Activate / Deactivate / Reactivate |
-| Q9–Q29 | D Activate | Name → Status (Eligible) |
-| Q30–Q36 | E Deactivate | Select mentee → Status (Ineligible) |
-| Q37–Q53 | F Reactivate | Select mentee → Status (Eligible) |
-| Q54–Q55 | G Review | Summary + confirm submit |
+| Question | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
+|----------|-----------------|--------------|-----------------|
+| Name | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
+| Mentee ID | 705367519 | 715372096 | 710242428 |
+| WhatsApp phone number | 705367519 | *(blank)* | 710242428 |
+| Cadre | Nurse | Nurse | Nurse |
+| Gender | Male | Female | Female |
+| New or Existing? | New | New | New |
+| Date Activated | 01 / 04 / 2026 | 01 / 04 / 2026 | 01 / 04 / 2026 |
+| Program | EmONC Curriculum | EmONC Curriculum | EmONC Curriculum |
+| EmONC In-person | Yes | Yes | Yes |
+| EmONC DELTA | No | No | No |
+| Essential Newborn In-person | No | No | No |
+| Essential Newborn DELTA | No | No | No |
+| Comprehensive Newborn In-person | No | No | No |
+| Continuum of Care | Yes | Yes | Yes |
+| Safe Surgery | *(blank / No)* | *(blank / No)* | *(blank / No)* |
+| OPOCUS | *(blank / No)* | *(blank / No)* | *(blank / No)* |
+| Learning Mode *(calc)* | In-person Only | In-person Only | In-person Only |
+| Status *(calc)* | Eligible | Eligible | Eligible |
