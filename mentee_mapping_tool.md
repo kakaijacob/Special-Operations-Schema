@@ -6,9 +6,7 @@
 
 ---
 
-## Section A — Welcome
-
----
+# SECTION 1 — Welcome
 
 **NOTE**
 
@@ -34,9 +32,13 @@ This tool is for the maternity nurse incharge or designated maternity lead only.
 
 ---
 
-## Section B — Your facility
+# SECTION 2 — Your facility
 
-*(Shown only if Yes above)*
+*(Shown only if Question 1 = Yes)*
+
+**NOTE**
+
+Please select the county and facility where you are the maternity nurse incharge. Confirm that the facility code is correct before continuing.
 
 ---
 
@@ -46,15 +48,11 @@ This tool is for the maternity nurse incharge or designated maternity lead only.
    - [ ] Kakamega
    - [ ] *(other counties from master facilities list)*
 
----
-
 3. What is your facility name?  
    *Required · search · filtered by county selected above*
 
    - [ ] Malava Sub County Hospital
    - [ ] *(other facilities in the selected county)*
-
----
 
 4. What is your facility code (DHIS code)?  
    *Auto-filled from facility name where possible · Required*  
@@ -71,7 +69,11 @@ You are mapping mentees for: **${Facility name}** (Code ${Facility code}), ${Cou
 
 ---
 
-## Section C — What do you want to do?
+# SECTION 3 — Mapping action
+
+**NOTE**
+
+Choose one action for this submission. You will only see the questions for the action you select.
 
 ---
 
@@ -82,17 +84,11 @@ You are mapping mentees for: **${Facility name}** (Code ${Facility code}), ${Cou
    - [ ] Deactivate an existing mentee
    - [ ] Reactivate a deactivated mentee
 
-→ **Activate** → go to Section D  
-→ **Deactivate** → go to Section E  
-→ **Reactivate** → go to Section F  
-
 ---
 
-## Section D — Activate a new mentee
+# SECTION 4 — Activate a new mentee
 
-*(Shown only if “Activate a new mentee” selected)*
-
----
+*(Shown only if Question 5 = Activate a new mentee)*
 
 **NOTE**
 
@@ -106,8 +102,6 @@ You are activating a new mentee at this facility. Please enter their details as 
    `_______________`  
    *Example: Geofrey Njebeli*
 
----
-
 7. Please write the mentee’s phone number (Mentee ID).  
    *Required*  
    *Hint: Enter 9 digits starting with 1 or 7. Do not include 254 or a leading 0.*
@@ -115,16 +109,12 @@ You are activating a new mentee at this facility. Please enter their details as 
    `_______________`  
    *Example: 705367519*
 
----
-
 8. Please write the mentee’s WhatsApp phone number.  
    *Optional, unless Learning Mode will be Hybrid (Both) — then Required*  
    *Hint: Same format as the phone number above. Leave blank if the mentee has no WhatsApp.*
 
    `_______________`  
    *Example: 705367519*
-
----
 
 9. What is the mentee’s cadre?  
    *Required*
@@ -134,15 +124,11 @@ You are activating a new mentee at this facility. Please enter their details as 
    - [ ] Clinical Officer
    - [ ] Other
 
----
-
 10. What is the mentee’s gender?  
     *Required*
 
     - [ ] Male
     - [ ] Female
-
----
 
 11. Is this mentee new to the mentorship program, or existing?  
     *Required*  
@@ -151,15 +137,11 @@ You are activating a new mentee at this facility. Please enter their details as 
     - [ ] New
     - [ ] Existing
 
----
-
 12. What is the date this mentee was activated?  
     *Required · default = today · cannot be in the future*
 
     `____ / ____ / ________`  
     *Example: 01 / 04 / 2026*
-
----
 
 13. Which program is this mentee enrolled in?  
     *Required*
@@ -192,15 +174,11 @@ Learning Mode is calculated from these answers (In-person Only / Virtually (DELT
     - [ ] Yes
     - [ ] No
 
----
-
 15. Is the mentee enrolled in EmONC DELTA?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 16. Is the mentee enrolled in Essential Newborn In-person?  
     *Required*
@@ -208,15 +186,11 @@ Learning Mode is calculated from these answers (In-person Only / Virtually (DELT
     - [ ] Yes
     - [ ] No
 
----
-
 17. Is the mentee enrolled in Essential Newborn DELTA?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 18. Is the mentee enrolled in Comprehensive Newborn In-person?  
     *Required*
@@ -224,23 +198,17 @@ Learning Mode is calculated from these answers (In-person Only / Virtually (DELT
     - [ ] Yes
     - [ ] No
 
----
-
 19. Is the mentee enrolled in Continuum of Care?  
     *Required*
 
     - [ ] Yes
     - [ ] No
 
----
-
 20. Is the mentee enrolled in Safe Surgery?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 21. Is the mentee enrolled in OPOCUS?  
     *Required*
@@ -261,11 +229,9 @@ If Learning Mode is **Hybrid (Both)**, the WhatsApp phone number is required bef
 
 ---
 
-## Section E — Deactivate an existing mentee
+# SECTION 5 — Deactivate an existing mentee
 
-*(Shown only if “Deactivate an existing mentee” selected)*
-
----
+*(Shown only if Question 5 = Deactivate an existing mentee)*
 
 **NOTE**
 
@@ -294,8 +260,6 @@ You selected: **${Mentee}** at ${Facility name}.
 
     `____ / ____ / ________`
 
----
-
 24. What is the reason for deactivation?  
     *Required*
 
@@ -307,8 +271,6 @@ You selected: **${Mentee}** at ${Facility name}.
     - [ ] Extended leave
     - [ ] Deceased
     - [ ] Other
-
----
 
 25. Please specify the reason for deactivation.  
     *(Only if Reason = Other)*  
@@ -324,11 +286,9 @@ You selected: **${Mentee}** at ${Facility name}.
 
 ---
 
-## Section F — Reactivate a deactivated mentee
+# SECTION 6 — Reactivate a deactivated mentee
 
-*(Shown only if “Reactivate a deactivated mentee” selected)*
-
----
+*(Shown only if Question 5 = Reactivate a deactivated mentee)*
 
 **NOTE**
 
@@ -354,15 +314,11 @@ You selected: **${Mentee}** at ${Facility name}.
 
     `____ / ____ / ________`
 
----
-
 28. Please write the mentee’s WhatsApp phone number if it has changed.  
     *Optional*  
     *Hint: Leave blank to keep the existing number. If entered, use 9 digits starting with 1 or 7.*
 
     `_______________`
-
----
 
 29. Do you need to update this mentee’s program or curriculum enrolment?  
     *Required*
@@ -370,12 +326,15 @@ You selected: **${Mentee}** at ${Facility name}.
     - [ ] Yes
     - [ ] No
 
-→ **No** → skip to Status note below  
-→ **Yes** → answer the questions below  
-
 ---
 
-*(Only if Yes — update program / curriculum)*
+*(Questions 30–38 shown only if Question 29 = Yes)*
+
+**NOTE — Update program and curriculum**
+
+Please update the mentee’s program and answer Yes or No for each curriculum item. Same program rules as in Section 4 (Activate).
+
+---
 
 30. Which program is this mentee enrolled in?  
     *Required*
@@ -385,21 +344,11 @@ You selected: **${Mentee}** at ${Facility name}.
     - [ ] Both
     - [ ] Other
 
----
-
-**NOTE — Curriculum and learning modality**
-
-Please answer Yes or No for each. Same program rules as in Section D (Activate).
-
----
-
 31. Is the mentee enrolled in EmONC In-person?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 32. Is the mentee enrolled in EmONC DELTA?  
     *Required*
@@ -407,15 +356,11 @@ Please answer Yes or No for each. Same program rules as in Section D (Activate).
     - [ ] Yes
     - [ ] No
 
----
-
 33. Is the mentee enrolled in Essential Newborn In-person?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 34. Is the mentee enrolled in Essential Newborn DELTA?  
     *Required*
@@ -423,15 +368,11 @@ Please answer Yes or No for each. Same program rules as in Section D (Activate).
     - [ ] Yes
     - [ ] No
 
----
-
 35. Is the mentee enrolled in Comprehensive Newborn In-person?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 36. Is the mentee enrolled in Continuum of Care?  
     *Required*
@@ -439,15 +380,11 @@ Please answer Yes or No for each. Same program rules as in Section D (Activate).
     - [ ] Yes
     - [ ] No
 
----
-
 37. Is the mentee enrolled in Safe Surgery?  
     *Required*
 
     - [ ] Yes
     - [ ] No
-
----
 
 38. Is the mentee enrolled in OPOCUS?  
     *Required*
@@ -464,11 +401,9 @@ Please answer Yes or No for each. Same program rules as in Section D (Activate).
 
 ---
 
-## Section G — Review and submit
+# SECTION 7 — Review and submit
 
-*(Shown after completing Activate, Deactivate, or Reactivate)*
-
----
+*(Shown after completing Section 4, 5, or 6)*
 
 **NOTE — Please review before submitting**
 
@@ -511,12 +446,15 @@ Please answer Yes or No for each. Same program rules as in Section D (Activate).
 
 ---
 
-## Example — Activate (Malava Sub County Hospital)
+# Example — Activate (Malava Sub County Hospital)
 
-**County:** Kakamega  
-**Facility name:** Malava Sub County Hospital  
-**Facility code:** 15996  
-**Action:** Activate a new mentee  
+**Section 2**  
+County: Kakamega · Facility name: Malava Sub County Hospital · Facility code: 15996  
+
+**Section 3**  
+Action: Activate a new mentee  
+
+**Section 4**
 
 | Question | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
 |----------|-----------------|--------------|-----------------|
