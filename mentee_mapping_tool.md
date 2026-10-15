@@ -1,7 +1,6 @@
 # Mentee Mapping Tool — Survey
 
 **Form title:** Mentee Mapping Tool  
-**Form ID:** `mentee_mapping_tool`  
 **Who fills it:** Maternity nurse incharge (or designated maternity lead)  
 **Rule:** One mentee per submission
 
@@ -21,11 +20,11 @@ Submit once per mentee. Open the form again for the next mentee.
 
 ---
 
-**Q. Are you the maternity nurse incharge (or designated maternity lead) for this facility?**  
-*Required*
+1. Are you the maternity nurse incharge (or designated maternity lead) for this facility?  
+   *Required*
 
-- [ ] Yes
-- [ ] No
+   - [ ] Yes
+   - [ ] No
 
 ---
 
@@ -41,34 +40,34 @@ This tool is for the maternity nurse incharge or designated maternity lead only.
 
 ---
 
-**Q. County**  
-*Required · search*
+2. What county is your facility in?  
+   *Required · search*
 
-- [ ] Kakamega
-- [ ] *(other counties from master facilities list)*
-
----
-
-**Q. Facility**  
-*Required · search · filtered by County selected above*
-
-- [ ] Malava Sub County Hospital
-- [ ] *(other facilities in the selected county)*
+   - [ ] Kakamega
+   - [ ] *(other counties from master facilities list)*
 
 ---
 
-**Q. Facility Code**  
-*Auto-filled from Facility · or enter DHIS code (up to 5 digits)*  
-*Required*
+3. What is your facility name?  
+   *Required · search · filtered by county selected above*
 
-`_______________`  
-*Example: 15996*
+   - [ ] Malava Sub County Hospital
+   - [ ] *(other facilities in the selected county)*
+
+---
+
+4. What is your facility code (DHIS code)?  
+   *Auto-filled from facility name where possible · Required*  
+   *Hint: Up to 5 digits.*
+
+   `_______________`  
+   *Example: 15996*
 
 ---
 
 **NOTE**
 
-You are mapping mentees for: **${Facility}** (Code ${Facility Code}), ${County}.
+You are mapping mentees for: **${Facility name}** (Code ${Facility code}), ${County}.
 
 ---
 
@@ -76,12 +75,12 @@ You are mapping mentees for: **${Facility}** (Code ${Facility Code}), ${County}.
 
 ---
 
-**Q. What do you want to do for this mentee?**  
-*Required*
+5. What do you want to do for this mentee?  
+   *Required*
 
-- [ ] Activate a new mentee
-- [ ] Deactivate an existing mentee
-- [ ] Reactivate a deactivated mentee
+   - [ ] Activate a new mentee
+   - [ ] Deactivate an existing mentee
+   - [ ] Reactivate a deactivated mentee
 
 → **Activate** → go to Section D  
 → **Deactivate** → go to Section E  
@@ -97,84 +96,84 @@ You are mapping mentees for: **${Facility}** (Code ${Facility Code}), ${County}.
 
 **NOTE**
 
-Enter details for the mentee you are activating at this facility. Use the name as it appears on the maternity duty roster. Mentee ID is usually their primary phone number (9 digits starting with 1 or 7 — no country code, no leading zero).
+You are activating a new mentee at this facility. Please enter their details as they appear on the maternity duty roster. The mentee ID is usually their primary phone number (9 digits starting with 1 or 7 — no country code, no leading zero).
 
 ---
 
-**Q. Name**  
-*Required*
+6. Please write the mentee’s full name.  
+   *Required*
 
-`_______________`  
-*Example: Geofrey Njebeli*
-
----
-
-**Q. Mentee ID**  
-*Required*  
-*Hint: 9 digits starting with 1 or 7. Do not include 254 or a leading 0.*
-
-`_______________`  
-*Example: 705367519*
+   `_______________`  
+   *Example: Geofrey Njebeli*
 
 ---
 
-**Q. WhatsApp phone number**  
-*Optional, unless Learning Mode will be Hybrid (Both) — then Required*  
-*Hint: Same format as Mentee ID. Leave blank if the mentee has no WhatsApp.*
+7. Please write the mentee’s phone number (Mentee ID).  
+   *Required*  
+   *Hint: Enter 9 digits starting with 1 or 7. Do not include 254 or a leading 0.*
 
-`_______________`  
-*Example: 705367519*
-
----
-
-**Q. Cadre**  
-*Required*
-
-- [ ] Nurse
-- [ ] Midwife
-- [ ] Clinical Officer
-- [ ] Other
+   `_______________`  
+   *Example: 705367519*
 
 ---
 
-**Q. Gender**  
-*Required*
+8. Please write the mentee’s WhatsApp phone number.  
+   *Optional, unless Learning Mode will be Hybrid (Both) — then Required*  
+   *Hint: Same format as the phone number above. Leave blank if the mentee has no WhatsApp.*
 
-- [ ] Male
-- [ ] Female
-
----
-
-**Q. New or Existing?**  
-*Required*  
-*Hint: New = joining mentorship for the first time. Existing = previously known to the program.*
-
-- [ ] New
-- [ ] Existing
+   `_______________`  
+   *Example: 705367519*
 
 ---
 
-**Q. Date Activated**  
-*Required · default = today · cannot be in the future*
+9. What is the mentee’s cadre?  
+   *Required*
 
-`____ / ____ / ________`  
-*Example: 01 / 04 / 2026*
+   - [ ] Nurse
+   - [ ] Midwife
+   - [ ] Clinical Officer
+   - [ ] Other
 
 ---
 
-**Q. Program**  
-*Required*
+10. What is the mentee’s gender?  
+    *Required*
 
-- [ ] EmONC Curriculum
-- [ ] Newborn Curriculum
-- [ ] Both
-- [ ] Other
+    - [ ] Male
+    - [ ] Female
+
+---
+
+11. Is this mentee new to the mentorship program, or existing?  
+    *Required*  
+    *Hint: New = joining mentorship for the first time. Existing = previously known to the program.*
+
+    - [ ] New
+    - [ ] Existing
+
+---
+
+12. What is the date this mentee was activated?  
+    *Required · default = today · cannot be in the future*
+
+    `____ / ____ / ________`  
+    *Example: 01 / 04 / 2026*
+
+---
+
+13. Which program is this mentee enrolled in?  
+    *Required*
+
+    - [ ] EmONC Curriculum
+    - [ ] Newborn Curriculum
+    - [ ] Both
+    - [ ] Other
 
 ---
 
 **NOTE — Curriculum and learning modality**
 
-Answer Yes or No for each item below. These must match the Program you selected:
+Please answer Yes or No for each item below. These must match the program you selected:
 
 | Program | Rule |
 |---------|------|
@@ -187,67 +186,67 @@ Learning Mode is calculated from these answers (In-person Only / Virtually (DELT
 
 ---
 
-**Q. EmONC In-person**  
-*Required*
+14. Is the mentee enrolled in EmONC In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. EmONC DELTA**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Essential Newborn In-person**  
-*Required*
+15. Is the mentee enrolled in EmONC DELTA?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. Essential Newborn DELTA**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Comprehensive Newborn In-person**  
-*Required*
+16. Is the mentee enrolled in Essential Newborn In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. Continuum of Care**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Safe Surgery**  
-*Required*
+17. Is the mentee enrolled in Essential Newborn DELTA?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. OPOCUS**  
-*Required*
+18. Is the mentee enrolled in Comprehensive Newborn In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
+
+---
+
+19. Is the mentee enrolled in Continuum of Care?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
+
+---
+
+20. Is the mentee enrolled in Safe Surgery?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
+
+---
+
+21. Is the mentee enrolled in OPOCUS?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
 
 ---
 
@@ -258,7 +257,7 @@ Learning Mode is calculated from these answers (In-person Only / Virtually (DELT
 
 **Status:** Eligible
 
-If Learning Mode is **Hybrid (Both)**, WhatsApp phone number is required before you can submit.
+If Learning Mode is **Hybrid (Both)**, the WhatsApp phone number is required before you can submit.
 
 ---
 
@@ -274,48 +273,48 @@ Select an **Eligible** mentee currently mapped to this facility. After deactivat
 
 ---
 
-**Q. Select mentee to deactivate**  
-*Required · search · only Eligible mentees at this facility*
+22. Which mentee do you want to deactivate?  
+    *Required · search · only Eligible mentees at this facility*
 
-- [ ] Geofrey Njebeli (705367519)
-- [ ] Judith Alusa (715372096)
-- [ ] Modesta Sumbati (710242428)
-- [ ] *(other Eligible mentees at this facility)*
+    - [ ] Geofrey Njebeli (705367519)
+    - [ ] Judith Alusa (715372096)
+    - [ ] Modesta Sumbati (710242428)
+    - [ ] *(other Eligible mentees at this facility)*
 
 ---
 
 **NOTE**
 
-You selected: **${Mentee}** at ${Facility}.
+You selected: **${Mentee}** at ${Facility name}.
 
 ---
 
-**Q. Date Deactivated**  
-*Required · default = today · cannot be in the future · cannot be earlier than Date Activated*
+23. What is the date this mentee was deactivated?  
+    *Required · default = today · cannot be in the future · cannot be earlier than Date Activated*
 
-`____ / ____ / ________`
-
----
-
-**Q. Reason for Deactivation**  
-*Required*
-
-- [ ] Transfer to another facility
-- [ ] Promotion / role change
-- [ ] Retirement
-- [ ] Resignation / left service
-- [ ] Lack of participation
-- [ ] Extended leave
-- [ ] Deceased
-- [ ] Other
+    `____ / ____ / ________`
 
 ---
 
-**Q. Please specify the reason for deactivation**  
-*(Only if Reason = Other)*  
-*Required*
+24. What is the reason for deactivation?  
+    *Required*
 
-`_______________`
+    - [ ] Transfer to another facility
+    - [ ] Promotion / role change
+    - [ ] Retirement
+    - [ ] Resignation / left service
+    - [ ] Lack of participation
+    - [ ] Extended leave
+    - [ ] Deceased
+    - [ ] Other
+
+---
+
+25. Please specify the reason for deactivation.  
+    *(Only if Reason = Other)*  
+    *Required*
+
+    `_______________`
 
 ---
 
@@ -337,39 +336,39 @@ Select an **Ineligible** (deactivated) mentee at this facility to bring them bac
 
 ---
 
-**Q. Select mentee to reactivate**  
-*Required · search · only Ineligible mentees at this facility*
+26. Which mentee do you want to reactivate?  
+    *Required · search · only Ineligible mentees at this facility*
 
-- [ ] *(deactivated mentees at this facility — Name (Mentee ID))*
+    - [ ] *(deactivated mentees at this facility — Name (phone number))*
 
 ---
 
 **NOTE**
 
-You selected: **${Mentee}** at ${Facility}.
+You selected: **${Mentee}** at ${Facility name}.
 
 ---
 
-**Q. Date Reactivated**  
-*Required · default = today · cannot be in the future · cannot be earlier than Date Deactivated*
+27. What is the date this mentee was reactivated?  
+    *Required · default = today · cannot be in the future · cannot be earlier than Date Deactivated*
 
-`____ / ____ / ________`
-
----
-
-**Q. WhatsApp phone number (update if changed)**  
-*Optional*  
-*Hint: Leave blank to keep the existing number. If entered, use 9 digits starting with 1 or 7.*
-
-`_______________`
+    `____ / ____ / ________`
 
 ---
 
-**Q. Do you need to update this mentee’s Program or curriculum flags?**  
-*Required*
+28. Please write the mentee’s WhatsApp phone number if it has changed.  
+    *Optional*  
+    *Hint: Leave blank to keep the existing number. If entered, use 9 digits starting with 1 or 7.*
 
-- [ ] Yes
-- [ ] No
+    `_______________`
+
+---
+
+29. Do you need to update this mentee’s program or curriculum enrolment?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
 
 → **No** → skip to Status note below  
 → **Yes** → answer the questions below  
@@ -378,83 +377,83 @@ You selected: **${Mentee}** at ${Facility}.
 
 *(Only if Yes — update program / curriculum)*
 
-**Q. Program**  
-*Required*
+30. Which program is this mentee enrolled in?  
+    *Required*
 
-- [ ] EmONC Curriculum
-- [ ] Newborn Curriculum
-- [ ] Both
-- [ ] Other
+    - [ ] EmONC Curriculum
+    - [ ] Newborn Curriculum
+    - [ ] Both
+    - [ ] Other
 
 ---
 
 **NOTE — Curriculum and learning modality**
 
-Answer Yes or No for each. Same Program rules as in Section D (Activate).
+Please answer Yes or No for each. Same program rules as in Section D (Activate).
 
 ---
 
-**Q. EmONC In-person**  
-*Required*
+31. Is the mentee enrolled in EmONC In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. EmONC DELTA**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Essential Newborn In-person**  
-*Required*
+32. Is the mentee enrolled in EmONC DELTA?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. Essential Newborn DELTA**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Comprehensive Newborn In-person**  
-*Required*
+33. Is the mentee enrolled in Essential Newborn In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
-
----
-
-**Q. Continuum of Care**  
-*Required*
-
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. Safe Surgery**  
-*Required*
+34. Is the mentee enrolled in Essential Newborn DELTA?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
 
 ---
 
-**Q. OPOCUS**  
-*Required*
+35. Is the mentee enrolled in Comprehensive Newborn In-person?  
+    *Required*
 
-- [ ] Yes
-- [ ] No
+    - [ ] Yes
+    - [ ] No
+
+---
+
+36. Is the mentee enrolled in Continuum of Care?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
+
+---
+
+37. Is the mentee enrolled in Safe Surgery?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
+
+---
+
+38. Is the mentee enrolled in OPOCUS?  
+    *Required*
+
+    - [ ] Yes
+    - [ ] No
 
 ---
 
@@ -473,72 +472,69 @@ Answer Yes or No for each. Same Program rules as in Section D (Activate).
 
 **NOTE — Please review before submitting**
 
-**Facility:** ${Facility} (${Facility Code}), ${County}  
+**Facility:** ${Facility name} (${Facility code}), ${County}  
 **Action:** ${Activate / Deactivate / Reactivate}
 
 **If Activate:**
-- Name: ${Name}
-- Mentee ID: ${Mentee ID}
-- WhatsApp: ${WhatsApp}
+- Full name: ${Name}
+- Phone number (Mentee ID): ${Mentee ID}
+- WhatsApp phone number: ${WhatsApp}
 - Cadre: ${Cadre}
 - Gender: ${Gender}
 - New or Existing?: ${New or Existing?}
-- Date Activated: ${Date Activated}
+- Date activated: ${Date Activated}
 - Program: ${Program}
-- EmONC In-person: ${…} · EmONC DELTA: ${…}
-- Essential Newborn In-person: ${…} · Essential Newborn DELTA: ${…}
-- Comprehensive Newborn In-person: ${…}
-- Continuum of Care: ${…} · Safe Surgery: ${…} · OPOCUS: ${…}
+- Curriculum enrolment: EmONC In-person, EmONC DELTA, Essential Newborn In-person, Essential Newborn DELTA, Comprehensive Newborn In-person, Continuum of Care, Safe Surgery, OPOCUS
 - Learning Mode: ${Learning Mode}
 - Status: Eligible
 
 **If Deactivate:**
 - Mentee: ${Mentee}
-- Date Deactivated: ${Date Deactivated}
-- Reason for Deactivation: ${Reason}
+- Date deactivated: ${Date Deactivated}
+- Reason for deactivation: ${Reason}
 - Status: Ineligible
 
 **If Reactivate:**
 - Mentee: ${Mentee}
-- Date Reactivated: ${Date Reactivated}
+- Date reactivated: ${Date Reactivated}
 - WhatsApp (if updated): ${WhatsApp}
-- Program / flags (if updated): ${…}
+- Program / curriculum (if updated): ${…}
 - Status: Eligible
 
 ---
 
-**Q. Is all information correct? Submit this mapping update?**  
-*Required*
+39. Is all information correct? Do you want to submit this mapping update?  
+    *Required*
 
-- [ ] Yes, submit
-- [ ] No, go back and edit
+    - [ ] Yes, submit
+    - [ ] No, go back and edit
 
 ---
 
-## Example — Activate (ready to fill)
+## Example — Activate (Malava Sub County Hospital)
 
 **County:** Kakamega  
-**Facility:** Malava Sub County Hospital  
-**Facility Code:** 15996  
+**Facility name:** Malava Sub County Hospital  
+**Facility code:** 15996  
 **Action:** Activate a new mentee  
 
 | Question | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
 |----------|-----------------|--------------|-----------------|
-| Name | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
-| Mentee ID | 705367519 | 715372096 | 710242428 |
-| WhatsApp phone number | 705367519 | *(blank)* | 710242428 |
-| Cadre | Nurse | Nurse | Nurse |
-| Gender | Male | Female | Female |
-| New or Existing? | New | New | New |
-| Date Activated | 01 / 04 / 2026 | 01 / 04 / 2026 | 01 / 04 / 2026 |
-| Program | EmONC Curriculum | EmONC Curriculum | EmONC Curriculum |
+| Please write the mentee’s full name | Geofrey Njebeli | Judith Alusa | Modesta Sumbati |
+| Please write the mentee’s phone number (Mentee ID) | 705367519 | 715372096 | 710242428 |
+| Please write the mentee’s WhatsApp phone number | 705367519 | *(blank)* | 710242428 |
+| What is the mentee’s cadre? | Nurse | Nurse | Nurse |
+| What is the mentee’s gender? | Male | Female | Female |
+| Is this mentee new or existing? | New | New | New |
+| What is the date this mentee was activated? | 01 / 04 / 2026 | 01 / 04 / 2026 | 01 / 04 / 2026 |
+| Which program is this mentee enrolled in? | EmONC Curriculum | EmONC Curriculum | EmONC Curriculum |
 | EmONC In-person | Yes | Yes | Yes |
 | EmONC DELTA | No | No | No |
 | Essential Newborn In-person | No | No | No |
 | Essential Newborn DELTA | No | No | No |
 | Comprehensive Newborn In-person | No | No | No |
 | Continuum of Care | Yes | Yes | Yes |
-| Safe Surgery | *(blank / No)* | *(blank / No)* | *(blank / No)* |
-| OPOCUS | *(blank / No)* | *(blank / No)* | *(blank / No)* |
+| Safe Surgery | No | No | No |
+| OPOCUS | No | No | No |
 | Learning Mode *(calc)* | In-person Only | In-person Only | In-person Only |
 | Status *(calc)* | Eligible | Eligible | Eligible |
