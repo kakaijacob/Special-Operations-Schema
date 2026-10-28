@@ -4,8 +4,15 @@ Use this file to record SQL queries for tasks, projects, or investigations.
 
 ## Project / Task
 - Project name: Skills Assessment Views
-- Task description: Document AMTSL evaluation view definition
-- Date: 2026-06-30
+- Task description: Cycle-aware child skill views return the **maximum** `average_score` per mentee × cycle × program (not an average of all attempts). Parent `process_moh_skills_assessment_2026` unions those cycle-best rows.
+- Date: 2026-10-28
+- Deploy: run `skills_assessment_cycle_views.sql` (or `process_moh_skills_assessment_all_child_views.sql`) — children first, then parent. That SQL is the source of truth for all 21 children.
+
+### Grain (all `*_evaluation_2026` children)
+- Score every attempt, assign a cohort from `date_submitted`.
+- `attempt_count` / `first_pass_date` still use all in-cycle attempts.
+- Keep only `score_rank = 1` (highest `average_score`; ties → latest `date_submitted`, then `submission_id`).
+- Example: Clare Chemutai Cohort 2 Newborn resuscitation attempts `0.4408` and `0.9677` → child/parent expose `0.9677` once with `attempt_count = 2`.
 
 ## Queries
 ### 1. mentors.amstl_evaluation_2026 source
@@ -154,7 +161,7 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 ### 11. mentors.maternal_resuscitation_evaluation_2026 source
 ```sql
 -- Canonical maternal resuscitation child view (feeds process_moh_skills_assessment_2026).
--- Same cohort / attempt_count / first_pass_date shape as amstl_evaluation_2026.
+-- Cycle-best grain: average_score = MAX attempt score per mentee × cycle × program.
 -- Score = sum of 21 items / 21.0 (each Yes = 1).
 -- After 2026-04-01 the form writes debrief_or_assign_tasks + identify_cpr_lormarks.
 -- Legacy columns debrief_and_assign_tasks + identify_cpr_landmarks stay 0 on new
@@ -171,7 +178,10 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 END)
           OVER(
           PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
-          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date,
+          row_number() OVER (
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ORDER BY scored_attempts."average score" DESC, scored_attempts.date_submitted DESC, scored_attempts.submission_id DESC) AS score_rank
            FROM ( SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
                         CASE
                             WHEN msc.date_submitted::date <= '2026-04-01'::date THEN msc.debrief_and_assign_tasks::integer
@@ -192,7 +202,8 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 UNION ALL
                          SELECT 3, 'Cohort 3'::character varying::character varying(50) AS "varchar", '2027-04-01'::date AS date, '2028-03-31'::date AS date) c ON msc.date_submitted::date >= c.cycle_start AND msc.date_submitted::date <= c.cycle_end
              WHERE msc.skill_evaluation::text = 'Maternal resuscitation'::character varying::text) scored_attempts
-          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts;
+          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts
+  WHERE ranked_attempts.score_rank = 1;
 ```
 
 ### 12. mentors.nasg_evaluation_2026 source
@@ -256,8 +267,9 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 ### 16. mentors.process_moh_skills_assessment_2026 source
 ```sql
--- Parent unions cohort-aware child views. Children expose average_score (unquoted),
--- not "average score". Also pass cycle_id / cycle_label / cycle_start / cycle_end /
+-- Parent unions cycle-best child views (each child already keeps max average_score
+-- per mentee × cycle × program). Children expose average_score (unquoted), not
+-- "average score". Also pass cycle_id / cycle_label / cycle_start / cycle_end /
 -- attempt_count / first_pass_date through.
 CREATE OR REPLACE VIEW mentors.process_moh_skills_assessment_2026
 AS ((((((((((((((((((( SELECT amstl_evaluation_2026.submission_id, amstl_evaluation_2026.date_started, amstl_evaluation_2026.date_ended, amstl_evaluation_2026.date_submitted, amstl_evaluation_2026.county, amstl_evaluation_2026.facility, amstl_evaluation_2026.facility_code, amstl_evaluation_2026.program, amstl_evaluation_2026.mentee_name, amstl_evaluation_2026.mentee_id, amstl_evaluation_2026.skill_evaluation, amstl_evaluation_2026.average_score, amstl_evaluation_2026.cycle_id, amstl_evaluation_2026.cycle_label, amstl_evaluation_2026.cycle_start, amstl_evaluation_2026.cycle_end, amstl_evaluation_2026.attempt_count, amstl_evaluation_2026.first_pass_date
@@ -344,7 +356,7 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 
 ### 19. mentors.ubt_free_flow_evaluation_2026 source
 ```sql
--- Cohort-aware child (same shape as amstl_evaluation_2026).
+-- Cohort-aware child; average_score is the MAX attempt per mentee × cycle × program.
 -- Cohort 2+ checklist: 34 items, each Yes = 1; average = sum / 34.0.
 -- Column note: hungon_drip_stand_valve_closed (not ..._stor_...); document (lowercase).
 -- Use ILIKE for skill_evaluation to avoid uterine-inversion-style case drops.
@@ -361,7 +373,10 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 END)
           OVER(
           PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
-          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date,
+          row_number() OVER (
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ORDER BY scored_attempts."average score" DESC, scored_attempts.date_submitted DESC, scored_attempts.submission_id DESC) AS score_rank
            FROM ( SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
                         (COALESCE(msc.obtain_consent::integer, 0)
                          + COALESCE(msc.sterile_gloves::integer, 0)
@@ -406,12 +421,13 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 UNION ALL
                          SELECT 3, 'Cohort 3'::character varying::character varying(50) AS "varchar", '2027-04-01'::date AS date, '2028-03-31'::date AS date) c ON msc.date_submitted::date >= c.cycle_start AND msc.date_submitted::date <= c.cycle_end
              WHERE msc.skill_evaluation ILIKE 'UBT (free flow)') scored_attempts
-          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts;
+          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts
+  WHERE ranked_attempts.score_rank = 1;
 ```
 
 ### 20. mentors.uterine_inversion_evaluation_2026 source
 ```sql
--- Cohort-aware child (same shape as amstl_evaluation_2026).
+-- Cohort-aware child; average_score is the MAX attempt per mentee × cycle × program.
 -- skill_evaluation in moh_skills_checklist is 'Uterine inversion' (lowercase i).
 -- Exact '= Uterine Inversion' drops rows (e.g. mentee 706665277, submission 820211387).
 -- Use ILIKE. Score = sum of 25 items / 25.0 (each Yes = 1); COALESCE nulls to 0.
@@ -427,7 +443,10 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 END)
           OVER(
           PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
-          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date
+          ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_pass_date,
+          row_number() OVER (
+          PARTITION BY scored_attempts.mentee_id, scored_attempts.cycle_id, scored_attempts.program
+          ORDER BY scored_attempts."average score" DESC, scored_attempts.date_submitted DESC, scored_attempts.submission_id DESC) AS score_rank
            FROM ( SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitted, msc.county, msc.facility, msc.facility_code, msc.program, msc.mentee_name, msc.mentee_id, msc.skill_evaluation,
                         (COALESCE(msc.shout_for_help::integer, 0)
                          + COALESCE(msc.blood_monitoring_drape::integer, 0)
@@ -463,7 +482,8 @@ AS SELECT ranked_attempts.submission_id, ranked_attempts.date_started, ranked_at
                 UNION ALL
                          SELECT 3, 'Cohort 3'::character varying::character varying(50) AS "varchar", '2027-04-01'::date AS date, '2028-03-31'::date AS date) c ON msc.date_submitted::date >= c.cycle_start AND msc.date_submitted::date <= c.cycle_end
              WHERE msc.skill_evaluation ILIKE 'Uterine inversion') scored_attempts
-          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts;
+          WHERE scored_attempts.mentee_id IS NOT NULL AND scored_attempts."average score" IS NOT NULL) ranked_attempts
+  WHERE ranked_attempts.score_rank = 1;
 ```
 
 ### 21. mentors.maternal_shock_evaluation_2026 source
@@ -476,10 +496,10 @@ AS SELECT msc.submission_id, msc.date_started, msc.date_ended, msc.date_submitte
 ```
 
 ## Notes
-- Purpose: Capture AMTSL evaluation scores in a reusable view
+- Purpose: Skills assessment parent/child views for MoH checklists
 - Database: mentors
-- Results / observations: View calculates average score using different item sets before and after 2026-04-01
+- **average_score grain:** maximum attempt score per mentee × cycle × program (not mean of attempts). Redeploy all children from `skills_assessment_cycle_views.sql`, then the parent.
 - Maternal shock: 23 checklist items, each Yes = 1 point; average score = sum / 23.0
 - Maternal resuscitation child view name: `mentors.maternal_resuscitation_evaluation_2026` (not `moh_maternal_resuscitation_evaluation`). 21 checklist items, each Yes = 1 point; average score = sum / 21.0. After 2026-04-01 use `debrief_or_assign_tasks` + `identify_cpr_lormarks` (not the legacy `debrief_and_assign_tasks` + `identify_cpr_landmarks`, which stay 0 on new form submissions and understate scores by up to 2/21).
 - Uterine inversion: checklist stores `Uterine inversion` (lowercase i). Child view must use `ILIKE 'Uterine inversion'` — exact `= 'Uterine Inversion'` drops rows from parent (e.g. mentee 706665277). Score = sum of 25 items / 25.0.
-- UBT free flow: cohort 2+ checklist has 34 items (Yes = 1); average = sum / 34.0. Column names: `hungon_drip_stand_valve_closed` (not `..._stor_...`), `document` (lowercase). Child uses `ILIKE 'UBT (free flow)'` + COALESCE nulls to 0; cohort-aware shape matches `amstl_evaluation_2026`.
+- UBT free flow: cohort 2+ checklist has 34 items (Yes = 1); average = sum / 34.0. Column names: `hungon_drip_stand_valve_closed` (not `..._stor_...`), `document` (lowercase). Child uses `ILIKE 'UBT (free flow)'` + COALESCE nulls to 0; cycle-best shape matches other `*_evaluation_2026` children.
