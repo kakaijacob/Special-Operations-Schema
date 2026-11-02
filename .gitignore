@@ -1,0 +1,5 @@
+.env
+.env.local
+.env.*.local
+*.pgpass
+.redshift.env
