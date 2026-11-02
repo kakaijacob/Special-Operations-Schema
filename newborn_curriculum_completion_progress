@@ -6,6 +6,14 @@
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
 -- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
+--
+-- Topic cells from Kobo select_multiple questions are space-separated choice
+-- codes ("ballard_score apnea_of_prematurity_and_use_of_caffeine_citrate").
+-- Those are split before the distinct-topic count. A display label that
+-- contains spaces and no underscore stays one topic. Activity text "cmes",
+-- "CMEs", or a multi-select such as "cmes videos" still counts as CMEs;
+-- on a multi-select activity cell only topics on the CME list are counted,
+-- so a video topic on that same row is not counted as a CME.
 
 WITH cohorts AS (
     SELECT
@@ -157,6 +165,115 @@ tracking_by_cycle AS (
       AND TRIM(t.topic) <> ''
 ),
 
+-- Official CME lecturette choice codes from the tracking form.
+cme_topic_codes AS (
+    SELECT 'infection_prevention_and_control' AS topic_code
+    UNION ALL SELECT 'infant_and_family_centred_developmental_care'
+    UNION ALL SELECT 'essential_newborn_care'
+    UNION ALL SELECT 'newborn_care_transition'
+    UNION ALL SELECT 'indications_and_safe_use_of_oxygen'
+    UNION ALL SELECT 'the_use_of_pulse_oximetry'
+    UNION ALL SELECT 'neonatal_thermoregulation'
+    UNION ALL SELECT 'the_use_of_a_radiant_warmer'
+    UNION ALL SELECT 'use_of_incubator_and_different_settings'
+    UNION ALL SELECT 'newborn_resuscitation'
+    UNION ALL SELECT 'danger_signs_inclusive_of_neonatal_convulsions_and_neonatal_sepsis'
+    UNION ALL SELECT 'introduction_to_care_of_small_and_sick_newborns_and_discussion_of_use_of_plastic_wraps'
+    UNION ALL SELECT 'ballard_score'
+    UNION ALL SELECT 'continuous_positive_airway_pressure'
+    UNION ALL SELECT 'apnea_of_prematurity_and_use_of_caffeine_citrate'
+    UNION ALL SELECT 'kangaroo_mother_care'
+    UNION ALL SELECT 'neonatal_jaundice'
+    UNION ALL SELECT 'neonatal_feeding_algorithm'
+    UNION ALL SELECT 'newborn_feeding_and_discussion_of_feeding_algorithm'
+),
+
+topic_numbers AS (
+    SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+    UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
+    UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12
+    UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15 UNION ALL SELECT 16
+    UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+    UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24
+    UNION ALL SELECT 25
+),
+
+-- One row per choice code when topic holds several underscore codes.
+tracking_parts AS (
+    SELECT
+        tb.cycle_id,
+        tb.req_cme,
+        tb.req_drills,
+        tb.req_practicum_essential,
+        tb.req_practicum_comprehensive,
+        tb.req_skill_demo,
+        tb.req_videos,
+        tb.req_roleplay,
+        tb.req_case_scenarios,
+        tb.req_group_discussions,
+        tb.mentee_id,
+        tb.mentorship_activity,
+        tb.program,
+        tb.date_submitted,
+        CASE
+            WHEN STRPOS(tb.topic, '_') > 0
+             AND STRPOS(TRIM(tb.topic), ' ') > 0
+            THEN TRIM(SPLIT_PART(tb.topic, ' ', tn.n))
+            ELSE TRIM(tb.topic)
+        END AS topic_unit
+    FROM tracking_by_cycle tb
+    INNER JOIN topic_numbers tn
+        ON tn.n <= CASE
+            WHEN STRPOS(tb.topic, '_') > 0
+             AND STRPOS(TRIM(tb.topic), ' ') > 0
+            THEN REGEXP_COUNT(TRIM(tb.topic), ' ') + 1
+            ELSE 1
+        END
+),
+
+tracking_expanded AS (
+    SELECT
+        tp.cycle_id,
+        tp.req_cme,
+        tp.req_drills,
+        tp.req_practicum_essential,
+        tp.req_practicum_comprehensive,
+        tp.req_skill_demo,
+        tp.req_videos,
+        tp.req_roleplay,
+        tp.req_case_scenarios,
+        tp.req_group_discussions,
+        tp.mentee_id,
+        CASE
+            WHEN LOWER(TRIM(tp.mentorship_activity)) IN ('cmes', 'cme')
+            THEN 'CMEs'
+            WHEN (
+                    STRPOS(' ' || LOWER(TRIM(tp.mentorship_activity)) || ' ', ' cmes ') > 0
+                 OR STRPOS(' ' || LOWER(TRIM(tp.mentorship_activity)) || ' ', ' cme ') > 0
+                )
+             AND (
+                    code_match.topic_code IS NOT NULL
+                 OR label_match.topic_code IS NOT NULL
+                )
+            THEN 'CMEs'
+            ELSE tp.mentorship_activity
+        END AS mentorship_activity,
+        tp.program,
+        tp.topic_unit AS topic,
+        tp.date_submitted
+    FROM tracking_parts tp
+    LEFT JOIN cme_topic_codes code_match
+        ON code_match.topic_code = LOWER(TRIM(tp.topic_unit))
+    LEFT JOIN cme_topic_codes label_match
+        ON label_match.topic_code = REPLACE(
+            LOWER(TRIM(SPLIT_PART(tp.topic_unit, '(', 1))),
+            ' ',
+            '_'
+        )
+    WHERE tp.topic_unit IS NOT NULL
+      AND tp.topic_unit <> ''
+),
+
 -- Program observed for the mentee within each cycle
 cycle_program AS (
     SELECT
@@ -181,7 +298,7 @@ topic_first AS (
         MAX(req_roleplay) AS req_roleplay,
         MAX(req_case_scenarios) AS req_case_scenarios,
         MAX(req_group_discussions) AS req_group_discussions
-    FROM tracking_by_cycle
+    FROM tracking_expanded
     WHERE mentorship_activity IN (
         'CMEs',
         'Drills',
@@ -298,7 +415,7 @@ practicum_topic_first AS (
         MIN(date_submitted) AS first_date,
         MAX(req_practicum_essential) AS req_practicum_essential,
         MAX(req_practicum_comprehensive) AS req_practicum_comprehensive
-    FROM tracking_by_cycle
+    FROM tracking_expanded
     WHERE (
             mentorship_activity = 'practicums'
             AND program = 'essential_newborn_care'

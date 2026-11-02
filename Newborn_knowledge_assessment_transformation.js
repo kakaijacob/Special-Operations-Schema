@@ -54,25 +54,22 @@ const menteeFields = [
 "demographic_information/mentee_details/muriranjas_nbc_mentees"
 ];
 
-// Topic fields
-const topicFields = [
-  'newborn_training_Curriculum/newborn_cmes/cmes_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/cmes_essential',
-  'newborn_training_Curriculum/newborn_cmes/drills_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/drills_essential',
-  'newborn_training_Curriculum/newborn_cmes/mentor_demonstrations_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/practicum_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/case_scenarios_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/videos_comprehensive',
-  'newborn_training_Curriculum/newborn_cmes/case_scenarios_essential'
-];
+// One topic field per activity. The live form stores each select_multiple
+// under its own group; pairing them avoids counting a drill topic as a CME.
+const activityTopicFields = {
+  cmes: 'newborn_training_Curriculum/newborn_cmes/cmes',
+  videos: 'newborn_training_Curriculum/newborn_videos/videos',
+  case_scenarios: 'newborn_training_Curriculum/newborn_case_scenarios/case_scenarios',
+  role_plays: 'newborn_training_Curriculum/newborn_role_plays/role_plays',
+  mentor_skills_demonstrations: 'newborn_training_Curriculum/newborn_skills_demonstrations/mentor_demonstrations',
+  practicum: 'newborn_training_Curriculum/newborn_practicum/practicum',
+  drills: 'newborn_training_Curriculum/newborn_drills/drills',
+  group_discussions: 'newborn_training_Curriculum/newborn_group_discussions/group_discussions'
+};
 
 // Mentorship activity & newborn program fields
 const activityField = 'newborn_training_Curriculum/program_activities/newborn_activities';
-const newbornProgramField = [
-  'newborn_training_Curriculum/program_activities/newborn_program',
-  'demographic_information/mentor_details/newborn_program'
-  ];
+const newbornProgramField = 'demographic_information/mentor_details/program';
 
 function fetchKoboIncrementalFull() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -175,34 +172,37 @@ function fetchKoboIncrementalFull() {
         }
       });
 
-      // Topics
-      const topics = [];
-      topicFields.forEach(tField => {
-        const tStr = record[tField];
-        if (tStr) tStr.split(' ').filter(Boolean).forEach(t => topics.push(formatTitleWithAbbrev(t)));
+      // Keep the Kobo program code. The progress SQL matches
+      // essential_newborn_care / comprehensive_newborn_care exactly.
+      const newbornProgram = (record[newbornProgramField] || '').toString().trim();
+
+      const selectedActivities = (record[activityField] || '')
+        .toString()
+        .split(' ')
+        .filter(Boolean);
+
+      const activityTopics = [];
+      selectedActivities.forEach(activityCode => {
+        const field = activityTopicFields[activityCode];
+        const rawTopics = field ? (record[field] || '') : '';
+        rawTopics.toString().split(' ').filter(Boolean).forEach(topicCode => {
+          activityTopics.push({
+            activity: activityLabel(activityCode, newbornProgram),
+            topic: formatTitleWithAbbrev(topicCode)
+          });
+        });
       });
 
-      // Activities
-      const activities = [];
-      const aStr = record[activityField];
-      if (aStr) aStr.split(' ').filter(Boolean).forEach(a => activities.push(formatTitleWithAbbrev(a)));
-
-      // Newborn Program (replace _ with space & Title Case)
-      let newbornProgram = record[newbornProgramField] || '';
-      newbornProgram = toTitleCase(newbornProgram.replace(/_/g, ' '));
-
-      // Build combinations
+      // One row per mentee × facility × activity × topic
       mentees.forEach(mentee => {
         facilities.forEach(fac => {
-          topics.forEach(topic => {
-            activities.forEach(activity => {
-              rows.push([
-                submissionDate, sessionDate, ifmName, county,
-                fac.code, fac.name,
-                mentee.id, mentee.name, newbornProgram,
-                activity, topic, submissionId
-              ]);
-            });
+          activityTopics.forEach(item => {
+            rows.push([
+              submissionDate, sessionDate, ifmName, county,
+              fac.code, fac.name,
+              mentee.id, mentee.name, newbornProgram,
+              item.activity, item.topic, submissionId
+            ]);
           });
         });
       });
@@ -238,6 +238,20 @@ function formatSubmissionDate(timestamp) {
 
 function toTitleCase(str) {
   return str.split(' ').map(word => word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : '').join(' ');
+}
+
+function activityLabel(activityCode, program) {
+  if (activityCode === 'cmes') return 'CMEs';
+  if (activityCode === 'drills') return 'Drills';
+  if (activityCode === 'videos') return 'Videos';
+  if (activityCode === 'role_plays') return 'Role plays';
+  if (activityCode === 'case_scenarios') return 'Case scenarios';
+  if (activityCode === 'group_discussions') return 'Group discussions';
+  if (activityCode === 'mentor_skills_demonstrations') return 'skill_demonstrations';
+  if (activityCode === 'practicum') {
+    return program === 'comprehensive_newborn_care' ? 'Practicums' : 'practicums';
+  }
+  return formatTitleWithAbbrev(activityCode);
 }
 
 function formatTitleWithAbbrev(str) {
