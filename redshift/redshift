@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Redshift client for https://github.com/kakaijacob/Special-Operations-Schema
+# Uses redshift/pg_service.conf in this repo. The password stays in ~/.pgpass.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+export PSQLRC="${PSQLRC:-$ROOT/psqlrc}"
+export PGSERVICEFILE="${PGSERVICEFILE:-$ROOT/pg_service.conf}"
+
+exec psql "service=redshift" "$@"

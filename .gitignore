@@ -1,0 +1,5 @@
+# Local Redshift credentials. Never commit these.
+.pgpass
+.env
+*.env
+redshift.env
