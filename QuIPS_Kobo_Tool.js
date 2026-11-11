@@ -183,6 +183,12 @@ function groupFacilitiesByCounty_(facilities) {
     if (!byCounty[f.county]) byCounty[f.county] = [];
     byCounty[f.county].push(f);
   }
+  // Keep each county's facilities A-Z by label for Kobo choice order
+  Object.keys(byCounty).forEach(function (county) {
+    byCounty[county].sort(function (a, b) {
+      return String(a.facility || '').toLowerCase().localeCompare(String(b.facility || '').toLowerCase());
+    });
+  });
   return byCounty;
 }
 
