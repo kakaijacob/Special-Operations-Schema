@@ -1,0 +1,85 @@
+submission_id,date_submitted,mentee_id,mentee_name,county,facility,facility_code,mentorship_activity,program,topic
+nb-001,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 01
+nb-002,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 02
+nb-003,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 03
+nb-004,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 04
+nb-005,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 05
+nb-006,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 06
+nb-007,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 07
+nb-008,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 08
+nb-009,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 09
+nb-010,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 10
+nb-011,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 11
+nb-012,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 12
+nb-013,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 13
+nb-014,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 14
+nb-015,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 15
+nb-016,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 16
+nb-017,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 17
+nb-018,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 18
+nb-019,2025-01-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,CMEs,essential_newborn_care,CME 19
+nb-020,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 01
+nb-021,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 02
+nb-022,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 03
+nb-023,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 04
+nb-024,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 05
+nb-025,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 06
+nb-026,2025-01-15 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Drills,essential_newborn_care,Drill 07
+nb-027,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 01
+nb-028,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 02
+nb-029,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 03
+nb-030,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 04
+nb-031,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 05
+nb-032,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 06
+nb-033,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 07
+nb-034,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 08
+nb-035,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 09
+nb-036,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 10
+nb-037,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 11
+nb-038,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 12
+nb-039,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 13
+nb-040,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 14
+nb-041,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 15
+nb-042,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 16
+nb-043,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 17
+nb-044,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 18
+nb-045,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 19
+nb-046,2025-01-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,practicums,essential_newborn_care,Practicum 20
+nb-047,2025-01-25 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,skill_demonstrations,essential_newborn_care,Skill Demo 01
+nb-048,2025-01-25 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,skill_demonstrations,essential_newborn_care,Skill Demo 02
+nb-049,2025-01-25 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,skill_demonstrations,essential_newborn_care,Skill Demo 03
+nb-050,2025-01-25 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,skill_demonstrations,essential_newborn_care,Skill Demo 04
+nb-051,2025-01-25 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,skill_demonstrations,essential_newborn_care,Skill Demo 05
+nb-052,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 01
+nb-053,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 02
+nb-054,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 03
+nb-055,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 04
+nb-056,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 05
+nb-057,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 06
+nb-058,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 07
+nb-059,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 08
+nb-060,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 09
+nb-061,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 10
+nb-062,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 11
+nb-063,2025-01-28 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Videos,essential_newborn_care,Video 12
+nb-064,2025-01-30 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Role plays,essential_newborn_care,Role Play 01
+nb-065,2025-01-30 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Role plays,essential_newborn_care,Role Play 02
+nb-066,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 01
+nb-067,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 02
+nb-068,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 03
+nb-069,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 04
+nb-070,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 05
+nb-071,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 06
+nb-072,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 07
+nb-073,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 08
+nb-074,2025-02-01 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Case scenarios,essential_newborn_care,Case Scenario 09
+nb-075,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 01
+nb-076,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 02
+nb-077,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 03
+nb-078,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 04
+nb-079,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 05
+nb-080,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 06
+nb-081,2025-02-05 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,Group discussions,essential_newborn_care,Group Discussion 07
+nb-082,2026-05-01 09:00:00,m-02,John Roe,Makueni,Makindu SCH,2002,CMEs,comprehensive_newborn_care,CME 01
+nb-083,2026-05-02 09:00:00,m-02,John Roe,Makueni,Makindu SCH,2002,Practicums,comprehensive_newborn_care,Practicum 01
+nb-084,2026-06-01 09:00:00,m-05,Newborn Fact Only,Kakamega,Kakamega CGH,4001,CMEs,essential_newborn_care,CME 01

@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: googlesheets
+    description: >
+      Mentors Google Sheet streams loaded by Airbyte into ClickHouse.
+      Confirm identifiers with SHOW TABLES FROM googlesheets.
+    schema: googlesheets
+    tables:
+      - name: ke_mentors_legacy_mentees
+        description: Old mentee database (first cohort 2024–2025).
+      - name: ke_mentors_mentees
+        description: Current mentee database (cohort 2026).
+      - name: ke_mentors_mentors
+        description: Complete in-facility mentor database.
+      - name: ke_facility_prioritization_database
+        description: Facilities enrolled in the mentors program.
+      - name: ke_mentors_total_delta_users
+        description: DELTA 1.0 learners including module pre/post scores.
+      - name: ke_legacy_emonc_knowledge_survey
+        description: Baseline/endline knowledge assessments through expanded curriculum 2025.
+
+  - name: kobotoolbox
+    description: >
+      Mentors Kobo form submissions loaded by Airbyte into ClickHouse.
+      Confirm identifiers with SHOW TABLES FROM kobotoolbox.
+    schema: kobotoolbox
+    tables:
+      - name: emonc_curriculum_tracking_submissions
+        description: EmONC curriculum tracking form submissions.
+      - name: moh_skills_assessment_submissions
+        description: MoH skills assessment form submissions.
+      - name: newbon_curriculum_tracking_submissions
+        description: Newborn curriculum tracking form submissions.
+      - name: quality_intrapartum_care_surveillance_submissions
+        description: Quality intrapartum care (QuIPS) surveillance submissions.

@@ -1,0 +1,10 @@
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+*.duckdb
+*.duckdb.wal
+# local profiles — use profiles.example.yml
+profiles.yml
+secrets.env

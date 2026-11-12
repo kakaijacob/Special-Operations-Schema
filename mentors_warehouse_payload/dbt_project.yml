@@ -1,0 +1,77 @@
+name: "jacaranda_mentors"
+version: "1.0.0"
+config-version: 2
+
+profile: "warehouse_mentors_ke"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  use_sample_seeds: true
+  emonc_progress_year: 2026
+  emonc_individual_req_cme: 13
+  emonc_individual_req_drills: 5
+  emonc_individual_req_skill_demos: 20
+  emonc_individual_req_return_demos: 20
+  emonc_individual_req_skill_eval: 20
+  emonc_individual_req_labor: 1
+  newborn_individual_req_cme: 19
+  newborn_individual_req_drills: 7
+  newborn_individual_req_practicum_essential: 20
+  newborn_individual_req_practicum_comprehensive: 22
+  newborn_individual_req_skill_demo: 5
+  newborn_individual_req_videos: 12
+  newborn_individual_req_roleplay: 2
+  newborn_individual_req_case_scenarios: 9
+  newborn_individual_req_group_discussions: 7
+
+models:
+  jacaranda_mentors:
+    +engine: MergeTree()
+    +persist_docs:
+      relation: true
+      columns: true
+
+    staging:
+      +materialized: view
+
+    intermediate:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    marts:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+      +schema: gold
+
+    metrics:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+      +schema: gold
+
+    exports:
+      +materialized: view
+
+seeds:
+  jacaranda_mentors:
+    +engine: MergeTree()
+
+snapshots:
+  jacaranda_mentors:
+    +engine: MergeTree()
+    +target_schema: "{{ env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') }}{% if env_var('DBT_USER_SCHEMA', 'dbt_mentors_ke') == 'dbt_mentors_ke' %}_snapshots{% endif %}"

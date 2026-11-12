@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: stg_googlesheets__ke_mentors_mentees
+    description: Cleaned current mentee master rows from googlesheets.ke_mentors_mentees.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+
+  - name: stg_googlesheets__ke_mentors_legacy_mentees
+    description: Cleaned legacy mentee master rows from googlesheets.ke_mentors_legacy_mentees.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: mentee_source
+        data_tests:
+          - accepted_values:
+              values: [legacy]
+
+  - name: stg_googlesheets__ke_mentors_mentors
+    description: Anticipatory staging for in-facility mentors sheet.
+
+  - name: stg_googlesheets__ke_facility_prioritization_database
+    description: Anticipatory staging for facility prioritization sheet.
+
+  - name: stg_googlesheets__ke_mentors_total_delta_users
+    description: Anticipatory staging for DELTA 1.0 learner scores.
+
+  - name: stg_googlesheets__ke_legacy_emonc_knowledge_survey
+    description: Anticipatory staging for legacy EmONC knowledge surveys.
+
+  - name: stg_kobotoolbox__emonc_curriculum_tracking_submissions
+    description: Raw EmONC curriculum tracking submissions (pre-explode).
+
+  - name: stg_kobotoolbox__moh_skills_assessment_submissions
+    description: Raw MoH skills assessment submissions (pre-parse).
+
+  - name: stg_kobotoolbox__newbon_curriculum_tracking_submissions
+    description: Anticipatory staging for newborn curriculum tracking.
+
+  - name: stg_kobotoolbox__quality_intrapartum_care_surveillance_submissions
+    description: Anticipatory staging for QuIPS surveillance.
+
+  - name: stg_processed__emonc_curriculum_tracking
+    description: >
+      Processed EmONC curriculum fact (activity × topic). Seed-backed until
+      Kobo explode intermediate is built.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: submitted_at
+        data_tests:
+          - not_null
+
+  - name: stg_processed__moh_skills_assessment
+    description: >
+      Processed MoH skill scores. Seed-backed until Kobo parse intermediate is built.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: skill_evaluation
+        data_tests:
+          - not_null
+      - name: average_score
+        data_tests:
+          - not_null
+
+  - name: stg_processed__newborn_curriculum_tracking
+    description: >
+      Processed newborn curriculum fact (activity × topic × program). Seed-backed
+      until Kobo explode intermediate is built.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: submitted_at
+        data_tests:
+          - not_null
+
+  - name: stg_processed__newborn_resuscitation_assessments
+    description: >
+      NNR assessments filtered to newborn resuscitation / newborn curriculum.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: average_score
+        data_tests:
+          - not_null

@@ -1,0 +1,5 @@
+submission_id,date_submitted,mentee_id,mentee_name,county,facility,facility_code,program,skill_evaluation,average_score
+nnr-001,2025-02-10 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,newborn curriculum,Newborn resuscitation,0.70
+nnr-002,2025-02-20 09:00:00,m-99,Newborn Only,Mombasa,Port Reitz,3001,newborn curriculum,Newborn resuscitation,0.90
+nnr-003,2026-05-10 09:00:00,m-02,John Roe,Makueni,Makindu SCH,2002,newborn curriculum,Newborn resuscitation,0.80
+nnr-004,2026-06-05 09:00:00,m-06,NNR Fact Only,Muranga,Muriranjas DH,1002,newborn curriculum,Newborn resuscitation,0.88
