@@ -4,6 +4,7 @@
 -- plus any mentee_id only present in fact tables
 -- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
+-- privacy_code = FacilityCode-XXXX (SHA-256 prefix); use on shared dashboards instead of mentee_name
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
 -- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
@@ -442,6 +443,27 @@ progress AS (
 SELECT
     mentee_id,
     mentee_name,
+    -- Dashboard-safe label: FacilityCode + first 4 hex of SHA-256(FacilityCode|MenteeID).
+    -- Does not embed name or raw mentee ID. Mentors resolve via private privacy key.
+    CASE
+        WHEN facility_code IS NOT NULL
+         AND TRIM(CAST(facility_code AS VARCHAR(100))) <> ''
+         AND mentee_id IS NOT NULL
+         AND TRIM(CAST(mentee_id AS VARCHAR(100))) <> ''
+        THEN TRIM(CAST(facility_code AS VARCHAR(100)))
+             || '-'
+             || UPPER(SUBSTRING(
+                    SHA2(
+                        TRIM(CAST(facility_code AS VARCHAR(100)))
+                        || '|'
+                        || TRIM(CAST(mentee_id AS VARCHAR(100))),
+                        256
+                    ),
+                    1,
+                    4
+                ))
+        ELSE NULL
+    END AS privacy_code,
     county,
     facility,
     facility_code,
