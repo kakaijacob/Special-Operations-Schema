@@ -1,0 +1,17 @@
+-- PRACTICE (do this yourself — see New_Stack_Tutor.md §04 Models → Practice)
+-- Goal: one row per order line item, with product name/type/price and order context.
+--
+-- Hints:
+--   1. Start FROM {{ ref('stg_order_items') }}
+--   2. LEFT JOIN {{ ref('stg_products') }} on sku
+--   3. LEFT JOIN {{ ref('stg_orders') }} on order_id
+--   4. Select: order_item_id, order_id, customer_id, sku, product_name,
+--              product_type, product_price, ordered_at, order_total
+--
+-- When ready: rename this file to order_items.sql (remove .practice), then:
+--   dbt run --select order_items
+--
+-- Compare with: models/marts/_exemplar_order_items.sql.exemplar
+
+-- DELETE this comment block and write your SELECT below:
+select 1 as placeholder
