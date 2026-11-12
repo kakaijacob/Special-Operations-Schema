@@ -1,6 +1,3 @@
-# QuIPS Data Transformation
-
-```javascript
 function fetchKoboData_Generic() {
 
   // ================= CONFIGURATION =================
@@ -1409,4 +1406,3 @@ kindly_none_of_above:
 
   Logger.log(`Inserted ${rows.length} new records.`);
 }
-```
