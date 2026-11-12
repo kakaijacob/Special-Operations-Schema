@@ -118,7 +118,8 @@ function fetchKoboData_All() {
   const facilitySuffixes = [
     "kiambu_facilities","machakos_facilities","makueni_facilities",
     "muranga_facilities","nairobi_facilities","nakuru_facilities",
-    "kakamega_facilities","kisii_facilities","mombasa_facilities"
+    "kakamega_facilities","kisii_facilities","mombasa_facilities",
+    "meru_facilities","kilifi_facilities"
   ];
 
   const facilityFields = facilityRoots.flatMap(root =>
