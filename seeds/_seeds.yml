@@ -1,0 +1,87 @@
+version: 2
+
+seeds:
+  - name: moh_skills_checklist_sample
+    description: Sample MoH skills checklist submissions for local practice until real source data is loaded.
+    config:
+      column_types:
+        submission_id: String
+        date_started: DateTime
+        date_ended: DateTime
+        date_submitted: DateTime
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+        mentee_name: String
+        mentee_id: String
+        skill_evaluation: String
+
+  - name: mentee_database_sample
+    description: Sample mentee master data for curriculum-completion practice.
+    config:
+      column_types:
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+
+  - name: mentee_curriculum_tracking_sample
+    description: Sample curriculum activities covering complete, partial, and fact-only mentees.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        mentorship_activity: String
+        topic: String
+
+  - name: process_moh_skills_assessment_sample
+    description: Sample processed skill scores used to calculate per-cycle completion.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        skill_evaluation: String
+        average_score: Float64
+
+  - name: newborn_curriculum_tracking_sample
+    description: Sample newborn activities covering a complete essential-care mentee and partial mentees.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        mentorship_activity: String
+        program: String
+        topic: String
+
+  - name: newborn_resuscitation_assessment_sample
+    description: Sample NNR baseline and endline assessments for newborn curriculum modelling.
+    config:
+      column_types:
+        submission_id: String
+        date_submitted: DateTime
+        mentee_id: String
+        mentee_name: String
+        county: String
+        facility: String
+        facility_code: String
+        program: String
+        skill_evaluation: String
+        average_score: Float64

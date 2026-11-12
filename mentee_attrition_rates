@@ -1,0 +1,58 @@
+-- Mentee and mentor attrition rates by facility
+-- Grain: one row per facility from mentors.facility_prioritization_database
+-- Includes mentor/mentee totals, active %, attrition rates, and leading mentee attrition cause
+
+WITH mentor_agg AS (
+    SELECT
+        facility_code,
+        COUNT(DISTINCT mentor_id) AS total_mentors,
+        COUNT(DISTINCT CASE WHEN status = 'Active' THEN mentor_id END) AS active_mentors
+    FROM mentors.mentors_database
+    GROUP BY facility_code
+),
+
+mentee_agg AS (
+    SELECT
+        facility_code,
+        COUNT(DISTINCT mentee_id) AS total_mentees,
+        COUNT(DISTINCT CASE WHEN status = 'Active' THEN mentee_id END) AS active_mentees
+    FROM mentors.mentee_database
+    GROUP BY facility_code
+),
+
+mentee_reason_agg AS (
+    SELECT
+        facility_code,
+        reason_for_deactivation,
+        COUNT(DISTINCT mentee_id) AS reason_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY facility_code
+            ORDER BY COUNT(DISTINCT mentee_id) DESC
+        ) AS rn
+    FROM mentors.mentee_database
+    WHERE status != 'Active'
+      AND reason_for_deactivation IS NOT NULL
+    GROUP BY facility_code, reason_for_deactivation
+)
+
+SELECT
+    f.county,
+    f.facility,
+    f.dhis_code AS facility_code,
+
+    COALESCE(m.total_mentors, 0) AS total_mentors,
+    ROUND(COALESCE(m.active_mentors, 0) / NULLIF(m.total_mentors, 0), 3) AS pct_active_mentors,
+    ROUND((COALESCE(m.total_mentors, 0) - COALESCE(m.active_mentors, 0)) / NULLIF(m.total_mentors, 0), 3) AS mentor_attrition_rate,
+
+    COALESCE(e.total_mentees, 0) AS total_mentees,
+    ROUND(COALESCE(e.active_mentees, 0) / NULLIF(e.total_mentees, 0), 3) AS pct_active_mentees,
+    ROUND((COALESCE(e.total_mentees, 0) - COALESCE(e.active_mentees, 0)) / NULLIF(e.total_mentees, 0), 3) AS mentee_attrition_rate,
+    ROUND(COALESCE(e.active_mentees, 0) / NULLIF(e.total_mentees, 0), 3) AS mentee_retention_rate,
+
+    r.reason_for_deactivation AS leading_mentee_attrition_cause
+
+FROM mentors.facility_prioritization_database f
+LEFT JOIN mentor_agg m ON f.dhis_code = m.facility_code
+LEFT JOIN mentee_agg e ON f.dhis_code = e.facility_code
+LEFT JOIN mentee_reason_agg r ON f.dhis_code = r.facility_code AND r.rn = 1
+ORDER BY f.county, f.facility;

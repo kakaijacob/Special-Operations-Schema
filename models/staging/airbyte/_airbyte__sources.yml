@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: airbyte
+    description: Tables loaded into ClickHouse by Airbyte.
+    schema: "{{ var('airbyte_schema', 'default') }}"
+    tables:
+      - name: mentees
+        identifier: Mentees
+        description: Mentee master data synced from the Mentees Google Sheet.
