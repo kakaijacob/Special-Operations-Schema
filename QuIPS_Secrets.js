@@ -1,17 +1,12 @@
 /**
  * QuIPS — secret keys and asset details.
  *
- * One Apps Script project, five files (all share a global function scope):
- *   1. QuIPS_Secrets.js            this file
- *   2. QuIPS_Data_Extraction.js    fetch + column transform
- *   3. QuIPS_Facility_Targets.js   observation targets by facility code
- *   4. QuIPS_Scoring.js            quality-of-care and section scores
- *   5. QuIPS_Data_Quality.js       integrity checks, formatting, dedupe
+ * One Apps Script project. All files share a global function scope.
+ * Run runQuips in QuIPS_Run.js. That starts the full pull.
  *
  * The Kobo API token and form asset UID live only in this file.
- * Run installQuipsSecrets once from the editor. That copies them into
- * Script Properties (Project Settings → Script properties). The other
- * files read getQuipsSecrets_() and never contain the token or asset UID.
+ * runQuips copies them into Script Properties on the first run.
+ * The other files read getQuipsSecrets_().
  *
  * Sheet name keeps its trailing space. That is the live tab name.
  */

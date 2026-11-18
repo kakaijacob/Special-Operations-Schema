@@ -1,12 +1,8 @@
 /**
  * QuIPS — data extraction and transformation into columns.
  *
- * Paste these five files into one Apps Script project:
- *   QuIPS_Secrets.js
- *   QuIPS_Data_Extraction.js          (this file — run fetchKoboData_Generic)
- *   QuIPS_Facility_Targets.js
- *   QuIPS_Scoring.js
- *   QuIPS_Data_Quality.js
+ * Paste every QuIPS_*.js file into one Apps Script project, then run
+ * runQuips in QuIPS_Run.js. That calls fetchKoboData_Generic.
  *
  * fetchKoboData_Generic pulls new Kobo submissions, flattens them, and
  * appends one row per new _uuid on the transformed-data sheet. Column
