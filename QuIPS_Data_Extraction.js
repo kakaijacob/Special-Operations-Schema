@@ -113,7 +113,11 @@ function fetchKoboData_GenericLocked_() {
     }
 
     var rows = transformedData.map(function (obj) {
-      return headers.map(function (h) { return obj[h] || ""; });
+      return headers.map(function (h) {
+        var value = obj[h];
+        if (value === 0) return 0;
+        return value || "";
+      });
     });
 
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
