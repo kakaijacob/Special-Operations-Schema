@@ -3,12 +3,15 @@
 # The Matrix Scorecards analysis, written out to Google Sheets from Colab.
 #
 # What you get each report month
-#   one spreadsheet per county, inside a month folder
-#   Index                  deliveries, links, facilities with no submission
+#   Drive folder 1r0U51qVnj7aPGrDP5VxzxVVDMtWp8U-a / {year} /
+#   one spreadsheet per county, named "QuIPS CQI Nakuru November 2026"
+#   Index                  deliveries and links
 #   All facilities         county roll-up
-#   one tab per facility   that submitted that month
+#   one tab per facility   named as the facility
 #
-# On every data tab the sections run first to last, in dashboard order:
+# On each facility tab, row 1 names the facility and month. From row 2 downward,
+# each dashboard section is its own titled matrix. Two blank rows separate
+# one matrix from the next. Sections run first to last, in dashboard order:
 #   Overview, Key QuIPS indicators, Birth Preparedness, Labor Care Guide,
 #   Partograph Review, Technical Quality After Birth,
 #   Maternal Vitals & Documentation, Postbirth Infection Prevention,
@@ -37,6 +40,8 @@ DATA_URL = (
     'pub?gid=1114469965&single=true&output=csv'
 )
 TIMEZONE = 'Africa/Nairobi'
+# Parent Drive folder. Year subfolders (2026, 2027, ...) are created inside it.
+DESTINATION_FOLDER_ID = '1r0U51qVnj7aPGrDP5VxzxVVDMtWp8U-a'
 ROOT_FOLDER_NAME = 'QuIPS Analysis Export and Data Sharing'
 
 # Set by prepare_data(). make_rows reads its columns, same as the dashboard.
@@ -559,7 +564,7 @@ def build_export_plan(data, export_period):
         plan.append({
             'county': county,
             'label': label,
-            'file_name': f"QuIPS - {label} - {export_period.strftime('%b %Y')}",
+            'file_name': f"QuIPS CQI {label} {export_period.strftime('%B %Y')}",
             'this_month': int(county_df.loc[county_df['month_period'] == export_period, '_uuid'].nunique()),
             'through': int(county_df['_uuid'].nunique()),
             'latest': _latest_label(county_df),
@@ -623,51 +628,21 @@ def _score_cell(score, mode):
 
 
 def layout_scorecard(card, place, export_period):
+    """Row 1 names the place and month. Matrices start at row 2, each with a title.
+
+    Two blank rows separate one matrix from the next.
+    """
     months = card['months']
     cols = 4 + len(months)
     report_at = months.index(export_period) if export_period in months else -1
     grid = _grid(cols)
-    first = months[0].strftime('%b %Y') if months else export_period.strftime('%b %Y')
-    report = export_period.strftime('%b %Y')
-    previous = (export_period - 1).strftime('%b %Y')
-
-    _add(grid, [_cell('Quality Intrapartum Care Surveillance', bg=COLOR_TITLE, color='#ffffff', bold=True, size=16)], 36, merge=True)
-    _add(grid, [_cell(place, bg='#e8f4f8', bold=True, size=12)], 24, merge=True)
-    _add(grid, [_cell(f'Report month: {report}    ·    Trend: {report} vs {previous}')], 20, merge=True)
+    report = export_period.strftime('%B %Y')
     _add(grid, [_cell(
-        f"Deliveries this month: {card['deliveries_this_month']}"
-        f"    ·    Deliveries in the score ({first} – {report}): {card['deliveries']}"
-        f"    ·    Latest submission: {card['latest'] or '—'}"
-    )], 20, merge=True)
-    _add(grid, [_cell(
-        f'All cadres and all complications. Score and Status use every submission from {first} '
-        f'through {report}. The highlighted column is {report}.',
-        color=COLOR_NOTE, size=9, wrap=True,
-    )], 32, merge=True)
-    _add(grid, [_cell('')], 10)
-
-    header = [_cell('Submissions', bg=COLOR_HEADER, bold=True, align='LEFT')]
-    header.append(_cell('Through report month', bg=COLOR_HEADER, bold=True, align='CENTER'))
-    for i, month in enumerate(months):
-        header.append(_cell(month.strftime('%b %Y'), bg=COLOR_MONTH if i == report_at else COLOR_HEADER, bold=True, align='CENTER'))
-    header += [_cell('', bg=COLOR_HEADER), _cell('', bg=COLOR_HEADER)]
-    header_row = _add(grid, header, 22)
-    counts = [_cell('Deliveries (n)')]
-    counts.append(_cell(card['deliveries'], fmt='int', align='CENTER'))
-    for i, month in enumerate(months):
-        counts.append(_cell(card['deliveries_by_month'][i], fmt='int', align='CENTER', bg=COLOR_MONTH if i == report_at else '#ffffff'))
-    counts += [_cell(''), _cell('')]
-    _add(grid, counts, 20)
-    grid['borders'].append((header_row, 0, header_row + 2, cols))
-    _add(grid, [_cell('')], 10)
-
+        f"{place}  ·  {report}  ·  {card['deliveries_this_month']} deliveries this month",
+        bg='#e8f4f8', bold=True, size=12,
+    )], 24, merge=True)
     for number, section in enumerate(card['sections'], start=1):
         _append_section(grid, section, number, report_at)
-    _add(grid, [_cell('How to read this tab', bg=COLOR_SECTION, color='#ffffff', bold=True, size=11)], 22, merge=True)
-    _add(grid, [_cell('🟢 80% or above     🟠 60% up to 80%     🔴 below 60%     ⚪ no valid answers. Status describes the Score column.', color=COLOR_NOTE, size=9)], 18, merge=True)
-    _add(grid, [_cell('Harmful Practices (% with instance): 🟢 0%     🟠 up to 5%     🔴 above 5%. Lower is better, so an increase is red.', color=COLOR_NOTE, size=9)], 18, merge=True)
-    _add(grid, [_cell('Key QuIPS percentages use every delivery as the denominator. Indicator scores use valid answers only. Answer-mix sections have no status icon.', color=COLOR_NOTE, size=9, wrap=True)], 18, merge=True)
-    _add(grid, [_cell('Sections are in dashboard order, first through last.', color=COLOR_NOTE, size=9)], 18, merge=True)
     return grid
 
 
@@ -690,6 +665,7 @@ def _append_section(grid, section, number, report_at):
         _add(grid, [_cell('No valid answers in this period')], 20)
         grid['borders'].append((header_row, 0, header_row + 2, cols))
         _add(grid, [_cell('')], 10)
+        _add(grid, [_cell('')], 10)
         return
     for r, item in enumerate(section['rows']):
         zebra = COLOR_ZEBRA if r % 2 else '#ffffff'
@@ -707,6 +683,7 @@ def _append_section(grid, section, number, report_at):
         row.append(_cell(trend, color=trend_color, bold=True, align='CENTER', bg=zebra))
         _add(grid, row, 20)
     grid['borders'].append((header_row, 0, header_row + 1 + len(section['rows']), cols))
+    _add(grid, [_cell('')], 10)
     _add(grid, [_cell('')], 10)
 
 
@@ -997,12 +974,13 @@ def _share(spreadsheet, emails, link_sharing):
             print(f'  Could not turn on link sharing: {err}')
 
 
-def export_to_sheets(report_month=None, folder_id='', share_with=None, link_sharing=False, source=None):
+def export_to_sheets(report_month=None, folder_id=None, share_with=None, link_sharing=False, source=None):
     """Create or update one spreadsheet per county for the report month.
 
-    Run this in Google Colab. report_month is 'YYYY-MM', or None for the
-    previous month. folder_id is a Drive folder the recipients can open.
-    Leave it blank to create "QuIPS Analysis Export and Data Sharing".
+    Files go in folder_id / {year} /, named "QuIPS CQI {County} {Month} {Year}".
+    The year folder is created when that year first appears. report_month is
+    'YYYY-MM', or None for the previous month. folder_id defaults to the
+    shared QuIPS Drive folder.
     """
     prepare_data(source)
     export_period = report_period(report_month)
@@ -1017,13 +995,15 @@ def export_to_sheets(report_month=None, folder_id='', share_with=None, link_shar
 
     gc, creds = _colab_clients()
     drive = _drive(creds)
-    root_id = folder_id.strip() if folder_id else _folder(drive, ROOT_FOLDER_NAME)
-    month_id = _folder(drive, label, root_id)
+    root_id = (folder_id if folder_id is not None else DESTINATION_FOLDER_ID).strip()
+    if not root_id:
+        root_id = _folder(drive, ROOT_FOLDER_NAME)
+    year_id = _folder(drive, str(export_period.year), root_id)
     generated_at = datetime.now(ZoneInfo(TIMEZONE)).strftime('%d %b %Y %H:%M')
     written = []
 
     for county in plan:
-        file_id = _find_spreadsheet(drive, county['file_name'], month_id)
+        file_id = _find_spreadsheet(drive, county['file_name'], year_id)
         if file_id:
             spreadsheet = gc.open_by_key(file_id)
             action = 'updated'
@@ -1031,7 +1011,7 @@ def export_to_sheets(report_month=None, folder_id='', share_with=None, link_shar
             created = drive.files().create(body={
                 'name': county['file_name'],
                 'mimeType': 'application/vnd.google-apps.spreadsheet',
-                'parents': [month_id],
+                'parents': [year_id],
             }, fields='id').execute()
             spreadsheet = gc.open_by_key(created['id'])
             action = 'created'
@@ -1103,7 +1083,7 @@ def export_to_sheets(report_month=None, folder_id='', share_with=None, link_shar
         print(f"  {county['label']} ({action}): {spreadsheet.url}")
         written.append({'county': county['label'], 'action': action, 'url': spreadsheet.url})
 
-    print(f'Folder: https://drive.google.com/drive/folders/{month_id}')
+    print(f'Folder: https://drive.google.com/drive/folders/{year_id}')
     return written
 
 
@@ -1125,10 +1105,10 @@ def describe_plan(data, report_month=None):
         prepare_data()
     export_period = report_period(report_month)
     plan = build_export_plan(df, export_period)
-    print(f"{export_period.strftime('%b %Y')}: {len(plan)} county file(s)")
+    print(f"{export_period.strftime('%B %Y')}: {len(plan)} county file(s) in {export_period.year}/")
     for county in plan:
         print(
-            f"  {county['label']}: {county['this_month']} deliveries, "
+            f"  {county['file_name']}: {county['this_month']} deliveries, "
             f"{len(county['facilities'])} facility tab(s), "
             f"{len(county['silent'])} with no submission"
         )

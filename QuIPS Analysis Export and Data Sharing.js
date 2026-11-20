@@ -3,7 +3,16 @@
  * ------------------------------------------------------------------
  * Monthly share-out of the Matrix Scorecards dashboard.
  *
- * Each report month produces one Google spreadsheet per county:
+ * Each report month produces one Google spreadsheet per county, saved in
+ * the shared Drive folder under a year subfolder (2026, 2027, ...):
+ *
+ *   QuIPS CQI Nakuru November 2026
+ *
+ * Each facility tab is named as the facility. Row 1 names the facility and
+ * month. From row 2, each dashboard section is a titled matrix, with two
+ * blank rows between matrices.
+ *
+ * Spreadsheets:
  *
  *   Index             how to read the file, who submitted, who did not
  *   All facilities    county roll-up
@@ -38,10 +47,8 @@
  *   2. Project Settings → Timezone → Africa/Nairobi.
  *   3. Reload the sheet. Menu: QuIPS Analysis Export →
  *      Create Config and Sharing sheets.
- *   4. On Config, set DESTINATION_FOLDER_ID to a Drive folder the
- *      recipients can already open (new files are created inside it).
- *      Leave it blank to create "QuIPS Analysis Export and Data Sharing"
- *      in My Drive the first time the export runs.
+ *   4. DESTINATION_FOLDER_ID is the shared QuIPS folder. Files are created
+ *      in a year subfolder inside it (2026, then 2027, and so on).
  *   5. Optional Sharing sheet — one person per row:
  *        Email | Role | Counties
  *        Role: reader, commenter, or writer.
@@ -63,7 +70,7 @@
 
 var QUIPS_EXPORT = {
   DATA_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRPEUzmFeJeSDdQySj9OinUnelYoHGaWtVaU0UIaKJU0v4UZoGp3VSTnlroBkl6GDmW1YZ9w1y4bAIY/pub?gid=1114469965&single=true&output=csv',
-  DESTINATION_FOLDER_ID: '',
+  DESTINATION_FOLDER_ID: '1r0U51qVnj7aPGrDP5VxzxVVDMtWp8U-a',
   LINK_SHARING: false,
   TIMEZONE: 'Africa/Nairobi',
   ROOT_FOLDER_NAME: 'QuIPS Analysis Export and Data Sharing',
@@ -406,14 +413,14 @@ function exportYearMonth_(yearMonth, dryRun) {
 
   var cfg = loadConfig_();
   var root = rootFolder_(cfg);
-  var monthFolder = getOrCreateFolder_(root, monthLabel_(yearMonth));
+  var yearFolder = getOrCreateFolder_(root, yearMonth.slice(0, 4));
   var generatedAt = Utilities.formatDate(new Date(), cfg.timezone, 'dd MMM yyyy HH:mm');
   var lines = [summary, ''];
 
   for (var i = 0; i < plan.length; i++) {
     var county = plan[i];
     try {
-      var written = writeCountyFile_(monthFolder, county, yearMonth, generatedAt, cfg.dataUrl);
+      var written = writeCountyFile_(yearFolder, county, yearMonth, generatedAt, cfg.dataUrl);
       shareFile_(written.file, county.countyKey, cfg);
       appendLog_(root, [
         generatedAt,
@@ -543,6 +550,11 @@ function monthLabel_(key) {
   var year = key.slice(0, 4);
   var month = Number(key.slice(5, 7));
   return MONTH_NAMES[month - 1] + ' ' + year;
+}
+
+function monthLabelLong_(key) {
+  var full = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return full[Number(key.slice(5, 7)) - 1] + ' ' + key.slice(0, 4);
 }
 
 function prevMonthKey_(key) {
@@ -1146,7 +1158,7 @@ function planCounty_(countyKey, records, exportMonth) {
   return {
     countyKey: countyKey,
     countyLabel: countyLabel,
-    fileName: 'QuIPS - ' + countyLabel + ' - ' + monthLabel_(exportMonth),
+    fileName: 'QuIPS CQI ' + countyLabel + ' ' + monthLabelLong_(exportMonth),
     thisMonth: countUnique_(records.filter(function (rec) { return rec.monthKey === exportMonth; })),
     through: countUnique_(records),
     latest: latestSubmission_(records),
@@ -1194,50 +1206,17 @@ function layoutScorecardSheet_(scorecard, heading) {
   var colCount = 4 + months.length; // label, score, months, status, trend
   var reportAt = months.indexOf(scorecard.exportMonth);
   var layout = createLayout_(colCount);
-  var firstLabel = monthLabel_(months[0] || scorecard.exportMonth);
-  var reportLabel = monthLabel_(scorecard.exportMonth);
-  var prevLabel = monthLabel_(scorecard.prevMonth);
+  var reportLabel = monthLabelLong_(scorecard.exportMonth);
 
-  addMerged_(layout, plainCell_(heading.title, { bg: COLOR_TITLE, color: COLOR_WHITE, bold: true, size: 16 }), 36);
-  addMerged_(layout, plainCell_(heading.place, { bg: '#e8f4f8', color: COLOR_INK, bold: true, size: 12 }), 24);
+  // Row 1 names the facility and month. The first matrix title is row 2.
   addMerged_(layout, plainCell_(
-    'Report month: ' + reportLabel + '    ·    Trend: ' + reportLabel + ' vs ' + prevLabel,
-    { bg: COLOR_WHITE, color: COLOR_INK, size: 10 }
-  ), 20);
-  addMerged_(layout, plainCell_(
-    'Deliveries this month: ' + scorecard.deliveriesThisMonth +
-    '    ·    Deliveries in the score (' + firstLabel + ' – ' + reportLabel + '): ' + scorecard.deliveries +
-    '    ·    Latest submission: ' + (scorecard.latest || '—'),
-    { bg: COLOR_WHITE, color: COLOR_INK, size: 10 }
-  ), 20);
-  addMerged_(layout, plainCell_(
-    'All cadres and all complications. Score and Status use every submission from ' + firstLabel +
-    ' through ' + reportLabel + '. The highlighted column is ' + reportLabel + '.',
-    { bg: COLOR_WHITE, color: COLOR_NOTE, size: 9 }
-  ), 32);
-  addBlank_(layout);
-
-  var subHeader = ['Submissions', 'Through report month'];
-  for (var m = 0; m < months.length; m++) subHeader.push(monthLabel_(months[m]));
-  subHeader.push('');
-  subHeader.push('');
-  var subValues = ['Deliveries (n)', scorecard.deliveries];
-  for (var d = 0; d < months.length; d++) subValues.push(scorecard.deliveriesByMonth[months[d]]);
-  subValues.push('');
-  subValues.push('');
-  pushTableRow_(layout, subHeader, { header: true, reportAt: reportAt, integer: false, text: true });
-  pushTableRow_(layout, subValues, { reportAt: reportAt, integer: true });
-  addBlank_(layout);
+    heading.place + '  ·  ' + reportLabel + '  ·  ' + scorecard.deliveriesThisMonth + ' deliveries this month',
+    { bg: '#e8f4f8', color: COLOR_INK, bold: true, size: 12 }
+  ), 24);
 
   for (var s = 0; s < scorecard.sections.length; s++) {
     appendSection_(layout, scorecard.sections[s], s + 1, months, reportAt);
   }
-
-  addMerged_(layout, plainCell_('How to read this tab', { bg: COLOR_SECTION, color: COLOR_WHITE, bold: true, size: 11 }), 22);
-  addMerged_(layout, plainCell_('🟢 80% or above     🟠 60% up to 80%     🔴 below 60%     ⚪ no valid answers. Status describes the Score column.', { size: 9, color: COLOR_NOTE }), 18);
-  addMerged_(layout, plainCell_('Harmful Practices (% with instance): 🟢 0%     🟠 up to 5%     🔴 above 5%. Lower is better, so an increase is red.', { size: 9, color: COLOR_NOTE }), 18);
-  addMerged_(layout, plainCell_('Key QuIPS percentages use every delivery as the denominator. Indicator scores use valid answers only. Answer-mix sections have no status icon.', { size: 9, color: COLOR_NOTE }), 18);
-  addMerged_(layout, plainCell_('Sections are in dashboard order, first through last. A later export of this same month updates this file in place.', { size: 9, color: COLOR_NOTE }), 18);
 
   layout.reportCol = reportAt < 0 ? -1 : reportAt + 2; // 0-based column of the report month
   return layout;
@@ -1259,6 +1238,7 @@ function appendSection_(layout, section, number, months, reportAt) {
     for (var e = 1; e < layout.colCount; e++) empty.push('');
     pushTableRow_(layout, empty, { reportAt: reportAt, text: true });
     layout.borders.push({ row: headerRow, col: 1, numRows: 2, numCols: layout.colCount });
+    addBlank_(layout);
     addBlank_(layout);
     return;
   }
@@ -1287,6 +1267,7 @@ function appendSection_(layout, section, number, months, reportAt) {
     numRows: section.rows.length + 1,
     numCols: layout.colCount
   });
+  addBlank_(layout);
   addBlank_(layout);
 }
 
@@ -1778,7 +1759,7 @@ function loadConfig_() {
     var value = values[i][1];
     if (!key || key === 'Key') continue;
     if (key === 'DATA_URL' && String(value || '').trim()) cfg.dataUrl = String(value).trim();
-    if (key === 'DESTINATION_FOLDER_ID') cfg.folderId = String(value || '').trim();
+    if (key === 'DESTINATION_FOLDER_ID' && String(value || '').trim()) cfg.folderId = String(value).trim();
     if (key === 'LINK_SHARING') cfg.linkSharing = /^true$/i.test(String(value || '').trim());
     if (key === 'TIMEZONE' && String(value || '').trim()) cfg.timezone = String(value).trim();
   }
@@ -1834,7 +1815,7 @@ function writeConfigSheet_(ss) {
   var rows = [
     ['Key', 'Value', 'Notes'],
     ['DATA_URL', QUIPS_EXPORT.DATA_URL, 'Published CSV used by the Matrix Scorecards dashboard.'],
-    ['DESTINATION_FOLDER_ID', QUIPS_EXPORT.DESTINATION_FOLDER_ID || '', 'Drive folder id. Share that folder with recipients. Blank creates a folder in My Drive.'],
+    ['DESTINATION_FOLDER_ID', QUIPS_EXPORT.DESTINATION_FOLDER_ID || '', 'Shared Drive folder. A year subfolder (2026, 2027, ...) is created inside it.'],
     ['LINK_SHARING', QUIPS_EXPORT.LINK_SHARING ? 'TRUE' : 'FALSE', 'TRUE lets anyone with the link view each county file.'],
     ['TIMEZONE', QUIPS_EXPORT.TIMEZONE, 'Used for the generated timestamp. The trigger clock follows the Apps Script project timezone.']
   ];
