@@ -906,7 +906,8 @@ def _format_requests(sheet_id, grid):
     requests.append({'updateSheetProperties': {
         'properties': {
             'sheetId': sheet_id,
-            'gridProperties': {'frozenRowCount': 1, 'frozenColumnCount': 1},
+            # Titles are merged across the row, so a frozen column would cut a merge.
+            'gridProperties': {'frozenRowCount': 1, 'frozenColumnCount': 0},
         },
         'fields': 'gridProperties.frozenRowCount,gridProperties.frozenColumnCount',
     }})

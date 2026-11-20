@@ -1627,7 +1627,7 @@ function paintSheet_(sheet, layout) {
   }
 
   sheet.setFrozenRows(1);
-  sheet.setFrozenColumns(1);
+  sheet.setFrozenColumns(0);
   if (layout.colCount === 4) {
     sheet.setColumnWidth(1, 360);
     sheet.setColumnWidth(2, 180);
