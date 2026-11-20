@@ -19,9 +19,10 @@
 #   Harmful Practices (% with instance), EMOTIVE,
 #   uterotonic mix, blood-loss mix.
 #
-# Score and Status cover every submission from the first month through the
-# report month. The highlighted column is the report month. Trend compares
-# it with the previous month. Cadre and complication stay on All.
+# Score and Status cover the last 6 months, including the report month.
+# The highlighted column is the report month. Trend compares it with the
+# previous month. Cadre and complication stay on All.
+# Leave the report month empty to use the current month in Africa/Nairobi.
 #
 # Run it from the companion notebook in Google Colab:
 #   QuIPS Analysis Export and Data Sharing.ipynb
@@ -43,6 +44,8 @@ TIMEZONE = 'Africa/Nairobi'
 # Parent Drive folder. Year subfolders (2026, 2027, ...) are created inside it.
 DESTINATION_FOLDER_ID = '1r0U51qVnj7aPGrDP5VxzxVVDMtWp8U-a'
 ROOT_FOLDER_NAME = 'QuIPS Analysis Export and Data Sharing'
+# Report month plus the five months before it.
+WINDOW_MONTHS = 6
 
 # Set by prepare_data(). make_rows reads its columns, same as the dashboard.
 df = None
@@ -409,14 +412,16 @@ def prepare_data(source=None):
 
 
 def report_period(spec=None):
-    """None means the previous calendar month in Africa/Nairobi."""
+    """None means the current calendar month in Africa/Nairobi."""
     if spec:
         return pd.Period(spec, freq='M')
     now = datetime.now(ZoneInfo(TIMEZONE))
-    year, month = now.year, now.month - 1
-    if month == 0:
-        year, month = year - 1, 12
-    return pd.Period(f'{year:04d}-{month:02d}', freq='M')
+    return pd.Period(f'{now.year:04d}-{now.month:02d}', freq='M')
+
+
+def window_periods(export_period, count=WINDOW_MONTHS):
+    """The report month and the months immediately before it, oldest first."""
+    return [export_period - offset for offset in range(count - 1, -1, -1)]
 
 
 def as_number(value):
@@ -481,10 +486,9 @@ def trend_mark(current, previous, mode):
     return '▬' + text, '#808080'
 
 
-def evaluate_view(view_name, frame, export_period):
+def evaluate_view(view_name, frame, export_period, months):
     view = VIEWS[view_name]
     first_col, row_defs, opts = make_rows(view, frame)
-    months = sorted(frame['month_period'].dropna().unique().tolist())
     previous_period = export_period - 1
     built = []
     for label, fn in row_defs:
@@ -512,16 +516,17 @@ def evaluate_view(view_name, frame, export_period):
 
 
 def scorecard_for(frame, export_period):
-    sections = [evaluate_view(name, frame, export_period) for name in VIEWS]
-    months = sorted(frame['month_period'].dropna().unique().tolist())
-    this_month = frame[frame['month_period'] == export_period]
+    months = window_periods(export_period)
+    scoped = frame[frame['month_period'].isin(months)]
+    sections = [evaluate_view(name, scoped, export_period, months) for name in VIEWS]
+    this_month = scoped[scoped['month_period'] == export_period]
     return {
         'sections': sections,
         'months': months,
-        'deliveries': int(frame['_uuid'].nunique()),
+        'deliveries': int(scoped['_uuid'].nunique()),
         'deliveries_this_month': int(this_month['_uuid'].nunique()),
-        'deliveries_by_month': [int(frame.loc[frame['month_period'] == month, '_uuid'].nunique()) for month in months],
-        'latest': _latest_label(frame),
+        'deliveries_by_month': [int(scoped.loc[scoped['month_period'] == month, '_uuid'].nunique()) for month in months],
+        'latest': _latest_label(scoped),
     }
 
 
@@ -534,7 +539,8 @@ def _latest_label(frame):
 
 def build_export_plan(data, export_period):
     """One entry per county that has at least one submission in the report month."""
-    window = data[data['month_period'] <= export_period]
+    periods = window_periods(export_period)
+    window = data[data['month_period'].isin(periods)]
     active = set(window.loc[window['month_period'] == export_period, 'county'])
     counties = sorted(active, key=lambda name: (name == '', name.lower()))
     plan = []
@@ -637,8 +643,11 @@ def layout_scorecard(card, place, export_period):
     report_at = months.index(export_period) if export_period in months else -1
     grid = _grid(cols)
     report = export_period.strftime('%B %Y')
+    span = ''
+    if months:
+        span = f"  ·  scores {months[0].strftime('%b %Y')} – {months[-1].strftime('%b %Y')}"
     _add(grid, [_cell(
-        f"{place}  ·  {report}  ·  {card['deliveries_this_month']} deliveries this month",
+        f"{place}  ·  {report}  ·  {card['deliveries_this_month']} deliveries this month{span}",
         bg='#e8f4f8', bold=True, size=12,
     )], 24, merge=True)
     for number, section in enumerate(card['sections'], start=1):
@@ -750,7 +759,7 @@ def layout_index(county, generated_at):
     _add(grid, [_cell('How to read the scores', bg=COLOR_SECTION, color='#ffffff', bold=True, size=12)], 22, merge=True)
     _add(grid, [_cell('🟢 80% or above     🟠 60% up to 80%     🔴 below 60%     ⚪ no valid answers.')], 18, merge=True)
     _add(grid, [_cell('Harmful Practices (% with instance) reads the other way: 🟢 0%, 🟠 up to 5%, 🔴 above 5%. Lower is better.')], 18, merge=True)
-    _add(grid, [_cell('Score and Status cover the whole window. Trend compares the report month with the previous month. The report month column is highlighted.', wrap=True)], 32, merge=True)
+    _add(grid, [_cell(f'Score and Status cover the last {WINDOW_MONTHS} months, including {report}. Trend compares {report} with the previous month. The {report} column is highlighted.', wrap=True)], 32, merge=True)
     _add(grid, [_cell('Key QuIPS percentages use every delivery as the denominator. The other indicator scores use valid answers only.', wrap=True)], 18, merge=True)
     _add(grid, [_cell('Running this export again for the same month updates this file in place, so the link stays the same.', color=COLOR_NOTE)], 18, merge=True)
     return grid
@@ -979,9 +988,9 @@ def export_to_sheets(report_month=None, folder_id=None, share_with=None, link_sh
     """Create or update one spreadsheet per county for the report month.
 
     Files go in folder_id / {year} /, named "QuIPS CQI {County} {Month} {Year}".
-    The year folder is created when that year first appears. report_month is
-    'YYYY-MM', or None for the previous month. folder_id defaults to the
-    shared QuIPS Drive folder.
+    The year folder is created when that year first appears. Each file covers
+    that month and the five months before it. report_month is 'YYYY-MM', or
+    None for the current month. folder_id defaults to the shared QuIPS Drive folder.
     """
     prepare_data(source)
     export_period = report_period(report_month)

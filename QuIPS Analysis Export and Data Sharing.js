@@ -34,10 +34,9 @@
  *   13. Uterotonic administered (% by type)
  *   14. Method of blood loss measurement (% by method)
  *
- * Scoring matches the Colab dashboard. "Score" and "Status" cover every
- * submission from the first month on record through the report month
- * (From = All, To = report month). The highlighted column is the report
- * month. Trend is that month versus the previous calendar month.
+ * Scoring matches the Colab dashboard. "Score" and "Status" cover the last
+ * 6 months, including the report month. The highlighted column is the
+ * report month. Trend is that month versus the previous calendar month.
  * Cadre and complication stay on "All" (nothing ticked).
  *
  * Re-running a month updates the same files, so links keep working.
@@ -57,8 +56,10 @@
  *      LINK_SHARING TRUE also lets anyone with the link view.
  *   6. Run "Run scoring self-check", then "Preview previous month",
  *      then "Export previous month" and authorise the script.
- *   7. "Install monthly trigger" runs on the 1st at 06:00 and exports
- *      the month that just ended.
+ *   7. "Install monthly trigger" checks every day at midnight and, on the
+ *      last day of the month, exports that month plus the five before it.
+ *      Set the project timezone to Africa/Nairobi first, so midnight is
+ *      Nairobi midnight.
  *
  * A standalone script (no spreadsheet) can skip steps 3–5 and edit
  * QUIPS_EXPORT below, including SHARE_WITH.
@@ -73,6 +74,7 @@ var QUIPS_EXPORT = {
   DESTINATION_FOLDER_ID: '1r0U51qVnj7aPGrDP5VxzxVVDMtWp8U-a',
   LINK_SHARING: false,
   TIMEZONE: 'Africa/Nairobi',
+  WINDOW_MONTHS: 6,
   ROOT_FOLDER_NAME: 'QuIPS Analysis Export and Data Sharing',
   // { email: 'person@example.org', role: 'reader', counties: 'Nakuru, Mombasa' }
   SHARE_WITH: []
@@ -315,7 +317,7 @@ function onOpen() {
     .addItem('Preview previous month (no files)', 'previewPreviousMonth')
     .addItem('Run scoring self-check', 'runScoringSelfCheck')
     .addSeparator()
-    .addItem('Install monthly trigger (1st, 06:00)', 'installMonthlyTrigger')
+    .addItem('Install monthly trigger (last day, midnight)', 'installMonthlyTrigger')
     .addItem('Remove monthly trigger', 'removeMonthlyTrigger')
     .addSeparator()
     .addItem('Create Config and Sharing sheets', 'createExportConfigSheets')
@@ -361,18 +363,41 @@ function runScoringSelfCheck() {
 
 function installMonthlyTrigger() {
   removeMonthlyTrigger();
-  ScriptApp.newTrigger('exportPreviousMonth')
+  // Apps Script has no "last day of the month" clock. A daily midnight
+  // trigger returns immediately except on that last day.
+  ScriptApp.newTrigger('exportOnLastDay')
     .timeBased()
-    .onMonthDay(1)
-    .atHour(6)
+    .everyDays(1)
+    .atHour(0)
+    .nearMinute(0)
     .create();
-  alert_('Monthly trigger installed. On the 1st at 06:00 (project timezone) the script exports the month that just ended.\n\nSet the Apps Script timezone to Africa/Nairobi.');
+  alert_('Monthly trigger installed.\n\nOn the last day of each month, at midnight in the project timezone, the script exports that month and the five months before it.\n\nSet Project Settings → Timezone to Africa/Nairobi before relying on the clock. If an older trigger was set for the 1st, it has been removed.');
+}
+
+function exportOnLastDay() {
+  var tz = QUIPS_EXPORT.TIMEZONE || 'Africa/Nairobi';
+  try {
+    tz = loadConfig_().timezone || tz;
+  } catch (ignore) {}
+  var stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  var year = Number(stamp.slice(0, 4));
+  var month = Number(stamp.slice(5, 7));
+  var day = Number(stamp.slice(8, 10));
+  if (day !== lastDayOfMonth_(year, month)) return;
+  exportYearMonth_(stamp.slice(0, 7), false);
+}
+
+function lastDayOfMonth_(year, month) {
+  var days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  var leap = month === 2 && ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0);
+  return leap ? 29 : days[month - 1];
 }
 
 function removeMonthlyTrigger() {
+  var handlers = { exportOnLastDay: true, exportPreviousMonth: true };
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'exportPreviousMonth') {
+    if (handlers[triggers[i].getHandlerFunction()]) {
       ScriptApp.deleteTrigger(triggers[i]);
     }
   }
@@ -565,6 +590,18 @@ function prevMonthKey_(key) {
     year -= 1;
   }
   return year + '-' + (month < 10 ? '0' : '') + month;
+}
+
+function windowMonthKeys_(exportMonth) {
+  var count = QUIPS_EXPORT.WINDOW_MONTHS || 6;
+  var keys = [];
+  var key = exportMonth;
+  for (var i = 0; i < count; i++) {
+    keys.push(key);
+    key = prevMonthKey_(key);
+  }
+  keys.reverse();
+  return keys;
 }
 
 function formatSubmitted_(value) {
@@ -956,17 +993,21 @@ function scoringSelfCheckErrors_() {
 // =====================================================
 
 function buildScorecard_(records, exportMonth) {
+  var months = windowMonthKeys_(exportMonth);
+  var allowed = Object.create(null);
   var monthMap = Object.create(null);
-  var months = [];
+  for (var m = 0; m < months.length; m++) {
+    allowed[months[m]] = true;
+    monthMap[months[m]] = [];
+  }
+  var scoped = [];
   for (var i = 0; i < records.length; i++) {
     var key = records[i].monthKey;
-    if (!monthMap[key]) {
-      monthMap[key] = [];
-      months.push(key);
-    }
+    if (!allowed[key]) continue;
     monthMap[key].push(records[i]);
+    scoped.push(records[i]);
   }
-  months.sort();
+  records = scoped;
   var prevKey = prevMonthKey_(exportMonth);
   var prevRecords = monthMap[prevKey] || [];
   var trendRecords = monthMap[exportMonth] || [];
@@ -1084,7 +1125,11 @@ function latestSubmission_(records) {
 }
 
 function sliceThrough_(records, exportMonth) {
-  return records.filter(function (rec) { return rec.monthKey && rec.monthKey <= exportMonth; });
+  var keys = windowMonthKeys_(exportMonth);
+  var start = keys[0];
+  return records.filter(function (rec) {
+    return rec.monthKey && rec.monthKey >= start && rec.monthKey <= exportMonth;
+  });
 }
 
 function buildExportPlan_(records, headers, exportMonth) {
@@ -1207,10 +1252,13 @@ function layoutScorecardSheet_(scorecard, heading) {
   var reportAt = months.indexOf(scorecard.exportMonth);
   var layout = createLayout_(colCount);
   var reportLabel = monthLabelLong_(scorecard.exportMonth);
+  var span = months.length
+    ? '  ·  scores ' + monthLabel_(months[0]) + ' – ' + monthLabel_(months[months.length - 1])
+    : '';
 
   // Row 1 names the facility and month. The first matrix title is row 2.
   addMerged_(layout, plainCell_(
-    heading.place + '  ·  ' + reportLabel + '  ·  ' + scorecard.deliveriesThisMonth + ' deliveries this month',
+    heading.place + '  ·  ' + reportLabel + '  ·  ' + scorecard.deliveriesThisMonth + ' deliveries this month' + span,
     { bg: '#e8f4f8', color: COLOR_INK, bold: true, size: 12 }
   ), 24);
 
@@ -1373,7 +1421,7 @@ function layoutIndexSheet_(county, generatedAt) {
   addMerged_(layout, plainCell_('How to read the scores', { bg: COLOR_SECTION, color: COLOR_WHITE, bold: true, size: 12 }), 22);
   addMerged_(layout, plainCell_('🟢 80% or above     🟠 60% up to 80%     🔴 below 60%     ⚪ no valid answers.', { size: 10 }), 18);
   addMerged_(layout, plainCell_('Harmful Practices (% with instance) reads the other way: 🟢 0%, 🟠 up to 5%, 🔴 above 5%. Lower is better.', { size: 10 }), 18);
-  addMerged_(layout, plainCell_('Score and Status cover the whole window. Trend compares the report month with the previous month. The report month column is highlighted.', { size: 10 }), 32);
+  addMerged_(layout, plainCell_('Score and Status cover the last 6 months, including the report month. Trend compares the report month with the previous month. The report month column is highlighted.', { size: 10 }), 32);
   addMerged_(layout, plainCell_('Key QuIPS percentages use every delivery as the denominator. The other indicator scores use valid answers only.', { size: 10 }), 18);
   addMerged_(layout, plainCell_('This file is replaced in place if this month is exported again, so the link stays the same.', { size: 10, color: COLOR_NOTE }), 18);
 
@@ -1920,6 +1968,8 @@ if (typeof module !== 'undefined' && module.exports) {
     sectionScore_: sectionScore_,
     monthLabel_: monthLabel_,
     prevMonthKey_: prevMonthKey_,
+    windowMonthKeys_: windowMonthKeys_,
+    lastDayOfMonth_: lastDayOfMonth_,
     SCORECARD_VIEWS: SCORECARD_VIEWS,
     QUIPS_SPECS: QUIPS_SPECS
   };
