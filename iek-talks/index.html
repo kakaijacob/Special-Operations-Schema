@@ -19,9 +19,9 @@
   --muted: #5c564c;
   --faint: #8a8376;
   --line: rgba(28,25,22,0.12);
-  --copper: #b4532a;
-  --copper-deep: #8c3d1c;
-  --gold: #8a5a12;
+  --copper: #e23d78;
+  --copper-deep: #3a2278;
+  --gold: #6d2f86;
   --foam: #1f6b52;
   --water: #1d5f86;
   --clay: #9a3b32;
@@ -107,7 +107,7 @@ em.soft { font-family: var(--serif); font-style: italic; font-weight: 500; color
 .keys { display: flex; gap: 22px; color: var(--faint); font-size: 15px; margin-top: 18px; }
 .keys b { color: var(--ink); font-weight: 600; background: var(--bg-3); border-radius: 6px; padding: 2px 7px; }
 .downloads { display: flex; gap: 18px; margin-top: 14px; }
-.downloads a { color: var(--gold); font-size: 15px; font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(227,194,122,.45); padding-bottom: 2px; }
+.downloads a { color: var(--gold); font-size: 15px; font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(226,61,120,.45); padding-bottom: 2px; }
 .downloads a:hover { color: var(--ink); }
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
 .trio article { background: var(--bg-2); border-radius: 16px; padding: 18px 18px 16px; border: 1px solid var(--line); }
@@ -507,6 +507,155 @@ html.shot .ring-draw { stroke-dashoffset: 0 !important; }
 html.shot .giant.cut i,
 html.shot .miss .dead i { transition: none !important; }
 
+/* The building writes the slides: pink beam, purple sign, air as a moving line. */
+#stage[data-talk="cyclotron"] {
+  --bg: #f7f3ef;
+  --bg-2: #fffdfb;
+  --bg-3: #f0e4ea;
+  --ink: #1a1220;
+  --muted: #5c5362;
+  --faint: #8a8094;
+  --line: rgba(26,18,32,.12);
+  --copper: #e23d78;
+  --copper-deep: #3a2278;
+  --gold: #6d2f86;
+  --foam: #2a6a4e;
+  --water: #245f86;
+  --clay: #9a3060;
+}
+#stage[data-talk="mentorship"] {
+  --bg: #f3f6f5;
+  --bg-2: #fffeff;
+  --bg-3: #e3eeeb;
+  --ink: #10211f;
+  --muted: #4e5e5a;
+  --faint: #7d8c88;
+  --line: rgba(16,33,31,.12);
+  --copper: #0e6b64;
+  --copper-deep: #0a3c38;
+  --gold: #0e6b64;
+  --foam: #0e6b64;
+  --water: #1d5f86;
+  --clay: #8d3a32;
+}
+#stage[data-talk="cyclotron"] .slide:not(.bleed) {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(#1a1220, #1a1220), linear-gradient(#1a1220, #1a1220),
+    linear-gradient(#1a1220, #1a1220), linear-gradient(#1a1220, #1a1220),
+    linear-gradient(#1a1220, #1a1220), linear-gradient(#1a1220, #1a1220),
+    linear-gradient(#1a1220, #1a1220), linear-gradient(#1a1220, #1a1220);
+  background-size: 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px, 16px 1.5px, 1.5px 16px;
+  background-position:
+    26px 26px, 26px 26px,
+    right 26px top 26px, right 26px top 26px,
+    26px bottom 64px, 26px bottom 64px,
+    right 26px bottom 64px, right 26px bottom 64px;
+  background-repeat: no-repeat;
+}
+#stage[data-talk="cyclotron"] .slide:not(.bleed)::before {
+  content: "";
+  position: absolute;
+  left: 86px; right: 86px; top: 44px; height: 2px;
+  background: linear-gradient(90deg, #e23d78, #e23d78 18%, #3a2278 82%, #3a2278);
+  opacity: .85;
+  pointer-events: none;
+  z-index: 2;
+}
+#stage[data-talk="cyclotron"] .slide:not(.bleed)::after {
+  content: "";
+  position: absolute;
+  top: 38px; left: 10%;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #e23d78;
+  box-shadow: 22px 0 0 0 #f4b4cc, 46px 0 0 0 #3a2278;
+  animation: drift 8s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes drift { from { left: 8%; } to { left: 78%; } }
+html.shot #stage[data-talk="cyclotron"] .slide:not(.bleed)::after { animation: none; left: 42%; }
+#stage[data-talk="cyclotron"] .title-copy {
+  background:
+    linear-gradient(#e23d78, #e23d78) top / 100% 16px no-repeat,
+    #2a1860;
+  color: #f7f1ea;
+}
+#stage[data-talk="cyclotron"] .title-copy .kicker { color: #ff8fba; }
+#stage[data-talk="cyclotron"] .title-copy .formal.track { color: #ffd0e4; }
+#stage[data-talk="cyclotron"] .title-copy .formal { color: #e4d7ef; }
+#stage[data-talk="cyclotron"] #chrome { background: #2a1860; }
+#stage[data-talk="cyclotron"] #pips i.on,
+#stage[data-talk="cyclotron"] #bar { background: #e23d78; }
+#stage[data-talk="cyclotron"] #chrome button { border-color: rgba(247,241,234,.28); color: #f0e4ea; }
+#stage[data-talk="mentorship"] .title-copy,
+#stage[data-talk="mentorship"] .quote-pane,
+#stage[data-talk="mentorship"] #chrome { background: #102422; }
+#stage[data-talk="mentorship"] .title-copy .kicker { color: #8ee0d6; }
+#stage[data-talk="mentorship"] .title-copy .formal.track,
+#stage[data-talk="mentorship"] .quote-pane p { color: #d7f6f1; }
+#stage[data-talk="mentorship"] #pips i.on,
+#stage[data-talk="mentorship"] #bar { background: #3dbeaf; }
+#stage[data-talk="mentorship"] #chrome button { border-color: rgba(215,246,241,.28); color: #d7f6f1; }
+#stage[data-talk="cyclotron"] .beat.now {
+  box-shadow: inset 4px 0 0 #e23d78;
+  background: rgba(226,61,120,.08);
+  border-radius: 10px;
+}
+#stage[data-talk="cyclotron"] .agenda.riser {
+  display: flex; flex-direction: column; gap: 0;
+  margin-top: 6px; position: relative; padding-left: 18px;
+}
+#stage[data-talk="cyclotron"] .agenda.riser::before {
+  content: "";
+  position: absolute; left: 46px; top: 22px; bottom: 22px; width: 3px;
+  background: linear-gradient(#e23d78, #3a2278);
+  border-radius: 3px;
+}
+#stage[data-talk="cyclotron"] .agenda.riser li {
+  background: transparent; border: 0; border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 8px 7px 4px;
+}
+#stage[data-talk="cyclotron"] .agenda.riser em {
+  position: relative; z-index: 1; background: var(--bg);
+  width: 56px; text-align: center; font-size: 26px;
+}
+#stage[data-talk="cyclotron"] .hops.one { position: relative; }
+#stage[data-talk="cyclotron"] .hops.one::before {
+  content: "";
+  position: absolute; left: 18px; top: 14px; bottom: 14px; width: 3px;
+  background: linear-gradient(#e23d78, #3a2278);
+  border-radius: 3px;
+}
+#stage[data-talk="cyclotron"] .hops.one em {
+  position: relative; z-index: 1; background: var(--bg); text-align: center;
+}
+#stage[data-talk="cyclotron"] .tread.hi { background: #fff; border-color: #e23d78; }
+#stage[data-talk="cyclotron"] .tread.hi b { color: #c21d62; }
+#stage[data-talk="cyclotron"] .tread.mid { background: #fff; }
+#stage[data-talk="cyclotron"] .tread.mid b { color: #3a3a3a; }
+#stage[data-talk="cyclotron"] .tread.lo { background: #f4e8f8; border-color: #6d2f86; }
+#stage[data-talk="cyclotron"] .tread.lo b { color: #5a2780; }
+#stage[data-talk="cyclotron"] .tread.deep { background: #2a1860; border-color: #2a1860; }
+#stage[data-talk="cyclotron"] .path3 .box { border-top: 5px solid #e23d78; }
+#stage[data-talk="cyclotron"] .path3 .box:last-of-type { border-top-color: #3a2278; }
+#stage[data-talk="cyclotron"] .path3 .arrow {
+  width: 36px; height: 36px; margin: auto; border-radius: 50%;
+  background: #2a1860; color: #fff; font-size: 20px;
+}
+.pick[data-open="cyclotron"] { border-top: 8px solid #e23d78; }
+.pick[data-open="cyclotron"] .who,
+.pick[data-open="cyclotron"] .go { color: #c21d62; }
+.pick[data-open="mentorship"] { border-top: 8px solid #0e6b64; }
+.pick[data-open="mentorship"] .who,
+.pick[data-open="mentorship"] .go { color: #0e6b64; }
+.home-track {
+  display: inline-block; padding-bottom: 8px; margin-bottom: 14px;
+  border-bottom: 7px solid #e23d78;
+  box-shadow: 0 11px 0 #2a1860;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .rise, .beat.on, .slide.active .beat.on .stagger > * { opacity: 1 !important; transform: none !important; }
@@ -583,7 +732,7 @@ html.shot .miss .dead i { transition: none !important; }
   <section class="slide" data-talk="cyclotron" data-label="Agenda" data-notes="Read the seven steps once. Problem, impact, solution, why this one, challenges, response, conclusion. Tell them the highlight on later slides shows where you are. About twenty minutes if you keep moving.">
     <div class="kicker rise d1">Opening</div>
     <h2 class="rise d2" style="font-size:56px">Agenda</h2>
-    <ol class="agenda">
+    <ol class="agenda riser">
       <li class="rise d2"><em>01</em><div><b>Problem</b><span>We look at the sixteen enclosed rooms, and at why ordinary ventilation cannot serve them.</span></div></li>
       <li class="rise d3"><em>02</em><div><b>Impact</b><span>We see what fails for staff, patients, the licence and the scans if the air is not controlled.</span></div></li>
       <li class="rise d3"><em>03</em><div><b>Solution</b><span>We walk through the chilled-water system, the filters, and the path the air takes.</span></div></li>
@@ -1108,6 +1257,7 @@ html.shot .miss .dead i { transition: none !important; }
 
   function showHome() {
     talk = null;
+    stage.dataset.talk = "";
     document.querySelectorAll(".slide").forEach(function (s) { s.classList.remove("active"); });
     home.classList.add("active");
     chrome.classList.remove("show");
@@ -1161,6 +1311,7 @@ html.shot .miss .dead i { transition: none !important; }
 
   function openTalk(name, slideIndex, beat) {
     talk = name;
+    stage.dataset.talk = name;
     index = slideIndex || 0;
     const slides = talkSlides();
     slides.forEach(function (s) { s.dataset.beat = "0"; });
