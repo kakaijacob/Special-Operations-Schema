@@ -3,6 +3,7 @@
 -- Mentee spine: mentors.mentee_database (program IN EmONC curriculum / both),
 -- plus any mentee_id only present in fact tables
 -- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
+-- Skill assessments exclude Partograph (no longer essential for curriculum completion)
 -- date_completed = first date within the cycle when ALL conditions were met; else NULL
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
@@ -31,7 +32,7 @@ WITH cohorts AS (
         CAST(21 AS INTEGER),
         CAST(21 AS INTEGER),
         CAST(1 AS INTEGER),
-        CAST(21 AS INTEGER)
+        CAST(20 AS INTEGER)
     UNION ALL
     SELECT
         CAST(3 AS INTEGER),
@@ -43,7 +44,7 @@ WITH cohorts AS (
         CAST(21 AS INTEGER),
         CAST(21 AS INTEGER),
         CAST(1 AS INTEGER),
-        CAST(21 AS INTEGER)
+        CAST(20 AS INTEGER)
 ),
 
 -- Prefer mentors.mentee_database; still include fact-table mentees missing from it
@@ -267,6 +268,7 @@ labor_monitoring AS (
 -- 1) highest score per skill, per mentee, per cycle
 -- 2) avg_skill_score = average of those per-skill maxima
 -- 3) a skill counts as complete only when its max score is >= 0.85
+-- 4) Partograph is excluded (no longer essential for curriculum completion)
 skill_eval_by_skill AS (
     SELECT
         c.cycle_id,
@@ -286,6 +288,7 @@ skill_eval_by_skill AS (
        AND CAST(s.date_submitted AS DATE) <= c.cycle_end
     WHERE s.skill_evaluation IS NOT NULL
       AND s.average_score IS NOT NULL
+      AND LOWER(TRIM(s.skill_evaluation)) <> 'partograph'
     GROUP BY
         c.cycle_id,
         c.req_skill_eval,
