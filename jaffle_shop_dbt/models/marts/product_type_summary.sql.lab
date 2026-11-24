@@ -1,0 +1,27 @@
+-- LAB A — Build your first model from scratch (before order_items practice)
+--
+-- Steps:
+-- 1. Rename this file to: product_type_summary.sql
+--    (remove .lab from the filename)
+-- 2. Replace the placeholder SELECT below with the SQL in the comments
+-- 3. Run:  dbt run --select product_type_summary
+-- 4. In ClickHouse: SELECT * FROM jaffle_shop.product_type_summary;
+--
+-- Goal: count products per product_type using ref('stg_products')
+--
+-- Finished SQL should look like:
+--
+--   with products as (
+--       select * from {{ ref('stg_products') }}
+--   )
+--   select
+--       product_type,
+--       count() as number_of_products,
+--       sum(product_price) as catalog_price_sum
+--   from products
+--   group by product_type
+--   order by product_type
+--
+-- DELETE everything below this line and paste your final SELECT:
+
+select 1 as delete_me_and_write_your_model

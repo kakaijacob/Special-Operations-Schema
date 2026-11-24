@@ -1,0 +1,9 @@
+-- SOLUTION for Lab A — prefers intermediate summary pattern.
+-- Production path uses int_product_type_summary → product_type_summary mart.
+
+select
+    product_type,
+    number_of_products,
+    catalog_price_sum
+from {{ ref('int_product_type_summary') }}
+order by product_type

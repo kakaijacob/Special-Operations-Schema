@@ -1,0 +1,32 @@
+# Copy/merge into ~/.dbt/profiles.yml (never commit real passwords).
+# Your existing EmONC project uses profile name: special_operations
+# The Jaffle tutor project uses profile name: jaffle_clickhouse
+
+special_operations:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      # Change schema if you already use a different ClickHouse database for EmONC models
+      schema: dbt_dev
+      secure: true
+      verify: true
+      threads: 4
+
+jaffle_clickhouse:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: s88yqw81q8.germanywestcentral.azure.clickhouse.cloud
+      port: 8443
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      schema: jaffle_shop
+      secure: true
+      verify: true
+      threads: 4
