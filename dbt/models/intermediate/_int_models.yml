@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: int_mentee_database
+    description: >
+      Deduplicated mentee master unioning current (ke_mentors_mentees) and
+      legacy (ke_mentors_legacy_mentees). Attributes prefer current when the
+      same mentee_id exists in both; in_current / in_legacy flag sheet membership.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+      - name: in_current
+        description: 1 when the mentee appears in the current mentee sheet.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: in_legacy
+        description: 1 when the mentee appears in the legacy mentee sheet.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: date_activated
+        description: Activation date from the preferred mentee sheet.
+
+  - name: int_emonc_cohorts
+    description: EmONC cohort windows and requirement thresholds.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_emonc_mentees
+    description: EmONC mentee spine (master EmONC/both ∪ fact-only mentees).
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_emonc_mentee_cycles
+    description: Every eligible mentee crossed with every configured cohort.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+
+  - name: int_emonc_curriculum_activity_progress
+    description: Distinct activity-topic counts and threshold dates by cycle.
+
+  - name: int_emonc_skill_evaluation_progress
+    description: >
+      Per-cycle skill pass counts (Partograph excluded), average of per-skill
+      maxima, and skill-eval threshold date.
+
+  - name: int_newborn_cohorts
+    description: Newborn cohort windows and curriculum requirement thresholds.
+    columns:
+      - name: cycle_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_newborn_mentees
+    description: Newborn mentee spine (master newborn/both ∪ fact-only mentees).
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_newborn_mentee_cycles
+    description: Every newborn mentee crossed with every configured cohort.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+
+  - name: int_newborn_curriculum_activity_progress
+    description: >
+      Distinct newborn activity-topic counts, practicum track (essential vs
+      comprehensive), and threshold dates by cycle.
+
+  - name: int_newborn_nnr_assessment_progress
+    description: >
+      First-attempt baseline and last-attempt endline NNR scores per mentee×cycle
+      (endline only when more than one assessment — used by completion mart).
+
+  - name: int_newborn_individual_curriculum_counts
+    description: >
+      Distinct newborn activity topic counts by mentee×cycle for individual
+      progress inspection (essential practicum preferred when both tracks present).
+
+  - name: int_newborn_individual_nnr_progress
+    description: >
+      NNR baseline/endline/assessment_count for individual progress inspection
+      (endline is always the last attempt; completion still requires count > 1).
+
+  - name: int_emonc_activity_sessions_monthly
+    description: EmONC curriculum sessions (distinct submissions) by month and activity.
+
+  - name: int_newborn_activity_sessions_monthly
+    description: Newborn curriculum sessions (distinct submissions) by month and activity.
+
+  - name: int_emonc_skill_eval_sessions_monthly
+    description: EmONC MoH skill-eval sessions by month (Partograph excluded).
+
+  - name: int_newborn_nnr_sessions_monthly
+    description: Newborn resuscitation assessment sessions by month.

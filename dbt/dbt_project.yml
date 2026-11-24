@@ -1,0 +1,72 @@
+name: "jacaranda_mentors"
+version: "1.0.0"
+config-version: 2
+
+profile: "warehouse_mentors_ke"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # true = compile/run against seeds (no ClickHouse source required)
+  # false = read Airbyte googlesheets / kobotoolbox sources
+  use_sample_seeds: true
+  # Calendar year for mart_individual_mentee_emonc_curriculum_progress
+  emonc_progress_year: 2026
+  # Caps for metric_individual_mentee_emonc_curriculum_progress_by_cycle (Cohort 2+ / DAX mirror)
+  emonc_individual_req_cme: 13
+  emonc_individual_req_drills: 5
+  emonc_individual_req_skill_demos: 20
+  emonc_individual_req_return_demos: 20
+  emonc_individual_req_skill_eval: 20
+  emonc_individual_req_labor: 1
+  # Caps for metric_individual_mentee_newborn_curriculum_progress_by_cycle
+  newborn_individual_req_cme: 19
+  newborn_individual_req_drills: 7
+  newborn_individual_req_practicum_essential: 20
+  newborn_individual_req_practicum_comprehensive: 22
+  newborn_individual_req_skill_demo: 5
+  newborn_individual_req_videos: 12
+  newborn_individual_req_roleplay: 2
+  newborn_individual_req_case_scenarios: 9
+  newborn_individual_req_group_discussions: 7
+
+models:
+  jacaranda_mentors:
+    +engine: MergeTree()
+    +persist_docs:
+      relation: true
+      columns: true
+
+    staging:
+      +materialized: view
+
+    intermediate:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    marts:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+    metrics:
+      +materialized: table
+      +engine: MergeTree()
+      +settings:
+        allow_nullable_key: 1
+
+seeds:
+  jacaranda_mentors:
+    +engine: MergeTree()
