@@ -1,0 +1,12 @@
+{
+  "name": "project-noir",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Laundry Noir financial management — sales, expenditures, statements",
+  "scripts": {
+    "dev": "python3 server/app.py",
+    "start": "python3 server/app.py",
+    "verify": "node scripts/verify.mjs"
+  }
+}
