@@ -1,0 +1,801 @@
+{
+  "cleaning": {
+    "n_raw": 28375,
+    "dropped_short_or_blank": 978,
+    "duplicates_removed": 7151,
+    "n_clean": 20246,
+    "date_min": "2022-11-04",
+    "date_max": "2023-09-08",
+    "source_files": "gsearch_jobs_2022.csv, gsearch_jobs_2023_q1.csv, gsearch_jobs_2023_q2.csv, gsearch_jobs_2023_q3.csv",
+    "search_terms": {
+      "data analyst": 20246
+    },
+    "salary_listed_share": 0.18245579373703447,
+    "salary_in_range_share": 0.17652869702657314
+  },
+  "summary": {
+    "category_counts": {
+      "Data Analyst": 15104,
+      "Data Scientist": 852,
+      "Data Engineer": 399,
+      "Machine Learning and AI": 10,
+      "Data Governance and Quality": 327,
+      "Others": 3554
+    },
+    "category_share": {
+      "Data Analyst": 0.746,
+      "Data Scientist": 0.0421,
+      "Data Engineer": 0.0197,
+      "Machine Learning and AI": 0.0005,
+      "Data Governance and Quality": 0.0162,
+      "Others": 0.1755
+    },
+    "others_top_titles": {
+      "Data Management Analyst": 24,
+      "Data Specialist": 19,
+      "Analyst": 17,
+      "Barclays, Data Metrics Analyst - Application via WayUp": 16,
+      "(USA) Analyst II, Merchandising Business Analytics": 14,
+      "Data Migration Analyst": 12,
+      "Senior Director II, Automation Engineering": 11,
+      "Excel Expert": 9,
+      "Lead Data Analytic Analyst": 9,
+      "HR Data": 9,
+      "Product Analyst": 8,
+      "Senior Analyst": 8
+    },
+    "arrangement": {
+      "Remote": 9221,
+      "City named": 5329,
+      "United States, city not listed": 5607,
+      "State named, no city": 89
+    },
+    "top_states": {
+      "Missouri": 2020,
+      "Oklahoma": 1126,
+      "Kansas": 1116,
+      "Arkansas": 993,
+      "California": 112,
+      "Texas": 31
+    },
+    "top_boards": {
+      "LinkedIn": 6681,
+      "Upwork": 3134,
+      "BeBee": 1817,
+      "Trabajo.org": 1600,
+      "Indeed": 1161,
+      "ZipRecruiter": 975,
+      "Adzuna": 396,
+      "Jobs Trabajo.org": 295,
+      "Snagajob": 284,
+      "Built In": 235,
+      "Jora": 202,
+      "Monster": 196
+    },
+    "salary_n": 3574,
+    "salary_median_by_category": {
+      "Data Analyst": 93550.0,
+      "Data Scientist": 124900.0,
+      "Data Engineer": 125000.0,
+      "Data Governance and Quality": 111250.0,
+      "Others": 87492.0
+    },
+    "salary_n_by_category": {
+      "Data Analyst": 2310,
+      "Data Scientist": 176,
+      "Data Engineer": 64,
+      "Data Governance and Quality": 44,
+      "Others": 976
+    },
+    "top_skills": [
+      {
+        "skill": "SQL",
+        "postings": 10563
+      },
+      {
+        "skill": "Excel",
+        "postings": 6925
+      },
+      {
+        "skill": "Python",
+        "postings": 5856
+      },
+      {
+        "skill": "Tableau",
+        "postings": 5701
+      },
+      {
+        "skill": "Power BI",
+        "postings": 5159
+      },
+      {
+        "skill": "R",
+        "postings": 3719
+      },
+      {
+        "skill": "SAS",
+        "postings": 1872
+      },
+      {
+        "skill": "Word",
+        "postings": 1640
+      },
+      {
+        "skill": "PowerPoint",
+        "postings": 1603
+      },
+      {
+        "skill": "Snowflake",
+        "postings": 1224
+      },
+      {
+        "skill": "Azure",
+        "postings": 1148
+      },
+      {
+        "skill": "AWS",
+        "postings": 1122
+      }
+    ],
+    "skill_share": {
+      "Data Analyst": {
+        "SQL": 0.5732,
+        "Excel": 0.3851,
+        "Python": 0.2981,
+        "Tableau": 0.3249,
+        "Power BI": 0.2991,
+        "R": 0.1948,
+        "SAS": 0.1034,
+        "Word": 0.0875,
+        "PowerPoint": 0.0875,
+        "Snowflake": 0.0648,
+        "Azure": 0.0529,
+        "AWS": 0.0471
+      },
+      "Data Scientist": {
+        "SQL": 0.5634,
+        "Excel": 0.1185,
+        "Python": 0.7031,
+        "Tableau": 0.2371,
+        "Power BI": 0.1596,
+        "R": 0.4249,
+        "SAS": 0.1009,
+        "Word": 0.0293,
+        "PowerPoint": 0.0434,
+        "Snowflake": 0.0387,
+        "Azure": 0.1045,
+        "AWS": 0.1408
+      },
+      "Data Engineer": {
+        "SQL": 0.7293,
+        "Excel": 0.0627,
+        "Python": 0.5614,
+        "Tableau": 0.1679,
+        "Power BI": 0.1855,
+        "R": 0.1228,
+        "SAS": 0.0175,
+        "Word": 0.0226,
+        "PowerPoint": 0.0125,
+        "Snowflake": 0.2506,
+        "Azure": 0.2431,
+        "AWS": 0.3258
+      },
+      "Data Governance and Quality": {
+        "SQL": 0.5138,
+        "Excel": 0.3119,
+        "Python": 0.1284,
+        "Tableau": 0.1315,
+        "Power BI": 0.1346,
+        "R": 0.055,
+        "SAS": 0.0275,
+        "Word": 0.1193,
+        "PowerPoint": 0.0948,
+        "Snowflake": 0.0336,
+        "Azure": 0.0581,
+        "AWS": 0.0581
+      },
+      "Others": {
+        "SQL": 0.2715,
+        "Excel": 0.2479,
+        "Python": 0.137,
+        "Tableau": 0.1356,
+        "Power BI": 0.1092,
+        "R": 0.0974,
+        "SAS": 0.0588,
+        "Word": 0.0689,
+        "PowerPoint": 0.0588,
+        "Snowflake": 0.0287,
+        "Azure": 0.0405,
+        "AWS": 0.0397
+      }
+    },
+    "distinctive_skills": {
+      "Data Analyst": [
+        {
+          "skill": "SQL",
+          "postings": 8658,
+          "share": 0.5732
+        },
+        {
+          "skill": "Excel",
+          "postings": 5816,
+          "share": 0.3851
+        },
+        {
+          "skill": "Tableau",
+          "postings": 4907,
+          "share": 0.3249
+        },
+        {
+          "skill": "Power BI",
+          "postings": 4517,
+          "share": 0.2991
+        },
+        {
+          "skill": "Python",
+          "postings": 4503,
+          "share": 0.2981
+        },
+        {
+          "skill": "R",
+          "postings": 2942,
+          "share": 0.1948
+        }
+      ],
+      "Data Scientist": [
+        {
+          "skill": "Python",
+          "postings": 599,
+          "share": 0.7031
+        },
+        {
+          "skill": "SQL",
+          "postings": 480,
+          "share": 0.5634
+        },
+        {
+          "skill": "R",
+          "postings": 362,
+          "share": 0.4249
+        },
+        {
+          "skill": "Tableau",
+          "postings": 202,
+          "share": 0.2371
+        },
+        {
+          "skill": "Power BI",
+          "postings": 136,
+          "share": 0.1596
+        },
+        {
+          "skill": "Spark",
+          "postings": 133,
+          "share": 0.1561
+        }
+      ],
+      "Data Engineer": [
+        {
+          "skill": "SQL",
+          "postings": 291,
+          "share": 0.7293
+        },
+        {
+          "skill": "Python",
+          "postings": 224,
+          "share": 0.5614
+        },
+        {
+          "skill": "AWS",
+          "postings": 130,
+          "share": 0.3258
+        },
+        {
+          "skill": "Spark",
+          "postings": 101,
+          "share": 0.2531
+        },
+        {
+          "skill": "Snowflake",
+          "postings": 100,
+          "share": 0.2506
+        },
+        {
+          "skill": "Azure",
+          "postings": 97,
+          "share": 0.2431
+        }
+      ],
+      "Data Governance and Quality": [
+        {
+          "skill": "SQL",
+          "postings": 168,
+          "share": 0.5138
+        },
+        {
+          "skill": "Excel",
+          "postings": 102,
+          "share": 0.3119
+        },
+        {
+          "skill": "Power BI",
+          "postings": 44,
+          "share": 0.1346
+        },
+        {
+          "skill": "Tableau",
+          "postings": 43,
+          "share": 0.1315
+        },
+        {
+          "skill": "Python",
+          "postings": 42,
+          "share": 0.1284
+        },
+        {
+          "skill": "Word",
+          "postings": 39,
+          "share": 0.1193
+        }
+      ]
+    },
+    "top_companies": {
+      "Upwork": 3143,
+      "Walmart": 676,
+      "EDWARD JONES": 455,
+      "Talentify.io": 368,
+      "Dice": 237,
+      "Corporate": 231,
+      "Insight Global": 210,
+      "Cox Communications": 203,
+      "Centene Corporation": 104,
+      "Staffigo Technical Services, LLC": 99
+    },
+    "label_examples": {
+      "Data Analyst": [
+        "Data Analyst III - Full Time - Days",
+        "Sr. Business Data Analyst",
+        "Sr. Data Analyst",
+        "Data Analyst",
+        "Data Analyst - Finance (Remote)",
+        "Data Analyst I",
+        "Data Analyst / Analytics",
+        "DATA ANALYST w/INFORMATICA EXPERIENCE"
+      ],
+      "Data Scientist": [
+        "Lead Data Science Analyst",
+        "Staff Data Scientist - Inference, Search",
+        "Data scientist to help find pattern",
+        "Data Scientist II - Marketing Analytics",
+        "Data Science Virtual Internship ( 30 Nov - Feb 2023)",
+        "Senior Data Science - Inference, Payments",
+        "InfoSec Risk Analyst, Data Science (Phoenix, AZ)",
+        "Data Science virtual internship (30 Nov 22- 30 Feb 23)"
+      ],
+      "Data Engineer": [
+        "Data Engineer/Analyst",
+        "Data Engineer/Analyst- Healthcare Data Mapper",
+        "Sr. Healthcare & Accounting Data Modeler and Analyst",
+        "Data QA And ETL",
+        "Data Engineering Tech Lead",
+        "Data Modeler/Data Analyst",
+        "Data Engineering Analyst - Radiology",
+        "Data Engineer/ Data Analyst-India"
+      ],
+      "Machine Learning and AI": [
+        "Machine Learning Operations - Analyst REMOTE",
+        "Senior Software Engineer, MLOps",
+        "Deep Learning Scientist",
+        "Analyst Level Researcher: Artificial Intelligence",
+        "Machine Learning Scientist, Radiology",
+        "Artificial intelligence program",
+        "Machine Learning Intern",
+        "Statistician and data expert needed for machine learning project"
+      ],
+      "Data Governance and Quality": [
+        "Data Quality Analyst II (Remote)",
+        "Data Quality Analyst",
+        "Data Governance Senior Analyst",
+        "Sr Data Quality Analyst",
+        "Data Governance Specialist",
+        "Data Governance Analyst",
+        "Jr. BA Data Governance (W2)",
+        "Data Steward Analyst- AVP"
+      ],
+      "Others": [
+        "Analytics Manager, Sales & Operations",
+        "Operations Analyst - Remote US",
+        "Convert an R process into Python",
+        "Facebook Ads Analyst/ Expert",
+        "Acuity Tracking Google Analytics 4",
+        "Google Analytics / Tag Manager",
+        "Teacher Data",
+        "Data/SharePoint Analyst"
+      ]
+    }
+  },
+  "models": {
+    "n_model_rows": 20245,
+    "n_train": 16196,
+    "n_test": 4049,
+    "rare_folded_into_others": [
+      "Machine Learning and AI"
+    ],
+    "results": [
+      {
+        "model": "Majority class",
+        "params": {
+          "class": "Data Analyst"
+        },
+        "cv_macro_f1": null,
+        "accuracy": 0.7461,
+        "macro_f1": 0.1709,
+        "weighted_f1": 0.6376,
+        "macro_precision": 0.1492,
+        "macro_recall": 0.2
+      },
+      {
+        "model": "Naive Bayes",
+        "params": {
+          "alpha": 0.1
+        },
+        "cv_macro_f1": 0.4345,
+        "accuracy": 0.7775,
+        "macro_f1": 0.4253,
+        "weighted_f1": 0.7387,
+        "macro_precision": 0.6552,
+        "macro_recall": 0.3667,
+        "seconds": 26.7
+      },
+      {
+        "model": "Support Vector Machine",
+        "params": {
+          "C": 0.25
+        },
+        "cv_macro_f1": 0.604,
+        "accuracy": 0.7908,
+        "macro_f1": 0.6038,
+        "weighted_f1": 0.7908,
+        "macro_precision": 0.5748,
+        "macro_recall": 0.6455,
+        "seconds": 30.7
+      },
+      {
+        "model": "Logistic Regression",
+        "params": {
+          "C": 3.0
+        },
+        "cv_macro_f1": 0.5756,
+        "accuracy": 0.738,
+        "macro_f1": 0.5734,
+        "weighted_f1": 0.7548,
+        "macro_precision": 0.5178,
+        "macro_recall": 0.6697,
+        "seconds": 34.5
+      },
+      {
+        "model": "Decision Tree",
+        "params": {
+          "max_depth": 32,
+          "min_samples_leaf": 10
+        },
+        "cv_macro_f1": 0.3528,
+        "accuracy": 0.589,
+        "macro_f1": 0.3788,
+        "weighted_f1": 0.6324,
+        "macro_precision": 0.3491,
+        "macro_recall": 0.5046,
+        "seconds": 46.8
+      },
+      {
+        "model": "Random Forest",
+        "params": {
+          "max_depth": 16,
+          "min_samples_leaf": 5
+        },
+        "cv_macro_f1": 0.5586,
+        "accuracy": 0.7518,
+        "macro_f1": 0.5603,
+        "weighted_f1": 0.7581,
+        "macro_precision": 0.5881,
+        "macro_recall": 0.554,
+        "seconds": 50.5
+      }
+    ],
+    "best_model": "Support Vector Machine",
+    "labels": [
+      "Data Analyst",
+      "Data Scientist",
+      "Data Engineer",
+      "Data Governance and Quality",
+      "Others"
+    ],
+    "confusion_matrix": [
+      [
+        2645,
+        73,
+        39,
+        27,
+        237
+      ],
+      [
+        39,
+        110,
+        7,
+        0,
+        14
+      ],
+      [
+        21,
+        4,
+        48,
+        3,
+        4
+      ],
+      [
+        22,
+        0,
+        0,
+        39,
+        4
+      ],
+      [
+        293,
+        31,
+        16,
+        13,
+        360
+      ]
+    ],
+    "per_class": [
+      {
+        "category": "Data Analyst",
+        "precision": 0.8758,
+        "recall": 0.8755,
+        "f1": 0.8757,
+        "support": 3021
+      },
+      {
+        "category": "Data Scientist",
+        "precision": 0.5046,
+        "recall": 0.6471,
+        "f1": 0.567,
+        "support": 170
+      },
+      {
+        "category": "Data Engineer",
+        "precision": 0.4364,
+        "recall": 0.6,
+        "f1": 0.5053,
+        "support": 80
+      },
+      {
+        "category": "Data Governance and Quality",
+        "precision": 0.4756,
+        "recall": 0.6,
+        "f1": 0.5306,
+        "support": 65
+      },
+      {
+        "category": "Others",
+        "precision": 0.5816,
+        "recall": 0.5049,
+        "f1": 0.5405,
+        "support": 713
+      }
+    ],
+    "logistic_terms": {
+      "Data Analyst": [
+        {
+          "term": "data analysis",
+          "weight": 3.356
+        },
+        {
+          "term": "data analytics",
+          "weight": 3.179
+        },
+        {
+          "term": "statistics related",
+          "weight": 3.1
+        },
+        {
+          "term": "tableau",
+          "weight": 3.052
+        },
+        {
+          "term": "reports",
+          "weight": 3.035
+        },
+        {
+          "term": "analyze",
+          "weight": 3.011
+        },
+        {
+          "term": "sr",
+          "weight": 2.542
+        },
+        {
+          "term": "ensures",
+          "weight": 2.532
+        },
+        {
+          "term": "ms excel",
+          "weight": 2.505
+        },
+        {
+          "term": "reporting",
+          "weight": 2.469
+        }
+      ],
+      "Data Engineer": [
+        {
+          "term": "ing",
+          "weight": 7.809
+        },
+        {
+          "term": "etl",
+          "weight": 5.515
+        },
+        {
+          "term": "snowflake",
+          "weight": 4.374
+        },
+        {
+          "term": "transformation",
+          "weight": 4.313
+        },
+        {
+          "term": "pipelines",
+          "weight": 4.307
+        },
+        {
+          "term": "aws",
+          "weight": 3.823
+        },
+        {
+          "term": "data models",
+          "weight": 3.671
+        },
+        {
+          "term": "dbt",
+          "weight": 3.654
+        },
+        {
+          "term": "data solutions",
+          "weight": 3.596
+        },
+        {
+          "term": "bigquery",
+          "weight": 3.465
+        }
+      ],
+      "Data Governance and Quality": [
+        {
+          "term": "policies",
+          "weight": 6.853
+        },
+        {
+          "term": "rules",
+          "weight": 5.616
+        },
+        {
+          "term": "catalog",
+          "weight": 5.205
+        },
+        {
+          "term": "standards",
+          "weight": 4.774
+        },
+        {
+          "term": "quality",
+          "weight": 4.73
+        },
+        {
+          "term": "issues",
+          "weight": 4.515
+        },
+        {
+          "term": "metadata",
+          "weight": 4.207
+        },
+        {
+          "term": "governance",
+          "weight": 3.56
+        },
+        {
+          "term": "privacy",
+          "weight": 3.294
+        },
+        {
+          "term": "tests",
+          "weight": 3.232
+        }
+      ],
+      "Data Scientist": [
+        {
+          "term": "python",
+          "weight": 7.338
+        },
+        {
+          "term": "algorithms",
+          "weight": 6.279
+        },
+        {
+          "term": "predictive",
+          "weight": 6.043
+        },
+        {
+          "term": "models",
+          "weight": 5.061
+        },
+        {
+          "term": "ml",
+          "weight": 4.67
+        },
+        {
+          "term": "techniques",
+          "weight": 4.179
+        },
+        {
+          "term": "include",
+          "weight": 4.15
+        },
+        {
+          "term": "statistics",
+          "weight": 3.931
+        },
+        {
+          "term": "modeling",
+          "weight": 3.561
+        },
+        {
+          "term": "ai",
+          "weight": 3.342
+        }
+      ],
+      "Others": [
+        {
+          "term": "analyst",
+          "weight": 4.61
+        },
+        {
+          "term": "ga4",
+          "weight": 3.125
+        },
+        {
+          "term": "strong communication",
+          "weight": 2.828
+        },
+        {
+          "term": "sas",
+          "weight": 2.733
+        },
+        {
+          "term": "legacy",
+          "weight": 2.647
+        },
+        {
+          "term": "need",
+          "weight": 2.623
+        },
+        {
+          "term": "conversion",
+          "weight": 2.54
+        },
+        {
+          "term": "virtual",
+          "weight": 2.453
+        },
+        {
+          "term": "manipulate",
+          "weight": 2.371
+        },
+        {
+          "term": "accurate",
+          "weight": 2.314
+        }
+      ]
+    },
+    "test_share": 0.2
+  }
+}
