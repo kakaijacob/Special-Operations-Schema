@@ -538,11 +538,14 @@ def _latest_label(frame):
 
 
 def build_export_plan(data, export_period):
-    """One entry per county that has at least one submission in the report month."""
+    """One entry per county that has at least one submission in the report month.
+
+    Submissions with no county are left out, so no spreadsheet is created for them.
+    """
     periods = window_periods(export_period)
     window = data[data['month_period'].isin(periods)]
     active = set(window.loc[window['month_period'] == export_period, 'county'])
-    counties = sorted(active, key=lambda name: (name == '', name.lower()))
+    counties = sorted((name for name in active if str(name).strip()), key=str.lower)
     plan = []
     for county in counties:
         county_df = window[window['county'] == county]

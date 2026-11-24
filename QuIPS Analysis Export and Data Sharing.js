@@ -1144,6 +1144,7 @@ function buildExportPlan_(records, headers, exportMonth) {
   }
 
   var countyKeys = Object.keys(byCounty).filter(function (key) {
+    if (!String(key || '').trim()) return false;
     return byCounty[key].some(function (rec) { return rec.monthKey === exportMonth; });
   });
   countyKeys.sort(function (a, b) {
