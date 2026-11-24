@@ -3,7 +3,8 @@
 -- Mentee spine: mentors.mentee_database (program IN EmONC curriculum / both),
 -- plus any mentee_id only present in fact tables
 -- Skill avg: AVG of per-skill MAX(average_score) within each mentee×cycle
--- date_completed = first date within the cycle when ALL conditions were met; else NULL
+-- date_completed = first date within the cycle when ALL conditions were met;
+-- if incomplete, max date_submitted of any activity in that mentee×cycle (else NULL)
 --
 -- To add a future cohort: insert another UNION ALL SELECT in the cohorts CTE below.
 -- Windows are inclusive on both ends: cycle_start <= date <= cycle_end.
@@ -344,6 +345,33 @@ skill_evaluation AS (
        AND s.mentee_id = t.mentee_id
 ),
 
+-- Latest activity submission in the cycle (curriculum tracking + skill assessments)
+activity_last_date AS (
+    SELECT
+        cycle_id,
+        mentee_id,
+        MAX(date_submitted) AS last_activity_date
+    FROM (
+        SELECT
+            cycle_id,
+            mentee_id,
+            date_submitted
+        FROM tracking_by_cycle
+
+        UNION ALL
+
+        SELECT
+            c.cycle_id,
+            CAST(s.mentee_id AS VARCHAR(100)) AS mentee_id,
+            CAST(s.date_submitted AS DATE) AS date_submitted
+        FROM mentors.process_moh_skills_assessment_2026 s
+        INNER JOIN cohorts c
+            ON CAST(s.date_submitted AS DATE) >= c.cycle_start
+           AND CAST(s.date_submitted AS DATE) <= c.cycle_end
+    ) u
+    GROUP BY cycle_id, mentee_id
+),
+
 progress AS (
     SELECT
         mc.mentee_id,
@@ -417,7 +445,8 @@ progress AS (
         sd.threshold_date AS skill_demo_threshold_date,
         rd.threshold_date AS return_demo_threshold_date,
         lm.threshold_date AS labor_monitoring_threshold_date,
-        se.threshold_date AS skill_evaluation_threshold_date
+        se.threshold_date AS skill_evaluation_threshold_date,
+        ald.last_activity_date
     FROM mentee_cycles mc
     LEFT JOIN cme
         ON mc.mentee_id = cme.mentee_id
@@ -437,6 +466,9 @@ progress AS (
     LEFT JOIN skill_evaluation se
         ON mc.mentee_id = se.mentee_id
        AND mc.cycle_id = se.cycle_id
+    LEFT JOIN activity_last_date ald
+        ON mc.mentee_id = ald.mentee_id
+       AND mc.cycle_id = ald.cycle_id
 )
 
 SELECT
@@ -489,7 +521,7 @@ SELECT
             labor_monitoring_threshold_date,
             skill_evaluation_threshold_date
         )
-        ELSE NULL
+        ELSE last_activity_date
     END AS date_completed
 
 FROM progress
