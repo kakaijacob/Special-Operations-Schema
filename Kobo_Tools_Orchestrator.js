@@ -1,0 +1,1387 @@
+// =====================================================
+// Kobo Tools Orchestrator
+// Shared pipeline for all curriculum / assessment Kobo form builders.
+//
+// Apps Script project file order (recommended):
+//   1) Kobo_Secrets.js            ← credentials / IDs (Script Properties only)
+//   2) kobocreator.js
+//   3) Kobo_Tools_Orchestrator.js  ← this file (ONLY onOpen / trigger)
+//   4) EmONC_Curriculum_Tracking_Form_2026.js
+//   5) Newborn_Curriculum_Tracking_Form.js
+//   6) MoH_Skills_Assessment_Checklist.js
+//   7) Newborn_Knowledge_Assessment.js
+//   8) EmONC_Knowledge_Assessment.js
+//   9) Kobo_Tools_Deployer.js  (upload/deploy; refresh skips deploy if missing)
+//
+// Trigger / menu should call ONLY refreshAllKoboTools().
+// Sequence (always in this order):
+//   0) Acquire a lock; initialize missing config; validate every dependency
+//   1) Sync external Mentee Database 2026 → local "Mentee Database"
+//   2) Sync external Mentor (IFM) Database 2026 → local "IFM List"
+//   3) Run kobocreator.js generateAllOutputs()
+//   4) Create/update every registered Kobo form tool
+//   5) Upload / deploy only forms successfully built in this run
+// =====================================================
+
+// Script Properties — Mentee Database 2026
+var KOBO_TOOLS_PROP_SOURCE_ID = "MENTEE_DATABASE_2026_SPREADSHEET_ID";
+var KOBO_TOOLS_PROP_SOURCE_SHEET = "MENTEE_DATABASE_2026_SHEET_NAME";
+
+var KOBO_TOOLS_DEFAULT_SOURCE_SHEET = "Mentee Database";
+var KOBO_TOOLS_LOCAL_MENTEE_SHEET = "Mentee Database";
+
+// Script Properties — Mentor (IFM) Database 2026
+var KOBO_TOOLS_PROP_IFM_SOURCE_ID = "MENTOR_IFM_DATABASE_2026_SPREADSHEET_ID";
+var KOBO_TOOLS_PROP_IFM_SOURCE_SHEET = "MENTOR_IFM_DATABASE_2026_SHEET_NAME";
+var KOBO_TOOLS_PROP_IFM_SOURCE_GID = "MENTOR_IFM_DATABASE_2026_SHEET_GID";
+
+var KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET = "Mentor (IFM) Database 2026";
+var KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID = 586824847;
+var KOBO_TOOLS_LOCAL_IFM_SHEET = "IFM List";
+
+// Only these counties are imported from Mentor (IFM) Database 2026.
+// The values written to the local IFM List use these canonical spellings.
+var KOBO_TOOLS_ALLOWED_IFM_COUNTIES = [
+  "Busia",
+  "Kakamega",
+  "Kiambu",
+  "Kilifi",
+  "Kisii",
+  "Kwale",
+  "Machakos",
+  "Makueni",
+  "Meru",
+  "Mombasa",
+  "Muranga",
+  "Nairobi",
+  "Nakuru",
+  "Nyeri",
+  "Siaya"
+];
+
+/**
+ * Register each form builder here as you add tools.
+ * buildFnName must match a global function in another Apps Script file.
+ */
+function getKoboToolsRegistry_() {
+  return [
+    {
+      id: "emonc_ctf",
+      label: "EmONC Curriculum Tracking Form",
+      buildFnName: "createEmONCCurriculumTrackingForm2026",
+      enabled: true
+    },
+    {
+      id: "newborn_ctf",
+      label: "Newborn Curriculum Tracking Form",
+      buildFnName: "createNewbornCurriculumTrackingForm",
+      enabled: true
+    },
+    {
+      id: "moh_sac",
+      label: "MoH Skills Assessment Checklist",
+      buildFnName: "createMoHSkillsAssessmentChecklist",
+      enabled: true
+    },
+    {
+      id: "newborn_ka",
+      label: "Newborn Knowledge Assessment",
+      buildFnName: "createNewbornKnowledgeAssessment",
+      enabled: true
+    },
+    {
+      id: "emonc_ka",
+      label: "MoH Mentee EmONC Knowledge Assessment",
+      buildFnName: "createEmONCKnowledgeAssessment",
+      enabled: true
+    }
+    // Add more tools below as needed.
+  ];
+}
+
+/**
+ * Unified spreadsheet menu for all Kobo tools.
+ * Keep this as the ONLY onOpen in the project (remove per-tool onOpen).
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("Kobo Tools")
+    .addItem("Run Full Pipeline", "refreshAllKoboTools")
+    .addSeparator()
+    .addItem("Install Weekly Auto-Refresh", "installKoboToolsWeeklyTrigger")
+    .addItem("Install Daily Auto-Refresh", "installKoboToolsDailyTrigger")
+    .addItem("Remove Auto-Refresh", "removeKoboToolsTriggers")
+    .addSeparator()
+    .addSubMenu(
+      SpreadsheetApp.getUi()
+        .createMenu("Secrets")
+        .addItem("Check secrets", "listKoboSecrets")
+        .addItem("Set Kobo API token…", "promptSetKoboApiToken")
+        .addItem("Set source spreadsheet IDs…", "promptSetKoboSourceIds")
+        .addItem("Set asset UID…", "promptSetKoboAssetUid")
+    )
+    .addToUi();
+}
+
+/**
+ * One-time setup: store external Mentee + Mentor (IFM) Database 2026 IDs.
+ * IDs must be passed in — they are not stored in this file.
+ * Prefer the menu: Kobo Tools → Secrets → Set source spreadsheet IDs…
+ */
+function setupKoboToolsSource(menteeSpreadsheetId, ifmSpreadsheetId) {
+  if (!menteeSpreadsheetId || !ifmSpreadsheetId) {
+    throw new Error(
+      "Pass both spreadsheet IDs, or use promptSetKoboSourceIds() from the " +
+      "Kobo Tools → Secrets menu. IDs must not be committed in source."
+    );
+  }
+  setKoboToolsSourceConfig(menteeSpreadsheetId);
+  setKoboToolsIFMSourceConfig(
+    ifmSpreadsheetId,
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET,
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID
+  );
+}
+
+/**
+ * Store mentee source spreadsheet ID (and optional sheet name).
+ *   setKoboToolsSourceConfig("1abc...xyz");
+ *   setKoboToolsSourceConfig("1abc...xyz", "Mentee Database");
+ */
+function setKoboToolsSourceConfig(sourceSpreadsheetId, sheetName) {
+  if (!sourceSpreadsheetId) {
+    throw new Error(
+      "sourceSpreadsheetId is required. Use promptSetKoboSourceIds() or " +
+      "setKoboToolsSourceConfig(id)."
+    );
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(KOBO_TOOLS_PROP_SOURCE_ID, String(sourceSpreadsheetId).trim());
+
+  if (sheetName) {
+    props.setProperty(KOBO_TOOLS_PROP_SOURCE_SHEET, String(sheetName).trim());
+  }
+
+  Logger.log(
+    "Saved Mentee Database 2026 source ID: " + sourceSpreadsheetId
+  );
+}
+
+/**
+ * Store Mentor (IFM) Database 2026 source spreadsheet ID.
+ * Optional sheetName and/or sheetGid (tab gid from the Sheets URL).
+ *   setKoboToolsIFMSourceConfig("1VPz5...");
+ *   setKoboToolsIFMSourceConfig("1VPz5...", "Mentor (IFM) Database 2026", 586824847);
+ */
+function setKoboToolsIFMSourceConfig(sourceSpreadsheetId, sheetName, sheetGid) {
+  if (!sourceSpreadsheetId) {
+    throw new Error(
+      "IFM sourceSpreadsheetId is required. Use promptSetKoboSourceIds() or " +
+      "setKoboToolsIFMSourceConfig(id)."
+    );
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(
+    KOBO_TOOLS_PROP_IFM_SOURCE_ID,
+    String(sourceSpreadsheetId).trim()
+  );
+
+  if (sheetName) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_SHEET,
+      String(sheetName).trim()
+    );
+  }
+
+  if (sheetGid != null && sheetGid !== "") {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(sheetGid).trim()
+    );
+  } else if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID)
+    );
+  }
+
+  Logger.log(
+    "Saved Mentor (IFM) Database 2026 source ID: " + sourceSpreadsheetId
+  );
+}
+
+/**
+ * MASTER PIPELINE — call this from the trigger / menu.
+ * Do NOT put separate triggers on sync, kobocreator, individual builders,
+ * or the Kobo deployer.
+ */
+function refreshAllKoboTools() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) {
+    Logger.log("Kobo Tools pipeline skipped — another run is already active.");
+    return { status: "skipped_concurrent_run" };
+  }
+
+  try {
+    Logger.log("=== Kobo Tools full pipeline started ===");
+
+    // 0) Initialize missing config and fail early on missing code/token access
+    ensureKoboToolsConfigured_();
+    validateKoboPipelineDependencies_();
+
+    // 1) Sync mentee database first
+    syncMenteeDatabaseFromSource();
+
+    // 2) Sync IFM mentor database → local IFM List
+    syncIFMListFromSource();
+
+    // 3) Run kobocreator generators (shared intermediate sheets)
+    Logger.log("Running kobocreator generateAllOutputs()...");
+    generateAllOutputs();
+    Logger.log("kobocreator complete.");
+
+    // 4) Build / update every registered form
+    var buildResults = buildRegisteredKoboTools_();
+
+    // 5) Deploy only forms that were successfully built in this run
+    var deployResults = deployRegisteredKoboTools_(buildResults);
+
+    var summary = {
+      status: hasKoboPipelineErrors_(buildResults, deployResults)
+        ? "completed_with_errors"
+        : "ok",
+      build: buildResults,
+      deploy: deployResults
+    };
+
+    Logger.log("=== Kobo Tools full pipeline finished: " + summary.status + " ===");
+    Logger.log(JSON.stringify(maskKoboPipelineSummary_(summary)));
+    return summary;
+  } catch (err) {
+    Logger.log("=== Kobo Tools full pipeline FAILED ===");
+    Logger.log(String(err && err.stack ? err.stack : err));
+    throw err;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Step 0a: seed public defaults only, then require secrets already stored
+ * in Script Properties. Never writes tokens, spreadsheet IDs or asset UIDs
+ * from source.
+ */
+function ensureKoboToolsConfigured_() {
+  var props = PropertiesService.getScriptProperties();
+
+  if (!props.getProperty(KOBO_TOOLS_PROP_SOURCE_SHEET)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_SOURCE_SHEET,
+      KOBO_TOOLS_DEFAULT_SOURCE_SHEET
+    );
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_SHEET,
+      KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET
+    );
+  }
+  if (!props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID)) {
+    props.setProperty(
+      KOBO_TOOLS_PROP_IFM_SOURCE_GID,
+      String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID)
+    );
+  }
+
+  if (!resolveGlobalFunction_("getKoboApiToken_")) {
+    throw new Error(
+      "Kobo_Secrets.js is missing: getKoboApiToken_() not found. " +
+      "Add Kobo_Secrets.js to this Apps Script project first."
+    );
+  }
+
+  seedKoboPublicDefaults_();
+  requireKoboPipelineSecrets_();
+  Logger.log("Source and Kobo deployment secrets are present (values masked).");
+}
+
+/**
+ * Step 0b: verify all code and deploy credentials before touching source data.
+ * This prevents a long sync/build run that can never deploy.
+ */
+function validateKoboPipelineDependencies_() {
+  var requiredFunctions = [
+    "generateAllOutputs",
+    "deployKoboTool",
+    "testKoboConnection",
+    "getKoboApiToken_",
+    "listKoboSecrets"
+  ];
+  var registry = getKoboToolsRegistry_();
+  var i;
+
+  for (i = 0; i < registry.length; i++) {
+    if (registry[i].enabled) {
+      requiredFunctions.push(registry[i].buildFnName);
+    }
+  }
+
+  var sourceFiles = {
+    generateAllOutputs: "kobocreator.js",
+    deployKoboTool: "Kobo_Tools_Deployer.js",
+    testKoboConnection: "Kobo_Tools_Deployer.js",
+    getKoboApiToken_: "Kobo_Secrets.js",
+    listKoboSecrets: "Kobo_Secrets.js",
+    createEmONCCurriculumTrackingForm2026:
+      "EmONC_Curriculum_Tracking_Form_2026.js",
+    createNewbornCurriculumTrackingForm: "Newborn_Curriculum_Tracking_Form.js",
+    createMoHSkillsAssessmentChecklist: "MoH_Skills_Assessment_Checklist.js",
+    createNewbornKnowledgeAssessment: "Newborn_Knowledge_Assessment.js",
+    createEmONCKnowledgeAssessment: "EmONC_Knowledge_Assessment.js"
+  };
+
+  var missing = [];
+  for (i = 0; i < requiredFunctions.length; i++) {
+    var fnName = requiredFunctions[i];
+    if (!resolveGlobalFunction_(fnName)) {
+      var file = sourceFiles[fnName];
+      missing.push(fnName + "()" + (file ? " from " + file : ""));
+    }
+  }
+  if (missing.length) {
+    throw new Error(
+      "Kobo pipeline cannot start. Add the missing file(s) to this Apps Script " +
+      "project: " + missing.join("; ")
+    );
+  }
+
+  validateKoboPipelineFileRevisions_();
+
+  requireKoboPipelineSecrets_();
+
+  resolveGlobalFunction_("testKoboConnection")();
+  Logger.log("Pipeline preflight complete: code, server and token verified.");
+}
+
+/**
+ * Each file is copied into this project by hand, so one of them is easily left
+ * on an older revision — and a stale builder quietly reintroduces deploy
+ * errors that were already fixed. Every entry below is an internal function
+ * added by a fix, so its absence dates the file it belongs to.
+ */
+function validateKoboPipelineFileRevisions_() {
+  var expectedFunctions = [
+    {
+      name: "resolveMenteeRecords_",
+      file: "kobocreator.js",
+      fix: "mentee questions restricted to facilities with selectable mentees"
+    },
+    {
+      name: "resolveIFMRecords_",
+      file: "kobocreator.js",
+      fix: "IFM questions restricted to Active mentor postings"
+    },
+    {
+      name: "padKoboFacilityRank_",
+      file: "kobocreator.js",
+      fix: "ranks duplicate facility field names as _02, _03, etc."
+    },
+    {
+      name: "foldKoboText_",
+      file: "kobocreator.js",
+      fix: "folds apostrophes and accents, so Murang'a gives muranga"
+    },
+    {
+      name: "dropMoHSACRowsWithMissingChoices_",
+      file: "MoH_Skills_Assessment_Checklist.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "clearMoHSACFieldReferences_",
+      file: "MoH_Skills_Assessment_Checklist.js",
+      fix: "clears ${references} to dropped questions"
+    },
+    {
+      name: "dropEmONCCTF2026RowsWithMissingChoices_",
+      file: "EmONC_Curriculum_Tracking_Form_2026.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "dropNewbornCTFRowsWithMissingChoices_",
+      file: "Newborn_Curriculum_Tracking_Form.js",
+      fix: "drops questions whose choice list is empty"
+    },
+    {
+      name: "findKoboFormProblems_",
+      file: "Kobo_Tools_Deployer.js",
+      fix: "pre-deploy check for empty choice lists"
+    },
+    {
+      name: "getKoboApiToken_",
+      file: "Kobo_Secrets.js",
+      fix: "reads the API token from Script Properties, never from source"
+    },
+    {
+      name: "maskKoboSecret_",
+      file: "Kobo_Secrets.js",
+      fix: "masks tokens and IDs in logs"
+    }
+  ];
+
+  var stale = [];
+  for (var i = 0; i < expectedFunctions.length; i++) {
+    var expected = expectedFunctions[i];
+    if (!resolveGlobalFunction_(expected.name)) {
+      stale.push(expected.file + " (missing " + expected.fix + ")");
+    }
+  }
+
+  if (stale.length) {
+    throw new Error(
+      "These Apps Script files are older than the pipeline expects — copy the " +
+      "current version of each one in before running again: " +
+      stale.sort().join("; ")
+    );
+  }
+}
+
+/**
+ * Step 5: deploy only tools whose builder returned status "ok" in this run.
+ * This prevents a failed builder from redeploying a stale spreadsheet.
+ */
+function deployRegisteredKoboTools_(buildResults) {
+  var deployFn = resolveGlobalFunction_("deployKoboTool");
+  var results = [];
+
+  for (var i = 0; i < buildResults.length; i++) {
+    var build = buildResults[i];
+    if (build.status !== "ok") {
+      results.push({
+        toolId: build.id,
+        label: build.label,
+        status: "skipped_build_failed"
+      });
+      continue;
+    }
+
+    try {
+      Logger.log("Deploying: " + build.label + "...");
+      var out = deployFn(build.id, false);
+      results.push({
+        toolId: build.id,
+        label: build.label,
+        status: "ok",
+        assetUid: out.assetUid
+      });
+    } catch (err) {
+      Logger.log("DEPLOY FAILED: " + build.label + " — " + err.message);
+      results.push({
+        toolId: build.id,
+        label: build.label,
+        status: "error",
+        error: String(err.message || err)
+      });
+    }
+  }
+
+  return results;
+}
+
+function hasKoboPipelineErrors_(buildResults, deployResults) {
+  var all = buildResults.concat(deployResults);
+  for (var i = 0; i < all.length; i++) {
+    if (
+      all[i].status === "error" ||
+      all[i].status === "skipped_missing_function" ||
+      all[i].status === "skipped_build_failed"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Step 1: Copy external Mentee Database 2026 → local "Mentee Database".
+ * Converts Status Eligible→Active / Ineligible→Inactive, excludes
+ * Status=Inactive, validates Mentee IDs, and normalizes Program
+ * "EmONC Curriculum" → "MENTORS Curriculum".
+ */
+function syncMenteeDatabaseFromSource() {
+  var props = PropertiesService.getScriptProperties();
+  var sourceId = getKoboSecret_(KOBO_TOOLS_PROP_SOURCE_ID, true);
+
+  var sourceSs = SpreadsheetApp.openById(sourceId);
+  var sourceSheetName =
+    props.getProperty(KOBO_TOOLS_PROP_SOURCE_SHEET) ||
+    KOBO_TOOLS_DEFAULT_SOURCE_SHEET;
+
+  var sourceSheet = sourceSs.getSheetByName(sourceSheetName);
+  if (!sourceSheet) {
+    sourceSheet = sourceSs.getSheets()[0];
+  }
+  if (!sourceSheet) {
+    throw new Error("No sheets found in Mentee Database 2026 spreadsheet.");
+  }
+
+  var values = sourceSheet.getDataRange().getValues();
+  if (!values || values.length === 0) {
+    throw new Error("Mentee Database 2026 source sheet is empty.");
+  }
+
+  // Mentee-only: map eligibility labels before Inactive filtering.
+  var statusNormalize = normalizeEligibleStatusValues_(
+    values,
+    "Mentee Database 2026"
+  );
+  values = statusNormalize.values;
+  var statusFilter = filterInactiveRows_(values, "Mentee Database 2026");
+  values = statusFilter.values;
+  var menteeIdFilter = normalizeAndFilterMenteeIds_(values);
+  values = menteeIdFilter.values;
+  var programNormalize = normalizeSourceProgramValues_(values, true);
+  values = programNormalize.values;
+
+  var localSs = SpreadsheetApp.getActiveSpreadsheet();
+  var localSheet = localSs.getSheetByName(KOBO_TOOLS_LOCAL_MENTEE_SHEET);
+  if (!localSheet) {
+    localSheet = localSs.insertSheet(KOBO_TOOLS_LOCAL_MENTEE_SHEET);
+  }
+
+  // Clear dropdown / validation rules that can block overwrite
+  var fullRange = localSheet.getRange(
+    1,
+    1,
+    localSheet.getMaxRows(),
+    localSheet.getMaxColumns()
+  );
+  fullRange.clearDataValidations();
+
+  var filter = localSheet.getFilter();
+  if (filter) {
+    filter.remove();
+  }
+
+  localSheet.clearContents();
+  localSheet
+    .getRange(1, 1, values.length, values[0].length)
+    .setValues(values);
+
+  Logger.log(
+    "Synced " + (values.length - 1) +
+    " mentee rows from '" + sourceSheet.getName() + "' into '" +
+    KOBO_TOOLS_LOCAL_MENTEE_SHEET + "'. " +
+    "Converted Status Eligible→Active on " +
+    statusNormalize.eligibleConverted +
+    " row(s) and Ineligible→Inactive on " +
+    statusNormalize.ineligibleConverted + " row(s). " +
+    "Excluded " + statusFilter.removed + " Status=Inactive row(s). " +
+    "Excluded " + menteeIdFilter.removed +
+    " row(s) with an invalid Mentee ID. Removed country code 254 from " +
+    menteeIdFilter.countryCodeTrimmed +
+    " Mentee ID(s) and removed a leading zero from " +
+    menteeIdFilter.leadingZeroTrimmed + " Mentee ID(s). " +
+    "Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
+    programNormalize.converted + " row(s)."
+  );
+
+  return localSheet;
+}
+
+/**
+ * Normalize Mentee ID and exclude rows whose ID remains invalid.
+ *
+ * Valid local IDs are exactly nine digits and start with 1 or 7. IDs supplied
+ * in Kenyan international form (2541xxxxxxxx or 2547xxxxxxxx) lose the 254
+ * first. IDs supplied in local phone form (01xxxxxxxx or 07xxxxxxxx) lose the
+ * leading zero. A leading + and common visual separators are accepted and
+ * removed. After those transformations, anything that is not exactly nine
+ * digits starting with 1 or 7 is excluded entirely.
+ */
+function normalizeAndFilterMenteeIds_(values) {
+  return normalizeAndFilterPersonIds_(
+    values,
+    "Mentee ID",
+    "Mentee Database 2026"
+  );
+}
+
+/**
+ * Normalize phone-style person IDs (Mentee ID / IFM ID) and drop invalid rows.
+ */
+function normalizeAndFilterPersonIds_(values, idColumnName, sourceLabel) {
+  if (!values || !values.length) {
+    return {
+      values: values,
+      removed: 0,
+      countryCodeTrimmed: 0,
+      leadingZeroTrimmed: 0
+    };
+  }
+
+  var idIndex = findCaseInsensitiveHeaderIndex_(values[0], idColumnName);
+  if (idIndex === -1) {
+    throw new Error(
+      sourceLabel +
+      " is missing the '" +
+      idColumnName +
+      "' column required for ID validation."
+    );
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+  var countryCodeTrimmed = 0;
+  var leadingZeroTrimmed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var result = normalizeMenteeId_(values[i][idIndex]);
+
+    if (!result.valid) {
+      removed++;
+      continue;
+    }
+
+    var row = values[i].slice();
+    row[idIndex] = result.value;
+    output.push(row);
+
+    if (result.countryCodeTrimmed) countryCodeTrimmed++;
+    if (result.leadingZeroTrimmed) leadingZeroTrimmed++;
+  }
+
+  return {
+    values: output,
+    removed: removed,
+    countryCodeTrimmed: countryCodeTrimmed,
+    leadingZeroTrimmed: leadingZeroTrimmed
+  };
+}
+
+/**
+ * One Mentee ID → { valid, value, countryCodeTrimmed, leadingZeroTrimmed }.
+ *
+ * Examples:
+ *   712345678     → 712345678
+ *   254712345678  → 712345678
+ *   +254 112345678 → 112345678
+ *   0712345678    → 712345678
+ *   0112345678    → 112345678
+ */
+function normalizeMenteeId_(rawValue) {
+  var value = String(rawValue == null ? "" : rawValue).trim();
+
+  // Spaces, hyphens and parentheses are presentation only. A leading + is
+  // allowed for the 254 form; any other non-digit makes the ID invalid.
+  value = value.replace(/[\s\-()]/g, "");
+  if (value.charAt(0) === "+") value = value.substring(1);
+
+  if (!/^\d+$/.test(value)) {
+    return {
+      valid: false,
+      value: "",
+      countryCodeTrimmed: false,
+      leadingZeroTrimmed: false
+    };
+  }
+
+  var countryCodeTrimmed = false;
+  if (/^254[17]\d{8}$/.test(value)) {
+    value = value.substring(3);
+    countryCodeTrimmed = true;
+  }
+
+  var leadingZeroTrimmed = false;
+  if (/^0[17]\d{8}$/.test(value)) {
+    value = value.substring(1);
+    leadingZeroTrimmed = true;
+  }
+
+  return {
+    valid: /^[17]\d{8}$/.test(value),
+    value: value,
+    countryCodeTrimmed: countryCodeTrimmed,
+    leadingZeroTrimmed: leadingZeroTrimmed
+  };
+}
+
+/**
+ * Map Status Eligible → Active and Ineligible → Inactive (mentee sync only).
+ * Comparison is trimmed and case-insensitive; other statuses are left as-is.
+ */
+function normalizeEligibleStatusValues_(values, sourceLabel) {
+  var eligibleConverted = 0;
+  var ineligibleConverted = 0;
+
+  if (!values || !values.length) {
+    return {
+      values: values,
+      eligibleConverted: eligibleConverted,
+      ineligibleConverted: ineligibleConverted
+    };
+  }
+
+  var statusIndex = findCaseInsensitiveHeaderIndex_(values[0], "Status");
+  if (statusIndex === -1) {
+    throw new Error(
+      sourceLabel + " is missing the 'Status' column required for syncing."
+    );
+  }
+
+  for (var i = 1; i < values.length; i++) {
+    var raw = values[i][statusIndex];
+    var cleaned = String(raw == null ? "" : raw).trim().toLowerCase();
+
+    if (cleaned === "eligible") {
+      values[i][statusIndex] = "Active";
+      eligibleConverted++;
+    } else if (cleaned === "ineligible") {
+      values[i][statusIndex] = "Inactive";
+      ineligibleConverted++;
+    }
+  }
+
+  return {
+    values: values,
+    eligibleConverted: eligibleConverted,
+    ineligibleConverted: ineligibleConverted
+  };
+}
+
+/**
+ * Normalize Program "EmONC Curriculum" → "MENTORS Curriculum".
+ * When requireProgramColumn is false, a missing Program column is a no-op.
+ */
+function normalizeSourceProgramValues_(values, requireProgramColumn) {
+  var converted = 0;
+  if (!values || values.length < 2) {
+    return { values: values, converted: converted };
+  }
+
+  var programIndex = findCaseInsensitiveHeaderIndex_(values[0], "Program");
+
+  if (programIndex === -1) {
+    if (requireProgramColumn) {
+      throw new Error("Source Mentee Database is missing a 'Program' column.");
+    }
+    return { values: values, converted: converted };
+  }
+
+  for (var i = 1; i < values.length; i++) {
+    var raw = values[i][programIndex];
+    var cleaned = String(raw == null ? "" : raw).trim();
+    if (cleaned.toLowerCase() === "emonc curriculum") {
+      values[i][programIndex] = "MENTORS Curriculum";
+      converted++;
+    }
+  }
+
+  return { values: values, converted: converted };
+}
+
+/**
+ * Keep the header and every record except Status=Inactive.
+ * Status comparison is trimmed and case-insensitive; blank/other statuses stay.
+ */
+function filterInactiveRows_(values, sourceLabel) {
+  if (!values || !values.length) {
+    return { values: values, removed: 0 };
+  }
+
+  var statusIndex = findCaseInsensitiveHeaderIndex_(values[0], "Status");
+  if (statusIndex === -1) {
+    throw new Error(
+      sourceLabel + " is missing the 'Status' column required for syncing."
+    );
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var status = String(
+      values[i][statusIndex] == null ? "" : values[i][statusIndex]
+    ).trim().toLowerCase();
+
+    if (status === "inactive") {
+      removed++;
+      continue;
+    }
+    output.push(values[i]);
+  }
+
+  return { values: output, removed: removed };
+}
+
+function findCaseInsensitiveHeaderIndex_(header, name) {
+  var wanted = String(name).trim().toLowerCase();
+  for (var i = 0; i < header.length; i++) {
+    if (
+      String(header[i] == null ? "" : header[i]).trim().toLowerCase() === wanted
+    ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Step 2: Copy external Mentor (IFM) Database 2026 → local "IFM List".
+ * Applies the same mentee sync validations (Inactive filter, phone-ID
+ * normalization, Program EmONC→MENTORS remap) except Eligible/Ineligible
+ * Status conversion, which is mentee-only. Also excludes counties outside
+ * KOBO_TOOLS_ALLOWED_IFM_COUNTIES.
+ * Chooses the source tab with real mentor rows (gid preferred, then best match).
+ *
+ * Downstream consumers (kobocreator) — ALL read local IFM List only:
+ *   IFM List → IFM List (Choices)
+ *   IFM List → Survey Sheet (IFM)
+ *   IFM List → IFM Assessment Facilities List (Choices)
+ */
+function syncIFMListFromSource() {
+  var props = PropertiesService.getScriptProperties();
+  var sourceId = getKoboSecret_(KOBO_TOOLS_PROP_IFM_SOURCE_ID, true);
+
+  var sourceSs = SpreadsheetApp.openById(sourceId);
+  var selected = selectIFMSourceTable_(sourceSs, props);
+
+  if (!selected || !selected.values || selected.values.length < 2) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 (" +
+      sourceId +
+      ") has no usable IFM table with Mentor ID/IFM ID, county, Facility, " +
+      "Facility Code and at least one filled data row. " +
+      (selected && selected.scanLog ? selected.scanLog : "")
+    );
+  }
+
+  var values = selected.values;
+  var sourceUsableRows = countIFMUsableRows_(values);
+
+  if (sourceUsableRows < 1) {
+    throw new Error(
+      "Selected IFM source sheet '" +
+      selected.sheetName +
+      "' has headers but 0 rows with county + Facility + Facility Code filled. " +
+      "Headers: [" +
+      values[0].join(" | ") +
+      "]."
+    );
+  }
+
+  // Map Mentor (IFM) Database headers → original kobocreator IFM List names
+  // so generateIFM* can keep using County / IFM ID / Status / etc.
+  values = normalizeIFMListHeadersForKobocreator_(values);
+
+  // Same mentee validations, excluding Eligible/Ineligible → Active/Inactive.
+  var statusFilter = filterInactiveRows_(
+    values,
+    "Mentor (IFM) Database 2026"
+  );
+  values = statusFilter.values;
+  var ifmIdFilter = normalizeAndFilterPersonIds_(
+    values,
+    "IFM ID",
+    "Mentor (IFM) Database 2026"
+  );
+  values = ifmIdFilter.values;
+  var programNormalize = normalizeSourceProgramValues_(values, false);
+  values = programNormalize.values;
+  var countyFilter = filterIFMRowsToAllowedCounties_(values);
+  values = countyFilter.values;
+  var usableRows = countIFMUsableRows_(values);
+  var header = values[0];
+
+  var localSs = SpreadsheetApp.getActiveSpreadsheet();
+  var localSheet = localSs.getSheetByName(KOBO_TOOLS_LOCAL_IFM_SHEET);
+  if (!localSheet) {
+    localSheet = localSs.insertSheet(KOBO_TOOLS_LOCAL_IFM_SHEET);
+  }
+
+  var fullRange = localSheet.getRange(
+    1,
+    1,
+    localSheet.getMaxRows(),
+    localSheet.getMaxColumns()
+  );
+  fullRange.clearDataValidations();
+
+  var filter = localSheet.getFilter();
+  if (filter) {
+    filter.remove();
+  }
+
+  localSheet.clearContents();
+  localSheet
+    .getRange(1, 1, values.length, values[0].length)
+    .setValues(values);
+
+  Logger.log(
+    "Synced IFM List from '" +
+    selected.sheetName +
+    "' (gid=" +
+    selected.sheetId +
+    ", spreadsheet " +
+    sourceId +
+    "): " +
+    (values.length - 1) +
+    " row(s), " +
+    usableRows +
+    " with County/Facility/Facility Code. Excluded " +
+    statusFilter.removed +
+    " Status=Inactive posting(s). Excluded " +
+    ifmIdFilter.removed +
+    " row(s) with an invalid IFM ID. Removed country code 254 from " +
+    ifmIdFilter.countryCodeTrimmed +
+    " IFM ID(s) and removed a leading zero from " +
+    ifmIdFilter.leadingZeroTrimmed +
+    " IFM ID(s). Converted Program 'EmONC Curriculum' → 'MENTORS Curriculum' on " +
+    programNormalize.converted +
+    " row(s). Excluded " +
+    countyFilter.removed +
+    " posting(s) outside the allowed counties. Allowed counties: [" +
+    KOBO_TOOLS_ALLOWED_IFM_COUNTIES.join(" | ") +
+    "]. " +
+    "Normalized headers: [" +
+    header.join(" | ") +
+    "]"
+  );
+
+  return localSheet;
+}
+
+/**
+ * Keep the header and IFM rows from the configured counties only.
+ *
+ * County comparison is case-insensitive and ignores spaces, punctuation,
+ * apostrophes and accents. Accepted rows are rewritten to the canonical
+ * allowlist spelling, so Muranga, Murang'a, Murang’a and Murangá all become
+ * "Muranga" in the local IFM List.
+ */
+function filterIFMRowsToAllowedCounties_(values) {
+  if (!values || !values.length) {
+    return { values: values, removed: 0 };
+  }
+
+  var countyIndex = findCaseInsensitiveHeaderIndex_(values[0], "County");
+  if (countyIndex === -1) {
+    throw new Error(
+      "Mentor (IFM) Database 2026 is missing the 'County' column required " +
+      "for the IFM county allowlist."
+    );
+  }
+
+  var allowedByKey = {};
+  for (var a = 0; a < KOBO_TOOLS_ALLOWED_IFM_COUNTIES.length; a++) {
+    var canonical = KOBO_TOOLS_ALLOWED_IFM_COUNTIES[a];
+    allowedByKey[normalizeIFMCountyKey_(canonical)] = canonical;
+  }
+
+  var output = [values[0]];
+  var removed = 0;
+
+  for (var i = 1; i < values.length; i++) {
+    var key = normalizeIFMCountyKey_(values[i][countyIndex]);
+    var allowedCounty = allowedByKey[key];
+
+    if (!allowedCounty) {
+      removed++;
+      continue;
+    }
+
+    var row = values[i].slice();
+    row[countyIndex] = allowedCounty;
+    output.push(row);
+  }
+
+  return { values: output, removed: removed };
+}
+
+/** Plain comparison key for an IFM county name. */
+function normalizeIFMCountyKey_(county) {
+  var value = String(county == null ? "" : county).trim();
+
+  // Remove a mis-decoded curly apostrophe before folding accents.
+  value = value.replace(/\u00E2\u20AC\u2122/g, "");
+  value = value.replace(/['\u2018\u2019\u02BC\u0060\u00B4]/g, "");
+
+  if (typeof value.normalize === "function") {
+    value = value.normalize("NFD").replace(/[\u0300-\u036F]/g, "");
+  } else {
+    value = value
+      .replace(/[àáâãäåāăą]/gi, "a")
+      .replace(/[èéêëēĕėęě]/gi, "e")
+      .replace(/[ìíîïĩīĭįı]/gi, "i")
+      .replace(/[òóôõöøōŏő]/gi, "o")
+      .replace(/[ùúûüũūŭůűų]/gi, "u");
+  }
+
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Rename Mentor (IFM) Database 2026 headers to the names kobocreator expects.
+ *   county     → County
+ *   Mentor ID  → IFM ID
+ * Other familiar names (Facility, Facility Code, Name, Status) stay as-is.
+ */
+function normalizeIFMListHeadersForKobocreator_(values) {
+  if (!values || !values.length) return values;
+
+  var header = values[0];
+  var mapped = [];
+
+  for (var c = 0; c < header.length; c++) {
+    var raw = String(header[c] == null ? "" : header[c]).trim();
+    var key = raw.toLowerCase();
+
+    if (key === "county") {
+      mapped.push("County");
+    } else if (
+      key === "mentor id" ||
+      key === "mentorid" ||
+      key === "ifm id"
+    ) {
+      mapped.push("IFM ID");
+    } else if (key === "facility code") {
+      mapped.push("Facility Code");
+    } else if (key === "facility") {
+      mapped.push("Facility");
+    } else if (key === "name") {
+      mapped.push("Name");
+    } else if (key === "status") {
+      mapped.push("Status");
+    } else {
+      mapped.push(raw);
+    }
+  }
+
+  values[0] = mapped;
+  return values;
+}
+
+/**
+ * Prefer configured gid/name sheet when it has usable rows; otherwise pick
+ * the workbook tab with the most usable IFM rows.
+ */
+function selectIFMSourceTable_(sourceSs, props) {
+  var gidRaw =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_GID) ||
+    String(KOBO_TOOLS_DEFAULT_IFM_SOURCE_GID);
+  var gid = parseInt(gidRaw, 10);
+  var preferredName =
+    props.getProperty(KOBO_TOOLS_PROP_IFM_SOURCE_SHEET) ||
+    KOBO_TOOLS_DEFAULT_IFM_SOURCE_SHEET;
+
+  var sheets = sourceSs.getSheets();
+  var scanParts = [];
+  var best = null;
+  var preferred = null;
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sh = sheets[i];
+    var parsed = parseIFMSourceSheet_(sh);
+    scanParts.push(
+      sh.getName() +
+      "(gid=" +
+      sh.getSheetId() +
+      ", usable=" +
+      parsed.usableRows +
+      ")"
+    );
+
+    if (parsed.usableRows < 1) continue;
+
+    if (!best || parsed.usableRows > best.usableRows) {
+      best = parsed;
+    }
+
+    var isPreferredGid = !isNaN(gid) && sh.getSheetId() === gid;
+    var isPreferredName = sh.getName() === preferredName;
+    if ((isPreferredGid || isPreferredName) && !preferred) {
+      preferred = parsed;
+    }
+  }
+
+  var chosen = preferred && preferred.usableRows > 0 ? preferred : best;
+  if (!chosen) {
+    return { scanLog: "Tabs scanned: " + scanParts.join("; ") };
+  }
+
+  chosen.scanLog = "Tabs scanned: " + scanParts.join("; ");
+  return chosen;
+}
+
+/**
+ * Read one source sheet and normalize to header-first values if it looks like IFM.
+ */
+function parseIFMSourceSheet_(sheet) {
+  var values = sheet.getDataRange().getValues();
+  var headerRowIndex = findIFMSourceHeaderRowIndex_(values);
+  if (headerRowIndex === -1) {
+    return {
+      sheetName: sheet.getName(),
+      sheetId: sheet.getSheetId(),
+      values: null,
+      usableRows: 0
+    };
+  }
+
+  if (headerRowIndex > 0) {
+    values = values.slice(headerRowIndex);
+  }
+
+  return {
+    sheetName: sheet.getName(),
+    sheetId: sheet.getSheetId(),
+    values: values,
+    usableRows: countIFMUsableRows_(values)
+  };
+}
+
+function countIFMUsableRows_(values) {
+  if (!values || values.length < 2) return 0;
+
+  var header = values[0];
+  var countyIndex = findIFMSourceHeaderIndex_(header, ["county", "County"]);
+  var facilityIndex = findIFMSourceHeaderIndex_(header, ["Facility"]);
+  var codeIndex = findIFMSourceHeaderIndex_(header, [
+    "Facility Code",
+    "Facility code"
+  ]);
+
+  if (countyIndex === -1 || facilityIndex === -1 || codeIndex === -1) {
+    return 0;
+  }
+
+  var usable = 0;
+  for (var i = 1; i < values.length; i++) {
+    var county = String(
+      values[i][countyIndex] == null ? "" : values[i][countyIndex]
+    ).trim();
+    var facility = String(
+      values[i][facilityIndex] == null ? "" : values[i][facilityIndex]
+    ).trim();
+    var code = String(
+      values[i][codeIndex] == null ? "" : values[i][codeIndex]
+    ).trim();
+    if (county && facility && code) usable++;
+  }
+  return usable;
+}
+
+/**
+ * Find header row in Mentor (IFM) source values (first ~15 rows).
+ */
+function findIFMSourceHeaderRowIndex_(rows) {
+  if (!rows || !rows.length) return -1;
+  var maxScan = Math.min(rows.length, 15);
+  for (var r = 0; r < maxScan; r++) {
+    var row = rows[r];
+    var hasId =
+      findIFMSourceHeaderIndex_(row, [
+        "Mentor ID",
+        "IFM ID",
+        "Mentor Id",
+        "MentorID"
+      ]) !== -1;
+    var hasFacility = findIFMSourceHeaderIndex_(row, ["Facility"]) !== -1;
+    var hasCode =
+      findIFMSourceHeaderIndex_(row, ["Facility Code", "Facility code"]) !==
+      -1;
+    var hasCounty =
+      findIFMSourceHeaderIndex_(row, ["county", "County"]) !== -1;
+
+    if (hasId && hasFacility && hasCode && hasCounty) {
+      return r;
+    }
+  }
+  return -1;
+}
+
+function findIFMSourceHeaderIndex_(headerRow, names) {
+  var aliases =
+    Object.prototype.toString.call(names) === "[object Array]"
+      ? names
+      : [names];
+  var i;
+  var c;
+  var want;
+
+  for (i = 0; i < aliases.length; i++) {
+    var exact = headerRow.indexOf(aliases[i]);
+    if (exact !== -1) return exact;
+  }
+
+  for (i = 0; i < aliases.length; i++) {
+    want = String(aliases[i] == null ? "" : aliases[i]).trim().toLowerCase();
+    for (c = 0; c < headerRow.length; c++) {
+      if (
+        String(headerRow[c] == null ? "" : headerRow[c]).trim().toLowerCase() ===
+        want
+      ) {
+        return c;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
+ * Step 4: call every enabled registry builder that exists in this project.
+ */
+function buildRegisteredKoboTools_() {
+  var registry = getKoboToolsRegistry_();
+  var results = [];
+
+  for (var i = 0; i < registry.length; i++) {
+    var tool = registry[i];
+    if (!tool.enabled) {
+      results.push({
+        id: tool.id,
+        label: tool.label,
+        status: "skipped_disabled"
+      });
+      continue;
+    }
+
+    var fn = resolveGlobalFunction_(tool.buildFnName);
+    if (!fn) {
+      Logger.log(
+        "Skipping " + tool.label +
+        " — function " + tool.buildFnName + " not found in this project."
+      );
+      results.push({
+        id: tool.id,
+        label: tool.label,
+        status: "skipped_missing_function",
+        buildFnName: tool.buildFnName
+      });
+      continue;
+    }
+
+    try {
+      Logger.log("Building: " + tool.label + " ...");
+      var formSs = fn();
+      var url = formSs && formSs.getUrl ? formSs.getUrl() : "";
+      Logger.log("Built: " + tool.label + (url ? " → " + url : ""));
+      results.push({
+        id: tool.id,
+        label: tool.label,
+        status: "ok",
+        url: url
+      });
+    } catch (err) {
+      Logger.log("FAILED: " + tool.label + " — " + err.message);
+      results.push({
+        id: tool.id,
+        label: tool.label,
+        status: "error",
+        error: String(err.message || err)
+      });
+    }
+  }
+
+  return results;
+}
+
+function resolveGlobalFunction_(fnName) {
+  try {
+    // Apps Script global scope
+    if (typeof this[fnName] === "function") return this[fnName];
+  } catch (e1) {}
+
+  try {
+    if (typeof globalThis !== "undefined" && typeof globalThis[fnName] === "function") {
+      return globalThis[fnName];
+    }
+  } catch (e2) {}
+
+  // Fallback: eval in global context (Apps Script-friendly for registered names only)
+  try {
+    var fn = eval(fnName);
+    if (typeof fn === "function") return fn;
+  } catch (e3) {}
+
+  return null;
+}
+
+/**
+ * Preferred: install weekly trigger on refreshAllKoboTools only.
+ */
+function installKoboToolsWeeklyTrigger() {
+  removeKoboToolsTriggers();
+
+  ScriptApp.newTrigger("refreshAllKoboTools")
+    .timeBased()
+    .everyWeeks(1)
+    .create();
+
+  Logger.log("Installed weekly trigger for refreshAllKoboTools().");
+}
+
+/**
+ * Install daily trigger on refreshAllKoboTools only.
+ */
+function installKoboToolsDailyTrigger() {
+  removeKoboToolsTriggers();
+
+  ScriptApp.newTrigger("refreshAllKoboTools")
+    .timeBased()
+    .everyDays(1)
+    .create();
+
+  Logger.log("Installed daily trigger for refreshAllKoboTools().");
+}
+
+/**
+ * Optional hourly trigger.
+ */
+function installKoboToolsHourlyTrigger() {
+  removeKoboToolsTriggers();
+
+  ScriptApp.newTrigger("refreshAllKoboTools")
+    .timeBased()
+    .everyHours(1)
+    .create();
+
+  Logger.log("Installed hourly trigger for refreshAllKoboTools().");
+}
+
+/**
+ * Remove orchestrator auto-refresh triggers.
+ */
+function removeKoboToolsTriggers() {
+  var triggers = ScriptApp.getProjectTriggers();
+  var removed = 0;
+  var pipelineHandlers = {
+    refreshAllKoboTools: true,
+    syncMenteeDatabaseFromSource: true,
+    syncIFMListFromSource: true,
+    generateAllOutputs: true,
+    buildRegisteredKoboTools_: true,
+    deployRegisteredKoboTools_: true,
+    deployAllKoboTools: true,
+    deployEmONCCurriculumTrackingFormToKobo: true,
+    createEmONCCurriculumTrackingForm2026: true,
+    createNewbornCurriculumTrackingForm: true,
+    createMoHSkillsAssessmentChecklist: true,
+    createNewbornKnowledgeAssessment: true,
+    createEmONCKnowledgeAssessment: true
+  };
+
+  for (var i = 0; i < triggers.length; i++) {
+    var handler = triggers[i].getHandlerFunction();
+    if (pipelineHandlers[handler]) {
+      ScriptApp.deleteTrigger(triggers[i]);
+      removed++;
+    }
+  }
+
+  Logger.log(
+    "Removed " + removed +
+    " Kobo pipeline trigger(s). Only refreshAllKoboTools may be installed."
+  );
+}

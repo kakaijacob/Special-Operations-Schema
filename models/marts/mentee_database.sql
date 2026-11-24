@@ -1,0 +1,22 @@
+select
+    mentee_name,
+    mentee_id,
+    county,
+    facility_code,
+    facility,
+    cadre,
+    gender,
+    new_existing,
+    date_activated,
+    date_deactivated,
+    date_reactivated,
+    reason_for_deactivation,
+    status,
+    program,
+    emonc_inperson,
+    emons_delta,
+    essential_newborn_inperson,
+    essential_newborn_delta,
+    comprehensive_newborn_inperson,
+    continuum_of_care
+from {{ ref('int_mentee_database') }}

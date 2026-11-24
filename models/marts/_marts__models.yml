@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: mentee_database
+    description: Analytics-ready, deduplicated mentee master table sourced from Airbyte.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+          - unique
+      # Option-list checks warn rather than fail: the sheet is hand-edited, and
+      # unexpected values should be reported without blocking downstream models.
+      - name: cadre
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - Clinical officer
+                  - Medical officer
+                  - Nurse
+                  - Pediatrician
+              config:
+                severity: warn
+      - name: new_existing
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [New, Existing]
+              config:
+                severity: warn
+      - name: program
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - Both
+                  - Mentors curriculum
+                  - Newborn curriculum
+                  - Other
+              config:
+                severity: warn
+
+  - name: mart_skill_assessment_summary
+    description: Monthly assessment activity by location, program, and evaluated skill.
+    columns:
+      - name: submission_month
+        description: Calendar month in which assessments were submitted.
+        data_tests:
+          - not_null
+      - name: assessment_count
+        description: Number of assessment submissions in the dimensional group.
+        data_tests:
+          - not_null
+      - name: assessed_mentee_count
+        description: Number of distinct non-null mentee identifiers assessed.
+        data_tests:
+          - not_null
+
+  - name: mart_emonc_curriculum_completion
+    description: Cohort-level EmONC curriculum progress and completion status for every mentee.
+    columns:
+      - name: mentee_id
+        description: Stable mentee identifier.
+        data_tests:
+          - not_null
+      - name: cycle_id
+        description: Cohort identifier.
+        data_tests:
+          - not_null
+      - name: curriculum_completion
+        description: One when all six curriculum requirements are complete, otherwise zero.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+  - name: mart_newborn_curriculum_completion
+    description: Cohort-level newborn curriculum progress, NNR scores, and completion status.
+    columns:
+      - name: mentee_id
+        data_tests:
+          - not_null
+      - name: cycle_id
+        data_tests:
+          - not_null
+      - name: nnr_assessment_completion
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+      - name: curriculum_completion
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
