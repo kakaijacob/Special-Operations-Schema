@@ -560,28 +560,34 @@ function generateFacilitiesChoicesSheet() {
   var facilityIndex = header.indexOf("Facility");
   var facilityCodeIndex = header.indexOf("Facility Code");
   var programIndex = header.indexOf("Program");
+  var statusIndex = header.indexOf("Status");
 
   var facilitiesSheet = getOrCreateSheet("All Facilities List (Choices)");
   var output = [[
-  "County",
-  "Facility",
-  "Facility Code",
-  "Program",
-  "list_name",
-  "name",
-  "label",
-  "allowed"
-]];
+    "County",
+    "Facility",
+    "Facility Code",
+    "Program",
+    "list_name",
+    "name",
+    "label",
+    "allowed"
+  ]];
 
-  var processed = {};
+  // Aggregate by Facility Code across all Active mentees
+  var facilityMap = {};
 
   for (var i = 1; i < data.length; i++) {
     var county = data[i][countyIndex];
     var facility = data[i][facilityIndex];
     var code = data[i][facilityCodeIndex];
     var program = data[i][programIndex];
+    var status = statusIndex !== -1 ? data[i][statusIndex] : "";
 
     if (!county || !facility || !code) continue;
+
+    // ✅ FILTER: Active status only
+    if (status !== "Active") continue;
 
     // ✅ FILTER: Only include specific Program values
     if (
@@ -590,34 +596,58 @@ function generateFacilitiesChoicesSheet() {
       program !== "Both"
     ) continue;
 
-    // ✅ Map Program → allowed
-    var allowed = "";
-    
-    if (program === "MENTORS Curriculum") {
-      allowed = "mentors_curriculum,ifm_assessment,tot";
-    } 
-    else if (program === "Newborn Curriculum") {
-      allowed = "newborn_curriculum,ifm_assessment,tot";
-    } 
-    else if (program === "Both") {
-      allowed = "mentors_curriculum,newborn_curriculum,ifm_assessment,tot";
+    if (!facilityMap[code]) {
+      facilityMap[code] = {
+        county: county,
+        facility: facility,
+        hasMentors: false,
+        hasNewborn: false
+      };
     }
 
-    var listName = cleanForKobo(county) + "_facilities";
-    var combinedName = code + "_" + cleanForKobo(facility);
+    // ✅ Union programs across all Active mentees at this facility
+    if (program === "MENTORS Curriculum" || program === "Both") {
+      facilityMap[code].hasMentors = true;
+    }
+    if (program === "Newborn Curriculum" || program === "Both") {
+      facilityMap[code].hasNewborn = true;
+    }
+  }
 
-    if (processed[combinedName]) continue;
-    processed[combinedName] = true;
+  for (var code in facilityMap) {
+    var f = facilityMap[code];
+
+    // ✅ Build allowed from union of programs at this facility
+    // MENTORS → mentors_curriculum; Newborn → newborn_curriculum;
+    // Both (or mix of MENTORS + Newborn) → both curricula;
+    // always append ifm_assessment,tot
+    var allowedParts = [];
+    if (f.hasMentors) allowedParts.push("mentors_curriculum");
+    if (f.hasNewborn) allowedParts.push("newborn_curriculum");
+    allowedParts.push("ifm_assessment", "tot");
+    var allowed = allowedParts.join(",");
+
+    var programLabel = "";
+    if (f.hasMentors && f.hasNewborn) {
+      programLabel = "Both";
+    } else if (f.hasMentors) {
+      programLabel = "MENTORS Curriculum";
+    } else {
+      programLabel = "Newborn Curriculum";
+    }
+
+    var listName = cleanForKobo(f.county) + "_facilities";
+    var combinedName = code + "_" + cleanForKobo(f.facility);
 
     output.push([
-    county,
-    facility,
-    code,
-    program,
-    listName,
-    combinedName,
-    facility,
-    allowed
+      f.county,
+      f.facility,
+      code,
+      programLabel,
+      listName,
+      combinedName,
+      f.facility,
+      allowed
     ]);
   }
 
